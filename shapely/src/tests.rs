@@ -104,7 +104,9 @@ fn build_foobar_through_reflection_with_missing_field() {
 }
 
 #[test]
-#[should_panic(expected = "We were building a \u{1b}[1;33mu64\u{1b}[0m")]
+#[should_panic(
+    expected = "This is a partial \u{1b}[1;34mu64\u{1b}[0m, you can't build a \u{1b}[1;32mu32\u{1b}[0m out of it"
+)]
 fn build_u64_get_u32_through_reflection() {
     let shape = u64::shape();
     eprintln!("{shape:#?}");

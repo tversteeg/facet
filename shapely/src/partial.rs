@@ -232,26 +232,19 @@ impl Partial<'_> {
         std::mem::forget(self);
     }
 
-    pub fn build<T: Shapely>(self) -> T {
-        trace!(
-            "Building \x1b[1;33m{}\x1b[0m from partial at addr \x1b[1;36m{:p}\x1b[0m",
-            std::any::type_name::<T>(),
-            self.addr.as_ptr()
-        );
-        trace!(
-            "Layout of \x1b[1;33m{}\x1b[0m: {:?}",
-            std::any::type_name::<T>(),
-            T::shape().layout
-        );
-        self.check_initialization();
-
+    fn check_shape_desc_matches<T: Shapely>(&self) {
         if self.shape_desc != T::shape_desc() {
             panic!(
-                "We were building a \x1b[1;33m{:?}\x1b[0m\n..but .build() was called expecting a \x1b[1;33m{:?}\x1b[0m",
-                self.shape_desc.get(),
-                T::shape(),
+                "This is a partial \x1b[1;34m{}\x1b[0m, you can't build a \x1b[1;32m{}\x1b[0m out of it",
+                self.shape_desc.get().name,
+                T::shape().name,
             );
         }
+    }
+
+    pub fn build<T: Shapely>(self) -> T {
+        self.check_initialization();
+        self.check_shape_desc_matches::<T>();
 
         let result = unsafe { std::ptr::read(self.addr.as_ptr() as *const T) };
         trace!(
@@ -264,14 +257,7 @@ impl Partial<'_> {
 
     pub fn build_boxed<T: Shapely>(self) -> Box<T> {
         self.check_initialization();
-
-        if self.shape_desc != T::shape_desc() {
-            panic!(
-                "We were building a {:?}\n..but .build_boxed() was called expecting a {:?}",
-                self.shape_desc.get(),
-                T::shape(),
-            );
-        }
+        self.check_shape_desc_matches::<T>();
 
         let boxed = unsafe { Box::from_raw(self.addr.as_ptr() as *mut T) };
         std::mem::forget(self);
