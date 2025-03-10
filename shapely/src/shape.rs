@@ -185,12 +185,12 @@ pub enum MapInnards {
 
 impl MapInnards {
     /// Creates a new MapInnards for a struct with the given fields
-    pub fn for_struct(fields: &'static [MapField<'static>]) -> Self {
+    pub const fn for_struct(fields: &'static [MapField<'static>]) -> Self {
         MapInnards::Struct { fields }
     }
 
     /// Creates a new MapInnards for a HashMap
-    pub fn for_hashmap(value_shape: fn() -> Shape) -> Self {
+    pub const fn for_hashmap(value_shape: fn() -> Shape) -> Self {
         MapInnards::HashMap { value_shape }
     }
 

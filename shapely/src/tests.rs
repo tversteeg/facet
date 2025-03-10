@@ -1,7 +1,6 @@
-
 use nonmax::NonMaxU32;
 
-use crate::{Innards, Shape, Shapely};
+use crate::{Innards, Shape, ShapeUninit, Shapely};
 
 #[derive(Debug, PartialEq, Eq)]
 struct FooBar {
@@ -21,10 +20,14 @@ impl Shapely for FooBar {
                 MapField {
                     name: stringify!($field),
                     schema: || shape_of(|s: $struct| s.$field),
-                    offset: Some(
-                        NonMaxU32::new(std::mem::offset_of!($struct, $field).try_into().unwrap())
-                            .expect("your struct is larger than 4GiB? that's impressive"),
-                    ),
+                    offset: Some({
+                        let offset = std::mem::offset_of!($struct, $field);
+                        if offset > u32::MAX as usize {
+                            panic!("Struct field offset exceeds u32::MAX");
+                        }
+                        NonMaxU32::new(offset as u32)
+                            .expect("Field offset should never be u32::MAX")
+                    }),
                 }
             };
         }
@@ -35,14 +38,7 @@ impl Shapely for FooBar {
             name: "FooBar",
             size: std::mem::size_of::<FooBar>(),
             align: std::mem::align_of::<FooBar>(),
-            innards: Innards::Map(
-                MapInnards::builder()
-                    .field(FOO_FIELD)
-                    .field(BAR_FIELD)
-                    .open_ended(false)
-                    .mk_slots(|shape| &StructManipulator { shape })
-                    .build(),
-            ),
+            innards: Innards::Map(MapInnards::for_struct(&[FOO_FIELD, BAR_FIELD])),
             display: None,
             debug: None,
             set_to_default: None,
@@ -62,24 +58,20 @@ fn build_foobar_through_reflection() {
     }
 
     if let Innards::Map(sh) = &schema.innards {
-        let foo_bar = unsafe { &mut *(ptr as *mut FooBar) };
+        let mut uninit = FooBar::shape_uninit();
         for field in sh.static_fields() {
-            unsafe {
-                match field.name {
-                    "foo" => {
-                        if let Some(slot) = sh.slots.slot(foo_bar, *field) {
-                            slot.fill(42u64);
-                        }
-                    }
-                    "bar" => {
-                        if let Some(slot) = sh.slots.slot(foo_bar, *field) {
-                            slot.fill(String::from("Hello, World!"));
-                        }
-                    }
-                    _ => panic!("Unknown field: {}", field.name),
+            let slot = uninit.slot(field).unwrap();
+            match field.name {
+                "foo" => {
+                    slot.fill(42u64);
                 }
+                "bar" => {
+                    slot.fill(String::from("Hello, World!"));
+                }
+                _ => panic!("Unknown field: {}", field.name),
             }
         }
+        let foo_bar = unsafe { &*(uninit.addr as *const FooBar) };
     }
 
     // Verify the fields were set correctly

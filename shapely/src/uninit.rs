@@ -43,6 +43,52 @@ impl ShapeUninit {
             )
         }
     }
+
+    fn check_initialization(&self) {
+        if let crate::Innards::Map(map_innards) = self.shape.innards {
+            let fields = map_innards.static_fields();
+            for (i, field) in fields.iter().enumerate() {
+                if !self.init_fields.is_set(i) {
+                    panic!(
+                        "Field '{}' was not initialized. Complete schema:\n{:?}",
+                        field.name, self.shape
+                    );
+                }
+            }
+        }
+    }
+
+    pub fn build<T: Shapely>(self) -> T {
+        self.check_initialization();
+
+        if self.shape != T::shape() {
+            panic!(
+                "Shape mismatch: expected {:?}, found {:?}",
+                T::shape(),
+                self.shape
+            );
+        }
+
+        let result = unsafe { std::ptr::read(self.addr as *const T) };
+        std::mem::forget(self);
+        result
+    }
+
+    pub fn build_boxed<T: Shapely>(self) -> Box<T> {
+        self.check_initialization();
+
+        if self.shape != T::shape() {
+            panic!(
+                "Shape mismatch: expected {:?}, found {:?}",
+                T::shape(),
+                self.shape
+            );
+        }
+
+        let boxed = unsafe { Box::from_raw(self.addr as *mut T) };
+        std::mem::forget(self);
+        boxed
+    }
 }
 
 /// A bit array to keep track of which fields were initialized

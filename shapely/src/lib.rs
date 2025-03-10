@@ -30,7 +30,9 @@ pub trait Shapely {
     /// Returns the shape of this type
     fn shape() -> Shape;
 
-    fn uninit() -> ShapeUninit {
+    /// allocates the right amount of memory to build such a shape on the heap and returns it in the
+    /// form of a ShapeUninit
+    fn shape_uninit() -> ShapeUninit {
         let shape = Self::shape();
         let layout = alloc::Layout::from_size_align(shape.size, shape.align).unwrap();
         let addr = unsafe { alloc::alloc(layout) };
