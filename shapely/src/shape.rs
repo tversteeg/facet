@@ -1,5 +1,7 @@
 use std::{collections::HashSet, fmt::Formatter};
 
+use nonmax::NonMaxU32;
+
 use crate::{FieldSlot, ShapeUninit};
 
 /// Schema for reflection of a type
@@ -200,6 +202,17 @@ pub struct MapField<'s> {
 
     /// schema of the inner type
     pub schema: fn() -> Shape,
+
+    /// offset of the field in the map, if known.
+    ///
+    /// For example, when deserializing a self-descriptive format like JSON, we're going to get
+    /// some map fields with dynamically discovered field names, and they're not going to have
+    /// an offset.
+    ///
+    /// However, when deserializing formats that are non-self descriptive and working from an
+    /// existing shape, then their map fields are probably going to have offsets, especially if
+    /// they're using derived macros.
+    pub offset: Option<NonMaxU32>,
 }
 
 /// Given the map's address, returns a FieldSlot for the requested field
