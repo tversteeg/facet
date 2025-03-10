@@ -76,7 +76,7 @@ impl Schema {
                     f,
                     "{:indent$}\x1b[1;36mFields:\x1b[0m",
                     "",
-                    indent = indent + 2
+                    indent = indent + Self::INDENT
                 )?;
                 for field in map_shape.fields {
                     write!(
@@ -84,12 +84,12 @@ impl Schema {
                         "{:indent$}\x1b[1;32m{}\x1b[0m: ",
                         "",
                         field.name,
-                        indent = indent + 4
+                        indent = indent + Self::INDENT * 2
                     )?;
                     (field.schema)().pretty_print_recursive_internal(
                         f,
                         printed_schemas,
-                        indent + 6,
+                        indent + Self::INDENT * 3,
                     )?;
                 }
                 if map_shape.open_ended {
@@ -97,7 +97,7 @@ impl Schema {
                         f,
                         "{:indent$}\x1b[1;31m(open-ended)\x1b[0m",
                         "",
-                        indent = indent + 4
+                        indent = indent + Self::INDENT * 2
                     )?;
                 }
             }
@@ -106,18 +106,26 @@ impl Schema {
                     f,
                     "{:indent$}\x1b[1;36mArray of:\x1b[0m ",
                     "",
-                    indent = indent + 2
+                    indent = indent + Self::INDENT
                 )?;
-                elem_schema.pretty_print_recursive_internal(f, printed_schemas, indent + 4)?;
+                elem_schema.pretty_print_recursive_internal(
+                    f,
+                    printed_schemas,
+                    indent + Self::INDENT * 2,
+                )?;
             }
             Shape::Transparent(inner_schema) => {
                 write!(
                     f,
                     "{:indent$}\x1b[1;36mTransparent wrapper for:\x1b[0m ",
                     "",
-                    indent = indent + 2
+                    indent = indent + Self::INDENT
                 )?;
-                inner_schema.pretty_print_recursive_internal(f, printed_schemas, indent + 4)?;
+                inner_schema.pretty_print_recursive_internal(
+                    f,
+                    printed_schemas,
+                    indent + Self::INDENT * 2,
+                )?;
             }
             Shape::Scalar(scalar) => {
                 writeln!(
@@ -125,7 +133,7 @@ impl Schema {
                     "{:indent$}\x1b[1;36mScalar:\x1b[0m \x1b[1;33m{:?}\x1b[0m",
                     "",
                     scalar,
-                    indent = indent + 2
+                    indent = indent + Self::INDENT
                 )?;
             }
         }
@@ -158,7 +166,7 @@ pub enum Shape {
 }
 
 /// The shape of a map: works for structs, but also HashMap<String, String> for example
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy)]
 pub struct MapShape {
     /// Statically-known fields
     pub fields: &'static [MapField<'static>],
@@ -170,6 +178,27 @@ pub struct MapShape {
     pub manipulator: &'static dyn MapManipulator,
 }
 
+impl PartialEq for MapShape {
+    fn eq(&self, other: &Self) -> bool {
+        self.fields == other.fields
+            && self.open_ended == other.open_ended
+            && std::ptr::eq(
+                self.manipulator as *const dyn MapManipulator,
+                other.manipulator as *const dyn MapManipulator,
+            )
+    }
+}
+
+impl Eq for MapShape {}
+
+impl std::hash::Hash for MapShape {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.fields.hash(state);
+        self.open_ended.hash(state);
+        (self.manipulator as *const dyn MapManipulator).hash(state);
+    }
+}
+
 impl std::fmt::Debug for MapShape {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("MapShape")
@@ -179,7 +208,7 @@ impl std::fmt::Debug for MapShape {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MapField<'s> {
     /// key for the map field
     pub name: &'s str,
