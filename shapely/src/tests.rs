@@ -65,3 +65,25 @@ fn build_foobar_through_reflection() {
         foo_bar
     )
 }
+
+#[test]
+fn build_u64_through_reflection() {
+    let shape = u64::shape();
+    eprintln!("{shape:#?}");
+
+    let layout = std::alloc::Layout::from_size_align(shape.size, shape.align).unwrap();
+    let ptr = unsafe { std::alloc::alloc(layout) };
+    if ptr.is_null() {
+        std::alloc::handle_alloc_error(layout);
+    }
+
+    let mut uninit = u64::shape_uninit();
+    let slot = uninit
+        .slot(shape.innards.static_fields().next().unwrap())
+        .unwrap();
+    slot.fill(42u64);
+    let value = uninit.build::<u64>();
+
+    // Verify the value was set correctly
+    assert_eq!(value, 42);
+}

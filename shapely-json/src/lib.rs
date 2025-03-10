@@ -13,17 +13,17 @@ pub fn from_json<'input>(
     target: &mut ShapeUninit,
     json: &'input str,
 ) -> Result<(), JsonParseErrorWithContext<'input>> {
-    use shapely::{Scalar, Innards};
+    use shapely::{Innards, Scalar};
 
     trace!("Starting JSON deserialization");
     let mut parser = JsonParser::new(json);
 
     fn deserialize_value<'input>(
         parser: &'input mut JsonParser,
-        target: *mut u8,
+        target: &mut ShapeUninit,
         shape: &Shape,
     ) -> Result<(), JsonParseErrorWithContext<'input>> {
-        trace!("Deserializing value with schema:\n{:?}", schema);
+        trace!("Deserializing value with shape:\n{:?}", shape);
         match &shape.innards {
             Innards::Scalar(scalar) => {
                 match scalar {
@@ -53,22 +53,19 @@ pub fn from_json<'input>(
                     }
                 }
             }
-            Innards::Map(MapInnards {
-                fields,
-                slots: manipulator,
-                ..
-            }) => {
-                trace!("Deserializing Map");
+            Innards::Struct { fields } => {
+                trace!("Deserializing struct");
                 parser.expect_object_start()?;
                 while let Some(key) = parser.parse_object_key()? {
-                    trace!("Processing map key: {}", key);
+                    trace!("Processing struct key: {}", key);
+
                     if let Some(field) = fields.iter().find(|f| f.name == key) {
                         let field_schema = (field.schema)();
                         trace!("Deserializing field: {}", field.name);
                         let mut field_error = None;
                         unsafe {
-                            manipulator.slot(map_addr, field)
-                            manipulator.set_field(target, *field, &mut |field_ptr| {
+                            let slot = manipulator.slot(target, field);
+                            slot.set(&mut |field_ptr| {
                                 if let Err(err) =
                                     deserialize_value(parser, field_ptr, &field_schema)
                                 {
@@ -89,7 +86,7 @@ pub fn from_json<'input>(
             }
             // Add support for other shapes (Array, Transparent) as needed
             _ => {
-                error!("Unsupported shape: {:?}", schema.shape);
+                error!("Unsupported shape: {:?}", shape.innards);
                 return Err(parser.make_error(JsonParseErrorKind::Custom(format!(
                     "Unsupported shape: {:?}",
                     shape.innards

@@ -57,6 +57,19 @@ impl ShapeUninit {
         }
     }
 
+    /// Returns a slot for assigning this whole shape as a scalar
+    pub fn scalar_slot<'s>(&'s mut self) -> Option<Slot<'s>> {
+        let slot = Slot::for_struct_field(
+            self.addr,
+            self.shape.clone(),
+            InitFieldSlot::Struct {
+                index: 0,
+                set: &mut self.init_fields,
+            },
+        );
+        Some(slot)
+    }
+
     /// Returns a slot for initializing a field in the shape.
     pub fn slot<'s>(&'s mut self, field: Field) -> Option<Slot<'s>> {
         match self.shape.innards {
