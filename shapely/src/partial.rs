@@ -26,16 +26,9 @@ pub struct Partial<'s> {
     pub(crate) shape_desc: ShapeDesc,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// We can build a tree of partials as the parsing process occurs or deserization occurs, which means they have to be covariant.
-    fn _assert_partial_covariant<'long: 'short, 'short>(
-        partial: Partial<'long>,
-    ) -> Partial<'short> {
-        partial
-    }
+/// We can build a tree of partials as the parsing process occurs or deserization occurs, which means they have to be covariant.
+fn _assert_partial_covariant<'long: 'short, 'short>(partial: Partial<'long>) -> Partial<'short> {
+    partial
 }
 
 impl Drop for Partial<'_> {
@@ -74,6 +67,38 @@ impl Drop for Partial<'_> {
 }
 
 impl Partial<'_> {
+    /// Allocates a partial on the heap for the given shape descriptor.
+    pub fn alloc(shape_desc: ShapeDesc) -> Self {
+        let layout = shape_desc.get().layout;
+        let addr = unsafe { alloc::alloc(layout) };
+        if addr.is_null() {
+            alloc::handle_alloc_error(layout);
+        }
+        Self {
+            origin: Origin::HeapAllocated,
+            phantom: PhantomData,
+            addr: NonNull::new(addr as _).unwrap(),
+            init_fields: Default::default(),
+            shape_desc,
+        }
+    }
+
+    /// Borrows a `MaybeUninit<Self>` and returns a `Partial`.
+    ///
+    /// Before calling assume_init, make sure to call Partial.build_in_place().
+    pub fn borrow<T: Shapely>(uninit: &mut std::mem::MaybeUninit<T>) -> Self {
+        Self {
+            origin: Origin::Borrowed {
+                parent: None,
+                init_field_slot: InitFieldSlot::Ignored,
+            },
+            phantom: PhantomData,
+            addr: NonNull::new(uninit.as_mut_ptr() as *mut ()).unwrap(),
+            init_fields: Default::default(),
+            shape_desc: T::shape_desc(),
+        }
+    }
+
     /// Returns a pointer to the underlying data, if the shape matches the expected shape.
     ///
     /// # Safety

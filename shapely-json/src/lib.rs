@@ -1,5 +1,5 @@
 use parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
-use shapely::{Shape, Partial};
+use shapely::{Partial, Shape};
 
 #[doc(hidden)]
 pub mod log;
@@ -31,12 +31,12 @@ pub fn from_json<'input>(
                         trace!("Deserializing String");
                         let s = parser.parse_string()?;
                         trace!("Deserialized String: {}", s);
-                        target.scalar_slot().unwrap().fill(s);
+                        target.scalar_slot().expect("String scalar slot").fill(s);
                     }
                     Scalar::U64 => {
                         trace!("Deserializing U64");
                         let n = parser.parse_u64()?;
-                        target.scalar_slot().unwrap().fill(n);
+                        target.scalar_slot().expect("U64 scalar slot").fill(n);
                         trace!("Deserialized U64: {}", n);
                     }
                     // Add other scalar types as needed
@@ -56,11 +56,12 @@ pub fn from_json<'input>(
                     trace!("Processing struct key: {}", key);
 
                     if let Some(field) = fields.iter().find(|f| f.name == key).copied() {
-                        let field_schema = field.shape;
+                        field.shape();
+
                         trace!("Deserializing field: {}", field.name);
                         let mut field_error = None;
                         unsafe {
-                            let slot = target.slot(field);
+                            let slot = target.slot(field).expect("Field slot");
                             if let Err(err) = deserialize_value(parser, slot.fill(), field_schema) {
                                 field_error = Some(err);
                             }
@@ -88,7 +89,7 @@ pub fn from_json<'input>(
         Ok(())
     }
 
-    let result = deserialize_value(&mut parser, target, target.shape());
+    let result = deserialize_value(&mut parser, target, target.shape);
     if result.is_ok() {
         trace!("JSON deserialization completed successfully");
     } else {

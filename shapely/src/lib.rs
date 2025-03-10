@@ -5,7 +5,7 @@ pub use shapely_derive::*;
 
 pub use nonmax::{self, NonMaxU32};
 
-use std::{alloc, marker::PhantomData, mem::MaybeUninit, ptr::NonNull};
+use std::mem::MaybeUninit;
 
 mod hashmap_impl;
 mod scalar_impls;
@@ -40,34 +40,14 @@ pub trait Shapely: Sized {
 
     /// Allocates this shape on the heap and return a partial that allows gradually initializing its fields.
     fn partial() -> Partial<'static> {
-        let shape = Self::shape();
-        let addr = unsafe { alloc::alloc(shape.layout) };
-        if addr.is_null() {
-            alloc::handle_alloc_error(shape.layout);
-        }
-        Partial {
-            origin: Origin::HeapAllocated,
-            phantom: PhantomData,
-            addr: NonNull::new(addr as _).unwrap(),
-            init_fields: Default::default(),
-            shape_desc: Self::shape_desc(),
-        }
+        Partial::alloc(Self::shape_desc())
     }
 
     /// Initializes a `Partial` from a borrowed `MaybeUninit<Self>`.
     ///
     /// Before calling assume_init, make sure to call Partial.build_in_place().
     fn partial_from_uninit(dest: &mut MaybeUninit<Self>) -> Partial<'_> {
-        Partial {
-            origin: Origin::Borrowed {
-                parent: None,
-                init_field_slot: InitFieldSlot::Ignored,
-            },
-            phantom: PhantomData,
-            addr: NonNull::new(dest.as_mut_ptr() as *mut ()).unwrap(),
-            init_fields: Default::default(),
-            shape_desc: Self::shape_desc(),
-        }
+        Partial::borrow(dest)
     }
 
     // TODO: partial_from_mut? where all the fields are already initialized?

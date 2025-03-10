@@ -426,7 +426,7 @@ fn build_truck_with_drop_fields() {
 }
 
 #[test]
-fn test_shape_uninit_build_in_place() {
+fn test_partial_build_in_place() {
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     static DROP_COUNT: AtomicUsize = AtomicUsize::new(0);
