@@ -27,9 +27,6 @@ pub mod mini_typeid;
 pub mod log;
 pub use log::*;
 
-#[cfg(all(test, feature = "derive"))]
-mod derive_tests;
-
 #[cfg(test)]
 mod tests;
 

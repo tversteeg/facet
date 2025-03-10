@@ -1,4 +1,3 @@
-// use proc_macro::TokenStream;
 use unsynn::*;
 
 keyword! {
@@ -7,13 +6,6 @@ keyword! {
 }
 
 unsynn! {
-    enum Enum {
-        Two(Plus, Plus, Dot),
-        One(Plus, Dot),
-        TwoS { a: Minus, b: Minus, c: Dot},
-        OneS { a: Minus, b: Dot },
-    }
-
     struct AttributeInner {
         name: Ident,
         attr: ParenthesisGroupContaining<Vec<Ident>>,
@@ -40,40 +32,46 @@ unsynn! {
     }
 }
 
-#[proc_macro]
-pub fn parse_enum(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let input = TokenStream::from(input);
-    let mut i = input.to_token_iter();
-    let parsed: Enum = i.parse().unwrap();
-    let dbg_s = format!("{parsed:#?}");
-    let s = format!("println!(\"Parsed: {{}}\", {dbg_s:?});");
-    s.into_token_stream().into()
-}
-
-#[proc_macro]
-pub fn parse_struct_like(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let input = TokenStream::from(input);
-    let mut i = input.to_token_iter();
-    let parsed: StructLike = i.parse().unwrap();
-    let dbg_s = format!("{parsed:#?}");
-    let s = format!("println!(\"Parsed: {{}}\", {dbg_s:?});");
-    s.into_token_stream().into()
-}
-
 #[proc_macro_derive(Shapely)]
 pub fn shapely_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = TokenStream::from(input);
     let mut i = input.to_token_iter();
     let parsed: StructLike = i.parse().unwrap();
-    let dbg_s = format!("{parsed:#?}");
 
-    let struct_def = format!(
-        "impl {name} {{
-            fn get_parsed_structure() -> &'static str {{
-                {dbg_s:?}
+    let struct_name = parsed.name.to_string();
+    let fields = parsed
+        .body
+        .content
+        .0
+        .iter()
+        .map(|field| field.value.name.to_string())
+        .collect::<Vec<String>>();
+
+    // Create the fields string for struct_fields! macro
+    let fields_str = fields.join(", ");
+
+    // Generate the impl
+    let output = format!(
+        r#"
+        impl shapely::Shapely for {struct_name} {{
+            fn shape() -> shapely::Shape {{
+                shapely::Shape {{
+                    name: "{struct_name}",
+                    typeid: shapely::mini_typeid::of::<Self>(),
+                    layout: std::alloc::Layout::new::<Self>(),
+                    innards: shapely::Innards::Struct {{
+                        fields: shapely::struct_fields!({struct_name}, ({fields_str})),
+                    }},
+                    display: None,
+                    debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| {{
+                        std::fmt::Debug::fmt(unsafe {{ &*(addr as *const Self) }}, f)
+                    }}),
+                    set_to_default: None,
+                    drop_in_place: Some(|ptr| unsafe {{ std::ptr::drop_in_place(ptr as *mut Self) }}),
+                }}
             }}
-        }}",
-        name = parsed.name
+        }}
+    "#
     );
-    struct_def.into_token_stream().into()
+    output.into_token_stream().into()
 }
