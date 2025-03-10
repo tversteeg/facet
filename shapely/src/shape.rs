@@ -2,7 +2,7 @@ use std::{collections::HashSet, fmt::Formatter};
 
 use nonmax::NonMaxU32;
 
-use crate::{FieldSlot, ShapeUninit};
+use crate::{ShapeUninit, Slot};
 
 /// Schema for reflection of a type
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -128,6 +128,13 @@ impl Shape {
 
         Ok(())
     }
+
+    pub fn slots(&self) -> Option<&'static dyn Slots> {
+        match self.innards {
+            Innards::Map(map_innards) => Some((map_innards.mk_slots)(*self)),
+            _ => None,
+        }
+    }
 }
 
 impl std::fmt::Debug for Shape {
@@ -156,13 +163,51 @@ pub enum Innards {
 #[derive(Clone, Copy)]
 pub struct MapInnards {
     /// Statically-known fields
-    pub fields: &'static [MapField<'static>],
+    fields: &'static [MapField<'static>],
 
     /// Will allow setting fields outside of the ones listed in `fields`
-    pub open_ended: bool,
+    open_ended: bool,
 
     /// Slots for setting fields
-    pub mk_slots: fn(Shape) -> &'static dyn Slots,
+    mk_slots: fn(Shape) -> &'static dyn Slots,
+}
+
+impl MapInnards {
+    fn builder() -> MapInnardsBuilder {
+        MapInnardsBuilder::default()
+    }
+}
+
+#[derive(Default)]
+pub struct MapInnardsBuilder {
+    fields: Vec<MapField<'static>>,
+    open_ended: bool,
+    mk_slots: Option<fn(Shape) -> &'static dyn Slots>,
+}
+
+impl MapInnardsBuilder {
+    pub fn field(mut self, field: MapField<'static>) -> Self {
+        self.fields.push(field);
+        self
+    }
+
+    pub fn open_ended(mut self, open_ended: bool) -> Self {
+        self.open_ended = open_ended;
+        self
+    }
+
+    pub fn mk_slots(mut self, mk_slots: fn(Shape) -> &'static dyn Slots) -> Self {
+        self.mk_slots = Some(mk_slots);
+        self
+    }
+
+    pub fn build(self) -> MapInnards {
+        MapInnards {
+            fields: self.fields.into_boxed_slice().leak(),
+            open_ended: self.open_ended,
+            mk_slots: self.mk_slots.expect("mk_slots is required"),
+        }
+    }
 }
 
 impl PartialEq for MapInnards {
@@ -221,11 +266,7 @@ pub trait Slots: Send + Sync {
     /// this might, for example, insert an entry into a HashMap.
     ///
     /// Returns None if the field is not known and the data structure does not accommodate for arbitrary fields.
-    fn slot<'a>(
-        &'a mut self,
-        map: &'a mut ShapeUninit,
-        field: MapField<'_>,
-    ) -> Option<FieldSlot<'a>>;
+    fn slot<'a>(&'a mut self, map: &'a mut ShapeUninit, field: MapField<'_>) -> Option<Slot<'a>>;
 }
 
 /// Manipulator for struct-like types with known field offsets
@@ -235,17 +276,13 @@ pub struct StructManipulator {
 }
 
 impl Slots for StructManipulator {
-    fn slot<'a>(
-        &'a mut self,
-        map: &'a mut ShapeUninit,
-        field: MapField<'_>,
-    ) -> Option<FieldSlot<'a>> {
+    fn slot<'a>(&'a mut self, map: &'a mut ShapeUninit, field: MapField<'_>) -> Option<Slot<'a>> {
         if let Innards::Map(map_shape) = self.shape.innards {
             if let Some(field) = map_shape.fields.iter().find(|f| f.name == field.name) {
                 if let Some(offset) = field.offset {
                     let field_addr =
                         unsafe { map.get_addr(&self.shape).add(offset.get() as usize) };
-                    Some(FieldSlot::new(field_addr as *mut _))
+                    Some(Slot::for_struct_field(field_addr as *mut _))
                 } else {
                     None
                 }

@@ -75,7 +75,7 @@ mod tests {
                 innards: Innards::Map(MapInnards {
                     fields: &[FOO_FIELD, BAR_FIELD],
                     open_ended: false,
-                    slots: &StructManipulator { shape: SCHEMA },
+                    mk_slots: |shape| &StructManipulator { shape },
                 }),
                 display: None,
                 debug: None,

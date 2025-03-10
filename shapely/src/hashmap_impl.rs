@@ -4,7 +4,7 @@ use std::{
     mem::{self, MaybeUninit},
 };
 
-use crate::{FieldSlot, Innards, MapField, MapInnards, Shape, ShapeUninit, Shapely, Slots};
+use crate::{Innards, MapField, MapInnards, Shape, ShapeUninit, Shapely, Slot, Slots};
 
 impl<V> Shapely for HashMap<String, V>
 where
@@ -13,8 +13,7 @@ where
     fn shape() -> Shape {
         struct HashMapManipulator<V> {
             _phantom: PhantomData<V>,
-            shape: Shape,
-            placeholder: MaybeUninit<V>,
+            map_shape: Shape,
         }
 
         impl<V> Slots for HashMapManipulator<V>
@@ -22,27 +21,24 @@ where
             V: Shapely + Send + Sync + 'static,
         {
             fn slot<'a>(
-                &mut self,
-                map: &mut ShapeUninit,
+                &'a mut self,
+                map: &'a mut ShapeUninit,
                 field: MapField<'_>,
-            ) -> Option<FieldSlot<'a>> {
-                let dest = self.placeholder.as_mut_ptr() as *mut u8;
-
+            ) -> Option<Slot<'a>> {
                 unsafe {
-                    let map: *mut HashMap<String, MaybeUninit<V>> = map.get_addr(&self.shape);
-                    Some(FieldSlot::new(
-                        (*map)
-                            .entry(field.name.to_string())
-                            .or_insert_with(|| MaybeUninit::uninit())
-                            .as_mut_ptr(),
+                    let map: *mut HashMap<String, MaybeUninit<V>> = map.get_addr(&self.map_shape);
+                    Some(Slot::for_hash_map(
+                        map as *mut HashMap<String, V>,
+                        field.name.to_string(),
                     ))
                 }
             }
         }
 
-        fn mk_hashmap_manipulator<V>() -> HashMapManipulator<V> {
+        fn mk_hashmap_manipulator<V>(shape: Shape) -> HashMapManipulator<V> {
             HashMapManipulator {
                 _phantom: PhantomData::<V>,
+                map_shape: shape,
             }
         }
 
