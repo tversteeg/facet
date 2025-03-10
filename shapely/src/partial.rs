@@ -69,12 +69,7 @@ impl Drop for Partial<'_> {
             _ => {}
         }
 
-        // Then deallocate the memory if we own it
-        if let Some(addr) = self.addr {
-            if matches!(self.origin, Origin::HeapAllocated) {
-                unsafe { alloc::dealloc(addr.as_ptr(), self.shape_desc.get().layout) }
-            }
-        }
+        self.deallocate()
     }
 }
 
@@ -241,32 +236,38 @@ impl Partial<'_> {
         }
     }
 
-    pub fn build<T: Shapely>(self) -> T {
+    fn deallocate(&mut self) {
+        if let Some(addr) = self.addr {
+            unsafe { alloc::dealloc(addr.as_ptr(), self.shape_desc.get().layout) }
+        }
+    }
+
+    pub fn build<T: Shapely>(mut self) -> T {
         self.check_initialization();
         self.check_shape_desc_matches::<T>();
 
         let result = unsafe {
-            let ptr = self.addr.map_or(std::ptr::null(), |ptr| ptr.as_ptr()) as *const T;
+            let ptr = self.addr.map_or(NonNull::dangling(), |ptr| ptr).as_ptr() as *const T;
             std::ptr::read(ptr)
         };
         trace!(
             "Built \x1b[1;33m{}\x1b[0m successfully",
             std::any::type_name::<T>()
         );
+        self.deallocate();
         std::mem::forget(self);
         result
     }
 
-    pub fn build_boxed<T: Shapely>(self) -> Box<T> {
+    pub fn build_boxed<T: Shapely>(mut self) -> Box<T> {
         self.check_initialization();
         self.check_shape_desc_matches::<T>();
 
         let boxed = unsafe {
-            let ptr = self
-                .addr
-                .map_or(std::ptr::null_mut(), |ptr| ptr.as_ptr() as *mut T);
+            let ptr = self.addr.map_or(NonNull::dangling(), |ptr| ptr).as_ptr() as *mut T;
             Box::from_raw(ptr)
         };
+        self.deallocate();
         std::mem::forget(self);
         boxed
     }

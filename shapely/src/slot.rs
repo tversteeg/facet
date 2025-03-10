@@ -76,7 +76,7 @@ impl<'s> Slot<'s> {
                             drop_fn(
                                 field_addr
                                     .map(|p| p.as_ptr())
-                                    .unwrap_or(std::ptr::null_mut()),
+                                    .unwrap_or(NonNull::dangling().as_ptr()),
                             );
                         }
                     }
