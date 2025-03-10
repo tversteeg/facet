@@ -16,8 +16,8 @@ pub use shape::*;
 mod slot;
 pub use slot::Slot;
 
-mod uninit;
-pub use uninit::*;
+mod partial;
+pub use partial::*;
 
 mod helpers;
 pub use helpers::*;
@@ -38,15 +38,14 @@ pub trait Shapely: Sized {
         ShapeDesc(Self::shape)
     }
 
-    /// allocates the right amount of memory to build such a shape on the heap and returns it in the
-    /// form of a ShapeUninit
-    fn shape_uninit() -> ShapeUninit<'static> {
+    /// Allocates this shape on the heap and return a partial that allows gradually initializing its fields.
+    fn partial() -> Partial<'static> {
         let shape = Self::shape();
         let addr = unsafe { alloc::alloc(shape.layout) };
         if addr.is_null() {
             alloc::handle_alloc_error(shape.layout);
         }
-        ShapeUninit {
+        Partial {
             origin: Origin::HeapAllocated,
             phantom: PhantomData,
             addr: NonNull::new(addr as _).unwrap(),
@@ -55,11 +54,11 @@ pub trait Shapely: Sized {
         }
     }
 
-    /// Initializes a `ShapeUninit` from a borrowed `MaybeUninit<Self>`.
+    /// Initializes a `Partial` from a borrowed `MaybeUninit<Self>`.
     ///
-    /// Before calling assume_init, make sure to call ShapeUninit.build_in_place().
-    fn shape_uninit_from_raw(dest: &mut MaybeUninit<Self>) -> ShapeUninit<'_> {
-        ShapeUninit {
+    /// Before calling assume_init, make sure to call Partial.build_in_place().
+    fn partial_from_uninit(dest: &mut MaybeUninit<Self>) -> Partial<'_> {
+        Partial {
             origin: Origin::Borrowed {
                 parent: None,
                 init_field_slot: InitFieldSlot::Ignored,
@@ -70,4 +69,6 @@ pub trait Shapely: Sized {
             shape_desc: Self::shape_desc(),
         }
     }
+
+    // TODO: partial_from_mut? where all the fields are already initialized?
 }

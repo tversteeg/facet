@@ -1,5 +1,5 @@
 use parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
-use shapely::{Shape, ShapeUninit};
+use shapely::{Shape, Partial};
 
 #[doc(hidden)]
 pub mod log;
@@ -10,7 +10,7 @@ mod parser;
 mod tests;
 
 pub fn from_json<'input>(
-    target: &mut ShapeUninit,
+    target: &mut Partial,
     json: &'input str,
 ) -> Result<(), JsonParseErrorWithContext<'input>> {
     use shapely::{Innards, Scalar};
@@ -20,7 +20,7 @@ pub fn from_json<'input>(
 
     fn deserialize_value<'input>(
         parser: &'input mut JsonParser,
-        target: &mut ShapeUninit,
+        target: &mut Partial,
         shape: &Shape,
     ) -> Result<(), JsonParseErrorWithContext<'input>> {
         trace!("Deserializing value with shape:\n{:?}", shape);

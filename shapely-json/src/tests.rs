@@ -35,7 +35,7 @@ fn test_from_json() {
 
     let json = r#"{"name": "Alice", "age": 30}"#;
 
-    let mut test_struct = TestStruct::shape_uninit();
+    let mut test_struct = TestStruct::partial();
     let result = from_json(&mut test_struct, json);
 
     result.unwrap();

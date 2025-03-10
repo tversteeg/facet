@@ -1,17 +1,17 @@
 use crate::{Field, ShapeDesc, Shapely, Slot};
 use std::{alloc, marker::PhantomData, ptr::NonNull};
 
-/// Origin of the shapeuninit
+/// Origin of the partial — did we allocate it? Or is it borrowed?
 pub enum Origin<'s> {
     Borrowed {
-        parent: Option<&'s ShapeUninit<'s>>,
+        parent: Option<&'s Partial<'s>>,
         init_field_slot: InitFieldSlot<'s>,
     },
     HeapAllocated,
 }
 
 /// A partially-initialized shape, useful when deserializing for example.
-pub struct ShapeUninit<'s> {
+pub struct Partial<'s> {
     pub(crate) origin: Origin<'s>,
 
     pub(crate) phantom: PhantomData<&'s ()>, // NonNull is covariant...
@@ -30,14 +30,15 @@ pub struct ShapeUninit<'s> {
 mod tests {
     use super::*;
 
-    fn _assert_shape_uninit_covariant<'long: 'short, 'short>(
-        shape_uninit: ShapeUninit<'long>,
-    ) -> ShapeUninit<'short> {
-        shape_uninit
+    /// We can build a tree of partials as the parsing process occurs or deserization occurs, which means they have to be covariant.
+    fn _assert_partial_covariant<'long: 'short, 'short>(
+        partial: Partial<'long>,
+    ) -> Partial<'short> {
+        partial
     }
 }
 
-impl Drop for ShapeUninit<'_> {
+impl Drop for Partial<'_> {
     fn drop(&mut self) {
         // First drop any initialized fields
         match self.shape_desc.get().innards {
@@ -72,7 +73,7 @@ impl Drop for ShapeUninit<'_> {
     }
 }
 
-impl ShapeUninit<'_> {
+impl Partial<'_> {
     /// Returns a pointer to the underlying data, if the shape matches the expected shape.
     ///
     /// # Safety

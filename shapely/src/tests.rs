@@ -1,4 +1,4 @@
-use crate::{Shape, ShapeUninit, Shapely};
+use crate::{Shape, Shapely};
 
 #[derive(Debug, PartialEq, Eq)]
 struct FooBar {
@@ -30,7 +30,7 @@ fn build_foobar_through_reflection() {
     let shape = FooBar::shape();
     eprintln!("{shape:#?}");
 
-    let mut uninit = FooBar::shape_uninit();
+    let mut uninit = FooBar::partial();
     for field in shape.innards.static_fields() {
         let slot = uninit.slot(*field).unwrap();
         match field.name {
@@ -63,7 +63,7 @@ fn build_u64_through_reflection() {
     let shape = u64::shape();
     eprintln!("{shape:#?}");
 
-    let mut uninit = u64::shape_uninit();
+    let mut uninit = u64::partial();
     let slot = uninit.scalar_slot().unwrap();
     slot.fill(42u64);
     let value = uninit.build::<u64>();
@@ -78,7 +78,7 @@ fn build_u64_through_reflection_without_filling() {
     let shape = u64::shape();
     eprintln!("{shape:#?}");
 
-    let uninit = u64::shape_uninit();
+    let uninit = u64::partial();
     // Intentionally not filling the slot
     let _value = uninit.build::<u64>();
     // This should panic
@@ -90,7 +90,7 @@ fn build_foobar_through_reflection_with_missing_field() {
     let shape = FooBar::shape();
     eprintln!("{shape:#?}");
 
-    let mut uninit = FooBar::shape_uninit();
+    let mut uninit = FooBar::partial();
     for field in shape.innards.static_fields() {
         if field.name == "foo" {
             let slot = uninit.slot(*field).unwrap();
@@ -109,7 +109,7 @@ fn build_u64_get_u32_through_reflection() {
     let shape = u64::shape();
     eprintln!("{shape:#?}");
 
-    let mut uninit = u64::shape_uninit();
+    let mut uninit = u64::partial();
 
     let slot = uninit.scalar_slot().unwrap();
     slot.fill(42u64);
@@ -174,7 +174,7 @@ fn build_struct_with_drop_field() {
     }
 
     let shape = StructWithDrop::shape();
-    let mut uninit = StructWithDrop::shape_uninit();
+    let mut uninit = StructWithDrop::partial();
 
     let counter_field = shape.innards.static_fields()[0];
     let value_field = shape.innards.static_fields()[1];
@@ -239,7 +239,7 @@ fn build_scalar_with_drop() {
         }
     }
 
-    let mut uninit = DropScalar::shape_uninit();
+    let mut uninit = DropScalar::partial();
 
     // First assignment
     {
@@ -351,7 +351,7 @@ fn build_truck_with_drop_fields() {
     // Scenario 1: Not filling any fields
     {
         reset_atomics();
-        let uninit = Truck::shape_uninit();
+        let uninit = Truck::partial();
         drop(uninit);
         assert_eq!(ENGINE_COUNT.load(Ordering::SeqCst), 0, "No drops occurred.");
         assert_eq!(WHEELS_COUNT.load(Ordering::SeqCst), 0, "No drops occurred.");
@@ -360,7 +360,7 @@ fn build_truck_with_drop_fields() {
     // Scenario 2: Filling only the engine field
     {
         reset_atomics();
-        let mut uninit = Truck::shape_uninit();
+        let mut uninit = Truck::partial();
         {
             let slot = uninit.slot(engine_field).unwrap();
             slot.fill(Engine);
@@ -381,7 +381,7 @@ fn build_truck_with_drop_fields() {
     // Scenario 3: Filling only the wheels field
     {
         reset_atomics();
-        let mut uninit = Truck::shape_uninit();
+        let mut uninit = Truck::partial();
         {
             let slot = uninit.slot(wheels_field).unwrap();
             slot.fill(Wheels);
@@ -402,7 +402,7 @@ fn build_truck_with_drop_fields() {
     // Scenario 4: Filling both fields
     {
         reset_atomics();
-        let mut uninit = Truck::shape_uninit();
+        let mut uninit = Truck::partial();
         {
             let slot = uninit.slot(engine_field).unwrap();
             slot.fill(Engine);
@@ -479,10 +479,10 @@ fn test_shape_uninit_build_in_place() {
         }
     }
 
-    let test_shape = std::mem::MaybeUninit::<TestShape>::uninit();
+    let mut test_shape = std::mem::MaybeUninit::<TestShape>::uninit();
     {
         let shape = TestShape::shape();
-        let mut uninit = unsafe { TestShape::shape_uninit_from_raw(&mut test_shape) };
+        let mut uninit = TestShape::partial_from_uninit(&mut test_shape);
 
         let counter_field = shape.innards.static_fields()[0];
         let unit_field = shape.innards.static_fields()[1];
