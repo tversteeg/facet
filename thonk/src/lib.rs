@@ -54,9 +54,7 @@ pub enum Shape {
     /// Ordered list of heterogenous values, variable size
     Array(&'static Schema),
 
-    /// Ordered list of non-heterogenous values, fixed-size
-    /// Tuple(&'static [&'static Schema]),
-
+    // todo: tuples: Ordered list of non-heterogenous values, fixed-size
     /// Transparent — forwards to another known schema
     Transparent(&'static Schema),
 
@@ -68,13 +66,13 @@ pub enum Shape {
 #[derive(Clone, Copy)]
 pub struct MapShape {
     /// Statically-known fields
-    fields: &'static [MapField],
+    pub fields: &'static [MapField],
 
     /// Will allow setting fields outside of the ones listed in `fields`
-    open_ended: bool,
+    pub open_ended: bool,
 
     /// Setter for fields — we can't use field offsets
-    setter: &'static dyn MapManipulator,
+    pub manipulator: &'static dyn MapManipulator,
 }
 
 impl std::fmt::Debug for MapShape {
@@ -89,19 +87,27 @@ impl std::fmt::Debug for MapShape {
 #[derive(Debug, Clone, Copy)]
 pub struct MapField {
     /// key for the map field
-    name: &'static str,
+    pub name: &'static str,
 
     /// schema of the inner type
-    schema: &'static Schema,
+    pub schema: fn() -> &'static Schema,
 }
 
 /// Given the map's address, calls on_field_addr with the address of the requested field
 pub trait MapManipulator: Send + Sync + 'static {
+    /// # Safety
+    ///
+    /// The caller must ensure that:
+    /// - `map_addr` is a valid, properly aligned pointer to an instance of the map type.
+    /// - `field` corresponds to an existing field in the map's schema.
+    /// - Any modifications made via `on_addr` maintain the field's type invariants.
+    /// - The data pointed to by `map_addr` remains valid for the duration of the `on_addr` callback.
+    /// - The address provided to `on_addr` is not used after the callback returns.
     unsafe fn set_field_raw(
         &self,
         map_addr: *mut u8,
         field: &MapField,
-        on_addr: &dyn FnMut(*mut u8),
+        on_addr: &mut dyn FnMut(*mut u8),
     );
 }
 
@@ -136,4 +142,115 @@ pub enum Scalar {
 pub type FmtFunction = fn(addr: *const u8, &mut std::fmt::Formatter) -> std::fmt::Result;
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use crate::{Schematic, Shape};
+
+    #[derive(Debug, PartialEq, Eq)]
+    struct FooBar {
+        foo: u64,
+        bar: String,
+    }
+
+    impl Schematic for FooBar {
+        fn schema() -> &'static crate::Schema {
+            use crate::{MapField, MapManipulator, MapShape, Schema, Shape};
+            struct FooBarManipulator;
+
+            impl MapManipulator for FooBarManipulator {
+                unsafe fn set_field_raw(
+                    &self,
+                    map_addr: *mut u8,
+                    field: &MapField,
+                    on_addr: &mut dyn FnMut(*mut u8),
+                ) {
+                    unsafe {
+                        let foo_bar = &mut *(map_addr as *mut FooBar);
+                        match field.name {
+                            "foo" => on_addr(&mut foo_bar.foo as *mut u64 as _),
+                            "bar" => on_addr(&mut foo_bar.bar as *mut String as _),
+                            _ => panic!("Unknown field: {}", field.name),
+                        }
+                    }
+                }
+            }
+
+            static SCHEMA: Schema = Schema {
+                name: "FooBar",
+                size: std::mem::size_of::<FooBar>(),
+                align: std::mem::align_of::<FooBar>(),
+                shape: Shape::Map(MapShape {
+                    fields: &[
+                        MapField {
+                            name: "foo",
+                            schema: <u64 as Schematic>::schema,
+                        },
+                        MapField {
+                            name: "bar",
+                            schema: <String as Schematic>::schema,
+                        },
+                    ],
+                    open_ended: false,
+                    manipulator: &FooBarManipulator,
+                }),
+                display: None,
+                debug: None,
+                set_to_default: None,
+            };
+            &SCHEMA
+        }
+    }
+
+    #[test]
+    fn build_foobar_through_reflection() {
+        let schema = FooBar::schema();
+        let layout = std::alloc::Layout::from_size_align(schema.size, schema.align).unwrap();
+        let ptr = unsafe { std::alloc::alloc(layout) };
+        if ptr.is_null() {
+            std::alloc::handle_alloc_error(layout);
+        }
+
+        // Ensure proper cleanup
+        struct Cleanup<'a>(&'a std::alloc::Layout, *mut u8);
+        impl Drop for Cleanup<'_> {
+            fn drop(&mut self) {
+                unsafe {
+                    std::alloc::dealloc(self.1, *self.0);
+                }
+            }
+        }
+        let _cleanup = Cleanup(&layout, ptr);
+
+        // Use ptr for further operations...
+        if let Shape::Map(map_shape) = &schema.shape {
+            for field in map_shape.fields {
+                unsafe {
+                    map_shape
+                        .manipulator
+                        .set_field_raw(ptr, field, &mut |field_ptr| match field.name {
+                            "foo" => {
+                                *(field_ptr as *mut u64) = 42;
+                            }
+                            "bar" => {
+                                let string_ptr = field_ptr as *mut String;
+                                std::ptr::write(string_ptr, String::from("Hello, World!"));
+                            }
+                            _ => panic!("Unknown field: {}", field.name),
+                        });
+                }
+            }
+        }
+
+        // Verify the fields were set correctly
+        let foo_bar = unsafe { &*(ptr as *const FooBar) };
+        assert_eq!(foo_bar.foo, 42);
+        assert_eq!(foo_bar.bar, "Hello, World!");
+
+        assert_eq!(
+            FooBar {
+                foo: 42,
+                bar: "Hello, World!".to_string()
+            },
+            foo_bar
+        )
+    }
+}
