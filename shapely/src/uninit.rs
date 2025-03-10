@@ -64,7 +64,7 @@ impl ShapeUninit {
     pub fn scalar_slot<'s>(&'s mut self) -> Option<Slot<'s>> {
         let slot = Slot::for_struct_field(
             self.addr,
-            self.shape_desc.clone().get(),
+            self.shape_desc,
             InitFieldSlot::Struct {
                 index: 0,
                 set: &mut self.init_fields,

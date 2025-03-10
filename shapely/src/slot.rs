@@ -39,7 +39,7 @@ impl<'s> Slot<'s> {
     #[inline(always)]
     pub fn for_hash_map(
         map: *mut u8,
-        field_shape: fn() -> Shape,
+        field_shape: ShapeDesc,
         key: String,
         init_field_slot: InitFieldSlot<'s>,
     ) -> Self {
@@ -51,14 +51,14 @@ impl<'s> Slot<'s> {
     }
 
     pub fn fill<T: Shapely>(mut self, value: T) {
-        let value_shape = T::shape();
-        if (self.field_shape)() != value_shape {
+        if self.field_shape != T::shape_desc() {
             panic!(
                 "Attempted to fill a field with an incompatible shape.\n\
                 Expected shape: {:?}\n\
                 Actual shape: {:?}\n\
                 This is undefined behavior and we're refusing to proceed.",
-                self.field_shape, value_shape
+                self.field_shape.get(),
+                T::shape()
             );
         }
 
