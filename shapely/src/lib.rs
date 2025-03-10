@@ -58,25 +58,35 @@ mod tests {
         fn shape() -> crate::Shape {
             use crate::{Innards, MapField, MapInnards};
 
-            static FOO_FIELD: MapField = MapField {
-                name: "foo",
-                schema: <u64 as Shapely>::shape,
-                offset: Some(NonMaxU32::new(std::mem::offset_of!(FooBar, foo) as u32).unwrap()),
-            };
-            static BAR_FIELD: MapField = MapField {
-                name: "bar",
-                schema: <String as Shapely>::shape,
-                offset: Some(NonMaxU32::new(std::mem::offset_of!(FooBar, bar) as u32).unwrap()),
-            };
+            fn shape_of<TStruct, TField: Shapely>(_f: impl Fn(TStruct) -> TField) -> Shape {
+                TField::shape()
+            }
+            macro_rules! map_field {
+                ($struct:ty, $field:ident) => {
+                    MapField {
+                        name: stringify!($field),
+                        schema: || shape_of(|s: $struct| s.$field),
+                        offset: Some(
+                            NonMaxU32::new(std::mem::offset_of!($struct, $field) as u32).unwrap(),
+                        ),
+                    }
+                };
+            }
+            static FOO_FIELD: MapField = map_field!(FooBar, foo);
+            static BAR_FIELD: MapField = map_field!(FooBar, bar);
+
             static SCHEMA: Shape = Shape {
                 name: "FooBar",
                 size: std::mem::size_of::<FooBar>(),
                 align: std::mem::align_of::<FooBar>(),
-                innards: Innards::Map(MapInnards {
-                    fields: &[FOO_FIELD, BAR_FIELD],
-                    open_ended: false,
-                    mk_slots: |shape| &StructManipulator { shape },
-                }),
+                innards: Innards::Map(
+                    MapInnards::builder()
+                        .field(FOO_FIELD)
+                        .field(BAR_FIELD)
+                        .open_ended(false)
+                        .mk_slots(|shape| &StructManipulator { shape })
+                        .build(),
+                ),
                 display: None,
                 debug: None,
                 set_to_default: None,

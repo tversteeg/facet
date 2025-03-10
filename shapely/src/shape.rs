@@ -173,7 +173,8 @@ pub struct MapInnards {
 }
 
 impl MapInnards {
-    fn builder() -> MapInnardsBuilder {
+    /// Starts building map innards
+    pub fn builder() -> MapInnardsBuilder {
         MapInnardsBuilder::default()
     }
 }
