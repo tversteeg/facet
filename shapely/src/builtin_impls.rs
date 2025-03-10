@@ -92,18 +92,17 @@ where
     fn shape() -> Shape {
         struct HashMapManipulator<V>(std::marker::PhantomData<V>);
 
-        impl<V> MapManipulator for HashMapManipulator<V>
+        impl<V> Slots for HashMapManipulator<V>
         where
             V: Shapely + Send + Sync + 'static,
         {
-            unsafe fn get_field_slot<'a>(
+            unsafe fn slot<'a>(
                 &self,
-                map_addr: &mut ShapeUninit,
+                map: &mut ShapeUninit,
                 field: MapField<'_>,
             ) -> Option<FieldSlot<'a>> {
                 unsafe {
-                    let map =
-                        &mut *(map_addr.as_thin_ptr() as *mut HashMap<String, MaybeUninit<V>>);
+                    let map = &mut *(map.as_mut_ptr() as *mut HashMap<String, MaybeUninit<V>>);
                     Some(FieldSlot::new(
                         map.entry(field.name.to_string())
                             .or_insert_with(|| MaybeUninit::uninit())
@@ -119,7 +118,7 @@ where
             shape: ShapeKind::Map(MapShape {
                 fields: &[],
                 open_ended: true,
-                manipulator: &HashMapManipulator(std::marker::PhantomData::<V>),
+                slots: &HashMapManipulator(std::marker::PhantomData::<V>),
             }),
             display: None,
             debug: None,

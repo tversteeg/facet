@@ -66,7 +66,7 @@ fn test_from_json() {
                 shape: ShapeKind::Map(MapShape {
                     fields: &[NAME_FIELD, AGE_FIELD],
                     open_ended: false,
-                    manipulator: &StructManipulator {
+                    slots: &StructManipulator {
                         fields: &[
                             (NAME_FIELD, std::mem::offset_of!(TestStruct, name)),
                             (AGE_FIELD, std::mem::offset_of!(TestStruct, age)),

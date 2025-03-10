@@ -53,7 +53,7 @@ pub fn from_json<'input>(
             }
             ShapeKind::Map(MapShape {
                 fields,
-                manipulator,
+                slots: manipulator,
                 ..
             }) => {
                 trace!("Deserializing Map");
@@ -65,7 +65,7 @@ pub fn from_json<'input>(
                         trace!("Deserializing field: {}", field.name);
                         let mut field_error = None;
                         unsafe {
-                            manipulator.get_field_slot(map_addr, field)
+                            manipulator.slot(map_addr, field)
                             manipulator.set_field(target, *field, &mut |field_ptr| {
                                 if let Err(err) =
                                     deserialize_value(parser, field_ptr, &field_schema)

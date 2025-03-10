@@ -68,7 +68,7 @@ mod tests {
                 shape: ShapeKind::Map(MapShape {
                     fields: &[FOO_FIELD, BAR_FIELD],
                     open_ended: false,
-                    manipulator: &StructManipulator {
+                    slots: &StructManipulator {
                         fields: &[
                             (FOO_FIELD, std::mem::offset_of!(FooBar, foo)),
                             (BAR_FIELD, std::mem::offset_of!(FooBar, bar)),
@@ -99,12 +99,12 @@ mod tests {
                 unsafe {
                     match field.name {
                         "foo" => {
-                            if let Some(slot) = sh.manipulator.get_field_slot(foo_bar, *field) {
+                            if let Some(slot) = sh.slots.slot(foo_bar, *field) {
                                 slot.fill(42u64);
                             }
                         }
                         "bar" => {
-                            if let Some(slot) = sh.manipulator.get_field_slot(foo_bar, *field) {
+                            if let Some(slot) = sh.slots.slot(foo_bar, *field) {
                                 slot.fill(String::from("Hello, World!"));
                             }
                         }

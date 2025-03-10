@@ -159,8 +159,8 @@ pub struct MapShape {
     /// Will allow setting fields outside of the ones listed in `fields`
     pub open_ended: bool,
 
-    /// Setter for fields — we can't use field offsets
-    pub manipulator: &'static dyn MapManipulator,
+    /// Slots for setting fields
+    pub slots: &'static dyn Slots,
 }
 
 impl PartialEq for MapShape {
@@ -168,8 +168,8 @@ impl PartialEq for MapShape {
         self.fields == other.fields
             && self.open_ended == other.open_ended
             && std::ptr::eq(
-                self.manipulator as *const dyn MapManipulator,
-                other.manipulator as *const dyn MapManipulator,
+                self.slots as *const dyn Slots,
+                other.slots as *const dyn Slots,
             )
     }
 }
@@ -180,7 +180,7 @@ impl std::hash::Hash for MapShape {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.fields.hash(state);
         self.open_ended.hash(state);
-        (self.manipulator as *const dyn MapManipulator).hash(state);
+        (self.slots as *const dyn Slots).hash(state);
     }
 }
 
@@ -203,7 +203,7 @@ pub struct MapField<'s> {
 }
 
 /// Given the map's address, returns a FieldSlot for the requested field
-pub trait MapManipulator: Send + Sync {
+pub trait Slots: Send + Sync {
     /// Returns a FieldSlot for a given field. If the map accommodates dynamically-added fields,
     /// this might, for example, insert an entry into a HashMap.
     ///
@@ -216,7 +216,7 @@ pub trait MapManipulator: Send + Sync {
     /// - `field` corresponds to an existing field in the map's schema.
     /// - Any modifications made via the returned FieldSlot maintain the field's type invariants.
     /// - The data pointed to by `map_addr` remains valid for the lifetime of the returned FieldSlot.
-    unsafe fn get_field_slot<'a>(
+    unsafe fn slot<'a>(
         &self,
         map_addr: &mut ShapeUninit,
         field: MapField<'_>,
@@ -232,12 +232,8 @@ pub struct StructManipulator {
     pub field_offsets: &'static [u32],
 }
 
-impl MapManipulator for StructManipulator {
-    unsafe fn get_field_slot<'a>(
-        &self,
-        map_addr: &mut ShapeUninit,
-        field: MapField<'_>,
-    ) -> Option<FieldSlot<'a>> {
+impl Slots for StructManipulator {
+    unsafe fn slot<'a>(&self, map: &mut ShapeUninit, field: MapField<'_>) -> Option<FieldSlot<'a>> {
         if let ShapeKind::Map(map_shape) = self.shape.shape {
             if let Some((index, _)) = map_shape
                 .fields
@@ -246,7 +242,7 @@ impl MapManipulator for StructManipulator {
                 .find(|(_, f)| f.name == field.name)
             {
                 let offset = self.field_offsets[index] as usize;
-                let field_addr = unsafe { map_addr.get_addr(&self.shape).add(offset) };
+                let field_addr = unsafe { map.get_addr(&self.shape).add(offset) };
                 Some(FieldSlot::new(field_addr as *mut _))
             } else {
                 None
