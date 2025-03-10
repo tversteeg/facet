@@ -89,7 +89,7 @@ impl Schematic for String {
 
 impl<V> Schematic for HashMap<String, V>
 where
-    V: Schematic + 'static,
+    V: Schematic + Send + Sync + 'static,
 {
     fn schema() -> Schema {
         struct HashMapManipulator<V>(std::marker::PhantomData<V>);

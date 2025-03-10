@@ -73,7 +73,7 @@ pub struct MapShape {
     pub open_ended: bool,
 
     /// Setter for fields — we can't use field offsets
-    pub manipulator: &'static dyn MapManipulator,
+    pub manipulator: &'static (dyn MapManipulator + Send + Sync),
 }
 
 impl std::fmt::Debug for MapShape {
@@ -139,6 +139,29 @@ impl dyn MapManipulator {
     }
 }
 
+/// Manipulator for struct-like types with known field offsets
+pub struct StructManipulator {
+    fields: &'static [(MapField<'static>, usize)],
+}
+
+impl MapManipulator for StructManipulator {
+    unsafe fn set_field_raw(
+        &self,
+        map_addr: *mut u8,
+        field: MapField<'_>,
+        write_field: &mut dyn FnMut(*mut u8),
+    ) -> SetFieldOutcome {
+        if let Some((_, offset)) = self.fields.iter().find(|(f, _)| f.name == field.name) {
+            unsafe {
+                write_field(map_addr.add(*offset));
+            }
+            SetFieldOutcome::Accepted
+        } else {
+            SetFieldOutcome::Rejected
+        }
+    }
+}
+
 /// The outcome of trying to set a field on a map
 #[derive(Debug, Clone, Copy)]
 pub enum SetFieldOutcome {
@@ -181,7 +204,7 @@ pub type FmtFunction = fn(addr: *const u8, &mut std::fmt::Formatter) -> std::fmt
 
 #[cfg(test)]
 mod tests {
-    use crate::{Schematic, SetFieldOutcome, Shape};
+    use crate::{Schematic, Shape, StructManipulator};
 
     #[derive(Debug, PartialEq, Eq)]
     struct FooBar {
@@ -191,50 +214,35 @@ mod tests {
 
     impl Schematic for FooBar {
         fn schema() -> crate::Schema {
-            use crate::{MapField, MapManipulator, MapShape, Schema, Shape};
-            struct FooBarManipulator;
+            use crate::{MapField, MapShape, Schema, Shape};
 
-            impl MapManipulator for FooBarManipulator {
-                unsafe fn set_field_raw(
-                    &self,
-                    map_addr: *mut u8,
-                    field: MapField<'_>,
-                    write_field: &mut dyn FnMut(*mut u8),
-                ) -> SetFieldOutcome {
-                    unsafe {
-                        let foo_bar = &mut *(map_addr as *mut FooBar);
-                        match field.name {
-                            "foo" => write_field(&mut foo_bar.foo as *mut u64 as _),
-                            "bar" => write_field(&mut foo_bar.bar as *mut String as _),
-                            _ => return SetFieldOutcome::Rejected,
-                        }
-                        SetFieldOutcome::Accepted
-                    }
-                }
-            }
-
-            Schema {
+            static FOO_FIELD: MapField = MapField {
+                name: "foo",
+                schema: <u64 as Schematic>::schema,
+            };
+            static BAR_FIELD: MapField = MapField {
+                name: "bar",
+                schema: <String as Schematic>::schema,
+            };
+            static SCHEMA: Schema = Schema {
                 name: "FooBar",
                 size: std::mem::size_of::<FooBar>(),
                 align: std::mem::align_of::<FooBar>(),
                 shape: Shape::Map(MapShape {
-                    fields: &[
-                        MapField {
-                            name: "foo",
-                            schema: <u64 as Schematic>::schema,
-                        },
-                        MapField {
-                            name: "bar",
-                            schema: <String as Schematic>::schema,
-                        },
-                    ],
+                    fields: &[FOO_FIELD, BAR_FIELD],
                     open_ended: false,
-                    manipulator: &FooBarManipulator,
+                    manipulator: &StructManipulator {
+                        fields: &[
+                            (FOO_FIELD, std::mem::offset_of!(FooBar, foo)),
+                            (BAR_FIELD, std::mem::offset_of!(FooBar, bar)),
+                        ],
+                    },
                 }),
                 display: None,
                 debug: None,
                 set_to_default: None,
-            }
+            };
+            SCHEMA
         }
     }
 

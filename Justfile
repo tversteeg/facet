@@ -1,4 +1,4 @@
 
 check:
-  cargo clippy
+  cargo clippy --all-targets
   cargo nextest run
