@@ -1,5 +1,5 @@
 use parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
-use shapely::{Partial, Shape, ShapeDesc};
+use shapely::Partial;
 
 #[doc(hidden)]
 pub mod log;
@@ -58,12 +58,13 @@ pub fn from_json<'input>(
                     trace!("Processing struct key: {}", key);
 
                     if let Some(field) = fields.iter().find(|f| f.name == key).copied() {
-                        // FIXME: we could _probably_ optimize this — the struct is already
+                        // FIXME: we could definitely optimize this — the struct is already
                         // allocated at this stage, so we could grab the address of its field.
                         let mut partial_field = Partial::alloc(field.shape);
                         trace!("Deserializing field: {}", field.name);
                         deserialize_value(parser, &mut partial_field)?;
                         let slot = partial.slot(field).expect("Field slot");
+                        slot.fill_from_partial(partial_field);
                     } else {
                         warn!("Unknown field: {}, skipping", key);
                         parser.skip_value()?;
@@ -84,11 +85,14 @@ pub fn from_json<'input>(
         Ok(())
     }
 
-    let result = deserialize_value(&mut parser, partial, partial.shape);
-    if result.is_ok() {
-        trace!("JSON deserialization completed successfully");
-    } else {
-        error!("JSON deserialization failed: {:?}", result);
+    let result = deserialize_value(&mut parser, partial);
+    match &result {
+        Ok(_) => {
+            trace!("JSON deserialization completed successfully");
+        }
+        Err(e) => {
+            error!("JSON deserialization failed: {}", e);
+        }
     }
     result
 }

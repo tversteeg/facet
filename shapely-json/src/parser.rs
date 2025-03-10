@@ -32,7 +32,7 @@ pub struct JsonParseErrorWithContext<'input> {
     pub input: &'input str,
 }
 
-impl<'a> JsonParseErrorWithContext<'a> {
+impl JsonParseErrorWithContext<'_> {
     pub fn strip_context(self) -> JsonParseError {
         self.error
     }
@@ -61,15 +61,15 @@ impl std::fmt::Display for JsonParseError {
     }
 }
 
-impl<'a> std::fmt::Display for JsonParseErrorWithContext<'a> {
+impl std::fmt::Display for JsonParseErrorWithContext<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let context_start = self.error.position.saturating_sub(20);
         let context_end = (self.error.position + 20).min(self.input.len());
         let context = &self.input[context_start..context_end];
         let arrow_position = self.error.position - context_start;
 
-        write!(f, "{}\n", self.error)?;
-        write!(f, "\x1b[36m{}\x1b[0m\n", context)?;
+        writeln!(f, "{}", self.error)?;
+        writeln!(f, "\x1b[36m{}\x1b[0m", context)?;
         write!(f, "{}\x1b[31m^\x1b[0m", " ".repeat(arrow_position))
     }
 }
