@@ -413,6 +413,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "thonk-derive-test"
+version = "0.1.0"
+dependencies = [
+ "thonk-derive",
+]
+
+[[package]]
 name = "thonk-json"
 version = "0.1.0"
 dependencies = [
