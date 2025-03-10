@@ -225,6 +225,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 
 [[package]]
+name = "mutants"
+version = "0.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc0287524726960e07b119cebd01678f852f147742ae0d925e6a520dca956126"
+
+[[package]]
 name = "nu-ansi-term"
 version = "0.46.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -330,6 +336,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 
 [[package]]
+name = "shadow_counted"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b985e394ee53f8e4c547d5c6fa75b83b243ab6f51563a0323f1475fc8abc8e7f"
+
+[[package]]
 name = "sharded-slab"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -392,6 +404,13 @@ dependencies = [
 [[package]]
 name = "thonk"
 version = "0.1.0"
+
+[[package]]
+name = "thonk-derive"
+version = "0.1.0"
+dependencies = [
+ "unsynn",
+]
 
 [[package]]
 name = "thonk-json"
@@ -466,6 +485,17 @@ name = "unicode-ident"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5a5f39404a5da50712a4c1eecf25e90dd62b613502b7e925fd4e4d19b5c96512"
+
+[[package]]
+name = "unsynn"
+version = "0.0.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "45b8949e2e0d516407a99e232f0040c7d433f32d522edabcb27ed27f7d10c47c"
+dependencies = [
+ "mutants",
+ "proc-macro2",
+ "shadow_counted",
+]
 
 [[package]]
 name = "utf8parse"

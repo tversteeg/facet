@@ -1,0 +1,22 @@
+[package]
+name = "thonk-derive"
+version = "0.1.0"
+edition = "2024"
+authors = ["Amos Wenger <amos@bearcove.eu>"]
+repository = "https://github.com/bearcove/thonk"
+description = "Proc macro for deriving the 'Schematic' trait in thonk"
+keywords = [
+  "reflection",
+  "introspection",
+  "serialization",
+  "deserialization",
+  "derive",
+]
+categories = ["development-tools", "encoding"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+unsynn = "0.0.25"
