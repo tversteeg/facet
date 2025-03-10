@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fmt::Formatter};
+use std::{alloc::Layout, collections::HashSet, fmt::Formatter};
 
 use nonmax::NonMaxU32;
 
@@ -8,11 +8,8 @@ pub struct Shape {
     /// A descriptive name for the type, e.g. `u64`, or `Person`
     pub name: &'static str,
 
-    /// Size of one such value, in bytes
-    pub size: usize,
-
-    /// Alignment of the value, in bytes
-    pub align: usize,
+    // Size & alignment
+    pub layout: Layout,
 
     /// Details/contents of the value
     pub innards: Innards,
@@ -57,8 +54,8 @@ impl Shape {
             "{:indent$}\x1b[1;33m{}\x1b[0m (size: \x1b[1;34m{}\x1b[0m, align: \x1b[1;35m{}\x1b[0m)",
             "",
             self.name,
-            self.size,
-            self.align,
+            self.layout.size(),
+            self.layout.align(),
             indent = indent
         )?;
 

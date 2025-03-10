@@ -1,10 +1,19 @@
 use crate::{Field, ShapeDesc, Shapely, Slot};
-use std::alloc;
+use std::{alloc, marker::PhantomData, ptr::NonNull};
+
+pub enum MemSource {
+    Borrowed,
+    HeapAllocated,
+}
 
 /// A partially-initialized shape, useful when deserializing for example.
-pub struct ShapeUninit {
+pub struct ShapeUninit<'s> {
+    pub(crate) source: MemSource,
+
+    pub(crate) phantom: PhantomData<&'s ()>, // NonNull is covariant...
+
     /// Address of the value in memory
-    pub(crate) addr: *mut u8,
+    pub(crate) addr: NonNull<u8>,
 
     /// Keeps track of which fields are initialized
     pub(crate) init_fields: InitSet64,
@@ -13,18 +22,16 @@ pub struct ShapeUninit {
     pub(crate) shape_desc: ShapeDesc,
 }
 
-impl Drop for ShapeUninit {
+impl Drop for ShapeUninit<'_> {
     fn drop(&mut self) {
-        if !self.addr.is_null() {
-            let shape = self.shape_desc.get();
-            let layout = alloc::Layout::from_size_align(shape.size, shape.align).unwrap();
-            unsafe { alloc::dealloc(self.addr, layout) }
+        if matches!(self.source, MemSource::HeapAllocated) {
+            unsafe { alloc::dealloc(self.addr.as_ptr(), self.shape_desc.get().layout) }
         }
     }
 }
 
-impl ShapeUninit {
-    /// Returns a pointer to the underlying data.
+impl ShapeUninit<'_> {
+    /// Returns a pointer to the underlying data, if the shape matches the expected shape.
     ///
     /// # Safety
     ///
@@ -32,11 +39,9 @@ impl ShapeUninit {
     /// - `self` outlives the returned pointer
     /// - The returned pointer is not aliased
     /// - The provided shape matches the shape of the data
-    ///
-    /// This function performs a cast and of course you could get it to do UB if you expected a different type.
-    pub unsafe fn get_addr(&self, expected_desc: ShapeDesc) -> *mut u8 {
+    pub unsafe fn as_ptr(&self, expected_desc: ShapeDesc) -> *mut u8 {
         if self.shape_desc == expected_desc {
-            self.addr
+            self.addr.as_ptr()
         } else {
             panic!(
                 "Shape mismatch: expected {:?}, found {:?}",

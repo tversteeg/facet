@@ -5,7 +5,7 @@ pub use shapely_derive::*;
 
 pub use nonmax::{self, NonMaxU32};
 
-use std::alloc;
+use std::{alloc, marker::PhantomData, ptr::NonNull};
 
 mod hashmap_impl;
 mod scalar_impls;
@@ -40,15 +40,16 @@ pub trait Shapely {
 
     /// allocates the right amount of memory to build such a shape on the heap and returns it in the
     /// form of a ShapeUninit
-    fn shape_uninit() -> ShapeUninit {
+    fn shape_uninit() -> ShapeUninit<'static> {
         let shape = Self::shape();
-        let layout = alloc::Layout::from_size_align(shape.size, shape.align).unwrap();
-        let addr = unsafe { alloc::alloc(layout) };
+        let addr = unsafe { alloc::alloc(shape.layout) };
         if addr.is_null() {
-            alloc::handle_alloc_error(layout);
+            alloc::handle_alloc_error(shape.layout);
         }
         ShapeUninit {
-            addr,
+            source: MemSource::HeapAllocated,
+            phantom: PhantomData,
+            addr: NonNull::new(addr).unwrap(),
             init_fields: Default::default(),
             shape_desc: Self::shape_desc(),
         }

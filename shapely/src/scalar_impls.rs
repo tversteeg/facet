@@ -1,4 +1,5 @@
-use std::mem::{self};
+use std::alloc::Layout;
+use std::mem;
 
 use crate::*;
 
@@ -8,8 +9,7 @@ macro_rules! impl_shapely_for_integer {
             fn shape() -> Shape {
                 Shape {
                     name: stringify!($type),
-                    size: mem::size_of::<$type>(),
-                    align: mem::align_of::<$type>(),
+                    layout: Layout::new::<$type>(),
                     innards: Innards::Scalar($scalar),
                     display: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
                         write!(f, "{}", *(addr as *const $type))
@@ -41,8 +41,7 @@ macro_rules! impl_schematic_for_float {
             fn shape() -> Shape {
                 Shape {
                     name: stringify!($type),
-                    size: mem::size_of::<$type>(),
-                    align: mem::align_of::<$type>(),
+                    layout: Layout::new::<$type>(),
                     innards: Innards::Scalar($scalar),
                     display: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
                         write!(f, "{}", *(addr as *const $type))
@@ -66,8 +65,7 @@ impl Shapely for String {
     fn shape() -> Shape {
         Shape {
             name: "String",
-            size: mem::size_of::<String>(),
-            align: mem::align_of::<String>(),
+            layout: Layout::new::<String>(),
             innards: Innards::Scalar(Scalar::String),
             display: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
                 write!(f, "{}", *(addr as *const String))

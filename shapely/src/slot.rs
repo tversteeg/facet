@@ -1,13 +1,14 @@
 use std::collections::HashMap;
+use std::ptr::NonNull;
 
 use crate::{InitFieldSlot, ShapeDesc, Shapely};
 
 enum Destination {
     /// Writes directly to an (uninitialized) struct field
-    StructField { field_addr: *mut u8 },
+    StructField { field_addr: NonNull<u8> },
 
     /// Inserts into a HashMap
-    HashMap { map: *mut u8, key: String },
+    HashMap { map: NonNull<u8>, key: String },
 }
 
 /// Allows writing into a struct field or inserting into a hash map.
@@ -25,7 +26,7 @@ pub struct Slot<'s> {
 impl<'s> Slot<'s> {
     #[inline(always)]
     pub fn for_struct_field(
-        field_addr: *mut u8,
+        field_addr: NonNull<u8>,
         field_shape: ShapeDesc,
         init_field_slot: InitFieldSlot<'s>,
     ) -> Self {
@@ -38,7 +39,7 @@ impl<'s> Slot<'s> {
 
     #[inline(always)]
     pub fn for_hash_map(
-        map: *mut u8,
+        map: NonNull<u8>,
         field_shape: ShapeDesc,
         key: String,
         init_field_slot: InitFieldSlot<'s>,
@@ -65,13 +66,14 @@ impl<'s> Slot<'s> {
         unsafe {
             match self.dest {
                 Destination::StructField { field_addr } => {
+                    let field_addr = field_addr.as_ptr();
                     if self.init_field_slot.is_init() {
                         std::ptr::drop_in_place(field_addr as *mut T);
                     }
                     std::ptr::write(field_addr as *mut T, value);
                 }
                 Destination::HashMap { map, key } => {
-                    let map = &mut *(map as *mut HashMap<String, T>);
+                    let map = &mut *(map.as_ptr() as *mut HashMap<String, T>);
                     map.insert(key, value);
                 }
             }
