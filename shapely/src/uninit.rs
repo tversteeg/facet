@@ -73,11 +73,6 @@ impl ShapeUninit {
 
     /// Returns a slot for assigning this whole shape as a scalar
     pub fn scalar_slot(&mut self) -> Option<Slot<'_>> {
-        // TODO: We should instead drop the previous value when reinitializing
-        if self.init_fields.is_set(0) {
-            panic!("Shape is already initialized as a scalar");
-        }
-
         let slot = Slot::for_struct_field(
             self.addr,
             self.shape_desc,
@@ -98,10 +93,6 @@ impl ShapeUninit {
                     .enumerate()
                     .find(|(_, f)| f.name == field.name)
                 {
-                    if self.init_fields.is_set(index) {
-                        // TODO: We could provide a way to replace fields that have already been initialized, but for now it's just gonna panic.
-                        panic!("Field '{}' is already initialized", field.name);
-                    }
                     if let Some(offset) = field.offset {
                         let field_addr = unsafe { self.addr.add(offset.get() as usize) };
                         let init_field_slot = InitFieldSlot::Struct {
