@@ -3,9 +3,7 @@ use std::{
     mem::{self, MaybeUninit},
 };
 
-use crate::{
-    MapFieldSlot, MapManipulator, MapShape, Scalar, Schema, Schematic, SetFieldOutcome, Shape,
-};
+use crate::{MapManipulator, MapShape, Scalar, Schema, Schematic, SetFieldOutcome, Shape};
 
 impl Schematic for u64 {
     fn schema() -> Schema {
@@ -58,12 +56,12 @@ where
             unsafe fn set_field_raw(
                 &self,
                 map_addr: *mut u8,
-                slot: MapFieldSlot,
+                field: MapField,
                 write_field: &mut dyn FnMut(*mut u8),
             ) -> SetFieldOutcome {
                 unsafe {
                     let map = &mut *(map_addr as *mut HashMap<String, MaybeUninit<V>>);
-                    let name = slot.name();
+                    let name = field.name;
                     let entry = map
                         .entry(name.to_string())
                         .or_insert_with(|| MaybeUninit::uninit());
@@ -80,7 +78,7 @@ where
             shape: Shape::Map(MapShape {
                 fields: &[],
                 open_ended: true,
-                manipulator: &HashMapManipulator(std::marker::PhantomData::<V>),
+                manip: &HashMapManipulator(std::marker::PhantomData::<V>),
             }),
             display: None,
             debug: None,

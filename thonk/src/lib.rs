@@ -67,7 +67,7 @@ pub enum Shape {
 #[derive(Clone, Copy)]
 pub struct MapShape {
     /// Statically-known fields
-    pub fields: &'static [MapField],
+    pub fields: &'static [MapField<'static>],
 
     /// Will allow setting fields outside of the ones listed in `fields`
     pub open_ended: bool,
@@ -86,35 +86,12 @@ impl std::fmt::Debug for MapShape {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct MapField {
+pub struct MapField<'s> {
     /// key for the map field
-    pub name: &'static str,
+    pub name: &'s str,
 
     /// schema of the inner type
     pub schema: fn() -> Schema,
-}
-
-pub enum MapFieldSlot<'s> {
-    // a statically-known field
-    Static(&'s MapField),
-
-    // a field we found out while deserializing
-    Dynamic { name: &'s str, schema: Schema },
-}
-
-impl<'a> From<&'a MapField> for MapFieldSlot<'a> {
-    fn from(field: &'a MapField) -> Self {
-        MapFieldSlot::Static(field)
-    }
-}
-
-impl MapFieldSlot<'_> {
-    fn name(&self) -> &str {
-        match self {
-            MapFieldSlot::Static(field) => field.name,
-            MapFieldSlot::Dynamic { name, .. } => name,
-        }
-    }
 }
 
 /// Given the map's address, calls on_field_addr with the address of the requested field
@@ -131,12 +108,35 @@ pub trait MapManipulator {
     /// - The data pointed to by `map_addr` remains valid for the duration of the `write_field` callback.
     /// - The address provided to `write_field` is not used after the callback returns.
     /// - The callback must fully initialize the field at the provided address.
-    unsafe fn set_field_raw(
+    unsafe fn set_field_raw<'s>(
         &self,
         map_addr: *mut u8,
-        field: MapFieldSlot,
+        field: MapField<'s>,
         write_field: &mut dyn FnMut(*mut u8),
     ) -> SetFieldOutcome;
+}
+
+impl dyn MapManipulator {
+    /// Still unsafe, but a little less?
+    ///
+    /// # Safety
+    ///
+    ///   - map must be a valid pointer to a map of the correct type.
+    ///   - slot must be a valid field for the map.
+    ///   - value must be of the correct type
+    pub unsafe fn set_field<TField>(
+        &self,
+        map: *mut u8,
+        slot: MapField,
+        value: TField,
+    ) -> SetFieldOutcome {
+        let mut value = Some(value);
+        unsafe {
+            self.set_field_raw(map, slot, &mut |field_ptr| {
+                *(field_ptr as *mut TField) = value.take().unwrap();
+            })
+        }
+    }
 }
 
 /// The outcome of trying to set a field on a map
@@ -181,7 +181,7 @@ pub type FmtFunction = fn(addr: *const u8, &mut std::fmt::Formatter) -> std::fmt
 
 #[cfg(test)]
 mod tests {
-    use crate::{MapFieldSlot, Schematic, SetFieldOutcome, Shape};
+    use crate::{Schematic, SetFieldOutcome, Shape};
 
     #[derive(Debug, PartialEq, Eq)]
     struct FooBar {
@@ -195,15 +195,15 @@ mod tests {
             struct FooBarManipulator;
 
             impl MapManipulator for FooBarManipulator {
-                unsafe fn set_field_raw(
+                unsafe fn set_field_raw<'s>(
                     &self,
                     map_addr: *mut u8,
-                    field: MapFieldSlot,
+                    field: MapField<'s>,
                     write_field: &mut dyn FnMut(*mut u8),
                 ) -> SetFieldOutcome {
                     unsafe {
                         let foo_bar = &mut *(map_addr as *mut FooBar);
-                        match field.name() {
+                        match field.name {
                             "foo" => write_field(&mut foo_bar.foo as *mut u64 as _),
                             "bar" => write_field(&mut foo_bar.bar as *mut String as _),
                             _ => return SetFieldOutcome::Rejected,
@@ -259,21 +259,19 @@ mod tests {
         let _cleanup = Cleanup(&layout, ptr);
 
         // Use ptr for further operations...
-        if let Shape::Map(map_shape) = &schema.shape {
-            for field in map_shape.fields {
+        if let Shape::Map(sh) = &schema.shape {
+            for field in sh.fields {
                 unsafe {
-                    map_shape
-                        .manipulator
-                        .set_field_raw(ptr, field.into(), &mut |field_ptr| match field.name {
-                            "foo" => {
-                                *(field_ptr as *mut u64) = 42;
-                            }
-                            "bar" => {
-                                let string_ptr = field_ptr as *mut String;
-                                std::ptr::write(string_ptr, String::from("Hello, World!"));
-                            }
-                            _ => panic!("Unknown field: {}", field.name),
-                        });
+                    match field.name {
+                        "foo" => {
+                            sh.manipulator.set_field(ptr, *field, 42u64);
+                        }
+                        "bar" => {
+                            sh.manipulator
+                                .set_field(ptr, *field, String::from("Hello, World!"));
+                        }
+                        _ => panic!("Unknown field: {}", field.name),
+                    }
                 }
             }
         }
