@@ -19,7 +19,13 @@ macro_rules! warn {
 }
 
 #[derive(Debug)]
-pub enum JsonParseError {
+pub struct JsonParseError {
+    pub kind: JsonParseErrorKind,
+    pub position: usize,
+}
+
+#[derive(Debug)]
+pub enum JsonParseErrorKind {
     ExpectedOpeningQuote,
     UnterminatedString,
     InvalidEscapeSequence(char),
@@ -34,44 +40,79 @@ pub enum JsonParseError {
     Custom(String),
 }
 
+impl JsonParseError {
+    pub fn new(kind: JsonParseErrorKind, position: usize) -> Self {
+        JsonParseError { kind, position }
+    }
+}
+
+#[derive(Debug)]
+pub struct JsonParseErrorWithContext<'input> {
+    pub error: JsonParseError,
+    pub input: &'input str,
+}
+
+impl<'a> JsonParseErrorWithContext<'a> {
+    pub fn strip_context(self) -> JsonParseError {
+        self.error
+    }
+}
+
 impl std::fmt::Display for JsonParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            JsonParseError::ExpectedOpeningQuote => write!(f, "Expected opening quote for string"),
-            JsonParseError::UnterminatedString => write!(f, "Unterminated string"),
-            JsonParseError::InvalidEscapeSequence(ch) => {
-                write!(f, "Invalid escape sequence: \\{}", ch)
+        let error_message = match &self.kind {
+            JsonParseErrorKind::ExpectedOpeningQuote => "Expected opening quote for string",
+            JsonParseErrorKind::UnterminatedString => "Unterminated string",
+            JsonParseErrorKind::InvalidEscapeSequence(ch) => {
+                return write!(f, "Invalid escape sequence: \\{}", ch)
             }
-            JsonParseError::IncompleteUnicodeEscape => {
-                write!(f, "Incomplete Unicode escape sequence")
-            }
-            JsonParseError::InvalidUnicodeEscape => write!(f, "Invalid Unicode escape sequence"),
-            JsonParseError::ExpectedNumber => write!(f, "Expected a number"),
-            JsonParseError::ExpectedOpeningBrace => write!(f, "Expected opening brace for object"),
-            JsonParseError::ExpectedColon => write!(f, "Expected ':' after object key"),
-            JsonParseError::UnexpectedEndOfInput => write!(f, "Unexpected end of input"),
-            JsonParseError::InvalidValue => write!(f, "Invalid value"),
-            JsonParseError::ExpectedClosingBrace => write!(f, "Expected closing brace for object"),
-            JsonParseError::Custom(msg) => write!(f, "{}", msg),
-        }
+            JsonParseErrorKind::IncompleteUnicodeEscape => "Incomplete Unicode escape sequence",
+            JsonParseErrorKind::InvalidUnicodeEscape => "Invalid Unicode escape sequence",
+            JsonParseErrorKind::ExpectedNumber => "Expected a number",
+            JsonParseErrorKind::ExpectedOpeningBrace => "Expected opening brace for object",
+            JsonParseErrorKind::ExpectedColon => "Expected ':' after object key",
+            JsonParseErrorKind::UnexpectedEndOfInput => "Unexpected end of input",
+            JsonParseErrorKind::InvalidValue => "Invalid value",
+            JsonParseErrorKind::ExpectedClosingBrace => "Expected closing brace for object",
+            JsonParseErrorKind::Custom(msg) => msg,
+        };
+
+        write!(f, "{} at position {}", error_message, self.position)
+    }
+}
+
+impl<'a> std::fmt::Display for JsonParseErrorWithContext<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let context_start = self.error.position.saturating_sub(20);
+        let context_end = (self.error.position + 20).min(self.input.len());
+        let context = &self.input[context_start..context_end];
+        let arrow_position = self.error.position - context_start;
+
+        write!(f, "{}\n", self.error)?;
+        write!(f, "\x1b[36m{}\x1b[0m\n", context)?;
+        write!(f, "{}\x1b[31m^\x1b[0m", " ".repeat(arrow_position))
     }
 }
 
 impl std::error::Error for JsonParseError {}
 
-pub fn from_json(target: *mut u8, schema: Shape, json: &str) -> Result<(), JsonParseError> {
+pub fn from_json<'input>(
+    target: *mut u8,
+    schema: Shape,
+    json: &'input str,
+) -> Result<(), JsonParseErrorWithContext<'input>> {
     use shapely::{MapShape, Scalar, ShapeKind};
 
     trace!("Starting JSON deserialization");
     let mut parser = JsonParser::new(json);
 
-    fn deserialize_value(
-        parser: &mut JsonParser,
+    fn deserialize_value<'input>(
+        parser: &'input mut JsonParser,
         target: *mut u8,
-        schema: &Shape,
-    ) -> Result<(), JsonParseError> {
+        shape: &Shape,
+    ) -> Result<(), JsonParseErrorWithContext<'input>> {
         trace!("Deserializing value with schema:\n{:?}", schema);
-        match &schema.shape {
+        match &shape.shape {
             ShapeKind::Scalar(scalar) => {
                 match scalar {
                     Scalar::String => {
@@ -93,10 +134,10 @@ pub fn from_json(target: *mut u8, schema: Shape, json: &str) -> Result<(), JsonP
                     // Add other scalar types as needed
                     _ => {
                         warn!("Unsupported scalar type: {:?}", scalar);
-                        return Err(JsonParseError::Custom(format!(
+                        return Err(parser.make_error(JsonParseErrorKind::Custom(format!(
                             "Unsupported scalar type: {:?}",
                             scalar
-                        )));
+                        ))));
                     }
                 }
             }
@@ -112,10 +153,18 @@ pub fn from_json(target: *mut u8, schema: Shape, json: &str) -> Result<(), JsonP
                     if let Some(field) = fields.iter().find(|f| f.name == key) {
                         let field_schema = (field.schema)();
                         trace!("Deserializing field: {}", field.name);
+                        let mut field_error = None;
                         unsafe {
                             manipulator.set_field_raw(target, *field, &mut |field_ptr| {
-                                deserialize_value(parser, field_ptr, &field_schema).unwrap();
+                                if let Err(err) =
+                                    deserialize_value(parser, field_ptr, &field_schema)
+                                {
+                                    field_error = Some(err);
+                                }
                             });
+                        }
+                        if let Some(err) = field_error {
+                            return Err(err);
                         }
                     } else {
                         warn!("Unknown field: {}, skipping", key);
@@ -128,10 +177,10 @@ pub fn from_json(target: *mut u8, schema: Shape, json: &str) -> Result<(), JsonP
             // Add support for other shapes (Array, Transparent) as needed
             _ => {
                 error!("Unsupported shape: {:?}", schema.shape);
-                return Err(JsonParseError::Custom(format!(
+                return Err(parser.make_error(JsonParseErrorKind::Custom(format!(
                     "Unsupported shape: {:?}",
-                    schema.shape
-                )));
+                    shape.shape
+                ))));
             }
         }
         Ok(())
@@ -156,10 +205,17 @@ impl<'a> JsonParser<'a> {
         JsonParser { input, position: 0 }
     }
 
-    fn parse_string(&mut self) -> Result<String, JsonParseError> {
+    fn make_error(&self, kind: JsonParseErrorKind) -> JsonParseErrorWithContext<'a> {
+        JsonParseErrorWithContext {
+            error: JsonParseError::new(kind, self.position),
+            input: self.input,
+        }
+    }
+
+    fn parse_string(&mut self) -> Result<String, JsonParseErrorWithContext<'a>> {
         self.skip_whitespace();
         if self.position >= self.input.len() || self.input.as_bytes()[self.position] != b'"' {
-            return Err(JsonParseError::ExpectedOpeningQuote);
+            return Err(self.make_error(JsonParseErrorKind::ExpectedOpeningQuote));
         }
         self.position += 1;
 
@@ -181,17 +237,23 @@ impl<'a> JsonParser<'a> {
                     b'u' => {
                         // Parse 4-digit hex code
                         if self.position + 4 > self.input.len() {
-                            return Err(JsonParseError::IncompleteUnicodeEscape);
+                            return Err(
+                                self.make_error(JsonParseErrorKind::IncompleteUnicodeEscape)
+                            );
                         }
                         let hex = &self.input[self.position..self.position + 4];
                         self.position += 4;
                         if let Ok(code) = u16::from_str_radix(hex, 16) {
                             result.push(char::from_u32(code as u32).unwrap_or('\u{FFFD}'));
                         } else {
-                            return Err(JsonParseError::InvalidUnicodeEscape);
+                            return Err(self.make_error(JsonParseErrorKind::InvalidUnicodeEscape));
                         }
                     }
-                    _ => return Err(JsonParseError::InvalidEscapeSequence(ch as char)),
+                    _ => {
+                        return Err(
+                            self.make_error(JsonParseErrorKind::InvalidEscapeSequence(ch as char))
+                        )
+                    }
                 }
                 escaped = false;
             } else if ch == b'\\' {
@@ -203,10 +265,10 @@ impl<'a> JsonParser<'a> {
             }
         }
 
-        Err(JsonParseError::UnterminatedString)
+        Err(self.make_error(JsonParseErrorKind::UnterminatedString))
     }
 
-    fn parse_u64(&mut self) -> Result<u64, JsonParseError> {
+    fn parse_u64(&mut self) -> Result<u64, JsonParseErrorWithContext<'a>> {
         self.skip_whitespace();
         let start = self.position;
         while self.position < self.input.len()
@@ -215,12 +277,12 @@ impl<'a> JsonParser<'a> {
             self.position += 1;
         }
         if start == self.position {
-            return Err(JsonParseError::ExpectedNumber);
+            return Err(self.make_error(JsonParseErrorKind::ExpectedNumber));
         }
         let num_str = &self.input[start..self.position];
         num_str
             .parse::<u64>()
-            .map_err(|_| JsonParseError::ExpectedNumber)
+            .map_err(|_| self.make_error(JsonParseErrorKind::ExpectedNumber))
     }
 
     fn skip_whitespace(&mut self) {
@@ -232,16 +294,16 @@ impl<'a> JsonParser<'a> {
         }
     }
 
-    fn expect_object_start(&mut self) -> Result<(), JsonParseError> {
+    fn expect_object_start(&mut self) -> Result<(), JsonParseErrorWithContext<'a>> {
         self.skip_whitespace();
         if self.position >= self.input.len() || self.input.as_bytes()[self.position] != b'{' {
-            return Err(JsonParseError::ExpectedOpeningBrace);
+            return Err(self.make_error(JsonParseErrorKind::ExpectedOpeningBrace));
         }
         self.position += 1;
         Ok(())
     }
 
-    fn parse_object_key(&mut self) -> Result<Option<String>, JsonParseError> {
+    fn parse_object_key(&mut self) -> Result<Option<String>, JsonParseErrorWithContext<'a>> {
         self.skip_whitespace();
         if self.position >= self.input.len() {
             return Ok(None);
@@ -255,18 +317,18 @@ impl<'a> JsonParser<'a> {
                     self.position += 1;
                     Ok(Some(key))
                 } else {
-                    Err(JsonParseError::ExpectedColon)
+                    Err(self.make_error(JsonParseErrorKind::ExpectedColon))
                 }
             }
             b'}' => Ok(None),
-            _ => Err(JsonParseError::InvalidValue),
+            _ => Err(self.make_error(JsonParseErrorKind::InvalidValue)),
         }
     }
 
-    fn skip_value(&mut self) -> Result<(), JsonParseError> {
+    fn skip_value(&mut self) -> Result<(), JsonParseErrorWithContext<'a>> {
         self.skip_whitespace();
         if self.position >= self.input.len() {
-            return Err(JsonParseError::UnexpectedEndOfInput);
+            return Err(self.make_error(JsonParseErrorKind::UnexpectedEndOfInput));
         }
         match self.input.as_bytes()[self.position] {
             b'{' => self.skip_object(),
@@ -289,7 +351,7 @@ impl<'a> JsonParser<'a> {
                     self.position += 4;
                     Ok(())
                 } else {
-                    Err(JsonParseError::InvalidValue)
+                    Err(self.make_error(JsonParseErrorKind::InvalidValue))
                 }
             }
             b'f' => {
@@ -297,7 +359,7 @@ impl<'a> JsonParser<'a> {
                     self.position += 5;
                     Ok(())
                 } else {
-                    Err(JsonParseError::InvalidValue)
+                    Err(self.make_error(JsonParseErrorKind::InvalidValue))
                 }
             }
             b'n' => {
@@ -305,14 +367,14 @@ impl<'a> JsonParser<'a> {
                     self.position += 4;
                     Ok(())
                 } else {
-                    Err(JsonParseError::InvalidValue)
+                    Err(self.make_error(JsonParseErrorKind::InvalidValue))
                 }
             }
-            _ => Err(JsonParseError::InvalidValue),
+            _ => Err(self.make_error(JsonParseErrorKind::InvalidValue)),
         }
     }
 
-    fn skip_object(&mut self) -> Result<(), JsonParseError> {
+    fn skip_object(&mut self) -> Result<(), JsonParseErrorWithContext<'a>> {
         self.expect_object_start()?;
         let mut depth = 1;
         while depth > 0 {
@@ -332,17 +394,17 @@ impl<'a> JsonParser<'a> {
         Ok(())
     }
 
-    fn skip_array(&mut self) -> Result<(), JsonParseError> {
+    fn skip_array(&mut self) -> Result<(), JsonParseErrorWithContext<'a>> {
         self.skip_whitespace();
         if self.position >= self.input.len() || self.input.as_bytes()[self.position] != b'[' {
-            return Err(JsonParseError::InvalidValue);
+            return Err(self.make_error(JsonParseErrorKind::InvalidValue));
         }
         self.position += 1;
         let mut depth = 1;
         while depth > 0 {
             self.skip_whitespace();
             if self.position >= self.input.len() {
-                return Err(JsonParseError::UnexpectedEndOfInput);
+                return Err(self.make_error(JsonParseErrorKind::UnexpectedEndOfInput));
             }
             match self.input.as_bytes()[self.position] {
                 b']' => {
@@ -364,13 +426,20 @@ impl<'a> JsonParser<'a> {
         Ok(())
     }
 
-    fn expect_object_end(&mut self) -> Result<(), JsonParseError> {
+    fn expect_object_end(&mut self) -> Result<(), JsonParseErrorWithContext<'a>> {
         self.skip_whitespace();
         if self.position >= self.input.len() || self.input.as_bytes()[self.position] != b'}' {
-            return Err(JsonParseError::ExpectedClosingBrace);
+            return Err(self.make_error(JsonParseErrorKind::ExpectedClosingBrace));
         }
         self.position += 1;
         Ok(())
+    }
+
+    fn make_error(&self, kind: JsonParseErrorKind) -> JsonParseErrorWithContext<'a> {
+        JsonParseErrorWithContext {
+            error: JsonParseError::new(kind, self.position),
+            input: self.input,
+        }
     }
 }
 
@@ -471,7 +540,7 @@ mod tests {
             json,
         );
 
-        assert!(result.is_ok());
+        result.unwrap();
         assert_eq!(
             test_struct,
             TestStruct {
