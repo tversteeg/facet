@@ -9,10 +9,15 @@ mod tests {
 
     #[test]
     fn regular() {
-        thonk::parse_test!(++.);
-        thonk::parse_test!(+.);
-        thonk::parse_test!(--.);
-        thonk::parse_test!(-.);
-        thonk::parse_test!(,$);
+        thonk::parse_enum!(++.);
+        thonk::parse_enum!(+.);
+        thonk::parse_enum!(--.);
+        thonk::parse_enum!(-.);
+        thonk::parse_enum!(,$);
+
+        thonk::parse_struct_like! {
+            // struct Yay {}
+            struct Yay
+        }
     }
 }
