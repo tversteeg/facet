@@ -123,12 +123,14 @@ impl<'s> Slot<'s> {
             match self.dest {
                 Destination::StructField { field_addr } => {
                     let size = self.field_shape.get().layout.size();
-                    if let Some(drop_fn) = self.field_shape.get().drop_in_place {
-                        drop_fn(
-                            field_addr
-                                .map(|p| p.as_ptr())
-                                .unwrap_or(std::ptr::null_mut()),
-                        );
+                    if self.init_field_slot.is_init() {
+                        if let Some(drop_fn) = self.field_shape.get().drop_in_place {
+                            drop_fn(
+                                field_addr
+                                    .map(|p| p.as_ptr())
+                                    .unwrap_or(std::ptr::null_mut()),
+                            );
+                        }
                     }
                     if let Some(field_addr) = field_addr {
                         let field_addr = field_addr.as_ptr();
