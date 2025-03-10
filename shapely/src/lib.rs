@@ -49,7 +49,7 @@ pub trait Shapely: Sized {
         ShapeUninit {
             origin: Origin::HeapAllocated,
             phantom: PhantomData,
-            addr: NonNull::new(addr).unwrap(),
+            addr: NonNull::new(addr as _).unwrap(),
             init_fields: Default::default(),
             shape_desc: Self::shape_desc(),
         }

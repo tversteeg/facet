@@ -67,7 +67,7 @@ impl Drop for ShapeUninit<'_> {
 
         // Then deallocate the memory if we own it
         if matches!(self.origin, Origin::HeapAllocated) {
-            unsafe { alloc::dealloc(self.addr.as_ptr(), self.shape_desc.get().layout) }
+            unsafe { alloc::dealloc(self.addr.as_ptr() as *mut u8, self.shape_desc.get().layout) }
         }
     }
 }
