@@ -229,7 +229,7 @@ pub type FmtFunction = fn(addr: *const u8, &mut std::fmt::Formatter) -> std::fmt
 
 /// A function that returns a shape. There should only be one of these per concrete type in a
 /// program. This enables optimizations.
-#[derive(Clone, Copy, Hash)]
+#[derive(Clone, Copy)]
 pub struct ShapeDesc(pub fn() -> Shape);
 
 impl From<fn() -> Shape> for ShapeDesc {
@@ -262,6 +262,13 @@ impl PartialEq for ShapeDesc {
 }
 
 impl Eq for ShapeDesc {}
+
+impl std::hash::Hash for ShapeDesc {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        // Hash the function pointer
+        (self.0 as *const ()).hash(state);
+    }
+}
 
 impl std::fmt::Debug for ShapeDesc {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

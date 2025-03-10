@@ -1,4 +1,4 @@
-use crate::{Field, Shape, ShapeDesc, Shapely, Slot};
+use crate::{Field, ShapeDesc, Shapely, Slot};
 use std::alloc;
 
 /// A partially-initialized shape, useful when deserializing for example.
@@ -61,7 +61,12 @@ impl ShapeUninit {
     }
 
     /// Returns a slot for assigning this whole shape as a scalar
-    pub fn scalar_slot<'s>(&'s mut self) -> Option<Slot<'s>> {
+    pub fn scalar_slot(&mut self) -> Option<Slot<'_>> {
+        // TODO: We should instead drop the previous value when reinitializing
+        if self.init_fields.is_set(0) {
+            panic!("Shape is already initialized as a scalar");
+        }
+
         let slot = Slot::for_struct_field(
             self.addr,
             self.shape_desc,
@@ -75,7 +80,7 @@ impl ShapeUninit {
 
     /// Returns a slot for initializing a field in the shape.
     pub fn slot<'s>(&'s mut self, field: Field) -> Option<Slot<'s>> {
-        match (self.shape_desc)().innards {
+        match self.shape_desc.get().innards {
             crate::Innards::Struct { fields } => {
                 if let Some((index, field)) = fields
                     .iter()
@@ -121,11 +126,11 @@ impl ShapeUninit {
     pub fn build<T: Shapely>(self) -> T {
         self.check_initialization();
 
-        if (self.shape_desc)() != T::shape() {
+        if self.shape_desc != T::shape_desc() {
             panic!(
-                "Shape mismatch: expected {:?}, found {:?}",
+                "We were building a {:?}\n..but .build() was called expecting a {:?}",
+                self.shape_desc.get(),
                 T::shape(),
-                (self.shape_desc)()
             );
         }
 
@@ -137,11 +142,11 @@ impl ShapeUninit {
     pub fn build_boxed<T: Shapely>(self) -> Box<T> {
         self.check_initialization();
 
-        if self.shape_desc != T::shape() {
+        if self.shape_desc != T::shape_desc() {
             panic!(
-                "Shape mismatch: expected {:?}, found {:?}",
+                "We were building a {:?}\n..but .build_boxed() was called expecting a {:?}",
+                self.shape_desc.get(),
                 T::shape(),
-                self.shape_desc
             );
         }
 

@@ -78,12 +78,49 @@ fn build_u64_through_reflection() {
     }
 
     let mut uninit = u64::shape_uninit();
-    let slot = uninit
-        .slot(shape.innards.static_fields().next().unwrap())
-        .unwrap();
+    let slot = uninit.scalar_slot().unwrap();
     slot.fill(42u64);
     let value = uninit.build::<u64>();
 
     // Verify the value was set correctly
     assert_eq!(value, 42);
+}
+
+#[test]
+#[should_panic(expected = "attempted to build uninitialised slot")]
+fn build_u64_through_reflection_without_filling() {
+    let shape = u64::shape();
+    eprintln!("{shape:#?}");
+
+    let layout = std::alloc::Layout::from_size_align(shape.size, shape.align).unwrap();
+    let ptr = unsafe { std::alloc::alloc(layout) };
+    if ptr.is_null() {
+        std::alloc::handle_alloc_error(layout);
+    }
+
+    let uninit = u64::shape_uninit();
+    // Intentionally not filling the slot
+    let _value = uninit.build::<u64>();
+    // This should panic
+}
+
+#[test]
+#[should_panic(expected = "We were building a \u{1b}[1;33mu64\u{1b}[0m")]
+fn build_u64_get_u32_through_reflection() {
+    let shape = u64::shape();
+    eprintln!("{shape:#?}");
+
+    let layout = std::alloc::Layout::from_size_align(shape.size, shape.align).unwrap();
+    let ptr = unsafe { std::alloc::alloc(layout) };
+    if ptr.is_null() {
+        std::alloc::handle_alloc_error(layout);
+    }
+
+    let mut uninit = u64::shape_uninit();
+    let slot = uninit.scalar_slot().unwrap();
+    slot.fill(42u64);
+
+    // Attempt to build as u32 instead of u64
+    let _value = uninit.build::<u32>();
+    // This should panic due to type mismatch
 }
