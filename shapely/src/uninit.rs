@@ -136,15 +136,11 @@ impl ShapeUninit {
     }
 }
 
-/// A bit array to keep track of which fields were initialized
-#[derive(Clone, Copy)]
+/// A bit array to keep track of which fields were initialized, up to 64 fields
+#[derive(Clone, Copy, Default)]
 pub struct InitSet64(u64);
 
 impl InitSet64 {
-    pub fn new() -> Self {
-        InitSet64(0)
-    }
-
     pub fn set(&mut self, index: usize) {
         if index < 64 {
             self.0 |= 1 << index;
