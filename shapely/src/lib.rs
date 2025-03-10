@@ -1,5 +1,4 @@
-//! Provides the core traits for shapely
-
+#[doc = include_str!("../README.md")]
 #[cfg(feature = "derive")]
 pub use shapely_derive::*;
 
