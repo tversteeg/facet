@@ -1,12 +1,16 @@
 [package]
 name = "shapely-json"
-version = "0.1.0"
-edition = "2024"
-authors = ["Amos Wenger <amos@bearcove.eu>"]
-repository = "https://github.com/bearcove/shapely"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/shapely-json"
 description = "A serialization and deserialization library for JSON"
 keywords = ["json", "serialization", "deserialization"]
 categories = ["encoding", "parsing"]
+rust-version.workspace = true
 
 [dependencies]
 jiter = { version = "0.8.2", default-features = false }

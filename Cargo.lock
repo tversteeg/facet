@@ -356,13 +356,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "shapely-derive-test"
-version = "0.1.0"
-dependencies = [
- "shapely",
-]
-
-[[package]]
 name = "shapely-json"
 version = "0.1.0"
 dependencies = [

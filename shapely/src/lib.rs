@@ -7,6 +7,9 @@ use std::{collections::HashSet, fmt::Formatter};
 
 mod builtin_impls;
 
+#[cfg(all(test, feature = "derive"))]
+mod derive_tests;
+
 /// Provides reflection so you can shapely about your types.
 pub trait Shapely {
     /// Returns the shape of this type

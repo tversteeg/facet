@@ -1,13 +1,16 @@
 [package]
 name = "shapely"
-version = "0.1.0"
-edition = "2024"
-authors = ["Amos Wenger <amos@bearcove.eu>"]
-repository = "https://github.com/bearcove/shapely"
-description = "A reflection/introspection library that enables serialization/deserialization"
-keywords = ["reflection", "introspection", "serialization", "deserialization"]
-categories = ["development-tools", "encoding"]
-license = "MIT OR Apache-2.0"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description.workspace = true
+keywords.workspace = true
+categories.workspace = true
 
 [dependencies]
 shapely-derive = { path = "../shapely-derive", optional = true }
