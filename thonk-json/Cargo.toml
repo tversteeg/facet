@@ -1,0 +1,17 @@
+[package]
+name = "thonk-json"
+version = "0.1.0"
+edition = "2024"
+authors = ["Amos Wenger <amos@bearcove.eu>"]
+repository = "https://github.com/bearcove/thonk"
+description = "A serialization and deserialization library for JSON"
+keywords = ["json", "serialization", "deserialization"]
+categories = ["encoding", "parsing"]
+
+[dependencies]
+jiter = { version = "0.8.2", default-features = false }
+log = "0.4.26"
+thonk = { version = "0.1.0", path = "../thonk" }
+
+[dev-dependencies]
+test-log = "0.2.17"

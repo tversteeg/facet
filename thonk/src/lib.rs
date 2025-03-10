@@ -141,7 +141,7 @@ impl dyn MapManipulator {
 
 /// Manipulator for struct-like types with known field offsets
 pub struct StructManipulator {
-    fields: &'static [(MapField<'static>, usize)],
+    pub fields: &'static [(MapField<'static>, usize)],
 }
 
 impl MapManipulator for StructManipulator {

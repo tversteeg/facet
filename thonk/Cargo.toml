@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 authors = ["Amos Wenger <amos@bearcove.eu>"]
 repository = "https://github.com/bearcove/thonk"
-
-[dependencies]
-bytemuck = "1.22.0"
+description = "A reflection/introspection library that enables serialization/deserialization"
+keywords = ["reflection", "introspection", "serialization", "deserialization"]
+categories = ["development-tools", "encoding"]
+license = "MIT OR Apache-2.0"
