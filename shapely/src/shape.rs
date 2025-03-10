@@ -266,44 +266,6 @@ pub struct MapField<'s> {
     pub offset: Option<NonMaxU32>,
 }
 
-/// Given the map's address, returns a FieldSlot for the requested field
-pub trait Slots: Send + Sync {
-    /// Returns a FieldSlot for a given field. If the map accommodates dynamically-added fields,
-    /// this might, for example, insert an entry into a HashMap.
-    ///
-    /// Returns None if the field is not known and the data structure does not accommodate for arbitrary fields.
-    fn slot<'a>(&'a mut self, map: &'a mut ShapeUninit, field: MapField<'_>) -> Option<Slot<'a>>;
-}
-
-/// Manipulator for struct-like types with known field offsets
-pub struct StructManipulator {
-    /// the overall shape of the struct
-    pub shape: Shape,
-}
-
-impl Slots for StructManipulator {
-    fn slot<'a>(&'a mut self, map: &'a mut ShapeUninit, field: MapField<'_>) -> Option<Slot<'a>> {
-        if let Innards::Map(map_shape) = self.shape.innards {
-            if let Some(field) = map_shape.fields.iter().find(|f| f.name == field.name) {
-                if let Some(offset) = field.offset {
-                    let field_addr =
-                        unsafe { map.get_addr(&self.shape).add(offset.get() as usize) };
-                    Some(Slot::for_struct_field(field_addr as *mut _))
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
-        } else {
-            panic!(
-                "Unexpected shape kind: expected Map, found {:?}",
-                self.shape.innards
-            );
-        }
-    }
-}
-
 /// The outcome of trying to set a field on a map
 #[derive(Debug, Clone, Copy)]
 pub enum SetFieldOutcome {

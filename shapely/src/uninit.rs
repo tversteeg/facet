@@ -33,9 +33,9 @@ impl ShapeUninit {
     /// - The provided shape matches the shape of the data
     ///
     /// This function performs a cast and of course you could get it to do UB if you expected a different type.
-    pub unsafe fn get_addr<T: Shapely>(&self, expected_shape: &Shape) -> *mut T {
+    pub unsafe fn get_addr(&self, expected_shape: &Shape) -> *mut u8 {
         if self.shape == *expected_shape {
-            self.addr as _
+            self.addr
         } else {
             panic!(
                 "Shape mismatch: expected {:?}, found {:?}",

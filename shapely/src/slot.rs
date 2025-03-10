@@ -1,6 +1,6 @@
 use std::{collections::HashMap, marker::PhantomData};
 
-use crate::{Shape, Shapely};
+use crate::{Innards, MapField, Shape, ShapeUninit, Shapely};
 
 /// Type alias for user data pointer
 type UserData = *mut u8;
@@ -76,6 +76,92 @@ impl Slot<'_> {
                     map.insert(key, value);
                 }
             }
+        }
+    }
+}
+
+/// Given the map's address, returns a FieldSlot for the requested field
+pub trait Slots: Send + Sync {
+    /// Returns a FieldSlot for a given field. If the map accommodates dynamically-added fields,
+    /// this might, for example, insert an entry into a HashMap.
+    ///
+    /// Returns None if the field is not known and the data structure does not accommodate for arbitrary fields.
+    fn slot<'a>(&'a mut self, map: &'a mut ShapeUninit, field: MapField<'_>) -> Option<Slot<'a>>;
+}
+
+/// All known slots types
+pub enum AllSlots {
+    Struct(StructSlots),
+    Map(HashMapSlots),
+}
+
+/// Manipulator for struct-like types with known field offsets
+pub struct StructSlots {
+    struct_shape: Shape,
+}
+
+impl StructSlots {
+    /// Create a new Slots suitable for a struct — only fields listed
+    /// in the map innards will be accepted, and they all must have an offset.
+    pub fn new(struct_shape: Shape) -> Self {
+        Self { struct_shape }
+    }
+}
+
+impl Slots for StructSlots {
+    fn slot<'a>(&'a mut self, map: &'a mut ShapeUninit, field: MapField<'_>) -> Option<Slot<'a>> {
+        if let Innards::Map(innards) = self.struct_shape.innards {
+            if let Some(field) = innards.fields().iter().find(|f| f.name == field.name) {
+                if let Some(offset) = field.offset {
+                    Some(Slot::for_struct_field(unsafe {
+                        map.get_addr(&self.struct_shape).add(offset.get() as usize)
+                    }))
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        } else {
+            panic!(
+                "Unexpected shape kind: expected Map, found {:?}",
+                self.struct_shape.innards
+            );
+        }
+    }
+}
+
+/// Slots for hashmaps
+struct HashMapSlots {
+    map_shape: &'static Shape,
+}
+
+impl HashMapSlots {
+    /// Create a new Slots suitable for a hash map.
+    /// Validates that the provided shape is a Map with an Array inner type.
+    pub fn new<K, V>(map_shape: &'static Shape) -> Self
+    where
+        K: Shapely,
+        V: Shapely,
+    {
+        if let Innards::Map(innards) = map_shape.innards {
+            if let Innards::Array(elem_shape) = innards.fields()[0].schema().innards {
+                if elem_shape == &V::shape() {
+                    return Self { map_shape };
+                }
+            }
+        }
+        panic!("Invalid shape for HashMap: expected Map with Array inner type");
+    }
+}
+
+impl Slots for HashMapSlots {
+    fn slot<'a>(&'a mut self, map: &'a mut ShapeUninit, field: MapField<'_>) -> Option<Slot<'a>> {
+        unsafe {
+            Some(Slot::for_hash_map(
+                map.get_addr(self.map_shape) as *mut HashMap<String, _>,
+                field.name.to_string(),
+            ))
         }
     }
 }
