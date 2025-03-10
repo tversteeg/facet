@@ -20,3 +20,13 @@ pub fn thonk_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let s = format!("parsed: {parsed:?}");
     s.into_token_stream().into()
 }
+
+#[proc_macro]
+pub fn parse_test(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = TokenStream::from(input);
+    let mut i = input.to_token_iter();
+    let parsed: Enum = i.parse().unwrap();
+    let dbg_s = format!("{parsed:?}");
+    let s = format!("println!(\"Parsed: {{}}\", {dbg_s:?});");
+    s.into_token_stream().into()
+}

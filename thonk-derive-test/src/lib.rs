@@ -2,8 +2,17 @@
 
 #[cfg(test)]
 mod tests {
-    use thonk_derive::Thonk;
+    // use thonk::Thonk;
 
-    #[derive(Thonk)]
-    struct Blah {}
+    // #[derive(Thonk)]
+    // struct Blah {}
+
+    #[test]
+    fn regular() {
+        thonk::parse_test!(++.);
+        thonk::parse_test!(+.);
+        thonk::parse_test!(--.);
+        thonk::parse_test!(-.);
+        thonk::parse_test!(,$);
+    }
 }

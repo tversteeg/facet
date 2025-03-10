@@ -404,6 +404,9 @@ dependencies = [
 [[package]]
 name = "thonk"
 version = "0.1.0"
+dependencies = [
+ "thonk-derive",
+]
 
 [[package]]
 name = "thonk-derive"
@@ -416,7 +419,7 @@ dependencies = [
 name = "thonk-derive-test"
 version = "0.1.0"
 dependencies = [
- "thonk-derive",
+ "thonk",
 ]
 
 [[package]]

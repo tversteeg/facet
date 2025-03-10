@@ -8,3 +8,10 @@ description = "A reflection/introspection library that enables serialization/des
 keywords = ["reflection", "introspection", "serialization", "deserialization"]
 categories = ["development-tools", "encoding"]
 license = "MIT OR Apache-2.0"
+
+[dependencies]
+thonk-derive = { path = "../thonk-derive", optional = true }
+
+[features]
+default = ["derive"]
+derive = ["thonk-derive"]

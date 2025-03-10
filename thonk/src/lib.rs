@@ -1,5 +1,8 @@
 //! Provides the core traits for thonk
 
+#[cfg(feature = "derive")]
+pub use thonk_derive::*;
+
 use std::{collections::HashSet, fmt::Formatter};
 
 mod builtin_impls;
