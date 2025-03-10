@@ -4,9 +4,6 @@ use shapely::Shapely;
 
 #[test]
 fn test_from_json() {
-    log::set_logger(&SimpleLogger).unwrap();
-    log::set_max_level(log::LevelFilter::Trace);
-
     #[derive(Debug, PartialEq)]
     struct TestStruct {
         name: String,
@@ -18,8 +15,7 @@ fn test_from_json() {
             use shapely::Innards;
             static SCHEMA: shapely::Shape = shapely::Shape {
                 name: "TestStruct",
-                size: std::mem::size_of::<TestStruct>(),
-                align: std::mem::align_of::<TestStruct>(),
+                layout: std::alloc::Layout::new::<TestStruct>(),
                 innards: Innards::Struct {
                     fields: shapely::struct_fields!(TestStruct, (name, age)),
                 },
@@ -28,6 +24,9 @@ fn test_from_json() {
                     std::fmt::Debug::fmt(unsafe { &*(addr as *const TestStruct) }, f)
                 }),
                 set_to_default: None,
+                drop_in_place: Some(|ptr| unsafe {
+                    std::ptr::drop_in_place(ptr as *mut TestStruct)
+                }),
             };
             SCHEMA
         }

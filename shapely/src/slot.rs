@@ -80,4 +80,43 @@ impl<'s> Slot<'s> {
         }
         self.init_field_slot.mark_as_init();
     }
+
+    pub fn fill_from_partial(mut self, partial: crate::Partial<'_>) {
+        if self.field_shape != partial.shape_desc() {
+            panic!(
+                "Attempted to fill a field with an incompatible shape.\n\
+                Expected shape: {:?}\n\
+                Actual shape: {:?}\n\
+                This is undefined behavior and we're refusing to proceed.",
+                self.field_shape.get(),
+                partial.shape_desc().get()
+            );
+        }
+
+        partial.check_initialization();
+
+        unsafe {
+            match self.dest {
+                Destination::StructField { field_addr } => {
+                    let field_addr = field_addr.as_ptr();
+                    if self.init_field_slot.is_init() {
+                        if let Some(drop_fn) = self.field_shape.get().drop_in_place {
+                            drop_fn(field_addr);
+                        }
+                    }
+                    std::ptr::copy_nonoverlapping(
+                        partial.addr.as_ptr(),
+                        field_addr,
+                        self.field_shape.get().layout.size(),
+                    );
+                }
+                Destination::HashMap { .. } => {
+                    // TODO: Implement for HashMap
+                    // I guess we need another field in the vtable?
+                    panic!("fill_from_partial not implemented for HashMap");
+                }
+            }
+        }
+        self.init_field_slot.mark_as_init();
+    }
 }

@@ -76,8 +76,8 @@ impl<'a> std::fmt::Display for JsonParseErrorWithContext<'a> {
 
 impl std::error::Error for JsonParseError {}
 
-pub struct JsonParser<'a> {
-    pub input: &'a str,
+pub struct JsonParser<'input> {
+    pub input: &'input str,
     pub position: usize,
 }
 

@@ -119,7 +119,9 @@ impl Partial<'_> {
         }
     }
 
-    fn check_initialization(&self) {
+    /// Checks if all fields in the struct or scalar value have been initialized.
+    /// Panics if any field is not initialized, providing details about the uninitialized field.
+    pub(crate) fn check_initialization(&self) {
         match self.shape_desc.get().innards {
             crate::Innards::Struct { fields } => {
                 for (i, field) in fields.iter().enumerate() {
@@ -253,6 +255,10 @@ impl Partial<'_> {
         let boxed = unsafe { Box::from_raw(self.addr.as_ptr() as *mut T) };
         std::mem::forget(self);
         boxed
+    }
+
+    pub fn shape_desc(&self) -> ShapeDesc {
+        self.shape_desc
     }
 }
 

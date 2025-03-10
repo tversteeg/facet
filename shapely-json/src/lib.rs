@@ -1,5 +1,5 @@
 use parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
-use shapely::{Partial, Shape};
+use shapely::{Partial, Shape, ShapeDesc};
 
 #[doc(hidden)]
 pub mod log;
@@ -10,7 +10,7 @@ mod parser;
 mod tests;
 
 pub fn from_json<'input>(
-    target: &mut Partial,
+    partial: &mut Partial,
     json: &'input str,
 ) -> Result<(), JsonParseErrorWithContext<'input>> {
     use shapely::{Innards, Scalar};
@@ -19,11 +19,13 @@ pub fn from_json<'input>(
     let mut parser = JsonParser::new(json);
 
     fn deserialize_value<'input>(
-        parser: &'input mut JsonParser,
-        target: &mut Partial,
-        shape: &Shape,
+        parser: &mut JsonParser<'input>,
+        partial: &mut Partial,
     ) -> Result<(), JsonParseErrorWithContext<'input>> {
+        let shape_desc = partial.shape_desc();
+        let shape = shape_desc.get();
         trace!("Deserializing value with shape:\n{:?}", shape);
+
         match &shape.innards {
             Innards::Scalar(scalar) => {
                 match scalar {
@@ -31,12 +33,12 @@ pub fn from_json<'input>(
                         trace!("Deserializing String");
                         let s = parser.parse_string()?;
                         trace!("Deserialized String: {}", s);
-                        target.scalar_slot().expect("String scalar slot").fill(s);
+                        partial.scalar_slot().expect("String scalar slot").fill(s);
                     }
                     Scalar::U64 => {
                         trace!("Deserializing U64");
                         let n = parser.parse_u64()?;
-                        target.scalar_slot().expect("U64 scalar slot").fill(n);
+                        partial.scalar_slot().expect("U64 scalar slot").fill(n);
                         trace!("Deserialized U64: {}", n);
                     }
                     // Add other scalar types as needed
@@ -56,19 +58,12 @@ pub fn from_json<'input>(
                     trace!("Processing struct key: {}", key);
 
                     if let Some(field) = fields.iter().find(|f| f.name == key).copied() {
-                        field.shape();
-
+                        // FIXME: we could _probably_ optimize this — the struct is already
+                        // allocated at this stage, so we could grab the address of its field.
+                        let mut partial_field = Partial::alloc(field.shape);
                         trace!("Deserializing field: {}", field.name);
-                        let mut field_error = None;
-                        unsafe {
-                            let slot = target.slot(field).expect("Field slot");
-                            if let Err(err) = deserialize_value(parser, slot.fill(), field_schema) {
-                                field_error = Some(err);
-                            }
-                        }
-                        if let Some(err) = field_error {
-                            return Err(err);
-                        }
+                        deserialize_value(parser, &mut partial_field)?;
+                        let slot = partial.slot(field).expect("Field slot");
                     } else {
                         warn!("Unknown field: {}, skipping", key);
                         parser.skip_value()?;
@@ -89,7 +84,7 @@ pub fn from_json<'input>(
         Ok(())
     }
 
-    let result = deserialize_value(&mut parser, target, target.shape);
+    let result = deserialize_value(&mut parser, partial, partial.shape);
     if result.is_ok() {
         trace!("JSON deserialization completed successfully");
     } else {
