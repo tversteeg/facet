@@ -105,6 +105,31 @@ fn build_u64_through_reflection_without_filling() {
 }
 
 #[test]
+#[should_panic(expected = "Field 'bar' was not initialized")]
+fn build_foobar_through_reflection_with_missing_field() {
+    let shape = FooBar::shape();
+    eprintln!("{shape:#?}");
+
+    let layout = std::alloc::Layout::from_size_align(shape.size, shape.align).unwrap();
+    let ptr = unsafe { std::alloc::alloc(layout) };
+    if ptr.is_null() {
+        std::alloc::handle_alloc_error(layout);
+    }
+
+    let mut uninit = FooBar::shape_uninit();
+    for field in shape.innards.static_fields() {
+        if field.name == "foo" {
+            let slot = uninit.slot(*field).unwrap();
+            slot.fill(42u64);
+            // Intentionally not setting the 'bar' field
+        }
+    }
+
+    // This should panic because 'bar' is not initialized
+    let _foo_bar = uninit.build::<FooBar>();
+}
+
+#[test]
 #[should_panic(expected = "We were building a \u{1b}[1;33mu64\u{1b}[0m")]
 fn build_u64_get_u32_through_reflection() {
     let shape = u64::shape();
