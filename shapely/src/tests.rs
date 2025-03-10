@@ -287,3 +287,161 @@ fn build_scalar_with_drop() {
     // Check that drop was called twice: once for the first assignment and once for the final instance
     assert_eq!(DROP_COUNT.load(Ordering::SeqCst), 2);
 }
+
+#[test]
+fn build_truck_with_drop_fields() {
+    use std::sync::atomic::{AtomicIsize, Ordering};
+
+    static ENGINE_COUNT: AtomicIsize = AtomicIsize::new(0);
+    static WHEELS_COUNT: AtomicIsize = AtomicIsize::new(0);
+
+    struct Engine;
+    struct Wheels;
+
+    impl Drop for Engine {
+        fn drop(&mut self) {
+            ENGINE_COUNT.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
+    impl Drop for Wheels {
+        fn drop(&mut self) {
+            WHEELS_COUNT.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
+    impl Shapely for Engine {
+        fn shape() -> crate::Shape {
+            Shape {
+                name: "Engine",
+                size: std::mem::size_of::<Engine>(),
+                align: std::mem::align_of::<Engine>(),
+                innards: crate::Innards::Scalar(crate::Scalar::Nothing),
+                display: None,
+                debug: None,
+                set_to_default: None,
+            }
+        }
+    }
+
+    impl Shapely for Wheels {
+        fn shape() -> crate::Shape {
+            Shape {
+                name: "Wheels",
+                size: std::mem::size_of::<Wheels>(),
+                align: std::mem::align_of::<Wheels>(),
+                innards: crate::Innards::Scalar(crate::Scalar::Nothing),
+                display: None,
+                debug: None,
+                set_to_default: None,
+            }
+        }
+    }
+
+    struct Truck {
+        engine: Engine,
+        wheels: Wheels,
+    }
+
+    impl Shapely for Truck {
+        fn shape() -> crate::Shape {
+            static SHAPE: Shape = Shape {
+                name: "Truck",
+                size: std::mem::size_of::<Truck>(),
+                align: std::mem::align_of::<Truck>(),
+                innards: crate::Innards::Struct {
+                    fields: crate::struct_fields!(Truck, (engine, wheels)),
+                },
+                display: None,
+                debug: None,
+                set_to_default: None,
+            };
+            SHAPE
+        }
+    }
+
+    let shape = Truck::shape();
+    let engine_field = shape.innards.static_fields()[0];
+    let wheels_field = shape.innards.static_fields()[1];
+
+    fn reset_atomics() {
+        ENGINE_COUNT.store(0, Ordering::SeqCst);
+        WHEELS_COUNT.store(0, Ordering::SeqCst);
+    }
+
+    // Scenario 1: Not filling any fields
+    {
+        reset_atomics();
+        let uninit = Truck::shape_uninit();
+        drop(uninit);
+        assert_eq!(ENGINE_COUNT.load(Ordering::SeqCst), 0, "No drops occurred.");
+        assert_eq!(WHEELS_COUNT.load(Ordering::SeqCst), 0, "No drops occurred.");
+    }
+
+    // Scenario 2: Filling only the engine field
+    {
+        reset_atomics();
+        let mut uninit = Truck::shape_uninit();
+        {
+            let slot = uninit.slot(engine_field).unwrap();
+            slot.fill(Engine);
+        }
+        drop(uninit);
+        assert_eq!(
+            ENGINE_COUNT.load(Ordering::SeqCst),
+            1,
+            "Engine field should have been dropped."
+        );
+        assert_eq!(
+            WHEELS_COUNT.load(Ordering::SeqCst),
+            0,
+            "Wheels field wasn't set."
+        );
+    }
+
+    // Scenario 3: Filling only the wheels field
+    {
+        reset_atomics();
+        let mut uninit = Truck::shape_uninit();
+        {
+            let slot = uninit.slot(wheels_field).unwrap();
+            slot.fill(Wheels);
+        }
+        drop(uninit);
+        assert_eq!(
+            ENGINE_COUNT.load(Ordering::SeqCst),
+            0,
+            "Engine field wasn't set."
+        );
+        assert_eq!(
+            WHEELS_COUNT.load(Ordering::SeqCst),
+            1,
+            "Wheels field should have been dropped."
+        );
+    }
+
+    // Scenario 4: Filling both fields
+    {
+        reset_atomics();
+        let mut uninit = Truck::shape_uninit();
+        {
+            let slot = uninit.slot(engine_field).unwrap();
+            slot.fill(Engine);
+        }
+        {
+            let slot = uninit.slot(wheels_field).unwrap();
+            slot.fill(Wheels);
+        }
+        drop(uninit);
+        assert_eq!(
+            ENGINE_COUNT.load(Ordering::SeqCst),
+            1,
+            "Engine field should have been dropped."
+        );
+        assert_eq!(
+            WHEELS_COUNT.load(Ordering::SeqCst),
+            1,
+            "Wheels field should have been dropped."
+        );
+    }
+}
