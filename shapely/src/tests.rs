@@ -10,8 +10,7 @@ impl Shapely for FooBar {
     fn shape() -> crate::Shape {
         static SHAPE: Shape = Shape {
             name: "FooBar",
-            size: std::mem::size_of::<FooBar>(),
-            align: std::mem::align_of::<FooBar>(),
+            layout: std::alloc::Layout::new::<FooBar>(),
             innards: crate::Innards::Struct {
                 fields: crate::struct_fields!(FooBar, (foo, bar)),
             },
@@ -29,12 +28,6 @@ impl Shapely for FooBar {
 fn build_foobar_through_reflection() {
     let shape = FooBar::shape();
     eprintln!("{shape:#?}");
-
-    let layout = std::alloc::Layout::from_size_align(shape.size, shape.align).unwrap();
-    let ptr = unsafe { std::alloc::alloc(layout) };
-    if ptr.is_null() {
-        std::alloc::handle_alloc_error(layout);
-    }
 
     let mut uninit = FooBar::shape_uninit();
     for field in shape.innards.static_fields() {
@@ -69,12 +62,6 @@ fn build_u64_through_reflection() {
     let shape = u64::shape();
     eprintln!("{shape:#?}");
 
-    let layout = std::alloc::Layout::from_size_align(shape.size, shape.align).unwrap();
-    let ptr = unsafe { std::alloc::alloc(layout) };
-    if ptr.is_null() {
-        std::alloc::handle_alloc_error(layout);
-    }
-
     let mut uninit = u64::shape_uninit();
     let slot = uninit.scalar_slot().unwrap();
     slot.fill(42u64);
@@ -90,12 +77,6 @@ fn build_u64_through_reflection_without_filling() {
     let shape = u64::shape();
     eprintln!("{shape:#?}");
 
-    let layout = std::alloc::Layout::from_size_align(shape.size, shape.align).unwrap();
-    let ptr = unsafe { std::alloc::alloc(layout) };
-    if ptr.is_null() {
-        std::alloc::handle_alloc_error(layout);
-    }
-
     let uninit = u64::shape_uninit();
     // Intentionally not filling the slot
     let _value = uninit.build::<u64>();
@@ -107,12 +88,6 @@ fn build_u64_through_reflection_without_filling() {
 fn build_foobar_through_reflection_with_missing_field() {
     let shape = FooBar::shape();
     eprintln!("{shape:#?}");
-
-    let layout = std::alloc::Layout::from_size_align(shape.size, shape.align).unwrap();
-    let ptr = unsafe { std::alloc::alloc(layout) };
-    if ptr.is_null() {
-        std::alloc::handle_alloc_error(layout);
-    }
 
     let mut uninit = FooBar::shape_uninit();
     for field in shape.innards.static_fields() {
@@ -133,13 +108,8 @@ fn build_u64_get_u32_through_reflection() {
     let shape = u64::shape();
     eprintln!("{shape:#?}");
 
-    let layout = std::alloc::Layout::from_size_align(shape.size, shape.align).unwrap();
-    let ptr = unsafe { std::alloc::alloc(layout) };
-    if ptr.is_null() {
-        std::alloc::handle_alloc_error(layout);
-    }
-
     let mut uninit = u64::shape_uninit();
+
     let slot = uninit.scalar_slot().unwrap();
     slot.fill(42u64);
 
@@ -160,8 +130,7 @@ fn build_struct_with_drop_field() {
         fn shape() -> crate::Shape {
             Shape {
                 name: "DropCounter",
-                size: std::mem::size_of::<DropCounter>(),
-                align: std::mem::align_of::<DropCounter>(),
+                layout: std::alloc::Layout::new::<DropCounter>(),
                 innards: crate::Innards::Struct { fields: &[] },
                 display: None,
                 debug: None,
@@ -185,8 +154,7 @@ fn build_struct_with_drop_field() {
         fn shape() -> crate::Shape {
             static SHAPE: Shape = Shape {
                 name: "StructWithDrop",
-                size: std::mem::size_of::<StructWithDrop>(),
-                align: std::mem::align_of::<StructWithDrop>(),
+                layout: std::alloc::Layout::new::<StructWithDrop>(),
                 innards: crate::Innards::Struct {
                     fields: crate::struct_fields!(StructWithDrop, (counter, value)),
                 },
@@ -246,8 +214,7 @@ fn build_scalar_with_drop() {
         fn shape() -> crate::Shape {
             Shape {
                 name: "DropScalar",
-                size: std::mem::size_of::<DropScalar>(),
-                align: std::mem::align_of::<DropScalar>(),
+                layout: std::alloc::Layout::new::<DropScalar>(),
                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
                 display: None,
                 debug: None,
@@ -314,8 +281,7 @@ fn build_truck_with_drop_fields() {
         fn shape() -> crate::Shape {
             Shape {
                 name: "Engine",
-                size: std::mem::size_of::<Engine>(),
-                align: std::mem::align_of::<Engine>(),
+                layout: std::alloc::Layout::new::<Engine>(),
                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
                 display: None,
                 debug: None,
@@ -328,8 +294,7 @@ fn build_truck_with_drop_fields() {
         fn shape() -> crate::Shape {
             Shape {
                 name: "Wheels",
-                size: std::mem::size_of::<Wheels>(),
-                align: std::mem::align_of::<Wheels>(),
+                layout: std::alloc::Layout::new::<Wheels>(),
                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
                 display: None,
                 debug: None,
@@ -347,8 +312,7 @@ fn build_truck_with_drop_fields() {
         fn shape() -> crate::Shape {
             static SHAPE: Shape = Shape {
                 name: "Truck",
-                size: std::mem::size_of::<Truck>(),
-                align: std::mem::align_of::<Truck>(),
+                layout: std::alloc::Layout::new::<Truck>(),
                 innards: crate::Innards::Struct {
                     fields: crate::struct_fields!(Truck, (engine, wheels)),
                 },

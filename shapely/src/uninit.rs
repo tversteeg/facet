@@ -149,7 +149,7 @@ impl ShapeUninit<'_> {
             );
         }
 
-        let result = unsafe { std::ptr::read(self.addr as *const T) };
+        let result = unsafe { std::ptr::read(self.addr.as_ptr() as *const T) };
         std::mem::forget(self);
         result
     }
@@ -165,7 +165,7 @@ impl ShapeUninit<'_> {
             );
         }
 
-        let boxed = unsafe { Box::from_raw(self.addr as *mut T) };
+        let boxed = unsafe { Box::from_raw(self.addr.as_ptr() as *mut T) };
         std::mem::forget(self);
         boxed
     }
