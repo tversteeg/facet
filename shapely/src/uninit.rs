@@ -47,16 +47,27 @@ impl ShapeUninit {
     }
 
     fn check_initialization(&self) {
-        if let crate::Innards::Struct { fields } = self.shape_desc.get().innards {
-            for (i, field) in fields.iter().enumerate() {
-                if !self.init_fields.is_set(i) {
+        match self.shape_desc.get().innards {
+            crate::Innards::Struct { fields } => {
+                for (i, field) in fields.iter().enumerate() {
+                    if !self.init_fields.is_set(i) {
+                        panic!(
+                            "Field '{}' was not initialized. Complete schema:\n{:?}",
+                            field.name,
+                            self.shape_desc.get()
+                        );
+                    }
+                }
+            }
+            crate::Innards::Scalar(_) => {
+                if !self.init_fields.is_set(0) {
                     panic!(
-                        "Field '{}' was not initialized. Complete schema:\n{:?}",
-                        field.name,
+                        "Scalar value was not initialized. Complete schema:\n{:?}",
                         self.shape_desc.get()
                     );
                 }
             }
+            _ => {}
         }
     }
 

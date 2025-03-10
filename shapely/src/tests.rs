@@ -87,7 +87,7 @@ fn build_u64_through_reflection() {
 }
 
 #[test]
-#[should_panic(expected = "attempted to build uninitialised slot")]
+#[should_panic(expected = "Scalar value was not initialized")]
 fn build_u64_through_reflection_without_filling() {
     let shape = u64::shape();
     eprintln!("{shape:#?}");

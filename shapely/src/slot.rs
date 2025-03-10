@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{InitFieldSlot, Shape, ShapeDesc, Shapely};
+use crate::{InitFieldSlot, ShapeDesc, Shapely};
 
 enum Destination {
     /// Writes directly to an (uninitialized) struct field
