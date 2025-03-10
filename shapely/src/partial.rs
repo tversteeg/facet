@@ -38,13 +38,18 @@ impl Drop for Partial<'_> {
             crate::Innards::Struct { fields } => {
                 for (i, field) in fields.iter().enumerate() {
                     if self.init_fields.is_set(i) && field.offset.is_some() {
-                        let offset = field.offset.unwrap().get() as usize;
-                        let field_addr =
-                            unsafe { self.addr.unwrap().as_ptr().byte_offset(offset as isize) };
-
                         // Drop the field using its drop function if available
                         if let Some(drop_fn) = field.shape.get().drop_in_place {
-                            drop_fn(field_addr);
+                            let field_addr = {
+                                let offset = field.offset.unwrap().get() as usize;
+                                if let Some(addr) = self.addr {
+                                    unsafe { addr.byte_add(offset) }
+                                } else {
+                                    // Zero-sized types don't have a valid address
+                                    NonNull::dangling()
+                                }
+                            };
+                            drop_fn(field_addr.as_ptr());
                         }
                     }
                 }
@@ -53,7 +58,11 @@ impl Drop for Partial<'_> {
                 if self.init_fields.is_set(0) {
                     // Drop the scalar value if it has a drop function
                     if let Some(drop_fn) = self.shape_desc.get().drop_in_place {
-                        drop_fn(self.addr.unwrap().as_ptr());
+                        // Use NonNull::dangling() if we don't have an addr.
+                        // This is safe because for zero-sized types, the actual address doesn't matter.
+                        // The drop function for zero-sized types should not dereference the pointer.
+                        let ptr = self.addr.map_or(NonNull::dangling(), |addr| addr).as_ptr();
+                        drop_fn(ptr);
                     }
                 }
             }
@@ -172,14 +181,14 @@ impl Partial<'_> {
                     .find(|(_, f)| f.name == field.name)
                 {
                     if let Some(offset) = field.offset {
-                        let field_addr =
-                            unsafe { self.addr.unwrap().byte_offset(offset.get() as isize) };
+                        let field_addr = self.addr.map(|addr| unsafe {
+                            NonNull::new(addr.as_ptr().byte_offset(offset.get() as isize)).unwrap()
+                        });
                         let init_field_slot = InitFieldSlot::Struct {
                             index,
                             set: &mut self.init_fields,
                         };
-                        let slot =
-                            Slot::for_struct_field(Some(field_addr), field.shape, init_field_slot);
+                        let slot = Slot::for_struct_field(field_addr, field.shape, init_field_slot);
                         Some(slot)
                     } else {
                         None
