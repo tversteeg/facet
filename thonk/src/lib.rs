@@ -249,24 +249,13 @@ mod tests {
     #[test]
     fn build_foobar_through_reflection() {
         let schema = FooBar::schema();
+
         let layout = std::alloc::Layout::from_size_align(schema.size, schema.align).unwrap();
         let ptr = unsafe { std::alloc::alloc(layout) };
         if ptr.is_null() {
             std::alloc::handle_alloc_error(layout);
         }
 
-        // Ensure proper cleanup
-        struct Cleanup<'a>(&'a std::alloc::Layout, *mut u8);
-        impl Drop for Cleanup<'_> {
-            fn drop(&mut self) {
-                unsafe {
-                    std::alloc::dealloc(self.1, *self.0);
-                }
-            }
-        }
-        let _cleanup = Cleanup(&layout, ptr);
-
-        // Use ptr for further operations...
         if let Shape::Map(sh) = &schema.shape {
             for field in sh.fields {
                 unsafe {
