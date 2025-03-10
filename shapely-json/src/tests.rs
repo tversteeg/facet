@@ -48,33 +48,19 @@ fn test_from_json() {
     }
 
     impl Shapely for TestStruct {
-        fn shape() -> Shape {
-            use shapely::{Innards, Field, MapInnards, Shaps, StructManipulator};
-
-            static NAME_FIELD: Field = Field {
-                name: "name",
-                schema: <String as Shapely>::shape,
-            };
-            static AGE_FIELD: Field = Field {
-                name: "age",
-                schema: <u64 as Shapely>::shape,
-            };
-            static SCHEMA: Shape = Shape {
+        fn shape() -> shapely::Shape {
+            use shapely::Innards;
+            static SCHEMA: shapely::Shape = shapely::Shape {
                 name: "TestStruct",
                 size: std::mem::size_of::<TestStruct>(),
                 align: std::mem::align_of::<TestStruct>(),
-                innards: Innards::Map(MapInnards {
-                    fields: &[NAME_FIELD, AGE_FIELD],
-                    open_ended: false,
-                    slots: &StructManipulator {
-                        fields: &[
-                            (NAME_FIELD, std::mem::offset_of!(TestStruct, name)),
-                            (AGE_FIELD, std::mem::offset_of!(TestStruct, age)),
-                        ],
-                    },
-                }),
+                innards: Innards::Struct {
+                    fields: shapely::struct_fields!(TestStruct, (name, age)),
+                },
                 display: None,
-                debug: None,
+                debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| {
+                    std::fmt::Debug::fmt(unsafe { &*(addr as *const TestStruct) }, f)
+                }),
                 set_to_default: None,
             };
             SCHEMA
@@ -82,20 +68,15 @@ fn test_from_json() {
     }
 
     let json = r#"{"name": "Alice", "age": 30}"#;
-    let mut test_struct = TestStruct {
-        name: String::new(),
-        age: 0,
-    };
 
-    let result = from_json(
-        &mut test_struct as *mut TestStruct as *mut u8,
-        TestStruct::shape(),
-        json,
-    );
+    let mut test_struct = TestStruct::shape_uninit();
+    let result = from_json(&mut test_struct, json);
 
     result.unwrap();
+    let built_struct = test_struct.build::<TestStruct>();
+
     assert_eq!(
-        test_struct,
+        built_struct,
         TestStruct {
             name: "Alice".to_string(),
             age: 30
