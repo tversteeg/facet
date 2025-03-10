@@ -22,7 +22,7 @@ pub struct Slot<'s> {
     dest: Destination,
 
     // shape of the struct we're assigning / the value in the hashmap
-    field_shape: Shape,
+    field_shape: fn() -> Shape,
 
     _phantom: PhantomData<&'s mut ()>,
 }
@@ -34,26 +34,23 @@ impl Slot<'_> {
             dest: Destination::StructField {
                 field_addr: field_addr as *mut u8,
             },
-            field_shape: TField::shape(),
+            field_shape: TField::shape,
             _phantom: PhantomData,
         }
     }
 
     #[inline(always)]
-    pub fn for_hash_map<TField: Shapely>(map: *mut HashMap<String, TField>, key: String) -> Self {
+    pub fn for_hash_map(map: *mut u8, field_shape: fn() -> Shape, key: String) -> Self {
         Self {
-            dest: Destination::HashMap {
-                map: map as *mut u8,
-                key,
-            },
-            field_shape: TField::shape(),
+            dest: Destination::HashMap { map, key },
+            field_shape,
             _phantom: PhantomData,
         }
     }
 
     pub fn fill<T: Shapely>(self, value: T) {
         let value_shape = T::shape();
-        if self.field_shape != value_shape {
+        if (self.field_shape)() != value_shape {
             panic!(
                 "Attempted to fill a field with an incompatible shape.\n\
                 Expected shape: {:?}\n\
@@ -87,16 +84,20 @@ pub trait Slots {
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SlotsKind {
     Struct,
-    HashMap,
+    // Reminder: hashmaps are homogeneous
+    HashMap { value_shape: fn() -> Shape },
 }
 
 impl SlotsKind {
-    pub fn to_slots(&self, shape: Shape) -> AllSlots {
+    pub fn to_slots(self, shape: Shape) -> AllSlots {
         match self {
             SlotsKind::Struct => AllSlots::Struct(StructSlots {
                 struct_shape: shape,
             }),
-            SlotsKind::HashMap => AllSlots::HashMap(HashMapSlots { map_shape: &shape }),
+            SlotsKind::HashMap { value_shape } => AllSlots::HashMap(HashMapSlots {
+                map_shape: shape,
+                value_shape,
+            }),
         }
     }
 }
@@ -124,7 +125,11 @@ struct StructSlots {
 impl Slots for StructSlots {
     fn slot<'a>(&'a mut self, map: &'a mut ShapeUninit, field: MapField<'_>) -> Option<Slot<'a>> {
         if let Innards::Map(innards) = self.struct_shape.innards {
-            if let Some(field) = innards.static_fields().iter().find(|f| f.name == field.name) {
+            if let Some(field) = innards
+                .static_fields()
+                .iter()
+                .find(|f| f.name == field.name)
+            {
                 if let Some(offset) = field.offset {
                     Some(Slot::for_struct_field(unsafe {
                         map.get_addr(&self.struct_shape).add(offset.get() as usize)
@@ -146,14 +151,16 @@ impl Slots for StructSlots {
 
 /// Slots for hashmaps
 struct HashMapSlots {
-    map_shape: &'static Shape,
+    map_shape: Shape,
+    value_shape: fn() -> Shape,
 }
 
 impl Slots for HashMapSlots {
     fn slot<'a>(&'a mut self, map: &'a mut ShapeUninit, field: MapField<'_>) -> Option<Slot<'a>> {
         unsafe {
             Some(Slot::for_hash_map(
-                map.get_addr(self.map_shape) as *mut HashMap<String, _>,
+                map.get_addr(&self.map_shape),
+                self.value_shape,
                 field.name.to_string(),
             ))
         }

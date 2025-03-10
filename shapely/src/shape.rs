@@ -82,12 +82,17 @@ impl Shape {
                         )?;
                     }
                 }
-                MapInnards::HashMap => {
+                MapInnards::HashMap { value_shape } => {
                     writeln!(
                         f,
-                        "{:indent$}\x1b[1;36mHashMap with arbitrary keys\x1b[0m",
+                        "{:indent$}\x1b[1;36mHashMap with arbitrary keys and value shape:\x1b[0m",
                         "",
                         indent = indent + Self::INDENT
+                    )?;
+                    value_shape().pretty_print_recursive_internal(
+                        f,
+                        printed_schemas,
+                        indent + Self::INDENT * 2,
                     )?;
                 }
             },
@@ -136,7 +141,7 @@ impl Shape {
             Innards::Map(map) => Some(
                 match map {
                     MapInnards::Struct { .. } => SlotsKind::Struct,
-                    MapInnards::HashMap => SlotsKind::HashMap,
+                    MapInnards::HashMap { value_shape } => SlotsKind::HashMap { value_shape },
                 }
                 .to_slots(*self),
             ),
@@ -174,8 +179,8 @@ pub enum MapInnards {
     Struct {
         fields: &'static [MapField<'static>],
     },
-    /// HashMap without known fields
-    HashMap,
+    /// HashMap — keys are dynamic, values are homogeneous
+    HashMap { value_shape: fn() -> Shape },
 }
 
 impl MapInnards {
@@ -185,15 +190,15 @@ impl MapInnards {
     }
 
     /// Creates a new MapInnards for a HashMap
-    pub fn for_hashmap() -> Self {
-        MapInnards::HashMap
+    pub fn for_hashmap(value_shape: fn() -> Shape) -> Self {
+        MapInnards::HashMap { value_shape }
     }
 
     /// Returns a reference to the fields of this map
     pub fn static_fields(&self) -> &'static [MapField<'static>] {
         match self {
             MapInnards::Struct { fields } => fields,
-            MapInnards::HashMap => &[],
+            MapInnards::HashMap { .. } => &[],
         }
     }
 }
