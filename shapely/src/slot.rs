@@ -5,10 +5,10 @@ use crate::{InitFieldSlot, ShapeDesc, Shapely};
 
 enum Destination {
     /// Writes directly to an (uninitialized) struct field
-    StructField { field_addr: NonNull<u8> },
+    StructField { field_addr: NonNull<()> },
 
     /// Inserts into a HashMap
-    HashMap { map: NonNull<u8>, key: String },
+    HashMap { map: NonNull<()>, key: String },
 }
 
 /// Allows writing into a struct field or inserting into a hash map.
@@ -26,7 +26,7 @@ pub struct Slot<'s> {
 impl<'s> Slot<'s> {
     #[inline(always)]
     pub fn for_struct_field(
-        field_addr: NonNull<u8>,
+        field_addr: NonNull<()>,
         field_shape: ShapeDesc,
         init_field_slot: InitFieldSlot<'s>,
     ) -> Self {
@@ -39,7 +39,7 @@ impl<'s> Slot<'s> {
 
     #[inline(always)]
     pub fn for_hash_map(
-        map: NonNull<u8>,
+        map: NonNull<()>,
         field_shape: ShapeDesc,
         key: String,
         init_field_slot: InitFieldSlot<'s>,

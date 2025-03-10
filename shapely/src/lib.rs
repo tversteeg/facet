@@ -70,7 +70,7 @@ pub trait Shapely: Sized {
                 init_field_slot: InitFieldSlot::Ignored,
             },
             phantom: PhantomData,
-            addr: NonNull::new(dest.as_mut_ptr() as *mut u8).unwrap(),
+            addr: NonNull::new(dest.as_mut_ptr() as *mut ()).unwrap(),
             init_fields: Default::default(),
             shape_desc: Self::shape_desc(),
         }

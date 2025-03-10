@@ -17,7 +17,7 @@ pub struct ShapeUninit<'s> {
     pub(crate) phantom: PhantomData<&'s ()>, // NonNull is covariant...
 
     /// Address of the value in memory
-    pub(crate) addr: NonNull<u8>,
+    pub(crate) addr: NonNull<()>,
 
     /// Keeps track of which fields are initialized
     pub(crate) init_fields: InitSet64,
@@ -45,7 +45,7 @@ impl Drop for ShapeUninit<'_> {
                 for (i, field) in fields.iter().enumerate() {
                     if self.init_fields.is_set(i) && field.offset.is_some() {
                         let offset = field.offset.unwrap().get() as usize;
-                        let field_addr = unsafe { self.addr.as_ptr().add(offset) };
+                        let field_addr = unsafe { self.addr.as_ptr().byte_offset(offset as isize) };
 
                         // Drop the field using its drop function if available
                         if let Some(drop_fn) = field.shape.get().drop_in_place {
@@ -81,7 +81,7 @@ impl ShapeUninit<'_> {
     /// - `self` outlives the returned pointer
     /// - The returned pointer is not aliased
     /// - The provided shape matches the shape of the data
-    pub unsafe fn as_ptr(&self, expected_desc: ShapeDesc) -> *mut u8 {
+    pub unsafe fn as_ptr(&self, expected_desc: ShapeDesc) -> *mut () {
         if self.shape_desc == expected_desc {
             self.addr.as_ptr()
         } else {
@@ -149,7 +149,7 @@ impl ShapeUninit<'_> {
                     .find(|(_, f)| f.name == field.name)
                 {
                     if let Some(offset) = field.offset {
-                        let field_addr = unsafe { self.addr.add(offset.get() as usize) };
+                        let field_addr = unsafe { self.addr.byte_offset(offset.get() as isize) };
                         let init_field_slot = InitFieldSlot::Struct {
                             index,
                             set: &mut self.init_fields,
