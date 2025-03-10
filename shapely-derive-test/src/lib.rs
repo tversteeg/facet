@@ -5,8 +5,9 @@ mod tests {
     use shapely::Shapely;
 
     #[derive(Shapely)]
-    struct Blah {
-        a: u32,
+    pub struct Blah {
+        foo: u32,
+        bar: String,
     }
 
     #[test]
@@ -15,12 +16,13 @@ mod tests {
         shapely::parse_enum!(+.);
         shapely::parse_enum!(--.);
         shapely::parse_enum!(-.);
-        shapely::parse_enum!(,$);
 
         shapely::parse_struct_like! {
             struct Yay {
                 a: u32,
             }
         }
+
+        println!("{}", Blah::get_parsed_structure())
     }
 }

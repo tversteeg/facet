@@ -2,6 +2,7 @@
 use unsynn::*;
 
 keyword! {
+    Pub = "pub";
     Struct = "struct";
 }
 
@@ -11,21 +12,20 @@ unsynn! {
         One(Plus, Dot),
         TwoS { a: Minus, b: Minus, c: Dot},
         OneS { a: Minus, b: Dot },
-        // the Expect<Dollar> shows a rust-analyzer error here, which is probably a bug in r-a
-        PunctBreak(Punct, Expect<Dollar>),
     }
 
     struct StructLike {
+        _pub: Option<Pub>,
         _kw_struct: Struct,
         name: Ident,
-        body: GroupContaining<Vec<FieldLike>>,
+        body: GroupContaining<CommaDelimitedVec<FieldLike>>,
     }
 
     struct FieldLike {
+        _pub: Option<Pub>,
         name: Ident,
         _colon: Colon,
         typ: Ident,
-        _comma: Option<Comma>,
     }
 }
 
@@ -62,7 +62,6 @@ pub fn shapely_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream
                 {dbg_s:?}
             }}
         }}",
-        // FIXME: interpolation is no good here, does unsynn provide a good way to do this?
         name = parsed.name
     );
     struct_def.into_token_stream().into()
