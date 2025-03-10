@@ -8,13 +8,11 @@ struct FooBar {
 
 impl Shapely for FooBar {
     fn shape() -> crate::Shape {
-        use crate::Innards;
-
-        static SCHEMA: Shape = Shape {
+        static SHAPE: Shape = Shape {
             name: "FooBar",
             size: std::mem::size_of::<FooBar>(),
             align: std::mem::align_of::<FooBar>(),
-            innards: Innards::Struct {
+            innards: crate::Innards::Struct {
                 fields: crate::struct_fields!(FooBar, (foo, bar)),
             },
             display: None,
@@ -23,7 +21,7 @@ impl Shapely for FooBar {
             }),
             set_to_default: None,
         };
-        SCHEMA
+        SHAPE
     }
 }
 
@@ -148,4 +146,144 @@ fn build_u64_get_u32_through_reflection() {
     // Attempt to build as u32 instead of u64
     let _value = uninit.build::<u32>();
     // This should panic due to type mismatch
+}
+
+#[test]
+fn build_struct_with_drop_field() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    static DROP_COUNT: AtomicUsize = AtomicUsize::new(0);
+
+    struct DropCounter;
+
+    impl Shapely for DropCounter {
+        fn shape() -> crate::Shape {
+            Shape {
+                name: "DropCounter",
+                size: std::mem::size_of::<DropCounter>(),
+                align: std::mem::align_of::<DropCounter>(),
+                innards: crate::Innards::Struct { fields: &[] },
+                display: None,
+                debug: None,
+                set_to_default: None,
+            }
+        }
+    }
+
+    impl Drop for DropCounter {
+        fn drop(&mut self) {
+            DROP_COUNT.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
+    struct StructWithDrop {
+        counter: DropCounter,
+        value: i32,
+    }
+
+    impl Shapely for StructWithDrop {
+        fn shape() -> crate::Shape {
+            static SHAPE: Shape = Shape {
+                name: "StructWithDrop",
+                size: std::mem::size_of::<StructWithDrop>(),
+                align: std::mem::align_of::<StructWithDrop>(),
+                innards: crate::Innards::Struct {
+                    fields: crate::struct_fields!(StructWithDrop, (counter, value)),
+                },
+                display: None,
+                debug: None,
+                set_to_default: None,
+            };
+            SHAPE
+        }
+    }
+
+    let shape = StructWithDrop::shape();
+    let mut uninit = StructWithDrop::shape_uninit();
+
+    let counter_field = shape.innards.static_fields()[0];
+    let value_field = shape.innards.static_fields()[1];
+
+    // First assignment
+    {
+        let slot = uninit.slot(counter_field).unwrap();
+        slot.fill(DropCounter);
+    }
+
+    // Second assignment, should trigger drop of the first value
+    {
+        let slot = uninit.slot(counter_field).unwrap();
+        slot.fill(DropCounter);
+    }
+
+    // Set the value field
+    {
+        let slot = uninit.slot(value_field).unwrap();
+        slot.fill(42i32);
+    }
+
+    let _struct_with_drop = uninit.build::<StructWithDrop>();
+
+    // Check that drop was called once for the first assignment
+    assert_eq!(DROP_COUNT.load(Ordering::SeqCst), 1);
+
+    // Explicitly drop _struct_with_drop
+    drop(_struct_with_drop);
+
+    // Check that drop was called twice: once for the first assignment and once for the final instance
+    assert_eq!(DROP_COUNT.load(Ordering::SeqCst), 2);
+}
+
+#[test]
+fn build_scalar_with_drop() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    static DROP_COUNT: AtomicUsize = AtomicUsize::new(0);
+
+    struct DropScalar;
+
+    impl Shapely for DropScalar {
+        fn shape() -> crate::Shape {
+            Shape {
+                name: "DropScalar",
+                size: std::mem::size_of::<DropScalar>(),
+                align: std::mem::align_of::<DropScalar>(),
+                innards: crate::Innards::Scalar(crate::Scalar::Nothing),
+                display: None,
+                debug: None,
+                set_to_default: None,
+            }
+        }
+    }
+
+    impl Drop for DropScalar {
+        fn drop(&mut self) {
+            DROP_COUNT.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
+    let mut uninit = DropScalar::shape_uninit();
+
+    // First assignment
+    {
+        let slot = uninit.scalar_slot().unwrap();
+        slot.fill(DropScalar);
+    }
+
+    // Second assignment, should trigger drop of the first value
+    {
+        let slot = uninit.scalar_slot().unwrap();
+        slot.fill(DropScalar);
+    }
+
+    let _drop_scalar = uninit.build::<DropScalar>();
+
+    // Check that drop was called once for the first assignment
+    assert_eq!(DROP_COUNT.load(Ordering::SeqCst), 1);
+
+    // Explicitly drop _drop_scalar
+    drop(_drop_scalar);
+
+    // Check that drop was called twice: once for the first assignment and once for the final instance
+    assert_eq!(DROP_COUNT.load(Ordering::SeqCst), 2);
 }

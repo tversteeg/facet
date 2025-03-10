@@ -222,6 +222,9 @@ pub enum Scalar {
     F64,
 
     Boolean,
+
+    /// An empty tuple, null, undefined, whatever you wish
+    Nothing,
 }
 
 /// A function that writes a field to a formatter
