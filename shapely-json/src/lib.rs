@@ -93,7 +93,7 @@ pub fn from_json<'input>(
         trace!(
             "Successfully deserialized value for shape: \x1b[1;32m{}\x1b[0m at address \x1b[1;34m{:?}\x1b[0m\n",
             shape.name,
-            partial.addr()
+            partial.addr_for_display()
         );
         Ok(())
     }

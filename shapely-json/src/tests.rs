@@ -35,7 +35,7 @@ fn test_from_json() {
     let json = r#"{"name": "Alice", "age": 30}"#;
 
     let mut test_struct = TestStruct::partial();
-    eprintln!("Address of test_struct: {:p}", test_struct.addr());
+    eprintln!("Address of test_struct: {:p}", test_struct.addr_for_display());
     let result = from_json(&mut test_struct, json);
     result.unwrap();
 
@@ -45,12 +45,12 @@ fn test_from_json() {
 
     let age_addr = unsafe {
         test_struct
-            .addr()
+            .addr_for_display()
             .byte_offset(age_field.offset.unwrap().get() as isize)
     };
     let name_addr = unsafe {
         test_struct
-            .addr()
+            .addr_for_display()
             .byte_offset(name_field.offset.unwrap().get() as isize)
     };
 

@@ -5,7 +5,7 @@ use crate::{trace, InitFieldSlot, ShapeDesc, Shapely};
 
 enum Destination {
     /// Writes directly to an (uninitialized) struct field
-    StructField { field_addr: NonNull<u8> },
+    StructField { field_addr: Option<NonNull<u8>> },
 
     /// Inserts into a HashMap
     HashMap { map: NonNull<u8>, key: String },
@@ -26,7 +26,7 @@ pub struct Slot<'s> {
 impl<'s> Slot<'s> {
     #[inline(always)]
     pub fn for_struct_field(
-        field_addr: NonNull<u8>,
+        field_addr: Option<NonNull<u8>>,
         field_shape: ShapeDesc,
         init_field_slot: InitFieldSlot<'s>,
     ) -> Self {
@@ -70,16 +70,28 @@ impl<'s> Slot<'s> {
         unsafe {
             match self.dest {
                 Destination::StructField { field_addr } => {
-                    let field_addr = field_addr.as_ptr();
-                    trace!(
-                        "Filling struct field at address: \x1b[33m{:?}\x1b[0m",
-                        field_addr
-                    );
                     if self.init_field_slot.is_init() {
                         trace!("Field already initialized, dropping existing value");
-                        std::ptr::drop_in_place(field_addr as *mut T);
+                        if let Some(drop_fn) = self.field_shape.get().drop_in_place {
+                            drop_fn(
+                                field_addr
+                                    .map(|p| p.as_ptr())
+                                    .unwrap_or(std::ptr::null_mut()),
+                            );
+                        }
                     }
-                    std::ptr::write(field_addr as *mut T, value);
+                    if let Some(field_addr) = field_addr {
+                        let field_addr = field_addr.as_ptr();
+                        trace!(
+                            "Filling struct field at address: \x1b[33m{:?}\x1b[0m",
+                            field_addr
+                        );
+                        std::ptr::write(field_addr as *mut T, value);
+                    } else {
+                        // ZST, no need to do anything
+                        trace!("Skipping write for ZST field");
+                        std::mem::forget(value);
+                    }
                 }
                 Destination::HashMap { map, key } => {
                     let map = &mut *(map.as_ptr() as *mut HashMap<String, T>);
@@ -110,27 +122,36 @@ impl<'s> Slot<'s> {
         unsafe {
             match self.dest {
                 Destination::StructField { field_addr } => {
-                    let field_addr = field_addr.as_ptr();
                     let size = self.field_shape.get().layout.size();
-                    trace!(
-                        "Filling struct field: src=\x1b[33m{:?}\x1b[0m, dst=\x1b[33m{:?}\x1b[0m, size=\x1b[33m{}\x1b[0m bytes",
-                        partial.addr.as_ptr(),
-                        field_addr,
-                        size
-                    );
-                    if self.init_field_slot.is_init() {
-                        trace!("Field is already initialized, dropping existing value");
-                        if let Some(drop_fn) = self.field_shape.get().drop_in_place {
-                            drop_fn(field_addr);
-                        }
+                    if let Some(drop_fn) = self.field_shape.get().drop_in_place {
+                        drop_fn(
+                            field_addr
+                                .map(|p| p.as_ptr())
+                                .unwrap_or(std::ptr::null_mut()),
+                        );
                     }
-                    std::ptr::copy_nonoverlapping(partial.addr.as_ptr(), field_addr, size);
+                    if let Some(field_addr) = field_addr {
+                        let field_addr = field_addr.as_ptr();
+                        trace!(
+                            "Filling struct field: src=\x1b[33m{:?}\x1b[0m, dst=\x1b[33m{:?}\x1b[0m, size=\x1b[33m{}\x1b[0m bytes",
+                            partial.addr.unwrap().as_ptr(),
+                            field_addr,
+                            size
+                        );
+                        std::ptr::copy_nonoverlapping(
+                            partial.addr.unwrap().as_ptr(),
+                            field_addr,
+                            size,
+                        );
+                    } else {
+                        trace!("Skipping write for ZST field");
+                    }
                 }
                 Destination::HashMap { map: _, ref key } => {
                     trace!(
                         "Filling HashMap entry: key=\x1b[33m{}\x1b[0m, src=\x1b[33m{:?}\x1b[0m, size=\x1b[33m{}\x1b[0m bytes",
                         key,
-                        partial.addr.as_ptr(),
+                        partial.addr.unwrap().as_ptr(),
                         self.field_shape.get().layout.size()
                     );
                     // TODO: Implement for HashMap

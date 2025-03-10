@@ -16,8 +16,8 @@ pub struct Partial<'s> {
 
     pub(crate) phantom: PhantomData<&'s ()>, // NonNull is covariant...
 
-    /// Address of the value in memory
-    pub(crate) addr: NonNull<u8>,
+    /// Address of the value in memory. If None, the value is zero-sized.
+    pub(crate) addr: Option<NonNull<u8>>,
 
     /// Keeps track of which fields are initialized
     pub(crate) init_fields: InitSet64,
@@ -39,7 +39,8 @@ impl Drop for Partial<'_> {
                 for (i, field) in fields.iter().enumerate() {
                     if self.init_fields.is_set(i) && field.offset.is_some() {
                         let offset = field.offset.unwrap().get() as usize;
-                        let field_addr = unsafe { self.addr.as_ptr().byte_offset(offset as isize) };
+                        let field_addr =
+                            unsafe { self.addr.unwrap().as_ptr().byte_offset(offset as isize) };
 
                         // Drop the field using its drop function if available
                         if let Some(drop_fn) = field.shape.get().drop_in_place {
@@ -52,7 +53,7 @@ impl Drop for Partial<'_> {
                 if self.init_fields.is_set(0) {
                     // Drop the scalar value if it has a drop function
                     if let Some(drop_fn) = self.shape_desc.get().drop_in_place {
-                        drop_fn(self.addr.as_ptr());
+                        drop_fn(self.addr.unwrap().as_ptr());
                     }
                 }
             }
@@ -60,8 +61,10 @@ impl Drop for Partial<'_> {
         }
 
         // Then deallocate the memory if we own it
-        if matches!(self.origin, Origin::HeapAllocated) {
-            unsafe { alloc::dealloc(self.addr.as_ptr(), self.shape_desc.get().layout) }
+        if let Some(addr) = self.addr {
+            if matches!(self.origin, Origin::HeapAllocated) {
+                unsafe { alloc::dealloc(addr.as_ptr(), self.shape_desc.get().layout) }
+            }
         }
     }
 }
@@ -70,14 +73,19 @@ impl Partial<'_> {
     /// Allocates a partial on the heap for the given shape descriptor.
     pub fn alloc(shape_desc: ShapeDesc) -> Self {
         let layout = shape_desc.get().layout;
-        let addr = unsafe { alloc::alloc(layout) };
-        if addr.is_null() {
-            alloc::handle_alloc_error(layout);
-        }
+        let addr = if layout.size() != 0 {
+            let addr = unsafe { alloc::alloc(layout) };
+            if addr.is_null() {
+                alloc::handle_alloc_error(layout);
+            }
+            Some(NonNull::new(addr).unwrap())
+        } else {
+            None
+        };
         Self {
             origin: Origin::HeapAllocated,
             phantom: PhantomData,
-            addr: NonNull::new(addr as _).unwrap(),
+            addr,
             init_fields: Default::default(),
             shape_desc,
         }
@@ -93,29 +101,9 @@ impl Partial<'_> {
                 init_field_slot: InitFieldSlot::Ignored,
             },
             phantom: PhantomData,
-            addr: NonNull::new(uninit.as_mut_ptr() as _).unwrap(),
+            addr: Some(NonNull::new(uninit.as_mut_ptr() as _).unwrap()),
             init_fields: Default::default(),
             shape_desc: T::shape_desc(),
-        }
-    }
-
-    /// Returns a pointer to the underlying data, if the shape matches the expected shape.
-    ///
-    /// # Safety
-    ///
-    /// The caller must ensure that:
-    /// - `self` outlives the returned pointer
-    /// - The returned pointer is not aliased
-    /// - The provided shape matches the shape of the data
-    pub unsafe fn as_ptr(&self, expected_desc: ShapeDesc) -> *mut u8 {
-        if self.shape_desc == expected_desc {
-            self.addr.as_ptr()
-        } else {
-            panic!(
-                "Shape mismatch: expected {:?}, found {:?}",
-                expected_desc.get(),
-                self.shape_desc.get()
-            )
         }
     }
 
@@ -125,7 +113,7 @@ impl Partial<'_> {
         trace!(
             "Checking initialization of \x1b[1;33m{}\x1b[0m partial at addr \x1b[1;36m{:p}\x1b[0m",
             self.shape_desc.get().name,
-            self.addr.as_ptr()
+            self.addr_for_display()
         );
         match self.shape_desc.get().innards {
             crate::Innards::Struct { fields } => {
@@ -184,12 +172,14 @@ impl Partial<'_> {
                     .find(|(_, f)| f.name == field.name)
                 {
                     if let Some(offset) = field.offset {
-                        let field_addr = unsafe { self.addr.byte_offset(offset.get() as isize) };
+                        let field_addr =
+                            unsafe { self.addr.unwrap().byte_offset(offset.get() as isize) };
                         let init_field_slot = InitFieldSlot::Struct {
                             index,
                             set: &mut self.init_fields,
                         };
-                        let slot = Slot::for_struct_field(field_addr, field.shape, init_field_slot);
+                        let slot =
+                            Slot::for_struct_field(Some(field_addr), field.shape, init_field_slot);
                         Some(slot)
                     } else {
                         None
@@ -202,7 +192,7 @@ impl Partial<'_> {
                 // Create a slot for inserting into the HashMap
                 let init_field_slot = InitFieldSlot::Ignored;
                 let slot = Slot::for_hash_map(
-                    self.addr,
+                    self.addr.unwrap(),
                     value_shape,
                     field.name.to_string(),
                     init_field_slot,
@@ -246,7 +236,10 @@ impl Partial<'_> {
         self.check_initialization();
         self.check_shape_desc_matches::<T>();
 
-        let result = unsafe { std::ptr::read(self.addr.as_ptr() as *const T) };
+        let result = unsafe {
+            let ptr = self.addr.map_or(std::ptr::null(), |ptr| ptr.as_ptr()) as *const T;
+            std::ptr::read(ptr)
+        };
         trace!(
             "Built \x1b[1;33m{}\x1b[0m successfully",
             std::any::type_name::<T>()
@@ -259,7 +252,12 @@ impl Partial<'_> {
         self.check_initialization();
         self.check_shape_desc_matches::<T>();
 
-        let boxed = unsafe { Box::from_raw(self.addr.as_ptr() as *mut T) };
+        let boxed = unsafe {
+            let ptr = self
+                .addr
+                .map_or(std::ptr::null_mut(), |ptr| ptr.as_ptr() as *mut T);
+            Box::from_raw(ptr)
+        };
         std::mem::forget(self);
         boxed
     }
@@ -269,8 +267,9 @@ impl Partial<'_> {
     }
 
     /// Returns the address of the underlying data — for debugging purposes only.
-    pub fn addr(&self) -> *const u8 {
-        self.addr.as_ptr()
+    /// Returns null if the data is zero-sized.
+    pub fn addr_for_display(&self) -> *const u8 {
+        self.addr.map_or(std::ptr::null(), |ptr| ptr.as_ptr())
     }
 }
 
