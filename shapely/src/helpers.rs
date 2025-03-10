@@ -32,7 +32,8 @@ macro_rules! struct_field {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! struct_fields {
-    ($struct:ty, ($($field:ident),*)) => {
-        &[ $($crate::struct_field!($struct, $field)),* ]
-    };
+    ($struct:ty, ($($field:ident),*)) => {{
+        static FIELDS: &[$crate::Field] = &[ $($crate::struct_field!($struct, $field)),* ];
+        FIELDS
+    }};
 }

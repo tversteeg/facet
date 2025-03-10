@@ -1,6 +1,6 @@
 use std::{alloc::Layout, collections::HashMap};
 
-use crate::{Innards, Shape, Shapely};
+use crate::{mini_typeid, Innards, Shape, Shapely};
 
 impl<V> Shapely for HashMap<String, V>
 where
@@ -9,6 +9,7 @@ where
     fn shape() -> Shape {
         Shape {
             name: "HashMap<String, V>",
+            typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<HashMap<String, V>>(),
             innards: Innards::HashMap {
                 value_shape: V::shape_desc(),

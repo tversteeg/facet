@@ -8,6 +8,7 @@ macro_rules! impl_shapely_for_integer {
             fn shape() -> Shape {
                 Shape {
                     name: stringify!($type),
+                    typeid: mini_typeid::of::<Self>(),
                     layout: Layout::new::<$type>(),
                     innards: Innards::Scalar($scalar),
                     display: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
@@ -42,6 +43,7 @@ macro_rules! impl_schematic_for_float {
             fn shape() -> Shape {
                 Shape {
                     name: stringify!($type),
+                    typeid: mini_typeid::of::<Self>(),
                     layout: Layout::new::<$type>(),
                     innards: Innards::Scalar($scalar),
                     display: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
@@ -68,6 +70,7 @@ impl Shapely for String {
     fn shape() -> Shape {
         Shape {
             name: "String",
+            typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<String>(),
             innards: Innards::Scalar(Scalar::String),
             display: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
@@ -90,6 +93,7 @@ impl Shapely for bool {
     fn shape() -> Shape {
         Shape {
             name: "bool",
+            typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<bool>(),
             innards: Innards::Scalar(Scalar::Boolean),
             display: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
@@ -111,6 +115,7 @@ impl Shapely for () {
     fn shape() -> Shape {
         Shape {
             name: "()",
+            typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<()>(),
             innards: Innards::Scalar(Scalar::Nothing),
             display: Some(|_addr: *const u8, f: &mut std::fmt::Formatter| write!(f, "()")),

@@ -22,6 +22,8 @@ pub use partial::*;
 mod helpers;
 pub use helpers::*;
 
+pub mod mini_typeid;
+
 #[doc(hidden)]
 pub mod log;
 pub use log::*;

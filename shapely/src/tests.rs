@@ -1,4 +1,4 @@
-use crate::{Shape, Shapely};
+use crate::{mini_typeid, Shape, Shapely};
 
 #[derive(Debug, PartialEq, Eq)]
 struct FooBar {
@@ -8,20 +8,20 @@ struct FooBar {
 
 impl Shapely for FooBar {
     fn shape() -> crate::Shape {
-        static SHAPE: Shape = Shape {
+        Shape {
             name: "FooBar",
-            layout: std::alloc::Layout::new::<FooBar>(),
+            typeid: mini_typeid::of::<Self>(),
+            layout: std::alloc::Layout::new::<Self>(),
             innards: crate::Innards::Struct {
                 fields: crate::struct_fields!(FooBar, (foo, bar)),
             },
             display: None,
             debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| {
-                std::fmt::Debug::fmt(unsafe { &*(addr as *const FooBar) }, f)
+                std::fmt::Debug::fmt(unsafe { &*(addr as *const Self) }, f)
             }),
             set_to_default: None,
-            drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut FooBar) }),
-        };
-        SHAPE
+            drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
+        }
     }
 }
 
@@ -133,6 +133,7 @@ fn build_struct_with_drop_field() {
         fn shape() -> crate::Shape {
             Shape {
                 name: "DropCounter",
+                typeid: mini_typeid::of::<DropCounter>(),
                 layout: std::alloc::Layout::new::<DropCounter>(),
                 innards: crate::Innards::Struct { fields: &[] },
                 display: None,
@@ -158,8 +159,9 @@ fn build_struct_with_drop_field() {
 
     impl Shapely for StructWithDrop {
         fn shape() -> crate::Shape {
-            static SHAPE: Shape = Shape {
+            Shape {
                 name: "StructWithDrop",
+                typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<StructWithDrop>(),
                 innards: crate::Innards::Struct {
                     fields: crate::struct_fields!(StructWithDrop, (counter, value)),
@@ -170,8 +172,7 @@ fn build_struct_with_drop_field() {
                 drop_in_place: Some(|ptr| unsafe {
                     std::ptr::drop_in_place(ptr as *mut StructWithDrop)
                 }),
-            };
-            SHAPE
+            }
         }
     }
 
@@ -223,14 +224,13 @@ fn build_scalar_with_drop() {
         fn shape() -> crate::Shape {
             Shape {
                 name: "DropScalar",
-                layout: std::alloc::Layout::new::<DropScalar>(),
+                typeid: mini_typeid::of::<Self>(),
+                layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
                 display: None,
                 debug: None,
                 set_to_default: None,
-                drop_in_place: Some(|ptr| unsafe {
-                    std::ptr::drop_in_place(ptr as *mut DropScalar)
-                }),
+                drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
             }
         }
     }
@@ -293,13 +293,14 @@ fn build_truck_with_drop_fields() {
         fn shape() -> crate::Shape {
             Shape {
                 name: "Engine",
-                layout: std::alloc::Layout::new::<Engine>(),
+                typeid: mini_typeid::of::<Self>(),
+                layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
                 display: None,
                 debug: None,
                 set_to_default: None,
                 drop_in_place: Some(|ptr| unsafe {
-                    std::ptr::drop_in_place(ptr as *mut Engine);
+                    std::ptr::drop_in_place(ptr as *mut Self);
                 }),
             }
         }
@@ -309,12 +310,13 @@ fn build_truck_with_drop_fields() {
         fn shape() -> crate::Shape {
             Shape {
                 name: "Wheels",
-                layout: std::alloc::Layout::new::<Wheels>(),
+                typeid: mini_typeid::of::<Self>(),
+                layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
                 display: None,
                 debug: None,
                 set_to_default: None,
-                drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Wheels) }),
+                drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
             }
         }
     }
@@ -326,18 +328,18 @@ fn build_truck_with_drop_fields() {
 
     impl Shapely for Truck {
         fn shape() -> crate::Shape {
-            static SHAPE: Shape = Shape {
+            Shape {
                 name: "Truck",
-                layout: std::alloc::Layout::new::<Truck>(),
+                typeid: mini_typeid::of::<Self>(),
+                layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Struct {
                     fields: crate::struct_fields!(Truck, (engine, wheels)),
                 },
                 display: None,
                 debug: None,
                 set_to_default: None,
-                drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Truck) }),
-            };
-            SHAPE
+                drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
+            }
         }
     }
 
@@ -439,14 +441,13 @@ fn test_partial_build_in_place() {
         fn shape() -> crate::Shape {
             Shape {
                 name: "DropCounter",
-                layout: std::alloc::Layout::new::<DropCounter>(),
+                typeid: mini_typeid::of::<Self>(),
+                layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Struct { fields: &[] },
                 display: None,
                 debug: None,
                 set_to_default: None,
-                drop_in_place: Some(|ptr| unsafe {
-                    std::ptr::drop_in_place(ptr as *mut DropCounter)
-                }),
+                drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
             }
         }
     }
@@ -464,20 +465,18 @@ fn test_partial_build_in_place() {
 
     impl Shapely for TestShape {
         fn shape() -> crate::Shape {
-            static SHAPE: Shape = Shape {
+            Shape {
                 name: "TestShape",
-                layout: std::alloc::Layout::new::<TestShape>(),
+                typeid: mini_typeid::of::<Self>(),
+                layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Struct {
                     fields: crate::struct_fields!(TestShape, (counter, unit)),
                 },
                 display: None,
                 debug: None,
                 set_to_default: None,
-                drop_in_place: Some(|ptr| unsafe {
-                    std::ptr::drop_in_place(ptr as *mut TestShape)
-                }),
-            };
-            SHAPE
+                drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
+            }
         }
     }
 

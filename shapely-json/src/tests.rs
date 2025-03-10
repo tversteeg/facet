@@ -12,30 +12,30 @@ fn test_from_json() {
 
     impl Shapely for TestStruct {
         fn shape() -> shapely::Shape {
-            use shapely::Innards;
-            static SCHEMA: shapely::Shape = shapely::Shape {
+            shapely::Shape {
                 name: "TestStruct",
-                layout: std::alloc::Layout::new::<TestStruct>(),
-                innards: Innards::Struct {
+                layout: std::alloc::Layout::new::<Self>(),
+                innards: shapely::Innards::Struct {
                     fields: shapely::struct_fields!(TestStruct, (name, age)),
                 },
                 display: None,
                 debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| {
-                    std::fmt::Debug::fmt(unsafe { &*(addr as *const TestStruct) }, f)
+                    std::fmt::Debug::fmt(unsafe { &*(addr as *const Self) }, f)
                 }),
                 set_to_default: None,
-                drop_in_place: Some(|ptr| unsafe {
-                    std::ptr::drop_in_place(ptr as *mut TestStruct)
-                }),
-            };
-            SCHEMA
+                drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
+                typeid: std::any::TypeId::of::<Self>(),
+            }
         }
     }
 
     let json = r#"{"name": "Alice", "age": 30}"#;
 
     let mut test_struct = TestStruct::partial();
-    eprintln!("Address of test_struct: {:p}", test_struct.addr_for_display());
+    eprintln!(
+        "Address of test_struct: {:p}",
+        test_struct.addr_for_display()
+    );
     let result = from_json(&mut test_struct, json);
     result.unwrap();
 

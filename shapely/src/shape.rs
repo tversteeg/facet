@@ -1,16 +1,19 @@
-use std::{alloc::Layout, collections::HashSet, fmt::Formatter};
+use std::{alloc::Layout, any::TypeId, collections::HashSet, fmt::Formatter};
 
 use nonmax::NonMaxU32;
 
 use crate::trace;
 
 /// Schema for reflection of a type
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy)]
 pub struct Shape {
     /// A descriptive name for the type, e.g. `u64`, or `Person`
     pub name: &'static str,
 
-    // Size & alignment
+    /// The typeid of the underlying type
+    pub typeid: TypeId,
+
+    /// Size & alignment
     pub layout: Layout,
 
     /// Details/contents of the value
@@ -32,6 +35,20 @@ pub struct Shape {
     /// This function should be called only for initialized values.
     /// It's the caller's responsibility to ensure the address points to a valid value.
     pub drop_in_place: Option<DropFunction>,
+}
+
+impl PartialEq for Shape {
+    fn eq(&self, other: &Self) -> bool {
+        self.typeid == other.typeid
+    }
+}
+
+impl Eq for Shape {}
+
+impl std::hash::Hash for Shape {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.typeid.hash(state);
+    }
 }
 
 impl Shape {
