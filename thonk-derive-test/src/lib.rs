@@ -2,10 +2,12 @@
 
 #[cfg(test)]
 mod tests {
-    // use thonk::Thonk;
+    use thonk::Thonk;
 
-    // #[derive(Thonk)]
-    // struct Blah {}
+    #[derive(Thonk)]
+    struct Blah {
+        a: u32,
+    }
 
     #[test]
     fn regular() {
