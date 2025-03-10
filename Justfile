@@ -1,7 +1,9 @@
 
 check:
   cargo clippy --all-targets
-  RUST_LOG=trace cargo nextest run
+  cargo nextest run
+  cargo +nightly miri nextest run
+
 
 publish:
   cargo +nightly publish --workspace -Zpackage-workspace
