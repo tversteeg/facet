@@ -1,10 +1,15 @@
-use std::{collections::HashMap, mem};
+use std::{
+    collections::HashMap,
+    mem::{self, MaybeUninit},
+};
 
-use crate::{MapManipulator, MapShape, Scalar, Schema, Schematic, Shape};
+use crate::{
+    MapFieldSlot, MapManipulator, MapShape, Scalar, Schema, Schematic, SetFieldOutcome, Shape,
+};
 
 impl Schematic for u64 {
-    fn schema() -> &'static Schema {
-        static SCHEMA: Schema = Schema {
+    fn schema() -> Schema {
+        Schema {
             name: "u64",
             size: mem::size_of::<u64>(),
             align: mem::align_of::<u64>(),
@@ -18,14 +23,13 @@ impl Schematic for u64 {
             set_to_default: Some(|addr: *mut u8| unsafe {
                 *(addr as *mut u64) = 0;
             }),
-        };
-        &SCHEMA
+        }
     }
 }
 
 impl Schematic for String {
-    fn schema() -> &'static Schema {
-        static SCHEMA: Schema = Schema {
+    fn schema() -> Schema {
+        Schema {
             name: "String",
             size: mem::size_of::<String>(),
             align: mem::align_of::<String>(),
@@ -39,45 +43,50 @@ impl Schematic for String {
             set_to_default: Some(|addr: *mut u8| unsafe {
                 *(addr as *mut String) = String::new();
             }),
-        };
-        &SCHEMA
+        }
     }
 }
 
 impl<V> Schematic for HashMap<String, V>
 where
-    V: Schematic,
+    V: Schematic + 'static,
 {
-    fn schema() -> &'static Schema {
-        static SCHEMA: Schema = Schema {
+    fn schema() -> Schema {
+        struct HashMapManipulator<V>(std::marker::PhantomData<V>);
+
+        impl<V> MapManipulator for HashMapManipulator<V> {
+            unsafe fn set_field_raw(
+                &self,
+                map_addr: *mut u8,
+                slot: MapFieldSlot,
+                write_field: &mut dyn FnMut(*mut u8),
+            ) -> SetFieldOutcome {
+                unsafe {
+                    let map = &mut *(map_addr as *mut HashMap<String, MaybeUninit<V>>);
+                    let name = slot.name();
+                    let entry = map
+                        .entry(name.to_string())
+                        .or_insert_with(|| MaybeUninit::uninit());
+                    // # Safety: write_field is supposed to fully initialize the field.
+                    write_field(entry.as_mut_ptr() as *mut u8);
+                    SetFieldOutcome::Accepted
+                }
+            }
+        }
+        Schema {
             name: "HashMap<String, V>",
-            // all good, values are heap-allocated
-            size: mem::size_of::<HashMap<String, ()>>(),
-            align: mem::align_of::<HashMap<String, ()>>(),
+            size: mem::size_of::<HashMap<String, V>>(),
+            align: mem::align_of::<HashMap<String, V>>(),
             shape: Shape::Map(MapShape {
                 fields: &[],
                 open_ended: true,
-                manipulator: &HashMapManipulator,
+                manipulator: &HashMapManipulator(std::marker::PhantomData::<V>),
             }),
             display: None,
             debug: None,
             set_to_default: Some(|addr: *mut u8| unsafe {
                 *(addr as *mut HashMap<String, V>) = HashMap::new();
             }),
-        };
-
-        struct HashMapManipulator;
-
-        impl MapManipulator for HashMapManipulator {
-            unsafe fn set_field_raw(
-                &self,
-                _map_addr: *mut u8,
-                _field: &MapField,
-                _on_addr: &mut dyn FnMut(*mut u8),
-            ) {
-                // Implementation left empty as HashMap doesn't have fixed fields
-            }
         }
-        &SCHEMA
     }
 }

@@ -5,10 +5,11 @@ mod builtin_impls;
 /// Provides reflection so you can thonk about your types.
 pub trait Schematic {
     /// Returns the thonk schema
-    fn schema() -> &'static Schema;
+    fn schema() -> Schema;
 }
 
 /// Schema for reflection of a type
+#[derive(Clone, Copy)]
 pub struct Schema {
     /// A descriptive name for the schema, e.g. `u64`, or `Person`
     pub name: &'static str,
@@ -90,7 +91,7 @@ pub struct MapField {
     pub name: &'static str,
 
     /// schema of the inner type
-    pub schema: fn() -> &'static Schema,
+    pub schema: fn() -> Schema,
 }
 
 pub enum MapFieldSlot<'s> {
@@ -98,10 +99,7 @@ pub enum MapFieldSlot<'s> {
     Static(&'s MapField),
 
     // a field we found out while deserializing
-    Dynamic {
-        name: &'s str,
-        schema: &'static Schema,
-    },
+    Dynamic { name: &'s str, schema: Schema },
 }
 
 impl<'a> From<&'a MapField> for MapFieldSlot<'a> {
@@ -110,7 +108,7 @@ impl<'a> From<&'a MapField> for MapFieldSlot<'a> {
     }
 }
 
-impl<'s> MapFieldSlot<'s> {
+impl MapFieldSlot<'_> {
     fn name(&self) -> &str {
         match self {
             MapFieldSlot::Static(field) => field.name,
@@ -120,7 +118,7 @@ impl<'s> MapFieldSlot<'s> {
 }
 
 /// Given the map's address, calls on_field_addr with the address of the requested field
-pub trait MapManipulator: Send + Sync + 'static {
+pub trait MapManipulator {
     /// Returns the address of a given field. If the map accomodates dynamically-added fields,
     /// this might for example, insert an entry into a HashMap.
     ///
@@ -129,14 +127,15 @@ pub trait MapManipulator: Send + Sync + 'static {
     /// The caller must ensure that:
     /// - `map_addr` is a valid, properly aligned pointer to an instance of the map type.
     /// - `field` corresponds to an existing field in the map's schema.
-    /// - Any modifications made via `on_addr` maintain the field's type invariants.
-    /// - The data pointed to by `map_addr` remains valid for the duration of the `on_addr` callback.
-    /// - The address provided to `on_addr` is not used after the callback returns.
+    /// - Any modifications made via `write_field` maintain the field's type invariants.
+    /// - The data pointed to by `map_addr` remains valid for the duration of the `write_field` callback.
+    /// - The address provided to `write_field` is not used after the callback returns.
+    /// - The callback must fully initialize the field at the provided address.
     unsafe fn set_field_raw(
         &self,
         map_addr: *mut u8,
         field: MapFieldSlot,
-        on_addr: &mut dyn FnMut(*mut u8),
+        write_field: &mut dyn FnMut(*mut u8),
     ) -> SetFieldOutcome;
 }
 
@@ -191,7 +190,7 @@ mod tests {
     }
 
     impl Schematic for FooBar {
-        fn schema() -> &'static crate::Schema {
+        fn schema() -> crate::Schema {
             use crate::{MapField, MapManipulator, MapShape, Schema, Shape};
             struct FooBarManipulator;
 
@@ -200,13 +199,13 @@ mod tests {
                     &self,
                     map_addr: *mut u8,
                     field: MapFieldSlot,
-                    on_addr: &mut dyn FnMut(*mut u8),
+                    write_field: &mut dyn FnMut(*mut u8),
                 ) -> SetFieldOutcome {
                     unsafe {
                         let foo_bar = &mut *(map_addr as *mut FooBar);
                         match field.name() {
-                            "foo" => on_addr(&mut foo_bar.foo as *mut u64 as _),
-                            "bar" => on_addr(&mut foo_bar.bar as *mut String as _),
+                            "foo" => write_field(&mut foo_bar.foo as *mut u64 as _),
+                            "bar" => write_field(&mut foo_bar.bar as *mut String as _),
                             _ => return SetFieldOutcome::Rejected,
                         }
                         SetFieldOutcome::Accepted
@@ -214,7 +213,7 @@ mod tests {
                 }
             }
 
-            static SCHEMA: Schema = Schema {
+            Schema {
                 name: "FooBar",
                 size: std::mem::size_of::<FooBar>(),
                 align: std::mem::align_of::<FooBar>(),
@@ -235,8 +234,7 @@ mod tests {
                 display: None,
                 debug: None,
                 set_to_default: None,
-            };
-            &SCHEMA
+            }
         }
     }
 
