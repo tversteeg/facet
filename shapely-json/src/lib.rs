@@ -31,16 +31,12 @@ pub fn from_json<'input>(
                         trace!("Deserializing String");
                         let s = parser.parse_string()?;
                         trace!("Deserialized String: {}", s);
-                        unsafe {
-                            *(target as *mut String) = s;
-                        }
+                        target.scalar_slot().unwrap().fill(s);
                     }
                     Scalar::U64 => {
                         trace!("Deserializing U64");
                         let n = parser.parse_u64()?;
-                        unsafe {
-                            *(target as *mut u64) = n;
-                        }
+                        target.scalar_slot().unwrap().fill(n);
                         trace!("Deserialized U64: {}", n);
                     }
                     // Add other scalar types as needed
@@ -59,19 +55,15 @@ pub fn from_json<'input>(
                 while let Some(key) = parser.parse_object_key()? {
                     trace!("Processing struct key: {}", key);
 
-                    if let Some(field) = fields.iter().find(|f| f.name == key) {
-                        let field_schema = (field.shape)();
+                    if let Some(field) = fields.iter().find(|f| f.name == key).copied() {
+                        let field_schema = field.shape;
                         trace!("Deserializing field: {}", field.name);
                         let mut field_error = None;
                         unsafe {
-                            let slot = manipulator.slot(target, field);
-                            slot.set(&mut |field_ptr| {
-                                if let Err(err) =
-                                    deserialize_value(parser, field_ptr, &field_schema)
-                                {
-                                    field_error = Some(err);
-                                }
-                            });
+                            let slot = target.slot(field);
+                            if let Err(err) = deserialize_value(parser, slot.fill(), field_schema) {
+                                field_error = Some(err);
+                            }
                         }
                         if let Some(err) = field_error {
                             return Err(err);
@@ -96,7 +88,7 @@ pub fn from_json<'input>(
         Ok(())
     }
 
-    let result = deserialize_value(&mut parser, target, &schema);
+    let result = deserialize_value(&mut parser, target, target.shape());
     if result.is_ok() {
         trace!("JSON deserialization completed successfully");
     } else {
