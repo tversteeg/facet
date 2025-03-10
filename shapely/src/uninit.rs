@@ -57,14 +57,23 @@ impl ShapeUninit {
         }
     }
 
+    /// Returns a slot for initializing a field in the shape.
     pub fn slot<'s>(&'s mut self, field: Field) -> Option<Slot<'s>> {
         match self.shape.innards {
             crate::Innards::Struct { fields } => {
-                if let Some(field) = fields.iter().find(|f| f.name == field.name) {
+                if let Some((index, field)) = fields
+                    .iter()
+                    .enumerate()
+                    .find(|(_, f)| f.name == field.name)
+                {
+                    if self.init_fields.is_set(index) {
+                        // TODO: We could provide a way to replace fields that have already been initialized, but for now it's just gonna panic.
+                        panic!("Field '{}' is already initialized", field.name);
+                    }
                     if let Some(offset) = field.offset {
                         let field_addr = unsafe { self.addr.add(offset.get() as usize) };
                         let init_field_slot = InitFieldSlot::Struct {
-                            index: fields.iter().position(|f| f.name == field.name).unwrap(),
+                            index,
                             set: &mut self.init_fields,
                         };
                         let slot =

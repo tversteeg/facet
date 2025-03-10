@@ -1,5 +1,3 @@
-use nonmax::NonMaxU32;
-
 use crate::{Shape, Shapely};
 
 #[derive(Debug, PartialEq, Eq)]
@@ -10,45 +8,19 @@ struct FooBar {
 
 impl Shapely for FooBar {
     fn shape() -> crate::Shape {
-        use crate::{Field, Innards};
-
-        fn shape_of<TStruct, TField: Shapely>(_f: impl Fn(TStruct) -> TField) -> Shape {
-            TField::shape()
-        }
-        macro_rules! field {
-            ($struct:ty, $field:ident) => {
-                Field {
-                    name: stringify!($field),
-                    schema: || shape_of(|s: $struct| s.$field),
-                    offset: Some({
-                        let offset = std::mem::offset_of!($struct, $field);
-                        if offset > u32::MAX as usize {
-                            panic!("Struct field offset exceeds u32::MAX");
-                        }
-                        NonMaxU32::new(offset as u32)
-                            .expect("Field offset should never be u32::MAX")
-                    }),
-                }
-            };
-        }
-
-        macro_rules! fields {
-            ($struct:ty, ($($field:ident),*)) => {
-                &[ $(field!($struct, $field)),* ]
-            };
-        }
-
-        fields!(FooBar, (foo, bar));
+        use crate::Innards;
 
         static SCHEMA: Shape = Shape {
             name: "FooBar",
             size: std::mem::size_of::<FooBar>(),
             align: std::mem::align_of::<FooBar>(),
             innards: Innards::Struct {
-                fields: fields!(FooBar, (foo, bar)),
+                fields: crate::struct_fields!(FooBar, (foo, bar)),
             },
             display: None,
-            debug: None,
+            debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| {
+                std::fmt::Debug::fmt(unsafe { &*(addr as *const FooBar) }, f)
+            }),
             set_to_default: None,
         };
         SCHEMA
@@ -58,6 +30,7 @@ impl Shapely for FooBar {
 #[test]
 fn build_foobar_through_reflection() {
     let shape = FooBar::shape();
+    eprintln!("{shape:#?}");
 
     let layout = std::alloc::Layout::from_size_align(shape.size, shape.align).unwrap();
     let ptr = unsafe { std::alloc::alloc(layout) };

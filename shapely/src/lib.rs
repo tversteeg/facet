@@ -3,7 +3,7 @@
 #[cfg(feature = "derive")]
 pub use shapely_derive::*;
 
-pub use nonmax::NonMaxU32;
+pub use nonmax::{self, NonMaxU32};
 
 use std::alloc;
 
@@ -18,6 +18,9 @@ pub use slot::Slot;
 
 mod uninit;
 pub use uninit::*;
+
+mod helpers;
+pub use helpers::*;
 
 #[cfg(all(test, feature = "derive"))]
 mod derive_tests;

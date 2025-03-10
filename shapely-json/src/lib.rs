@@ -1,5 +1,5 @@
 use parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
-use shapely::{Shape};
+use shapely::{Shape, ShapeUninit};
 
 mod log_macros;
 mod parser;
@@ -11,7 +11,7 @@ pub fn from_json<'input>(
     target: &mut ShapeUninit,
     json: &'input str,
 ) -> Result<(), JsonParseErrorWithContext<'input>> {
-    use shapely::{MapInnards, Scalar, Innards};
+    use shapely::{Scalar, Innards};
 
     trace!("Starting JSON deserialization");
     let mut parser = JsonParser::new(json);

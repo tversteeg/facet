@@ -2,13 +2,7 @@ use std::collections::HashMap;
 
 use crate::{InitFieldSlot, Shape, Shapely};
 
-/// Type alias for user data pointer
-type UserData = *mut u8;
-
-/// Type alias for destination pointer
-type StructField = *mut u8;
-
-pub enum Destination {
+enum Destination {
     /// Writes directly to an (uninitialized) struct field
     StructField { field_addr: *mut u8 },
 
@@ -16,7 +10,7 @@ pub enum Destination {
     HashMap { map: *mut u8, key: String },
 }
 
-/// Allows filling in a field of a struct, or inserting a value into a hashmap while deserializing.
+/// Allows writing into a struct field or inserting into a hash map.
 pub struct Slot<'s> {
     /// where to write the value
     dest: Destination,
