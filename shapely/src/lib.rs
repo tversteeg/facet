@@ -41,7 +41,7 @@ pub trait Shapely {
         }
         ShapeUninit {
             addr,
-            init_fields: InitFields64::new(),
+            init_fields: InitSet64::new(),
             shape,
         }
     }

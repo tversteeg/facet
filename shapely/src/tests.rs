@@ -10,7 +10,7 @@ struct FooBar {
 
 impl Shapely for FooBar {
     fn shape() -> crate::Shape {
-        use crate::{Innards, MapField, MapInnards};
+        use crate::{Innards, Field, MapInnards};
 
         fn shape_of<TStruct, TField: Shapely>(_f: impl Fn(TStruct) -> TField) -> Shape {
             TField::shape()
@@ -31,8 +31,8 @@ impl Shapely for FooBar {
                 }
             };
         }
-        static FOO_FIELD: MapField = map_field!(FooBar, foo);
-        static BAR_FIELD: MapField = map_field!(FooBar, bar);
+        static FOO_FIELD: Field = map_field!(FooBar, foo);
+        static BAR_FIELD: Field = map_field!(FooBar, bar);
 
         static SCHEMA: Shape = Shape {
             name: "FooBar",

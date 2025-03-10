@@ -49,13 +49,13 @@ fn test_from_json() {
 
     impl Shapely for TestStruct {
         fn shape() -> Shape {
-            use shapely::{Innards, MapField, MapInnards, Shaps, StructManipulator};
+            use shapely::{Innards, Field, MapInnards, Shaps, StructManipulator};
 
-            static NAME_FIELD: MapField = MapField {
+            static NAME_FIELD: Field = Field {
                 name: "name",
                 schema: <String as Shapely>::shape,
             };
-            static AGE_FIELD: MapField = MapField {
+            static AGE_FIELD: Field = Field {
                 name: "age",
                 schema: <u64 as Shapely>::shape,
             };

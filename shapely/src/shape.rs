@@ -159,8 +159,11 @@ impl std::fmt::Debug for Shape {
 /// The shape of a schema: is it more map-shaped, array-shaped, scalar-shaped?
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Innards {
-    /// Associates keys with values
-    Map(MapInnards),
+    /// Struct with statically-known fields
+    Struct { fields: &'static [Field<'static>] },
+
+    /// HashMap — keys are dynamic, values are homogeneous
+    HashMap { value_shape: fn() -> Shape },
 
     /// Ordered list of heterogenous values, variable size
     Array(&'static Shape),
@@ -172,38 +175,17 @@ pub enum Innards {
     Scalar(Scalar),
 }
 
-/// The shape of a map: works for structs, but also HashMap<String, String> for example
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum MapInnards {
-    /// Struct with statically-known fields
-    Struct {
-        fields: &'static [MapField<'static>],
-    },
-    /// HashMap — keys are dynamic, values are homogeneous
-    HashMap { value_shape: fn() -> Shape },
-}
-
-impl MapInnards {
-    /// Creates a new MapInnards for a struct with the given fields
-    pub const fn for_struct(fields: &'static [MapField<'static>]) -> Self {
-        MapInnards::Struct { fields }
-    }
-
-    /// Creates a new MapInnards for a HashMap
-    pub const fn for_hashmap(value_shape: fn() -> Shape) -> Self {
-        MapInnards::HashMap { value_shape }
-    }
-
+impl Innards {
     /// Returns a reference to the fields of this map
-    pub fn static_fields(&self) -> &'static [MapField<'static>] {
+    pub fn static_fields(&self) -> &'static [Field<'static>] {
         match self {
-            MapInnards::Struct { fields } => fields,
-            MapInnards::HashMap { .. } => &[],
+            Innards::Struct { fields } => fields,
+            _ => &[],
         }
     }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MapField<'s> {
+pub struct Field<'s> {
     /// key for the map field
     pub name: &'s str,
 
