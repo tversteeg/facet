@@ -28,7 +28,6 @@ pub struct Slot<'s> {
 }
 
 impl Slot<'_> {
-    /// Construct a new `FieldSlot` for a struct field, ready to be filled
     #[inline(always)]
     pub fn for_struct_field<TField: Shapely>(field_addr: *mut TField) -> Self {
         Self {
@@ -40,7 +39,6 @@ impl Slot<'_> {
         }
     }
 
-    /// Construct a new `FieldSlot` for a HashMap entry, ready to be filled
     #[inline(always)]
     pub fn for_hash_map<TField: Shapely>(map: *mut HashMap<String, TField>, key: String) -> Self {
         Self {
@@ -53,7 +51,6 @@ impl Slot<'_> {
         }
     }
 
-    /// Fill this field with a value.
     pub fn fill<T: Shapely>(self, value: T) {
         let value_shape = T::shape();
         if self.field_shape != value_shape {
@@ -80,38 +77,54 @@ impl Slot<'_> {
     }
 }
 
-/// Given the map's address, returns a FieldSlot for the requested field
-pub trait Slots: Send + Sync {
-    /// Returns a FieldSlot for a given field. If the map accommodates dynamically-added fields,
-    /// this might, for example, insert an entry into a HashMap.
+pub trait Slots {
+    /// If the map accommodates dynamically-added fields, this might, for example, insert an entry into a HashMap.
     ///
     /// Returns None if the field is not known and the data structure does not accommodate for arbitrary fields.
     fn slot<'a>(&'a mut self, map: &'a mut ShapeUninit, field: MapField<'_>) -> Option<Slot<'a>>;
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SlotsKind {
+    Struct,
+    HashMap,
+}
+
+impl SlotsKind {
+    pub fn to_slots(&self, shape: Shape) -> AllSlots {
+        match self {
+            SlotsKind::Struct => AllSlots::Struct(StructSlots {
+                struct_shape: shape,
+            }),
+            SlotsKind::HashMap => AllSlots::HashMap(HashMapSlots { map_shape: &shape }),
+        }
+    }
+}
+
 /// All known slots types
 pub enum AllSlots {
     Struct(StructSlots),
-    Map(HashMapSlots),
+    HashMap(HashMapSlots),
+}
+
+impl Slots for AllSlots {
+    fn slot<'a>(&'a mut self, map: &'a mut ShapeUninit, field: MapField<'_>) -> Option<Slot<'a>> {
+        match self {
+            AllSlots::Struct(inner) => inner.slot(map, field),
+            AllSlots::HashMap(inner) => inner.slot(map, field),
+        }
+    }
 }
 
 /// Manipulator for struct-like types with known field offsets
-pub struct StructSlots {
+struct StructSlots {
     struct_shape: Shape,
-}
-
-impl StructSlots {
-    /// Create a new Slots suitable for a struct — only fields listed
-    /// in the map innards will be accepted, and they all must have an offset.
-    pub fn new(struct_shape: Shape) -> Self {
-        Self { struct_shape }
-    }
 }
 
 impl Slots for StructSlots {
     fn slot<'a>(&'a mut self, map: &'a mut ShapeUninit, field: MapField<'_>) -> Option<Slot<'a>> {
         if let Innards::Map(innards) = self.struct_shape.innards {
-            if let Some(field) = innards.fields().iter().find(|f| f.name == field.name) {
+            if let Some(field) = innards.static_fields().iter().find(|f| f.name == field.name) {
                 if let Some(offset) = field.offset {
                     Some(Slot::for_struct_field(unsafe {
                         map.get_addr(&self.struct_shape).add(offset.get() as usize)
@@ -134,25 +147,6 @@ impl Slots for StructSlots {
 /// Slots for hashmaps
 struct HashMapSlots {
     map_shape: &'static Shape,
-}
-
-impl HashMapSlots {
-    /// Create a new Slots suitable for a hash map.
-    /// Validates that the provided shape is a Map with an Array inner type.
-    pub fn new<K, V>(map_shape: &'static Shape) -> Self
-    where
-        K: Shapely,
-        V: Shapely,
-    {
-        if let Innards::Map(innards) = map_shape.innards {
-            if let Innards::Array(elem_shape) = innards.fields()[0].schema().innards {
-                if elem_shape == &V::shape() {
-                    return Self { map_shape };
-                }
-            }
-        }
-        panic!("Invalid shape for HashMap: expected Map with Array inner type");
-    }
 }
 
 impl Slots for HashMapSlots {

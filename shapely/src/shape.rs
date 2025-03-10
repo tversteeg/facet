@@ -2,7 +2,7 @@ use std::{collections::HashSet, fmt::Formatter};
 
 use nonmax::NonMaxU32;
 
-use crate::{ShapeUninit, Slot};
+use crate::slot::{AllSlots, SlotsKind};
 
 /// Schema for reflection of a type
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -65,30 +65,32 @@ impl Shape {
         )?;
 
         match &self.innards {
-            Innards::Map(map) => {
-                for field in map.fields {
+            Innards::Map(map) => match map {
+                MapInnards::Struct { fields } => {
+                    for field in *fields {
+                        writeln!(
+                            f,
+                            "{:indent$}\x1b[1;32m{}\x1b[0m: ",
+                            "",
+                            field.name,
+                            indent = indent + Self::INDENT
+                        )?;
+                        (field.schema)().pretty_print_recursive_internal(
+                            f,
+                            printed_schemas,
+                            indent + Self::INDENT * 2,
+                        )?;
+                    }
+                }
+                MapInnards::HashMap => {
                     writeln!(
                         f,
-                        "{:indent$}\x1b[1;32m{}\x1b[0m: ",
+                        "{:indent$}\x1b[1;36mHashMap with arbitrary keys\x1b[0m",
                         "",
-                        field.name,
                         indent = indent + Self::INDENT
                     )?;
-                    (field.schema)().pretty_print_recursive_internal(
-                        f,
-                        printed_schemas,
-                        indent + Self::INDENT * 2,
-                    )?;
                 }
-                if map.open_ended {
-                    writeln!(
-                        f,
-                        "{:indent$}\x1b[1;31m(open-ended)\x1b[0m",
-                        "",
-                        indent = indent + Self::INDENT * 2
-                    )?;
-                }
-            }
+            },
             Innards::Array(elem_schema) => {
                 write!(
                     f,
@@ -129,9 +131,15 @@ impl Shape {
         Ok(())
     }
 
-    pub fn slots(&self) -> Option<&'static dyn Slots> {
+    pub fn slots(&self) -> Option<AllSlots> {
         match self.innards {
-            Innards::Map(map_innards) => Some((map_innards.mk_slots)(*self)),
+            Innards::Map(map) => Some(
+                match map {
+                    MapInnards::Struct { .. } => SlotsKind::Struct,
+                    MapInnards::HashMap => SlotsKind::HashMap,
+                }
+                .to_slots(*self),
+            ),
             _ => None,
         }
     }
@@ -160,92 +168,35 @@ pub enum Innards {
 }
 
 /// The shape of a map: works for structs, but also HashMap<String, String> for example
-#[derive(Clone, Copy)]
-pub struct MapInnards {
-    /// Statically-known fields
-    fields: &'static [MapField<'static>],
-
-    /// Will allow setting fields outside of the ones listed in `fields`
-    open_ended: bool,
-
-    /// Slots for setting fields
-    mk_slots: fn(Shape) -> &'static dyn Slots,
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum MapInnards {
+    /// Struct with statically-known fields
+    Struct {
+        fields: &'static [MapField<'static>],
+    },
+    /// HashMap without known fields
+    HashMap,
 }
 
 impl MapInnards {
-    /// Starts building map innards
-    pub fn builder() -> MapInnardsBuilder {
-        MapInnardsBuilder::default()
+    /// Creates a new MapInnards for a struct with the given fields
+    pub fn for_struct(fields: &'static [MapField<'static>]) -> Self {
+        MapInnards::Struct { fields }
+    }
+
+    /// Creates a new MapInnards for a HashMap
+    pub fn for_hashmap() -> Self {
+        MapInnards::HashMap
     }
 
     /// Returns a reference to the fields of this map
-    pub fn fields(&self) -> &'static [MapField<'static>] {
-        self.fields
-    }
-}
-
-#[derive(Default)]
-pub struct MapInnardsBuilder {
-    fields: Vec<MapField<'static>>,
-    open_ended: bool,
-    mk_slots: Option<fn(Shape) -> &'static dyn Slots>,
-}
-
-impl MapInnardsBuilder {
-    pub fn field(mut self, field: MapField<'static>) -> Self {
-        self.fields.push(field);
-        self
-    }
-
-    pub fn open_ended(mut self, open_ended: bool) -> Self {
-        self.open_ended = open_ended;
-        self
-    }
-
-    pub fn mk_slots(mut self, mk_slots: fn(Shape) -> &'static dyn Slots) -> Self {
-        self.mk_slots = Some(mk_slots);
-        self
-    }
-
-    pub fn build(self) -> MapInnards {
-        MapInnards {
-            fields: self.fields.into_boxed_slice().leak(),
-            open_ended: self.open_ended,
-            mk_slots: self.mk_slots.expect("mk_slots is required"),
+    pub fn static_fields(&self) -> &'static [MapField<'static>] {
+        match self {
+            MapInnards::Struct { fields } => fields,
+            MapInnards::HashMap => &[],
         }
     }
 }
-
-impl PartialEq for MapInnards {
-    fn eq(&self, other: &Self) -> bool {
-        self.fields == other.fields
-            && self.open_ended == other.open_ended
-            && std::ptr::eq(
-                self.slots as *const dyn Slots,
-                other.slots as *const dyn Slots,
-            )
-    }
-}
-
-impl Eq for MapInnards {}
-
-impl std::hash::Hash for MapInnards {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.fields.hash(state);
-        self.open_ended.hash(state);
-        (self.slots as *const dyn Slots).hash(state);
-    }
-}
-
-impl std::fmt::Debug for MapInnards {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("MapShape")
-            .field("fields", &self.fields)
-            .field("open_ended", &self.open_ended)
-            .finish()
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MapField<'s> {
     /// key for the map field
