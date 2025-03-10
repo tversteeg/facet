@@ -14,7 +14,7 @@ pub fn from_json(target: *mut u8, schema: Schema, json: &str) -> Result<(), Stri
         target: *mut u8,
         schema: &Schema,
     ) -> Result<(), String> {
-        trace!("Deserializing value with schema: {:?}", schema);
+        trace!("Deserializing value with schema:\n{:?}", schema);
         match &schema.shape {
             Shape::Scalar(scalar) => {
                 match scalar {

@@ -39,17 +39,17 @@ impl Schema {
     const INDENT: usize = 2;
 
     /// Pretty-print this schema, recursively.
-    pub fn pretty_print_recursive(&self, f: &mut Formatter, indent: usize) -> std::fmt::Result {
-        self.pretty_print_recursive_internal(f, &mut HashSet::new(), indent)
+    pub fn pretty_print_recursive(&self, f: &mut Formatter) -> std::fmt::Result {
+        self.pretty_print_recursive_internal(f, &mut HashSet::new(), 0)
     }
 
     fn pretty_print_recursive_internal(
         &self,
         f: &mut Formatter,
-        printed_schemas: &mut HashSet<&'static str>,
+        printed_schemas: &mut HashSet<Schema>,
         indent: usize,
     ) -> std::fmt::Result {
-        if !printed_schemas.insert(self.name) {
+        if !printed_schemas.insert(*self) {
             writeln!(
                 f,
                 "{:indent$}\x1b[1;33m{}\x1b[0m (\x1b[1;31malready printed\x1b[0m)",
@@ -72,24 +72,18 @@ impl Schema {
 
         match &self.shape {
             Shape::Map(map_shape) => {
-                writeln!(
-                    f,
-                    "{:indent$}\x1b[1;36mFields:\x1b[0m",
-                    "",
-                    indent = indent + Self::INDENT
-                )?;
                 for field in map_shape.fields {
-                    write!(
+                    writeln!(
                         f,
                         "{:indent$}\x1b[1;32m{}\x1b[0m: ",
                         "",
                         field.name,
-                        indent = indent + Self::INDENT * 2
+                        indent = indent + Self::INDENT
                     )?;
                     (field.schema)().pretty_print_recursive_internal(
                         f,
                         printed_schemas,
-                        indent + Self::INDENT * 3,
+                        indent + Self::INDENT * 2,
                     )?;
                 }
                 if map_shape.open_ended {
@@ -133,7 +127,7 @@ impl Schema {
                     "{:indent$}\x1b[1;36mScalar:\x1b[0m \x1b[1;33m{:?}\x1b[0m",
                     "",
                     scalar,
-                    indent = indent + Self::INDENT
+                    indent = indent
                 )?;
             }
         }
@@ -144,7 +138,7 @@ impl Schema {
 
 impl std::fmt::Debug for Schema {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.pretty_print_recursive(f, 0)
+        self.pretty_print_recursive(f)
     }
 }
 
