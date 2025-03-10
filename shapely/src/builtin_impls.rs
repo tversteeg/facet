@@ -94,24 +94,21 @@ where
 
         impl<V> MapManipulator for HashMapManipulator<V>
         where
-            V: Send + Sync + 'static,
+            V: Shapely + Send + Sync + 'static,
         {
-            unsafe fn set_field_raw(
+            unsafe fn get_field_slot<'a>(
                 &self,
-                map_addr: *mut u8,
-                field: MapField,
-                write_field: &mut dyn FnMut(*mut u8),
-            ) -> SetFieldOutcome {
+                map_addr: &mut ShapeUninit,
+                field: MapField<'_>,
+            ) -> Option<FieldSlot<'a>> {
                 unsafe {
-                    let map = &mut *(map_addr as *mut HashMap<String, MaybeUninit<V>>);
-                    let name = field.name;
-                    let entry = map
-                        // FIXME: we should avoid this `to_string` call, if the entry is already there.
-                        .entry(name.to_string())
-                        .or_insert_with(|| MaybeUninit::uninit());
-                    // # Safety: write_field is supposed to fully initialize the field.
-                    write_field(entry.as_mut_ptr() as *mut u8);
-                    SetFieldOutcome::Accepted
+                    let map =
+                        &mut *(map_addr.as_thin_ptr() as *mut HashMap<String, MaybeUninit<V>>);
+                    Some(FieldSlot::new(
+                        map.entry(field.name.to_string())
+                            .or_insert_with(|| MaybeUninit::uninit())
+                            .as_mut_ptr(),
+                    ))
                 }
             }
         }

@@ -1,5 +1,5 @@
 use parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
-use shapely::Shape;
+use shapely::{DynShapely, Shape};
 
 mod log_macros;
 mod parser;
@@ -8,8 +8,7 @@ mod parser;
 mod tests;
 
 pub fn from_json<'input>(
-    target: *mut u8,
-    schema: Shape,
+    target: &mut u8,
     json: &'input str,
 ) -> Result<(), JsonParseErrorWithContext<'input>> {
     use shapely::{MapShape, Scalar, ShapeKind};
@@ -66,7 +65,8 @@ pub fn from_json<'input>(
                         trace!("Deserializing field: {}", field.name);
                         let mut field_error = None;
                         unsafe {
-                            manipulator.set_field_raw(target, *field, &mut |field_ptr| {
+                            manipulator.get_field_slot(map_addr, field)
+                            manipulator.set_field(target, *field, &mut |field_ptr| {
                                 if let Err(err) =
                                     deserialize_value(parser, field_ptr, &field_schema)
                                 {
