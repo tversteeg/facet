@@ -14,17 +14,20 @@ where
         struct HashMapManipulator<V> {
             _phantom: PhantomData<V>,
             shape: Shape,
-        };
+            placeholder: MaybeUninit<V>,
+        }
 
         impl<V> Slots for HashMapManipulator<V>
         where
             V: Shapely + Send + Sync + 'static,
         {
             fn slot<'a>(
-                &self,
+                &mut self,
                 map: &mut ShapeUninit,
                 field: MapField<'_>,
             ) -> Option<FieldSlot<'a>> {
+                let dest = self.placeholder.as_mut_ptr() as *mut u8;
+
                 unsafe {
                     let map: *mut HashMap<String, MaybeUninit<V>> = map.get_addr(&self.shape);
                     Some(FieldSlot::new(

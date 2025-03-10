@@ -1,21 +1,53 @@
-use std::marker::PhantomData;
+use std::{collections::HashMap, marker::PhantomData};
 
 use crate::{Shape, Shapely};
 
+/// Type alias for user data pointer
+type UserData = *mut u8;
+
+/// Type alias for destination pointer
+type StructField = *mut u8;
+
+pub enum Destination {
+    /// Writes directly to an (uninitialized) struct field
+    StructField { field_addr: *mut u8 },
+
+    /// Inserts into a HashMap
+    HashMap { map: *mut u8, key: String },
+}
+
 /// Allows filling in a field of a struct while deserializing.
 pub struct FieldSlot<'s> {
-    dest: *mut u8,
-    shape: Shape,
+    dest: Destination,
+
+    // shape of the struct we're assigning / the value in the hashmap
+    field_shape: Shape,
+
     _phantom: PhantomData<&'s mut ()>,
 }
 
 impl FieldSlot<'_> {
-    /// Construct a new `FieldSlot`, ready to be filled
+    /// Construct a new `FieldSlot` for a struct field, ready to be filled
     #[inline(always)]
-    pub fn new<T: Shapely>(dest: *mut T) -> Self {
+    pub fn for_struct_field<TField: Shapely>(field_addr: *mut TField) -> Self {
         Self {
-            dest: dest as *mut u8,
-            shape: T::shape(),
+            dest: Destination::StructField {
+                field_addr: field_addr as *mut u8,
+            },
+            field_shape: TField::shape(),
+            _phantom: PhantomData,
+        }
+    }
+
+    /// Construct a new `FieldSlot` for a HashMap entry, ready to be filled
+    #[inline(always)]
+    pub fn for_hash_map<TField: Shapely>(map: *mut HashMap<String, TField>, key: String) -> Self {
+        Self {
+            dest: Destination::HashMap {
+                map: map as *mut u8,
+                key,
+            },
+            field_shape: TField::shape(),
             _phantom: PhantomData,
         }
     }
@@ -23,20 +55,26 @@ impl FieldSlot<'_> {
     /// Fill this field with a value.
     pub fn fill<T: Shapely>(self, value: T) {
         let value_shape = T::shape();
-        if self.shape != value_shape {
+        if self.field_shape != value_shape {
             panic!(
                 "Attempted to fill a field with an incompatible shape.\n\
                 Expected shape: {:?}\n\
                 Actual shape: {:?}\n\
-                This is unsafe and could lead to undefined behavior.",
-                self.shape, value_shape
+                This is undefined behavior and we're refusing to proceed.",
+                self.field_shape, value_shape
             );
         }
 
         unsafe {
-            // FIXME: There are several invariants we do not check for here:
-            // If self.dest was already initialized, then we're not doing anything about it.
-            std::ptr::write(self.dest as *mut T, value);
+            match self.dest {
+                Destination::StructField { field_addr } => {
+                    std::ptr::write(field_addr as *mut T, value);
+                }
+                Destination::HashMap { map, key } => {
+                    let map = &mut *(map as *mut HashMap<String, T>);
+                    map.insert(key, value);
+                }
+            }
         }
     }
 }

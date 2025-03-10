@@ -221,7 +221,11 @@ pub trait Slots: Send + Sync {
     /// this might, for example, insert an entry into a HashMap.
     ///
     /// Returns None if the field is not known and the data structure does not accommodate for arbitrary fields.
-    fn slot<'a>(&self, map_addr: &mut ShapeUninit, field: MapField<'_>) -> Option<FieldSlot<'a>>;
+    fn slot<'a>(
+        &'a mut self,
+        map: &'a mut ShapeUninit,
+        field: MapField<'_>,
+    ) -> Option<FieldSlot<'a>>;
 }
 
 /// Manipulator for struct-like types with known field offsets
@@ -231,7 +235,11 @@ pub struct StructManipulator {
 }
 
 impl Slots for StructManipulator {
-    fn slot<'a>(&self, map: &mut ShapeUninit, field: MapField<'_>) -> Option<FieldSlot<'a>> {
+    fn slot<'a>(
+        &'a mut self,
+        map: &'a mut ShapeUninit,
+        field: MapField<'_>,
+    ) -> Option<FieldSlot<'a>> {
         if let Innards::Map(map_shape) = self.shape.innards {
             if let Some(field) = map_shape.fields.iter().find(|f| f.name == field.name) {
                 if let Some(offset) = field.offset {
