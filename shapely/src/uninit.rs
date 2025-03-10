@@ -1,14 +1,18 @@
 use crate::{Field, ShapeDesc, Shapely, Slot};
 use std::{alloc, marker::PhantomData, ptr::NonNull};
 
-pub enum MemSource {
-    Borrowed,
+/// Origin of the shapeuninit
+pub enum Origin<'s> {
+    Borrowed {
+        parent: Option<&'s ShapeUninit<'s>>,
+        init_field_slot: InitFieldSlot<'s>,
+    },
     HeapAllocated,
 }
 
 /// A partially-initialized shape, useful when deserializing for example.
 pub struct ShapeUninit<'s> {
-    pub(crate) source: MemSource,
+    pub(crate) origin: Origin<'s>,
 
     pub(crate) phantom: PhantomData<&'s ()>, // NonNull is covariant...
 
@@ -20,6 +24,17 @@ pub struct ShapeUninit<'s> {
 
     /// The shape we're building.
     pub(crate) shape_desc: ShapeDesc,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn _assert_shape_uninit_covariant<'long: 'short, 'short>(
+        shape_uninit: ShapeUninit<'long>,
+    ) -> ShapeUninit<'short> {
+        shape_uninit
+    }
 }
 
 impl Drop for ShapeUninit<'_> {
@@ -51,7 +66,7 @@ impl Drop for ShapeUninit<'_> {
         }
 
         // Then deallocate the memory if we own it
-        if matches!(self.source, MemSource::HeapAllocated) {
+        if matches!(self.origin, Origin::HeapAllocated) {
             unsafe { alloc::dealloc(self.addr.as_ptr(), self.shape_desc.get().layout) }
         }
     }
@@ -163,6 +178,23 @@ impl ShapeUninit<'_> {
             crate::Innards::Transparent(_shape) => None,
             crate::Innards::Scalar(_scalar) => None,
         }
+    }
+
+    pub fn build_in_place(mut self) {
+        self.check_initialization();
+
+        match &mut self.origin {
+            Origin::Borrowed {
+                init_field_slot, ..
+            } => {
+                // Mark the borrowed field as initialized
+                init_field_slot.mark_as_init();
+            }
+            Origin::HeapAllocated => {
+                panic!("Cannot build in place for heap allocated ShapeUninit");
+            }
+        }
+        std::mem::forget(self);
     }
 
     pub fn build<T: Shapely>(self) -> T {

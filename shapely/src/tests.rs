@@ -424,3 +424,88 @@ fn build_truck_with_drop_fields() {
         );
     }
 }
+
+#[test]
+fn test_shape_uninit_build_in_place() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    static DROP_COUNT: AtomicUsize = AtomicUsize::new(0);
+
+    struct DropCounter;
+
+    impl Shapely for DropCounter {
+        fn shape() -> crate::Shape {
+            Shape {
+                name: "DropCounter",
+                layout: std::alloc::Layout::new::<DropCounter>(),
+                innards: crate::Innards::Struct { fields: &[] },
+                display: None,
+                debug: None,
+                set_to_default: None,
+                drop_in_place: Some(|ptr| unsafe {
+                    std::ptr::drop_in_place(ptr as *mut DropCounter)
+                }),
+            }
+        }
+    }
+
+    impl Drop for DropCounter {
+        fn drop(&mut self) {
+            DROP_COUNT.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
+    struct TestShape {
+        counter: DropCounter,
+        unit: (),
+    }
+
+    impl Shapely for TestShape {
+        fn shape() -> crate::Shape {
+            static SHAPE: Shape = Shape {
+                name: "TestShape",
+                layout: std::alloc::Layout::new::<TestShape>(),
+                innards: crate::Innards::Struct {
+                    fields: crate::struct_fields!(TestShape, (counter, unit)),
+                },
+                display: None,
+                debug: None,
+                set_to_default: None,
+                drop_in_place: Some(|ptr| unsafe {
+                    std::ptr::drop_in_place(ptr as *mut TestShape)
+                }),
+            };
+            SHAPE
+        }
+    }
+
+    let shape = TestShape::shape();
+    let mut uninit = TestShape::shape_uninit();
+
+    let counter_field = shape.innards.static_fields()[0];
+    let unit_field = shape.innards.static_fields()[1];
+
+    // Set the counter field
+    {
+        let slot = uninit.slot(counter_field).unwrap();
+        slot.fill(DropCounter);
+    }
+
+    // Set the unit field
+    {
+        let slot = uninit.slot(unit_field).unwrap();
+        slot.fill(());
+    }
+
+    // Build in place
+    uninit.build_in_place();
+
+    // Check that drop hasn't been called yet
+    assert_eq!(DROP_COUNT.load(Ordering::SeqCst), 0);
+
+    // Manually drop the parent to trigger the drop of TestShape
+    drop(uninit);
+
+    // Check that drop was called once for the DropCounter
+    assert_eq!(DROP_COUNT.load(Ordering::SeqCst), 1);
+}

@@ -5,7 +5,7 @@ pub use shapely_derive::*;
 
 pub use nonmax::{self, NonMaxU32};
 
-use std::{alloc, marker::PhantomData, ptr::NonNull};
+use std::{alloc, marker::PhantomData, mem::MaybeUninit, ptr::NonNull};
 
 mod hashmap_impl;
 mod scalar_impls;
@@ -29,7 +29,7 @@ mod derive_tests;
 mod tests;
 
 /// Provides reflection so you can shapely about your types.
-pub trait Shapely {
+pub trait Shapely: Sized {
     /// Returns the shape of this type
     fn shape() -> Shape;
 
@@ -47,7 +47,7 @@ pub trait Shapely {
             alloc::handle_alloc_error(shape.layout);
         }
         ShapeUninit {
-            source: MemSource::HeapAllocated,
+            origin: Origin::HeapAllocated,
             phantom: PhantomData,
             addr: NonNull::new(addr).unwrap(),
             init_fields: Default::default(),
@@ -55,5 +55,24 @@ pub trait Shapely {
         }
     }
 
-    // TODO: provide a way to bring your own alloc
+    /// Initializes a `ShapeUninit` from a raw pointer.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that:
+    /// - The memory pointed to by `ptr` is valid for the size of `Self`
+    /// - The memory comes from a `MaybeUninit<Self>`
+    /// - The pointer remains valid for the lifetime of the returned `ShapeUninit`
+    unsafe fn shape_uninit_from_raw(dest: &mut MaybeUninit<Self>) -> ShapeUninit<'_> {
+        ShapeUninit {
+            origin: Origin::Borrowed {
+                parent: None,
+                init_field_slot: InitFieldSlot::Ignored,
+            },
+            phantom: PhantomData,
+            addr: NonNull::new(dest.as_mut_ptr() as *mut u8).unwrap(),
+            init_fields: Default::default(),
+            shape_desc: Self::shape_desc(),
+        }
+    }
 }

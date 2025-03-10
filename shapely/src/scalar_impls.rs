@@ -106,3 +106,17 @@ impl Shapely for bool {
         }
     }
 }
+
+impl Shapely for () {
+    fn shape() -> Shape {
+        Shape {
+            name: "()",
+            layout: Layout::new::<()>(),
+            innards: Innards::Scalar(Scalar::Nothing),
+            display: Some(|_addr: *const u8, f: &mut std::fmt::Formatter| write!(f, "()")),
+            debug: Some(|_addr: *const u8, f: &mut std::fmt::Formatter| write!(f, "()")),
+            set_to_default: Some(|_addr: *mut u8| {}),
+            drop_in_place: None,
+        }
+    }
+}
