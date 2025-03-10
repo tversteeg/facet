@@ -17,7 +17,7 @@ pub struct Shape {
     pub align: usize,
 
     /// Details/contents of the value
-    pub shape: ShapeKind,
+    pub innards: Innards,
 
     /// Display impl, if any
     pub display: Option<FmtFunction>,
@@ -64,9 +64,9 @@ impl Shape {
             indent = indent
         )?;
 
-        match &self.shape {
-            ShapeKind::Map(map_shape) => {
-                for field in map_shape.fields {
+        match &self.innards {
+            Innards::Map(map) => {
+                for field in map.fields {
                     writeln!(
                         f,
                         "{:indent$}\x1b[1;32m{}\x1b[0m: ",
@@ -80,7 +80,7 @@ impl Shape {
                         indent + Self::INDENT * 2,
                     )?;
                 }
-                if map_shape.open_ended {
+                if map.open_ended {
                     writeln!(
                         f,
                         "{:indent$}\x1b[1;31m(open-ended)\x1b[0m",
@@ -89,7 +89,7 @@ impl Shape {
                     )?;
                 }
             }
-            ShapeKind::Array(elem_schema) => {
+            Innards::Array(elem_schema) => {
                 write!(
                     f,
                     "{:indent$}\x1b[1;36mArray of:\x1b[0m ",
@@ -102,7 +102,7 @@ impl Shape {
                     indent + Self::INDENT * 2,
                 )?;
             }
-            ShapeKind::Transparent(inner_schema) => {
+            Innards::Transparent(inner_schema) => {
                 write!(
                     f,
                     "{:indent$}\x1b[1;36mTransparent wrapper for:\x1b[0m ",
@@ -115,7 +115,7 @@ impl Shape {
                     indent + Self::INDENT * 2,
                 )?;
             }
-            ShapeKind::Scalar(scalar) => {
+            Innards::Scalar(scalar) => {
                 writeln!(
                     f,
                     "{:indent$}\x1b[1;36mScalar:\x1b[0m \x1b[1;33m{:?}\x1b[0m",
@@ -138,9 +138,9 @@ impl std::fmt::Debug for Shape {
 
 /// The shape of a schema: is it more map-shaped, array-shaped, scalar-shaped?
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum ShapeKind {
+pub enum Innards {
     /// Associates keys with values
-    Map(MapShape),
+    Map(MapInnards),
 
     /// Ordered list of heterogenous values, variable size
     Array(&'static Shape),
@@ -154,7 +154,7 @@ pub enum ShapeKind {
 
 /// The shape of a map: works for structs, but also HashMap<String, String> for example
 #[derive(Clone, Copy)]
-pub struct MapShape {
+pub struct MapInnards {
     /// Statically-known fields
     pub fields: &'static [MapField<'static>],
 
@@ -162,10 +162,10 @@ pub struct MapShape {
     pub open_ended: bool,
 
     /// Slots for setting fields
-    pub slots: &'static dyn Slots,
+    pub mk_slots: fn(Shape) -> &'static dyn Slots,
 }
 
-impl PartialEq for MapShape {
+impl PartialEq for MapInnards {
     fn eq(&self, other: &Self) -> bool {
         self.fields == other.fields
             && self.open_ended == other.open_ended
@@ -176,9 +176,9 @@ impl PartialEq for MapShape {
     }
 }
 
-impl Eq for MapShape {}
+impl Eq for MapInnards {}
 
-impl std::hash::Hash for MapShape {
+impl std::hash::Hash for MapInnards {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.fields.hash(state);
         self.open_ended.hash(state);
@@ -186,7 +186,7 @@ impl std::hash::Hash for MapShape {
     }
 }
 
-impl std::fmt::Debug for MapShape {
+impl std::fmt::Debug for MapInnards {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("MapShape")
             .field("fields", &self.fields)
@@ -220,50 +220,34 @@ pub trait Slots: Send + Sync {
     /// Returns a FieldSlot for a given field. If the map accommodates dynamically-added fields,
     /// this might, for example, insert an entry into a HashMap.
     ///
-    /// Returns None if the field is rejected or doesn't exist.
-    ///
-    /// # Safety
-    ///
-    /// The caller must ensure that:
-    /// - `map_addr` is a valid, properly aligned pointer to an instance of the map type.
-    /// - `field` corresponds to an existing field in the map's schema.
-    /// - Any modifications made via the returned FieldSlot maintain the field's type invariants.
-    /// - The data pointed to by `map_addr` remains valid for the lifetime of the returned FieldSlot.
-    unsafe fn slot<'a>(
-        &self,
-        map_addr: &mut ShapeUninit,
-        field: MapField<'_>,
-    ) -> Option<FieldSlot<'a>>;
+    /// Returns None if the field is not known and the data structure does not accommodate for arbitrary fields.
+    fn slot<'a>(&self, map_addr: &mut ShapeUninit, field: MapField<'_>) -> Option<FieldSlot<'a>>;
 }
 
 /// Manipulator for struct-like types with known field offsets
 pub struct StructManipulator {
     /// the overall shape of the struct
     pub shape: Shape,
-
-    /// field offsets
-    pub field_offsets: &'static [u32],
 }
 
 impl Slots for StructManipulator {
-    unsafe fn slot<'a>(&self, map: &mut ShapeUninit, field: MapField<'_>) -> Option<FieldSlot<'a>> {
-        if let ShapeKind::Map(map_shape) = self.shape.shape {
-            if let Some((index, _)) = map_shape
-                .fields
-                .iter()
-                .enumerate()
-                .find(|(_, f)| f.name == field.name)
-            {
-                let offset = self.field_offsets[index] as usize;
-                let field_addr = unsafe { map.get_addr(&self.shape).add(offset) };
-                Some(FieldSlot::new(field_addr as *mut _))
+    fn slot<'a>(&self, map: &mut ShapeUninit, field: MapField<'_>) -> Option<FieldSlot<'a>> {
+        if let Innards::Map(map_shape) = self.shape.innards {
+            if let Some(field) = map_shape.fields.iter().find(|f| f.name == field.name) {
+                if let Some(offset) = field.offset {
+                    let field_addr =
+                        unsafe { map.get_addr(&self.shape).add(offset.get() as usize) };
+                    Some(FieldSlot::new(field_addr as *mut _))
+                } else {
+                    None
+                }
             } else {
                 None
             }
         } else {
             panic!(
                 "Unexpected shape kind: expected Map, found {:?}",
-                self.shape.shape
+                self.shape.innards
             );
         }
     }

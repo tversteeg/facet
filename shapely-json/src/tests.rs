@@ -49,7 +49,7 @@ fn test_from_json() {
 
     impl Shapely for TestStruct {
         fn shape() -> Shape {
-            use shapely::{MapField, MapShape, Shape, ShapeKind, StructManipulator};
+            use shapely::{Innards, MapField, MapInnards, Shaps, StructManipulator};
 
             static NAME_FIELD: MapField = MapField {
                 name: "name",
@@ -63,7 +63,7 @@ fn test_from_json() {
                 name: "TestStruct",
                 size: std::mem::size_of::<TestStruct>(),
                 align: std::mem::align_of::<TestStruct>(),
-                shape: ShapeKind::Map(MapShape {
+                innards: Innards::Map(MapInnards {
                     fields: &[NAME_FIELD, AGE_FIELD],
                     open_ended: false,
                     slots: &StructManipulator {

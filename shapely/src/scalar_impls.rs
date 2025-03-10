@@ -13,7 +13,7 @@ macro_rules! impl_shapely_for_integer {
                     name: stringify!($type),
                     size: mem::size_of::<$type>(),
                     align: mem::align_of::<$type>(),
-                    shape: ShapeKind::Scalar($scalar),
+                    innards: Innards::Scalar($scalar),
                     display: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
                         write!(f, "{}", *(addr as *const $type))
                     }),
@@ -46,7 +46,7 @@ macro_rules! impl_schematic_for_float {
                     name: stringify!($type),
                     size: mem::size_of::<$type>(),
                     align: mem::align_of::<$type>(),
-                    shape: ShapeKind::Scalar($scalar),
+                    innards: Innards::Scalar($scalar),
                     display: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
                         write!(f, "{}", *(addr as *const $type))
                     }),
@@ -71,7 +71,7 @@ impl Shapely for String {
             name: "String",
             size: mem::size_of::<String>(),
             align: mem::align_of::<String>(),
-            shape: ShapeKind::Scalar(Scalar::String),
+            innards: Innards::Scalar(Scalar::String),
             display: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
                 write!(f, "{}", *(addr as *const String))
             }),
@@ -80,50 +80,6 @@ impl Shapely for String {
             }),
             set_to_default: Some(|addr: *mut u8| unsafe {
                 *(addr as *mut String) = String::new();
-            }),
-        }
-    }
-}
-
-impl<V> Shapely for HashMap<String, V>
-where
-    V: Shapely + Send + Sync + 'static,
-{
-    fn shape() -> Shape {
-        struct HashMapManipulator<V>(std::marker::PhantomData<V>);
-
-        impl<V> Slots for HashMapManipulator<V>
-        where
-            V: Shapely + Send + Sync + 'static,
-        {
-            unsafe fn slot<'a>(
-                &self,
-                map: &mut ShapeUninit,
-                field: MapField<'_>,
-            ) -> Option<FieldSlot<'a>> {
-                unsafe {
-                    let map = &mut *(map.as_mut_ptr() as *mut HashMap<String, MaybeUninit<V>>);
-                    Some(FieldSlot::new(
-                        map.entry(field.name.to_string())
-                            .or_insert_with(|| MaybeUninit::uninit())
-                            .as_mut_ptr(),
-                    ))
-                }
-            }
-        }
-        Shape {
-            name: "HashMap<String, V>",
-            size: mem::size_of::<HashMap<String, V>>(),
-            align: mem::align_of::<HashMap<String, V>>(),
-            shape: ShapeKind::Map(MapShape {
-                fields: &[],
-                open_ended: true,
-                slots: &HashMapManipulator(std::marker::PhantomData::<V>),
-            }),
-            display: None,
-            debug: None,
-            set_to_default: Some(|addr: *mut u8| unsafe {
-                *(addr as *mut HashMap<String, V>) = HashMap::new();
             }),
         }
     }

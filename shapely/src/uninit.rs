@@ -1,16 +1,16 @@
 use crate::Shape;
 use std::alloc;
 
-/// A partially-initialized shape
+/// A partially-initialized shape, useful when deserializing for example.
 pub struct ShapeUninit {
     /// Address of the value in memory
-    addr: *mut u8,
+    pub(crate) addr: *mut u8,
 
     /// Keeps track of which fields are initialized
-    init_fields: InitFields64,
+    pub(crate) init_fields: InitFields64,
 
-    /// The shape of the value
-    shape: Shape,
+    /// The shape we're building.
+    pub(crate) shape: Shape,
 }
 
 impl Drop for ShapeUninit {
@@ -31,9 +31,11 @@ impl ShapeUninit {
     /// - `self` outlives the returned pointer
     /// - The returned pointer is not aliased
     /// - The provided shape matches the shape of the data
-    pub unsafe fn get_addr(&self, expected_shape: &Shape) -> *mut u8 {
+    ///
+    /// This function performs a cast and of course you could get it to do UB if you expected a different type.
+    pub unsafe fn get_addr<T: Shapely>(&self, expected_shape: &Shape) -> *mut T {
         if self.shape == *expected_shape {
-            self.addr
+            self.addr as _
         } else {
             panic!(
                 "Shape mismatch: expected {:?}, found {:?}",

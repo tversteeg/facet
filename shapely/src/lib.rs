@@ -3,9 +3,12 @@
 #[cfg(feature = "derive")]
 pub use shapely_derive::*;
 
+pub use nonmax::NonMaxU32;
+
 use std::alloc;
 
-mod builtin_impls;
+mod hashmap_impl;
+mod scalar_impls;
 
 mod shape;
 pub use shape::*;
@@ -41,7 +44,9 @@ pub trait Shapely {
 
 #[cfg(test)]
 mod tests {
-    use crate::{ShapeKind, Shapely, StructManipulator};
+    use nonmax::NonMaxU32;
+
+    use crate::{Innards, Shape, Shapely, StructManipulator};
 
     #[derive(Debug, PartialEq, Eq)]
     struct FooBar {
@@ -51,29 +56,26 @@ mod tests {
 
     impl Shapely for FooBar {
         fn shape() -> crate::Shape {
-            use crate::{MapField, MapShape, Shape, ShapeKind};
+            use crate::{Innards, MapField, MapInnards};
 
             static FOO_FIELD: MapField = MapField {
                 name: "foo",
                 schema: <u64 as Shapely>::shape,
+                offset: Some(NonMaxU32::new(std::mem::offset_of!(FooBar, foo) as u32).unwrap()),
             };
             static BAR_FIELD: MapField = MapField {
                 name: "bar",
                 schema: <String as Shapely>::shape,
+                offset: Some(NonMaxU32::new(std::mem::offset_of!(FooBar, bar) as u32).unwrap()),
             };
             static SCHEMA: Shape = Shape {
                 name: "FooBar",
                 size: std::mem::size_of::<FooBar>(),
                 align: std::mem::align_of::<FooBar>(),
-                shape: ShapeKind::Map(MapShape {
+                innards: Innards::Map(MapInnards {
                     fields: &[FOO_FIELD, BAR_FIELD],
                     open_ended: false,
-                    slots: &StructManipulator {
-                        fields: &[
-                            (FOO_FIELD, std::mem::offset_of!(FooBar, foo)),
-                            (BAR_FIELD, std::mem::offset_of!(FooBar, bar)),
-                        ],
-                    },
+                    slots: &StructManipulator { shape: SCHEMA },
                 }),
                 display: None,
                 debug: None,
@@ -93,7 +95,7 @@ mod tests {
             std::alloc::handle_alloc_error(layout);
         }
 
-        if let ShapeKind::Map(sh) = &schema.shape {
+        if let Innards::Map(sh) = &schema.innards {
             let foo_bar = unsafe { &mut *(ptr as *mut FooBar) };
             for field in sh.fields {
                 unsafe {

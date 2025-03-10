@@ -11,7 +11,7 @@ pub fn from_json<'input>(
     target: &mut u8,
     json: &'input str,
 ) -> Result<(), JsonParseErrorWithContext<'input>> {
-    use shapely::{MapShape, Scalar, ShapeKind};
+    use shapely::{MapInnards, Scalar, Innards};
 
     trace!("Starting JSON deserialization");
     let mut parser = JsonParser::new(json);
@@ -22,8 +22,8 @@ pub fn from_json<'input>(
         shape: &Shape,
     ) -> Result<(), JsonParseErrorWithContext<'input>> {
         trace!("Deserializing value with schema:\n{:?}", schema);
-        match &shape.shape {
-            ShapeKind::Scalar(scalar) => {
+        match &shape.innards {
+            Innards::Scalar(scalar) => {
                 match scalar {
                     Scalar::String => {
                         trace!("Deserializing String");
@@ -51,7 +51,7 @@ pub fn from_json<'input>(
                     }
                 }
             }
-            ShapeKind::Map(MapShape {
+            Innards::Map(MapInnards {
                 fields,
                 slots: manipulator,
                 ..
@@ -90,7 +90,7 @@ pub fn from_json<'input>(
                 error!("Unsupported shape: {:?}", schema.shape);
                 return Err(parser.make_error(JsonParseErrorKind::Custom(format!(
                     "Unsupported shape: {:?}",
-                    shape.shape
+                    shape.innards
                 ))));
             }
         }
