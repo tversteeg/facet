@@ -19,7 +19,7 @@ jobs:
       - name: Install tools
         uses: taiki-e/install-action@v2
         with:
-          tool: cargo-hack,just
+          tool: cargo-hack,just,cargo-nextest
       - name: Run tests
         shell: bash
         run: |
