@@ -1,5 +1,7 @@
 //! Provides the core traits for thonk
 
+use std::{collections::HashSet, fmt::Formatter};
+
 mod builtin_impls;
 
 /// Provides reflection so you can thonk about your types.
@@ -9,7 +11,7 @@ pub trait Schematic {
 }
 
 /// Schema for reflection of a type
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Schema {
     /// A descriptive name for the schema, e.g. `u64`, or `Person`
     pub name: &'static str,
@@ -33,21 +35,113 @@ pub struct Schema {
     pub set_to_default: Option<fn(*mut u8)>,
 }
 
+impl Schema {
+    const INDENT: usize = 2;
+
+    /// Pretty-print this schema, recursively.
+    pub fn pretty_print_recursive(&self, f: &mut Formatter, indent: usize) -> std::fmt::Result {
+        self.pretty_print_recursive_internal(f, &mut HashSet::new(), indent)
+    }
+
+    fn pretty_print_recursive_internal(
+        &self,
+        f: &mut Formatter,
+        printed_schemas: &mut HashSet<&'static str>,
+        indent: usize,
+    ) -> std::fmt::Result {
+        if !printed_schemas.insert(self.name) {
+            writeln!(
+                f,
+                "{:indent$}\x1b[1;33m{}\x1b[0m (\x1b[1;31malready printed\x1b[0m)",
+                "",
+                self.name,
+                indent = indent
+            )?;
+            return Ok(());
+        }
+
+        writeln!(
+            f,
+            "{:indent$}\x1b[1;33m{}\x1b[0m (size: \x1b[1;34m{}\x1b[0m, align: \x1b[1;35m{}\x1b[0m)",
+            "",
+            self.name,
+            self.size,
+            self.align,
+            indent = indent
+        )?;
+
+        match &self.shape {
+            Shape::Map(map_shape) => {
+                writeln!(
+                    f,
+                    "{:indent$}\x1b[1;36mFields:\x1b[0m",
+                    "",
+                    indent = indent + 2
+                )?;
+                for field in map_shape.fields {
+                    write!(
+                        f,
+                        "{:indent$}\x1b[1;32m{}\x1b[0m: ",
+                        "",
+                        field.name,
+                        indent = indent + 4
+                    )?;
+                    (field.schema)().pretty_print_recursive_internal(
+                        f,
+                        printed_schemas,
+                        indent + 6,
+                    )?;
+                }
+                if map_shape.open_ended {
+                    writeln!(
+                        f,
+                        "{:indent$}\x1b[1;31m(open-ended)\x1b[0m",
+                        "",
+                        indent = indent + 4
+                    )?;
+                }
+            }
+            Shape::Array(elem_schema) => {
+                write!(
+                    f,
+                    "{:indent$}\x1b[1;36mArray of:\x1b[0m ",
+                    "",
+                    indent = indent + 2
+                )?;
+                elem_schema.pretty_print_recursive_internal(f, printed_schemas, indent + 4)?;
+            }
+            Shape::Transparent(inner_schema) => {
+                write!(
+                    f,
+                    "{:indent$}\x1b[1;36mTransparent wrapper for:\x1b[0m ",
+                    "",
+                    indent = indent + 2
+                )?;
+                inner_schema.pretty_print_recursive_internal(f, printed_schemas, indent + 4)?;
+            }
+            Shape::Scalar(scalar) => {
+                writeln!(
+                    f,
+                    "{:indent$}\x1b[1;36mScalar:\x1b[0m \x1b[1;33m{:?}\x1b[0m",
+                    "",
+                    scalar,
+                    indent = indent + 2
+                )?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
 impl std::fmt::Debug for Schema {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Schema")
-            .field("name", &self.name)
-            .field("size", &self.size)
-            .field("align", &self.align)
-            .field("shape", &self.shape)
-            .field("write_display", &self.display.is_some())
-            .field("write_debug", &self.debug.is_some())
-            .finish()
+        self.pretty_print_recursive(f, 0)
     }
 }
 
 /// The shape of a schema: is it more map-shaped, array-shaped, scalar-shaped?
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Shape {
     /// Associates keys with values
     Map(MapShape),
@@ -64,7 +158,7 @@ pub enum Shape {
 }
 
 /// The shape of a map: works for structs, but also HashMap<String, String> for example
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MapShape {
     /// Statically-known fields
     pub fields: &'static [MapField<'static>],
@@ -172,7 +266,7 @@ pub enum SetFieldOutcome {
     Rejected,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Scalar {
     // Valid utf-8
