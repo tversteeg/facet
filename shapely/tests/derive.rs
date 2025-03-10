@@ -9,5 +9,7 @@ fn simple_struct() {
         bar: String,
     }
 
-    assert_debug_snapshot!(Blah::shape());
+    if !cfg!(miri) {
+        assert_debug_snapshot!(Blah::shape());
+    }
 }
