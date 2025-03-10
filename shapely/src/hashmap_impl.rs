@@ -3,7 +3,7 @@ use std::{
     mem::{self},
 };
 
-use crate::{Innards, MapInnards, Shape, Shapely};
+use crate::{Innards, Shape, Shapely};
 
 impl<V> Shapely for HashMap<String, V>
 where
@@ -14,7 +14,9 @@ where
             name: "HashMap<String, V>",
             size: mem::size_of::<HashMap<String, V>>(),
             align: mem::align_of::<HashMap<String, V>>(),
-            innards: Innards::Map(MapInnards::for_hashmap(V::shape)),
+            innards: Innards::HashMap {
+                value_shape: V::shape,
+            },
             display: None,
             debug: None,
             set_to_default: Some(|addr: *mut u8| unsafe {
