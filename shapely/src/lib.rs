@@ -67,7 +67,10 @@ mod tests {
                         name: stringify!($field),
                         schema: || shape_of(|s: $struct| s.$field),
                         offset: Some(
-                            NonMaxU32::new(std::mem::offset_of!($struct, $field) as u32).unwrap(),
+                            NonMaxU32::new(
+                                std::mem::offset_of!($struct, $field).try_into().unwrap(),
+                            )
+                            .expect("your struct is larger than 4GiB? that's impressive"),
                         ),
                     }
                 };
@@ -107,7 +110,7 @@ mod tests {
 
         if let Innards::Map(sh) = &schema.innards {
             let foo_bar = unsafe { &mut *(ptr as *mut FooBar) };
-            for field in sh.fields {
+            for field in sh.fields() {
                 unsafe {
                     match field.name {
                         "foo" => {

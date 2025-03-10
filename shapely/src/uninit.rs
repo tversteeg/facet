@@ -1,4 +1,4 @@
-use crate::Shape;
+use crate::{Shape, Shapely};
 use std::alloc;
 
 /// A partially-initialized shape, useful when deserializing for example.

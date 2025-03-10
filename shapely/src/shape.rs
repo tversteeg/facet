@@ -177,6 +177,11 @@ impl MapInnards {
     pub fn builder() -> MapInnardsBuilder {
         MapInnardsBuilder::default()
     }
+
+    /// Returns a reference to the fields of this map
+    pub fn fields(&self) -> &'static [MapField<'static>] {
+        self.fields
+    }
 }
 
 #[derive(Default)]
