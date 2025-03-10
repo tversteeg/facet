@@ -13,7 +13,7 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
-shapely-derive = { path = "../shapely-derive", optional = true }
+shapely-derive = { workspace = true, optional = true }
 
 [features]
 default = ["derive"]

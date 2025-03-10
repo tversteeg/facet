@@ -14,11 +14,22 @@ unsynn! {
         OneS { a: Minus, b: Dot },
     }
 
+    struct AttributeInner {
+        name: Ident,
+        attr: ParenthesisGroupContaining<Vec<Ident>>,
+    }
+
+    struct Attribute {
+        _pound: Pound,
+        body: BracketGroupContaining<AttributeInner>,
+    }
+
     struct StructLike {
+        attributes: Vec<Attribute>,
         _pub: Option<Pub>,
         _kw_struct: Struct,
         name: Ident,
-        body: GroupContaining<CommaDelimitedVec<FieldLike>>,
+        body: BraceGroupContaining<CommaDelimitedVec<FieldLike>>,
     }
 
     struct FieldLike {

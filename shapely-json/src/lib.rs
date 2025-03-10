@@ -1,9 +1,26 @@
 use jiter::NumberInt;
 use shapely::Shape;
 
+#[cfg(feature = "log")]
+use log::{error, trace, warn};
+
+#[cfg(not(feature = "log"))]
+macro_rules! error {
+    ($($arg:tt)*) => {};
+}
+
+#[cfg(not(feature = "log"))]
+macro_rules! trace {
+    ($($arg:tt)*) => {};
+}
+
+#[cfg(not(feature = "log"))]
+macro_rules! warn {
+    ($($arg:tt)*) => {};
+}
+
 pub fn from_json(target: *mut u8, schema: Shape, json: &str) -> Result<(), String> {
     use jiter::Jiter;
-    use log::{error, trace, warn};
     use shapely::{MapShape, Scalar, ShapeKind};
 
     trace!("Starting JSON deserialization");
@@ -93,10 +110,31 @@ pub fn from_json(target: *mut u8, schema: Shape, json: &str) -> Result<(), Strin
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use log::{Level, Metadata, Record};
     use shapely::Shapely;
 
-    #[test_log::test]
+    struct SimpleLogger;
+
+    impl log::Log for SimpleLogger {
+        fn enabled(&self, metadata: &Metadata) -> bool {
+            metadata.level() <= Level::Info
+        }
+
+        fn log(&self, record: &Record) {
+            if self.enabled(record.metadata()) {
+                println!("{} - {}", record.level(), record.args());
+            }
+        }
+
+        fn flush(&self) {}
+    }
+
+    #[test]
     fn test_from_json() {
+        log::set_logger(&SimpleLogger).unwrap();
+        log::set_max_level(log::LevelFilter::Trace);
+
         #[derive(Debug, PartialEq)]
         struct TestStruct {
             name: String,
