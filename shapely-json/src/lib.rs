@@ -1,3 +1,4 @@
+#[doc = include_str!("../README.md")]
 use parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
 use shapely::{error, trace, warn, Partial};
 
