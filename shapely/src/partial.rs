@@ -1,4 +1,4 @@
-use crate::{Field, ShapeDesc, Shapely, Slot};
+use crate::{trace, Field, ShapeDesc, Shapely, Slot};
 use std::{alloc, marker::PhantomData, ptr::NonNull};
 
 /// Origin of the partial — did we allocate it? Or is it borrowed?
@@ -122,10 +122,17 @@ impl Partial<'_> {
     /// Checks if all fields in the struct or scalar value have been initialized.
     /// Panics if any field is not initialized, providing details about the uninitialized field.
     pub(crate) fn check_initialization(&self) {
+        trace!(
+            "Checking initialization of \x1b[1;33m{}\x1b[0m partial at addr \x1b[1;36m{:p}\x1b[0m",
+            self.shape_desc.get().name,
+            self.addr.as_ptr()
+        );
         match self.shape_desc.get().innards {
             crate::Innards::Struct { fields } => {
                 for (i, field) in fields.iter().enumerate() {
-                    if !self.init_fields.is_set(i) {
+                    if self.init_fields.is_set(i) {
+                        trace!("Field \x1b[1;33m{}\x1b[0m is initialized", field.name);
+                    } else {
                         panic!(
                             "Field '{}' was not initialized. Complete schema:\n{:?}",
                             field.name,
@@ -226,17 +233,31 @@ impl Partial<'_> {
     }
 
     pub fn build<T: Shapely>(self) -> T {
+        trace!(
+            "Building \x1b[1;33m{}\x1b[0m from partial at addr \x1b[1;36m{:p}\x1b[0m",
+            std::any::type_name::<T>(),
+            self.addr.as_ptr()
+        );
+        trace!(
+            "Layout of \x1b[1;33m{}\x1b[0m: {:?}",
+            std::any::type_name::<T>(),
+            T::shape().layout
+        );
         self.check_initialization();
 
         if self.shape_desc != T::shape_desc() {
             panic!(
-                "We were building a {:?}\n..but .build() was called expecting a {:?}",
+                "We were building a \x1b[1;33m{:?}\x1b[0m\n..but .build() was called expecting a \x1b[1;33m{:?}\x1b[0m",
                 self.shape_desc.get(),
                 T::shape(),
             );
         }
 
         let result = unsafe { std::ptr::read(self.addr.as_ptr() as *const T) };
+        trace!(
+            "Built \x1b[1;33m{}\x1b[0m successfully",
+            std::any::type_name::<T>()
+        );
         std::mem::forget(self);
         result
     }
@@ -259,6 +280,10 @@ impl Partial<'_> {
 
     pub fn shape_desc(&self) -> ShapeDesc {
         self.shape_desc
+    }
+
+    pub fn addr(&self) -> *const () {
+        self.addr.as_ptr()
     }
 }
 

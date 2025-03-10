@@ -38,23 +38,54 @@ fn test_from_json() {
     let result = from_json(&mut test_struct, json);
     result.unwrap();
 
+    let shape = TestStruct::shape();
+    let age_field = shape.innards.static_fields()[1];
+    let name_field = shape.innards.static_fields()[0];
+
+    let age_addr = unsafe {
+        test_struct
+            .addr()
+            .byte_offset(age_field.offset.unwrap().get() as isize)
+    };
+    let name_addr = unsafe {
+        test_struct
+            .addr()
+            .byte_offset(name_field.offset.unwrap().get() as isize)
+    };
+
+    let age_value = unsafe { *(age_addr as *const u64) };
+    let name_value = unsafe { &*(name_addr as *const String) };
+
+    eprintln!("Age value before build: {}", age_value);
+    eprintln!("Name value before build: {}", name_value);
+    eprintln!("Name pointer before build: {:p}", name_value.as_ptr());
+    eprintln!("Name length before build: {}", name_value.len());
+
     let built_struct = test_struct.build::<TestStruct>();
-    println!("built_struct age = {}", built_struct.age);
-    println!("built_struct name ptr = {:p}", built_struct.name.as_ptr());
-    println!("built_struct name len = {}", built_struct.name.len());
+    eprintln!(
+        "built_struct age address = {:p}",
+        &built_struct.age as *const u64
+    );
+    eprintln!(
+        "built_struct name address = {:p}",
+        &built_struct.name as *const String
+    );
+    eprintln!("built_struct age = {}", built_struct.age);
+    eprintln!("built_struct name ptr = {:p}", built_struct.name.as_ptr());
+    eprintln!("built_struct name len = {}", built_struct.name.len());
 
     let built_struct_ptr = &built_struct as *const TestStruct as *const u8;
     let built_struct_size = std::mem::size_of::<TestStruct>();
     let built_struct_slice =
         unsafe { std::slice::from_raw_parts(built_struct_ptr, built_struct_size) };
-    println!("built_struct as hex:");
+    eprintln!("built_struct as hex:");
     for (i, byte) in built_struct_slice.iter().enumerate() {
-        print!("{:02x} ", byte);
+        eprint!("{:02x} ", byte);
         if (i + 1) % 16 == 0 {
-            println!();
+            eprintln!();
         }
     }
-    println!();
+    eprintln!();
 
     assert_eq!(
         built_struct,

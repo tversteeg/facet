@@ -22,6 +22,10 @@ pub use partial::*;
 mod helpers;
 pub use helpers::*;
 
+#[doc(hidden)]
+pub mod log;
+pub use log::*;
+
 #[cfg(all(test, feature = "derive"))]
 mod derive_tests;
 
