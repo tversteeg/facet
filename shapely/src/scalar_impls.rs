@@ -1,5 +1,4 @@
 use std::alloc::Layout;
-use std::mem;
 
 use crate::*;
 

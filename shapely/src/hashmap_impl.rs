@@ -1,8 +1,4 @@
-use std::{
-    alloc::Layout,
-    collections::HashMap,
-    mem::{self},
-};
+use std::{alloc::Layout, collections::HashMap};
 
 use crate::{Innards, Shape, Shapely};
 
