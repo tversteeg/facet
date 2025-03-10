@@ -55,15 +55,10 @@ pub trait Shapely: Sized {
         }
     }
 
-    /// Initializes a `ShapeUninit` from a raw pointer.
+    /// Initializes a `ShapeUninit` from a borrowed `MaybeUninit<Self>`.
     ///
-    /// # Safety
-    ///
-    /// The caller must ensure that:
-    /// - The memory pointed to by `ptr` is valid for the size of `Self`
-    /// - The memory comes from a `MaybeUninit<Self>`
-    /// - The pointer remains valid for the lifetime of the returned `ShapeUninit`
-    unsafe fn shape_uninit_from_raw(dest: &mut MaybeUninit<Self>) -> ShapeUninit<'_> {
+    /// Before calling assume_init, make sure to call ShapeUninit.build_in_place().
+    fn shape_uninit_from_raw(dest: &mut MaybeUninit<Self>) -> ShapeUninit<'_> {
         ShapeUninit {
             origin: Origin::Borrowed {
                 parent: None,

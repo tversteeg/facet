@@ -1,4 +1,4 @@
-use crate::{Shape, Shapely};
+use crate::{Shape, ShapeUninit, Shapely};
 
 #[derive(Debug, PartialEq, Eq)]
 struct FooBar {
@@ -479,32 +479,36 @@ fn test_shape_uninit_build_in_place() {
         }
     }
 
-    let shape = TestShape::shape();
-    let mut uninit = TestShape::shape_uninit();
-
-    let counter_field = shape.innards.static_fields()[0];
-    let unit_field = shape.innards.static_fields()[1];
-
-    // Set the counter field
+    let test_shape = std::mem::MaybeUninit::<TestShape>::uninit();
     {
-        let slot = uninit.slot(counter_field).unwrap();
-        slot.fill(DropCounter);
-    }
+        let shape = TestShape::shape();
+        let mut uninit = unsafe { TestShape::shape_uninit_from_raw(&mut test_shape) };
 
-    // Set the unit field
-    {
-        let slot = uninit.slot(unit_field).unwrap();
-        slot.fill(());
-    }
+        let counter_field = shape.innards.static_fields()[0];
+        let unit_field = shape.innards.static_fields()[1];
 
-    // Build in place
-    uninit.build_in_place();
+        // Set the counter field
+        {
+            let slot = uninit.slot(counter_field).unwrap();
+            slot.fill(DropCounter);
+        }
+
+        // Set the unit field
+        {
+            let slot = uninit.slot(unit_field).unwrap();
+            slot.fill(());
+        }
+
+        // Build in place
+        uninit.build_in_place();
+    }
+    let test_shape = unsafe { test_shape.assume_init() };
 
     // Check that drop hasn't been called yet
     assert_eq!(DROP_COUNT.load(Ordering::SeqCst), 0);
 
     // Manually drop the parent to trigger the drop of TestShape
-    drop(uninit);
+    drop(test_shape);
 
     // Check that drop was called once for the DropCounter
     assert_eq!(DROP_COUNT.load(Ordering::SeqCst), 1);
