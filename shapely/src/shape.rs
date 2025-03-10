@@ -63,37 +63,35 @@ impl Shape {
         )?;
 
         match &self.innards {
-            Innards::Map(map) => match map {
-                MapInnards::Struct { fields } => {
-                    for field in *fields {
-                        writeln!(
-                            f,
-                            "{:indent$}\x1b[1;32m{}\x1b[0m: ",
-                            "",
-                            field.name,
-                            indent = indent + Self::INDENT
-                        )?;
-                        (field.schema)().pretty_print_recursive_internal(
-                            f,
-                            printed_schemas,
-                            indent + Self::INDENT * 2,
-                        )?;
-                    }
-                }
-                MapInnards::HashMap { value_shape } => {
+            Innards::Struct { fields } => {
+                for field in *fields {
                     writeln!(
                         f,
-                        "{:indent$}\x1b[1;36mHashMap with arbitrary keys and value shape:\x1b[0m",
+                        "{:indent$}\x1b[1;32m{}\x1b[0m: ",
                         "",
+                        field.name,
                         indent = indent + Self::INDENT
                     )?;
-                    value_shape().pretty_print_recursive_internal(
+                    (field.schema)().pretty_print_recursive_internal(
                         f,
                         printed_schemas,
                         indent + Self::INDENT * 2,
                     )?;
                 }
-            },
+            }
+            Innards::HashMap { value_shape } => {
+                writeln!(
+                    f,
+                    "{:indent$}\x1b[1;36mHashMap with arbitrary keys and value shape:\x1b[0m",
+                    "",
+                    indent = indent + Self::INDENT
+                )?;
+                value_shape().pretty_print_recursive_internal(
+                    f,
+                    printed_schemas,
+                    indent + Self::INDENT * 2,
+                )?;
+            }
             Innards::Array(elem_schema) => {
                 write!(
                     f,
@@ -132,19 +130,6 @@ impl Shape {
         }
 
         Ok(())
-    }
-
-    pub fn slots(&self) -> Option<AllSlots> {
-        match self.innards {
-            Innards::Map(map) => Some(
-                match map {
-                    MapInnards::Struct { .. } => SlotsKind::Struct,
-                    MapInnards::HashMap { value_shape } => SlotsKind::HashMap { value_shape },
-                }
-                .to_slots(*self),
-            ),
-            _ => None,
-        }
     }
 }
 

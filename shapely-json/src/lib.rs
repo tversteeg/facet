@@ -1,5 +1,5 @@
 use parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
-use shapely::{DynShapely, Shape};
+use shapely::{Shape};
 
 mod log_macros;
 mod parser;
@@ -8,7 +8,7 @@ mod parser;
 mod tests;
 
 pub fn from_json<'input>(
-    target: &mut u8,
+    target: &mut ShapeUninit,
     json: &'input str,
 ) -> Result<(), JsonParseErrorWithContext<'input>> {
     use shapely::{MapInnards, Scalar, Innards};
