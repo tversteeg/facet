@@ -108,10 +108,10 @@ pub trait MapManipulator {
     /// - The data pointed to by `map_addr` remains valid for the duration of the `write_field` callback.
     /// - The address provided to `write_field` is not used after the callback returns.
     /// - The callback must fully initialize the field at the provided address.
-    unsafe fn set_field_raw<'s>(
+    unsafe fn set_field_raw(
         &self,
         map_addr: *mut u8,
-        field: MapField<'s>,
+        field: MapField<'_>,
         write_field: &mut dyn FnMut(*mut u8),
     ) -> SetFieldOutcome;
 }
@@ -195,10 +195,10 @@ mod tests {
             struct FooBarManipulator;
 
             impl MapManipulator for FooBarManipulator {
-                unsafe fn set_field_raw<'s>(
+                unsafe fn set_field_raw(
                     &self,
                     map_addr: *mut u8,
-                    field: MapField<'s>,
+                    field: MapField<'_>,
                     write_field: &mut dyn FnMut(*mut u8),
                 ) -> SetFieldOutcome {
                     unsafe {

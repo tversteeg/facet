@@ -3,7 +3,9 @@ use std::{
     mem::{self, MaybeUninit},
 };
 
-use crate::{MapManipulator, MapShape, Scalar, Schema, Schematic, SetFieldOutcome, Shape};
+use crate::{
+    MapField, MapManipulator, MapShape, Scalar, Schema, Schematic, SetFieldOutcome, Shape,
+};
 
 impl Schematic for u64 {
     fn schema() -> Schema {
@@ -63,6 +65,7 @@ where
                     let map = &mut *(map_addr as *mut HashMap<String, MaybeUninit<V>>);
                     let name = field.name;
                     let entry = map
+                        // FIXME: we should avoid this `to_string` call, if the entry is already there.
                         .entry(name.to_string())
                         .or_insert_with(|| MaybeUninit::uninit());
                     // # Safety: write_field is supposed to fully initialize the field.
@@ -78,7 +81,7 @@ where
             shape: Shape::Map(MapShape {
                 fields: &[],
                 open_ended: true,
-                manip: &HashMapManipulator(std::marker::PhantomData::<V>),
+                manipulator: &HashMapManipulator(std::marker::PhantomData::<V>),
             }),
             display: None,
             debug: None,
