@@ -2,8 +2,6 @@ use std::{alloc::Layout, any::TypeId, collections::HashSet, fmt::Formatter};
 
 use nonmax::NonMaxU32;
 
-use crate::trace;
-
 /// Schema for reflection of a type
 #[derive(Clone, Copy)]
 pub struct Shape {
@@ -277,27 +275,12 @@ impl ShapeDesc {
 
 impl PartialEq for ShapeDesc {
     fn eq(&self, other: &Self) -> bool {
-        trace!(
-            "Comparing ShapeDesc: {:p} vs {:p}",
-            self.0 as *const (),
-            other.0 as *const ()
-        );
         if std::ptr::eq(self.0 as *const (), other.0 as *const ()) {
-            trace!("Pointers are equal, returning true");
             true
         } else {
-            trace!("Pointers are not equal, comparing shapes");
             let self_shape = self.0();
             let other_shape = other.0();
-            if self_shape == other_shape {
-                panic!(
-                    "We should only have one ShapeFactory for a given type. Found:\n{:p}\n{:p}",
-                    self.0 as *const (), other.0 as *const ()
-                );
-            } else {
-                trace!("Shapes are not equal, returning false");
-                false
-            }
+            self_shape == other_shape
         }
     }
 }
