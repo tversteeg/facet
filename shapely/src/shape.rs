@@ -72,7 +72,7 @@ impl Shape {
                         field.name,
                         indent = indent + Self::INDENT
                     )?;
-                    (field.schema)().pretty_print_recursive_internal(
+                    field.shape.get().pretty_print_recursive_internal(
                         f,
                         printed_schemas,
                         indent + Self::INDENT * 2,
@@ -86,7 +86,7 @@ impl Shape {
                     "",
                     indent = indent + Self::INDENT
                 )?;
-                value_shape().pretty_print_recursive_internal(
+                value_shape.get().pretty_print_recursive_internal(
                     f,
                     printed_schemas,
                     indent + Self::INDENT * 2,
@@ -146,7 +146,7 @@ pub enum Innards {
     Struct { fields: &'static [Field<'static>] },
 
     /// HashMap — keys are dynamic, values are homogeneous
-    HashMap { value_shape: fn() -> Shape },
+    HashMap { value_shape: ShapeDesc },
 
     /// Ordered list of heterogenous values, variable size
     Array(&'static Shape),
@@ -173,7 +173,7 @@ pub struct Field<'s> {
     pub name: &'s str,
 
     /// schema of the inner type
-    pub schema: fn() -> Shape,
+    pub shape: ShapeDesc,
 
     /// offset of the field in the map, if known.
     ///
@@ -226,3 +226,45 @@ pub enum Scalar {
 
 /// A function that writes a field to a formatter
 pub type FmtFunction = fn(addr: *const u8, &mut std::fmt::Formatter) -> std::fmt::Result;
+
+/// A function that returns a shape. There should only be one of these per concrete type in a
+/// program. This enables optimizations.
+#[derive(Clone, Copy, Hash)]
+pub struct ShapeDesc(pub fn() -> Shape);
+
+impl From<fn() -> Shape> for ShapeDesc {
+    fn from(f: fn() -> Shape) -> Self {
+        Self(f)
+    }
+}
+
+impl ShapeDesc {
+    /// Build the inner shape
+    pub fn get(&self) -> Shape {
+        (self.0)()
+    }
+}
+
+impl PartialEq for ShapeDesc {
+    fn eq(&self, other: &Self) -> bool {
+        if std::ptr::eq(self.0 as *const (), other.0 as *const ()) {
+            true
+        } else {
+            let self_shape = self.0();
+            let other_shape = other.0();
+            if self_shape == other_shape {
+                panic!("We should only have one ShapeFactory for a given type");
+            } else {
+                false
+            }
+        }
+    }
+}
+
+impl Eq for ShapeDesc {}
+
+impl std::fmt::Debug for ShapeDesc {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.get().fmt(f)
+    }
+}

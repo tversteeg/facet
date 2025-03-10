@@ -60,7 +60,7 @@ pub fn from_json<'input>(
                     trace!("Processing struct key: {}", key);
 
                     if let Some(field) = fields.iter().find(|f| f.name == key) {
-                        let field_schema = (field.schema)();
+                        let field_schema = (field.shape)();
                         trace!("Deserializing field: {}", field.name);
                         let mut field_error = None;
                         unsafe {

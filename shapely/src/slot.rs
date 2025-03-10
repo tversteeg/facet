@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{InitFieldSlot, Shape, Shapely};
+use crate::{InitFieldSlot, Shape, ShapeDesc, Shapely};
 
 enum Destination {
     /// Writes directly to an (uninitialized) struct field
@@ -16,7 +16,7 @@ pub struct Slot<'s> {
     dest: Destination,
 
     /// shape of the field / hashmap value we're writing
-    field_shape: fn() -> Shape,
+    field_shape: ShapeDesc,
 
     /// lifetime marker
     init_field_slot: InitFieldSlot<'s>,
@@ -26,7 +26,7 @@ impl<'s> Slot<'s> {
     #[inline(always)]
     pub fn for_struct_field(
         field_addr: *mut u8,
-        field_shape: fn() -> Shape,
+        field_shape: ShapeDesc,
         init_field_slot: InitFieldSlot<'s>,
     ) -> Self {
         Self {

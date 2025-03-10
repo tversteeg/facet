@@ -33,6 +33,11 @@ pub trait Shapely {
     /// Returns the shape of this type
     fn shape() -> Shape;
 
+    /// Returns a shape def (a function that can describe this shape)
+    fn shape_desc() -> ShapeDesc {
+        ShapeDesc(Self::shape)
+    }
+
     /// allocates the right amount of memory to build such a shape on the heap and returns it in the
     /// form of a ShapeUninit
     fn shape_uninit() -> ShapeUninit {
@@ -45,7 +50,7 @@ pub trait Shapely {
         ShapeUninit {
             addr,
             init_fields: Default::default(),
-            shape,
+            shape_desc: Self::shape_desc(),
         }
     }
 

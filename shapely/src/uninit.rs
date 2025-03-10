@@ -1,4 +1,4 @@
-use crate::{Field, Shape, Shapely, Slot};
+use crate::{Field, Shape, ShapeDesc, Shapely, Slot};
 use std::alloc;
 
 /// A partially-initialized shape, useful when deserializing for example.
@@ -10,13 +10,14 @@ pub struct ShapeUninit {
     pub(crate) init_fields: InitSet64,
 
     /// The shape we're building.
-    pub(crate) shape: Shape,
+    pub(crate) shape_desc: ShapeDesc,
 }
 
 impl Drop for ShapeUninit {
     fn drop(&mut self) {
         if !self.addr.is_null() {
-            let layout = alloc::Layout::from_size_align(self.shape.size, self.shape.align).unwrap();
+            let shape = self.shape_desc.get();
+            let layout = alloc::Layout::from_size_align(shape.size, shape.align).unwrap();
             unsafe { alloc::dealloc(self.addr, layout) }
         }
     }
@@ -33,24 +34,26 @@ impl ShapeUninit {
     /// - The provided shape matches the shape of the data
     ///
     /// This function performs a cast and of course you could get it to do UB if you expected a different type.
-    pub unsafe fn get_addr(&self, expected_shape: &Shape) -> *mut u8 {
-        if self.shape == *expected_shape {
+    pub unsafe fn get_addr(&self, expected_desc: ShapeDesc) -> *mut u8 {
+        if self.shape_desc == expected_desc {
             self.addr
         } else {
             panic!(
                 "Shape mismatch: expected {:?}, found {:?}",
-                expected_shape, self.shape
+                expected_desc.get(),
+                self.shape_desc.get()
             )
         }
     }
 
     fn check_initialization(&self) {
-        if let crate::Innards::Struct { fields } = self.shape.innards {
+        if let crate::Innards::Struct { fields } = self.shape_desc.get().innards {
             for (i, field) in fields.iter().enumerate() {
                 if !self.init_fields.is_set(i) {
                     panic!(
                         "Field '{}' was not initialized. Complete schema:\n{:?}",
-                        field.name, self.shape
+                        field.name,
+                        self.shape_desc.get()
                     );
                 }
             }
@@ -61,7 +64,7 @@ impl ShapeUninit {
     pub fn scalar_slot<'s>(&'s mut self) -> Option<Slot<'s>> {
         let slot = Slot::for_struct_field(
             self.addr,
-            self.shape.clone(),
+            self.shape_desc.clone().get(),
             InitFieldSlot::Struct {
                 index: 0,
                 set: &mut self.init_fields,
@@ -72,7 +75,7 @@ impl ShapeUninit {
 
     /// Returns a slot for initializing a field in the shape.
     pub fn slot<'s>(&'s mut self, field: Field) -> Option<Slot<'s>> {
-        match self.shape.innards {
+        match (self.shape_desc)().innards {
             crate::Innards::Struct { fields } => {
                 if let Some((index, field)) = fields
                     .iter()
@@ -89,8 +92,7 @@ impl ShapeUninit {
                             index,
                             set: &mut self.init_fields,
                         };
-                        let slot =
-                            Slot::for_struct_field(field_addr, field.schema, init_field_slot);
+                        let slot = Slot::for_struct_field(field_addr, field.shape, init_field_slot);
                         Some(slot)
                     } else {
                         None
@@ -119,11 +121,11 @@ impl ShapeUninit {
     pub fn build<T: Shapely>(self) -> T {
         self.check_initialization();
 
-        if self.shape != T::shape() {
+        if (self.shape_desc)() != T::shape() {
             panic!(
                 "Shape mismatch: expected {:?}, found {:?}",
                 T::shape(),
-                self.shape
+                (self.shape_desc)()
             );
         }
 
@@ -135,11 +137,11 @@ impl ShapeUninit {
     pub fn build_boxed<T: Shapely>(self) -> Box<T> {
         self.check_initialization();
 
-        if self.shape != T::shape() {
+        if self.shape_desc != T::shape() {
             panic!(
                 "Shape mismatch: expected {:?}, found {:?}",
                 T::shape(),
-                self.shape
+                self.shape_desc
             );
         }
 

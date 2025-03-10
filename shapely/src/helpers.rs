@@ -1,8 +1,13 @@
-use crate::{Shape, Shapely};
+use crate::{Shape, ShapeDesc, Shapely};
 
 #[doc(hidden)]
 pub fn shape_of<TStruct, TField: Shapely>(_f: impl Fn(TStruct) -> TField) -> Shape {
     TField::shape()
+}
+
+#[doc(hidden)]
+pub const fn shape_desc_of<TStruct, TField: Shapely>(_f: &dyn Fn(TStruct) -> TField) -> ShapeDesc {
+    ShapeDesc(TField::shape)
 }
 
 #[doc(hidden)]
@@ -11,7 +16,7 @@ macro_rules! struct_field {
     ($struct:ty, $field:ident) => {
         $crate::Field {
             name: stringify!($field),
-            schema: || $crate::shape_of(|s: $struct| s.$field),
+            shape: $crate::shape_desc_of(&|s: $struct| s.$field),
             offset: Some({
                 let offset = ::std::mem::offset_of!($struct, $field);
                 if offset > u32::MAX as usize {

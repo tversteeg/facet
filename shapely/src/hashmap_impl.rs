@@ -15,7 +15,7 @@ where
             size: mem::size_of::<HashMap<String, V>>(),
             align: mem::align_of::<HashMap<String, V>>(),
             innards: Innards::HashMap {
-                value_shape: V::shape,
+                value_shape: V::shape_desc(),
             },
             display: Some(hashmap_display::<V>),
             debug: Some(hashmap_debug::<V>),
