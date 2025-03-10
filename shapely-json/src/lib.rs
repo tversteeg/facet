@@ -1,10 +1,10 @@
 use jiter::NumberInt;
-use thonk::Schema;
+use shapely::Schema;
 
 pub fn from_json(target: *mut u8, schema: Schema, json: &str) -> Result<(), String> {
     use jiter::Jiter;
     use log::{error, trace, warn};
-    use thonk::{MapShape, Scalar, Shape};
+    use shapely::{MapShape, Scalar, Shape};
 
     trace!("Starting JSON deserialization");
     let mut jiter = Jiter::new(json.as_bytes());
@@ -97,7 +97,7 @@ pub fn from_json(target: *mut u8, schema: Schema, json: &str) -> Result<(), Stri
 #[cfg(test)]
 mod tests {
     use super::*;
-    use thonk::Schematic;
+    use shapely::Schematic;
 
     #[test_log::test]
     fn test_from_json() {
@@ -109,7 +109,7 @@ mod tests {
 
         impl Schematic for TestStruct {
             fn schema() -> Schema {
-                use thonk::{MapField, MapShape, Schema, Shape, StructManipulator};
+                use shapely::{MapField, MapShape, Schema, Shape, StructManipulator};
 
                 static NAME_FIELD: MapField = MapField {
                     name: "name",

@@ -2,7 +2,7 @@
 
 #[cfg(test)]
 mod tests {
-    use thonk::Thonk;
+    use shapely::Thonk;
 
     #[derive(Thonk)]
     struct Blah {
@@ -11,13 +11,13 @@ mod tests {
 
     #[test]
     fn regular() {
-        thonk::parse_enum!(++.);
-        thonk::parse_enum!(+.);
-        thonk::parse_enum!(--.);
-        thonk::parse_enum!(-.);
-        thonk::parse_enum!(,$);
+        shapely::parse_enum!(++.);
+        shapely::parse_enum!(+.);
+        shapely::parse_enum!(--.);
+        shapely::parse_enum!(-.);
+        shapely::parse_enum!(,$);
 
-        thonk::parse_struct_like! {
+        shapely::parse_struct_like! {
             struct Yay {
                 a: u32,
             }

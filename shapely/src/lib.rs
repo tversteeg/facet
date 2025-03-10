@@ -1,15 +1,15 @@
-//! Provides the core traits for thonk
+//! Provides the core traits for shapely
 
 #[cfg(feature = "derive")]
-pub use thonk_derive::*;
+pub use shapely_derive::*;
 
 use std::{collections::HashSet, fmt::Formatter};
 
 mod builtin_impls;
 
-/// Provides reflection so you can thonk about your types.
+/// Provides reflection so you can shapely about your types.
 pub trait Schematic {
-    /// Returns the thonk schema
+    /// Returns the shapely schema
     fn schema() -> Schema;
 }
 

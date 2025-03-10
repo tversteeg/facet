@@ -50,7 +50,7 @@ pub fn parse_struct_like(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 }
 
 #[proc_macro_derive(Thonk)]
-pub fn thonk_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn shapely_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = TokenStream::from(input);
     let mut i = input.to_token_iter();
     let parsed: StructLike = i.parse().unwrap();

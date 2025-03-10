@@ -1,0 +1,7 @@
+[package]
+name = "shapely-derive-test"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+shapely = { version = "0.1.0", path = "../shapely", features = ["derive"] }

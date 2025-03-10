@@ -1,7 +1,0 @@
-[package]
-name = "thonk-derive-test"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
-thonk = { version = "0.1.0", path = "../thonk", features = ["derive"] }

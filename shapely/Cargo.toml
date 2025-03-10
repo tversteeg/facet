@@ -1,17 +1,17 @@
 [package]
-name = "thonk"
+name = "shapely"
 version = "0.1.0"
 edition = "2024"
 authors = ["Amos Wenger <amos@bearcove.eu>"]
-repository = "https://github.com/bearcove/thonk"
+repository = "https://github.com/bearcove/shapely"
 description = "A reflection/introspection library that enables serialization/deserialization"
 keywords = ["reflection", "introspection", "serialization", "deserialization"]
 categories = ["development-tools", "encoding"]
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-thonk-derive = { path = "../thonk-derive", optional = true }
+shapely-derive = { path = "../shapely-derive", optional = true }
 
 [features]
 default = ["derive"]
-derive = ["thonk-derive"]
+derive = ["shapely-derive"]

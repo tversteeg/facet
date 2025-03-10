@@ -1,10 +1,10 @@
 [package]
-name = "thonk-derive"
+name = "shapely-derive"
 version = "0.1.0"
 edition = "2024"
 authors = ["Amos Wenger <amos@bearcove.eu>"]
-repository = "https://github.com/bearcove/thonk"
-description = "Proc macro for deriving the 'Schematic' trait in thonk"
+repository = "https://github.com/bearcove/shapely"
+description = "Proc macro for deriving the 'Schematic' trait in shapely"
 keywords = [
   "reflection",
   "introspection",

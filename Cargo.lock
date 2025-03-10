@@ -342,6 +342,37 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b985e394ee53f8e4c547d5c6fa75b83b243ab6f51563a0323f1475fc8abc8e7f"
 
 [[package]]
+name = "shapely"
+version = "0.1.0"
+dependencies = [
+ "shapely-derive",
+]
+
+[[package]]
+name = "shapely-derive"
+version = "0.1.0"
+dependencies = [
+ "unsynn",
+]
+
+[[package]]
+name = "shapely-derive-test"
+version = "0.1.0"
+dependencies = [
+ "shapely",
+]
+
+[[package]]
+name = "shapely-json"
+version = "0.1.0"
+dependencies = [
+ "jiter",
+ "log",
+ "shapely",
+ "test-log",
+]
+
+[[package]]
 name = "sharded-slab"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -399,37 +430,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "thonk"
-version = "0.1.0"
-dependencies = [
- "thonk-derive",
-]
-
-[[package]]
-name = "thonk-derive"
-version = "0.1.0"
-dependencies = [
- "unsynn",
-]
-
-[[package]]
-name = "thonk-derive-test"
-version = "0.1.0"
-dependencies = [
- "thonk",
-]
-
-[[package]]
-name = "thonk-json"
-version = "0.1.0"
-dependencies = [
- "jiter",
- "log",
- "test-log",
- "thonk",
 ]
 
 [[package]]
