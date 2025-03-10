@@ -14,7 +14,7 @@ where
             name: "HashMap<String, V>",
             size: mem::size_of::<HashMap<String, V>>(),
             align: mem::align_of::<HashMap<String, V>>(),
-            innards: Innards::Map(MapInnards::for_hashmap()),
+            innards: Innards::Map(MapInnards::for_hashmap(V::shape)),
             display: None,
             debug: None,
             set_to_default: Some(|addr: *mut u8| unsafe {

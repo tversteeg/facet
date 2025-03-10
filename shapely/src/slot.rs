@@ -18,12 +18,13 @@ pub enum Destination {
 
 /// Allows filling in a field of a struct, or inserting a value into a hashmap while deserializing.
 pub struct Slot<'s> {
-    /// Where to write the value
+    /// where to write the value
     dest: Destination,
 
-    // shape of the struct we're assigning / the value in the hashmap
+    /// shape of the field / hashmap value we're writing
     field_shape: fn() -> Shape,
 
+    /// lifetime marker
     _phantom: PhantomData<&'s mut ()>,
 }
 
