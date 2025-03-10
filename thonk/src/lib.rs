@@ -73,7 +73,7 @@ pub struct MapShape {
     pub open_ended: bool,
 
     /// Setter for fields — we can't use field offsets
-    pub manipulator: &'static (dyn MapManipulator + Send + Sync),
+    pub manipulator: &'static dyn MapManipulator,
 }
 
 impl std::fmt::Debug for MapShape {
@@ -95,7 +95,7 @@ pub struct MapField<'s> {
 }
 
 /// Given the map's address, calls on_field_addr with the address of the requested field
-pub trait MapManipulator {
+pub trait MapManipulator: Send + Sync {
     /// Returns the address of a given field. If the map accomodates dynamically-added fields,
     /// this might for example, insert an entry into a HashMap.
     ///

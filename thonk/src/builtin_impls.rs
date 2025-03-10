@@ -94,7 +94,10 @@ where
     fn schema() -> Schema {
         struct HashMapManipulator<V>(std::marker::PhantomData<V>);
 
-        impl<V> MapManipulator for HashMapManipulator<V> {
+        impl<V> MapManipulator for HashMapManipulator<V>
+        where
+            V: Send + Sync + 'static,
+        {
             unsafe fn set_field_raw(
                 &self,
                 map_addr: *mut u8,
