@@ -1,40 +1,6 @@
 use super::*;
 
-use log::{Metadata, Record};
 use shapely::Shapely;
-
-struct SimpleLogger;
-
-impl log::Log for SimpleLogger {
-    fn enabled(&self, _metadata: &Metadata) -> bool {
-        true
-    }
-
-    fn log(&self, record: &Record) {
-        if self.enabled(record.metadata()) {
-            let level_color = match record.level() {
-                log::Level::Error => "\x1b[31m", // Red
-                log::Level::Warn => "\x1b[33m",  // Yellow
-                log::Level::Info => "\x1b[32m",  // Green
-                log::Level::Debug => "\x1b[36m", // Cyan
-                log::Level::Trace => "\x1b[35m", // Magenta
-            };
-            let target_color = "\x1b[34m"; // Blue for target
-            let args_color = "\x1b[37m"; // White for args
-            eprintln!(
-                "{}{}\x1b[0m {}{}:\x1b[0m {}{}\x1b[0m",
-                target_color,
-                record.target(),
-                level_color,
-                record.level(),
-                args_color,
-                record.args()
-            );
-        }
-    }
-
-    fn flush(&self) {}
-}
 
 #[test]
 fn test_from_json() {

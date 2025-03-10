@@ -1,7 +1,9 @@
 use parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
 use shapely::{Shape, ShapeUninit};
 
-mod log_macros;
+#[doc(hidden)]
+pub mod log;
+
 mod parser;
 
 #[cfg(test)]
