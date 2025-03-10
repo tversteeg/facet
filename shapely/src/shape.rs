@@ -121,7 +121,7 @@ impl Shape {
                     "",
                     indent = indent + Self::INDENT
                 )?;
-                elem_schema.pretty_print_recursive_internal(
+                elem_schema.get().pretty_print_recursive_internal(
                     f,
                     printed_schemas,
                     indent + Self::INDENT * 2,
@@ -134,7 +134,7 @@ impl Shape {
                     "",
                     indent = indent + Self::INDENT
                 )?;
-                inner_schema.pretty_print_recursive_internal(
+                inner_schema.get().pretty_print_recursive_internal(
                     f,
                     printed_schemas,
                     indent + Self::INDENT * 2,
@@ -171,10 +171,10 @@ pub enum Innards {
     HashMap { value_shape: ShapeDesc },
 
     /// Ordered list of heterogenous values, variable size
-    Array(&'static Shape),
+    Array(ShapeDesc),
 
     /// Transparent — forwards to another known schema
-    Transparent(&'static Shape),
+    Transparent(ShapeDesc),
 
     /// Scalar — known based type
     Scalar(Scalar),

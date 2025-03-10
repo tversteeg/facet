@@ -159,6 +159,17 @@ impl Partial<'_> {
                 );
                 Some(slot)
             }
+            crate::Innards::Transparent(inner_shape) => {
+                let slot = Slot::for_struct_field(
+                    self.addr,
+                    inner_shape,
+                    InitFieldSlot::Struct {
+                        index: 0,
+                        set: &mut self.init_fields,
+                    },
+                );
+                Some(slot)
+            }
             _ => panic!(
                 "Expected scalar innards, found {:?}",
                 self.shape_desc.get().innards

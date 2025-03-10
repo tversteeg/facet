@@ -514,3 +514,57 @@ fn test_partial_build_in_place() {
     // Check that drop was called once for the DropCounter
     assert_eq!(DROP_COUNT.load(Ordering::SeqCst), 1);
 }
+
+#[test]
+fn test_partial_build_transparent() {
+    #[derive(Debug, PartialEq)]
+    struct InnerType(u32);
+
+    impl Shapely for InnerType {
+        fn shape() -> crate::Shape {
+            Shape {
+                name: "InnerType",
+                typeid: mini_typeid::of::<Self>(),
+                layout: std::alloc::Layout::new::<Self>(),
+                innards: crate::Innards::Scalar(crate::Scalar::U32),
+                display: None,
+                debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| {
+                    std::fmt::Debug::fmt(unsafe { &*(addr as *const Self) }, f)
+                }),
+                set_to_default: None,
+                drop_in_place: None,
+            }
+        }
+    }
+
+    #[derive(Debug, PartialEq)]
+    struct TransparentWrapper(InnerType);
+
+    impl Shapely for TransparentWrapper {
+        fn shape() -> crate::Shape {
+            Shape {
+                name: "TransparentWrapper",
+                typeid: mini_typeid::of::<Self>(),
+                layout: std::alloc::Layout::new::<Self>(),
+                innards: crate::Innards::Transparent(InnerType::shape_desc()),
+                display: None,
+                debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| {
+                    std::fmt::Debug::fmt(unsafe { &*(addr as *const Self) }, f)
+                }),
+                set_to_default: None,
+                drop_in_place: None,
+            }
+        }
+    }
+
+    let shape = TransparentWrapper::shape();
+    eprintln!("{shape:#?}");
+
+    let mut uninit = TransparentWrapper::partial();
+    let slot = uninit.scalar_slot().unwrap();
+    slot.fill(InnerType(42));
+
+    let wrapper = uninit.build::<TransparentWrapper>();
+
+    assert_eq!(wrapper, TransparentWrapper(InnerType(42)));
+}
