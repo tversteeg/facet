@@ -16,8 +16,9 @@ mod tests {
         thonk::parse_enum!(,$);
 
         thonk::parse_struct_like! {
-            // struct Yay {}
-            struct Yay
+            struct Yay {
+                a: u32,
+            }
         }
     }
 }

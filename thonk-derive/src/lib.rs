@@ -18,7 +18,14 @@ unsynn! {
     struct StructLike {
         _kw_struct: Struct,
         name: Ident,
-        // body: GroupContaining<Nothing>,
+        body: GroupContaining<Vec<FieldLike>>,
+    }
+
+    struct FieldLike {
+        name: Ident,
+        _colon: Colon,
+        typ: Ident,
+        _comma: Option<Comma>,
     }
 }
 
@@ -36,7 +43,7 @@ pub fn parse_enum(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = TokenStream::from(input);
     let mut i = input.to_token_iter();
     let parsed: Enum = i.parse().unwrap();
-    let dbg_s = format!("{parsed:?}");
+    let dbg_s = format!("{parsed:#?}");
     let s = format!("println!(\"Parsed: {{}}\", {dbg_s:?});");
     s.into_token_stream().into()
 }
@@ -46,7 +53,7 @@ pub fn parse_struct_like(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     let input = TokenStream::from(input);
     let mut i = input.to_token_iter();
     let parsed: StructLike = i.parse().unwrap();
-    let dbg_s = format!("{parsed:?}");
+    let dbg_s = format!("{parsed:#?}");
     let s = format!("println!(\"Parsed: {{}}\", {dbg_s:?});");
     s.into_token_stream().into()
 }
