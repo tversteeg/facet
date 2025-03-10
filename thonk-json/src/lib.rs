@@ -48,22 +48,31 @@ pub fn from_json(target: *mut u8, schema: Schema, json: &str) -> Result<(), Stri
                 ..
             }) => {
                 trace!("Deserializing Map");
-                jiter.next_object().map_err(|e| e.to_string())?;
-                while let Some(key) = jiter.next_key().map_err(|e| e.to_string())? {
-                    trace!("Processing map key: {}", key);
-                    if let Some(field) = fields.iter().find(|f| f.name == key) {
-                        let field_schema = (field.schema)();
-                        trace!("Deserializing field: {}", field.name);
-                        unsafe {
-                            manipulator.set_field_raw(target, *field, &mut |field_ptr| {
-                                deserialize_value(jiter, field_ptr, &field_schema).unwrap();
-                            });
+                let first_key = jiter.next_object().map_err(|e| e.to_string())?;
+                if let Some(mut key) = first_key {
+                    loop {
+                        trace!("Processing map key: {}", key);
+                        if let Some(field) = fields.iter().find(|f| f.name == key) {
+                            let field_schema = (field.schema)();
+                            trace!("Deserializing field: {}", field.name);
+                            unsafe {
+                                manipulator.set_field_raw(target, *field, &mut |field_ptr| {
+                                    deserialize_value(jiter, field_ptr, &field_schema).unwrap();
+                                });
+                            }
+                        } else {
+                            warn!("Unknown field: {}, skipping", key);
+                            // Skip unknown field
+                            jiter.next_skip().map_err(|e| e.to_string())?;
                         }
-                    } else {
-                        warn!("Unknown field: {}, skipping", key);
-                        // Skip unknown field
-                        jiter.next_skip().map_err(|e| e.to_string())?;
+                        if let Some(next_key) = jiter.next_key().map_err(|e| e.to_string())? {
+                            key = next_key;
+                        } else {
+                            break;
+                        }
                     }
+                } else {
+                    trace!("Empty object encountered");
                 }
                 trace!("Finished deserializing Map");
             }
