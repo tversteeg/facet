@@ -1,22 +1,18 @@
 use jiter::NumberInt;
-use shapely::Schema;
+use shapely::Shape;
 
-pub fn from_json(target: *mut u8, schema: Schema, json: &str) -> Result<(), String> {
+pub fn from_json(target: *mut u8, schema: Shape, json: &str) -> Result<(), String> {
     use jiter::Jiter;
     use log::{error, trace, warn};
-    use shapely::{MapShape, Scalar, Shape};
+    use shapely::{MapShape, Scalar, ShapeKind};
 
     trace!("Starting JSON deserialization");
     let mut jiter = Jiter::new(json.as_bytes());
 
-    fn deserialize_value(
-        jiter: &mut Jiter,
-        target: *mut u8,
-        schema: &Schema,
-    ) -> Result<(), String> {
+    fn deserialize_value(jiter: &mut Jiter, target: *mut u8, schema: &Shape) -> Result<(), String> {
         trace!("Deserializing value with schema:\n{:?}", schema);
         match &schema.shape {
-            Shape::Scalar(scalar) => {
+            ShapeKind::Scalar(scalar) => {
                 match scalar {
                     Scalar::String => {
                         trace!("Deserializing String");
@@ -42,7 +38,7 @@ pub fn from_json(target: *mut u8, schema: Schema, json: &str) -> Result<(), Stri
                     }
                 }
             }
-            Shape::Map(MapShape {
+            ShapeKind::Map(MapShape {
                 fields,
                 manipulator,
                 ..
@@ -97,7 +93,7 @@ pub fn from_json(target: *mut u8, schema: Schema, json: &str) -> Result<(), Stri
 #[cfg(test)]
 mod tests {
     use super::*;
-    use shapely::Schematic;
+    use shapely::Shapely;
 
     #[test_log::test]
     fn test_from_json() {
@@ -107,23 +103,23 @@ mod tests {
             age: u64,
         }
 
-        impl Schematic for TestStruct {
-            fn schema() -> Schema {
-                use shapely::{MapField, MapShape, Schema, Shape, StructManipulator};
+        impl Shapely for TestStruct {
+            fn shape() -> Shape {
+                use shapely::{MapField, MapShape, Shape, ShapeKind, StructManipulator};
 
                 static NAME_FIELD: MapField = MapField {
                     name: "name",
-                    schema: <String as Schematic>::schema,
+                    schema: <String as Shapely>::shape,
                 };
                 static AGE_FIELD: MapField = MapField {
                     name: "age",
-                    schema: <u64 as Schematic>::schema,
+                    schema: <u64 as Shapely>::shape,
                 };
-                static SCHEMA: Schema = Schema {
+                static SCHEMA: Shape = Shape {
                     name: "TestStruct",
                     size: std::mem::size_of::<TestStruct>(),
                     align: std::mem::align_of::<TestStruct>(),
-                    shape: Shape::Map(MapShape {
+                    shape: ShapeKind::Map(MapShape {
                         fields: &[NAME_FIELD, AGE_FIELD],
                         open_ended: false,
                         manipulator: &StructManipulator {
@@ -149,7 +145,7 @@ mod tests {
 
         let result = from_json(
             &mut test_struct as *mut TestStruct as *mut u8,
-            TestStruct::schema(),
+            TestStruct::shape(),
             json,
         );
 

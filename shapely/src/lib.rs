@@ -8,15 +8,15 @@ use std::{collections::HashSet, fmt::Formatter};
 mod builtin_impls;
 
 /// Provides reflection so you can shapely about your types.
-pub trait Schematic {
-    /// Returns the shapely schema
-    fn schema() -> Schema;
+pub trait Shapely {
+    /// Returns the shape of this type
+    fn shape() -> Shape;
 }
 
 /// Schema for reflection of a type
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Schema {
-    /// A descriptive name for the schema, e.g. `u64`, or `Person`
+pub struct Shape {
+    /// A descriptive name for the type, e.g. `u64`, or `Person`
     pub name: &'static str,
 
     /// Size of one such value, in bytes
@@ -25,8 +25,8 @@ pub struct Schema {
     /// Alignment of the value, in bytes
     pub align: usize,
 
-    /// Shape of the value
-    pub shape: Shape,
+    /// Details/contents of the value
+    pub shape: ShapeKind,
 
     /// Display impl, if any
     pub display: Option<FmtFunction>,
@@ -34,14 +34,14 @@ pub struct Schema {
     /// Debug impl, if any
     pub debug: Option<FmtFunction>,
 
-    /// Set the value at a given address to the default value
+    /// Set the value at a given address to the default value for this type
     pub set_to_default: Option<fn(*mut u8)>,
 }
 
-impl Schema {
+impl Shape {
     const INDENT: usize = 2;
 
-    /// Pretty-print this schema, recursively.
+    /// Pretty-print this shape, recursively.
     pub fn pretty_print_recursive(&self, f: &mut Formatter) -> std::fmt::Result {
         self.pretty_print_recursive_internal(f, &mut HashSet::new(), 0)
     }
@@ -49,7 +49,7 @@ impl Schema {
     fn pretty_print_recursive_internal(
         &self,
         f: &mut Formatter,
-        printed_schemas: &mut HashSet<Schema>,
+        printed_schemas: &mut HashSet<Shape>,
         indent: usize,
     ) -> std::fmt::Result {
         if !printed_schemas.insert(*self) {
@@ -74,7 +74,7 @@ impl Schema {
         )?;
 
         match &self.shape {
-            Shape::Map(map_shape) => {
+            ShapeKind::Map(map_shape) => {
                 for field in map_shape.fields {
                     writeln!(
                         f,
@@ -98,7 +98,7 @@ impl Schema {
                     )?;
                 }
             }
-            Shape::Array(elem_schema) => {
+            ShapeKind::Array(elem_schema) => {
                 write!(
                     f,
                     "{:indent$}\x1b[1;36mArray of:\x1b[0m ",
@@ -111,7 +111,7 @@ impl Schema {
                     indent + Self::INDENT * 2,
                 )?;
             }
-            Shape::Transparent(inner_schema) => {
+            ShapeKind::Transparent(inner_schema) => {
                 write!(
                     f,
                     "{:indent$}\x1b[1;36mTransparent wrapper for:\x1b[0m ",
@@ -124,7 +124,7 @@ impl Schema {
                     indent + Self::INDENT * 2,
                 )?;
             }
-            Shape::Scalar(scalar) => {
+            ShapeKind::Scalar(scalar) => {
                 writeln!(
                     f,
                     "{:indent$}\x1b[1;36mScalar:\x1b[0m \x1b[1;33m{:?}\x1b[0m",
@@ -139,7 +139,7 @@ impl Schema {
     }
 }
 
-impl std::fmt::Debug for Schema {
+impl std::fmt::Debug for Shape {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.pretty_print_recursive(f)
     }
@@ -147,16 +147,15 @@ impl std::fmt::Debug for Schema {
 
 /// The shape of a schema: is it more map-shaped, array-shaped, scalar-shaped?
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Shape {
+pub enum ShapeKind {
     /// Associates keys with values
     Map(MapShape),
 
     /// Ordered list of heterogenous values, variable size
-    Array(&'static Schema),
+    Array(&'static Shape),
 
-    // todo: tuples: Ordered list of non-heterogenous values, fixed-size
     /// Transparent — forwards to another known schema
-    Transparent(&'static Schema),
+    Transparent(&'static Shape),
 
     /// Scalar — known based type
     Scalar(Scalar),
@@ -211,7 +210,7 @@ pub struct MapField<'s> {
     pub name: &'s str,
 
     /// schema of the inner type
-    pub schema: fn() -> Schema,
+    pub schema: fn() -> Shape,
 }
 
 /// Given the map's address, calls on_field_addr with the address of the requested field
@@ -324,7 +323,7 @@ pub type FmtFunction = fn(addr: *const u8, &mut std::fmt::Formatter) -> std::fmt
 
 #[cfg(test)]
 mod tests {
-    use crate::{Schematic, Shape, StructManipulator};
+    use crate::{ShapeKind, Shapely, StructManipulator};
 
     #[derive(Debug, PartialEq, Eq)]
     struct FooBar {
@@ -332,23 +331,23 @@ mod tests {
         bar: String,
     }
 
-    impl Schematic for FooBar {
-        fn schema() -> crate::Schema {
-            use crate::{MapField, MapShape, Schema, Shape};
+    impl Shapely for FooBar {
+        fn shape() -> crate::Shape {
+            use crate::{MapField, MapShape, Shape, ShapeKind};
 
             static FOO_FIELD: MapField = MapField {
                 name: "foo",
-                schema: <u64 as Schematic>::schema,
+                schema: <u64 as Shapely>::shape,
             };
             static BAR_FIELD: MapField = MapField {
                 name: "bar",
-                schema: <String as Schematic>::schema,
+                schema: <String as Shapely>::shape,
             };
-            static SCHEMA: Schema = Schema {
+            static SCHEMA: Shape = Shape {
                 name: "FooBar",
                 size: std::mem::size_of::<FooBar>(),
                 align: std::mem::align_of::<FooBar>(),
-                shape: Shape::Map(MapShape {
+                shape: ShapeKind::Map(MapShape {
                     fields: &[FOO_FIELD, BAR_FIELD],
                     open_ended: false,
                     manipulator: &StructManipulator {
@@ -368,7 +367,7 @@ mod tests {
 
     #[test]
     fn build_foobar_through_reflection() {
-        let schema = FooBar::schema();
+        let schema = FooBar::shape();
 
         let layout = std::alloc::Layout::from_size_align(schema.size, schema.align).unwrap();
         let ptr = unsafe { std::alloc::alloc(layout) };
@@ -376,7 +375,7 @@ mod tests {
             std::alloc::handle_alloc_error(layout);
         }
 
-        if let Shape::Map(sh) = &schema.shape {
+        if let ShapeKind::Map(sh) = &schema.shape {
             for field in sh.fields {
                 unsafe {
                     match field.name {
