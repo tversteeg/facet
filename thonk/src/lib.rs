@@ -93,8 +93,36 @@ pub struct MapField {
     pub schema: fn() -> &'static Schema,
 }
 
+pub enum MapFieldSlot<'s> {
+    // a statically-known field
+    Static(&'s MapField),
+
+    // a field we found out while deserializing
+    Dynamic {
+        name: &'s str,
+        schema: &'static Schema,
+    },
+}
+
+impl<'a> From<&'a MapField> for MapFieldSlot<'a> {
+    fn from(field: &'a MapField) -> Self {
+        MapFieldSlot::Static(field)
+    }
+}
+
+impl<'s> MapFieldSlot<'s> {
+    fn name(&self) -> &str {
+        match self {
+            MapFieldSlot::Static(field) => field.name,
+            MapFieldSlot::Dynamic { name, .. } => name,
+        }
+    }
+}
+
 /// Given the map's address, calls on_field_addr with the address of the requested field
 pub trait MapManipulator: Send + Sync + 'static {
+    /// Returns the address of a given field
+    ///
     /// # Safety
     ///
     /// The caller must ensure that:
@@ -106,9 +134,19 @@ pub trait MapManipulator: Send + Sync + 'static {
     unsafe fn set_field_raw(
         &self,
         map_addr: *mut u8,
-        field: &MapField,
+        field: MapFieldSlot,
         on_addr: &mut dyn FnMut(*mut u8),
-    );
+    ) -> SetFieldOutcome;
+}
+
+/// The outcome of trying to set a field on a map
+#[derive(Debug, Clone, Copy)]
+pub enum SetFieldOutcome {
+    /// The field was successfully set
+    Accepted,
+
+    /// The field was rejected (unknown field set in a struct, for example)
+    Rejected,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -143,7 +181,7 @@ pub type FmtFunction = fn(addr: *const u8, &mut std::fmt::Formatter) -> std::fmt
 
 #[cfg(test)]
 mod tests {
-    use crate::{Schematic, Shape};
+    use crate::{MapFieldSlot, Schematic, SetFieldOutcome, Shape};
 
     #[derive(Debug, PartialEq, Eq)]
     struct FooBar {
@@ -160,16 +198,17 @@ mod tests {
                 unsafe fn set_field_raw(
                     &self,
                     map_addr: *mut u8,
-                    field: &MapField,
+                    field: MapFieldSlot,
                     on_addr: &mut dyn FnMut(*mut u8),
-                ) {
+                ) -> SetFieldOutcome {
                     unsafe {
                         let foo_bar = &mut *(map_addr as *mut FooBar);
-                        match field.name {
+                        match field.name() {
                             "foo" => on_addr(&mut foo_bar.foo as *mut u64 as _),
                             "bar" => on_addr(&mut foo_bar.bar as *mut String as _),
-                            _ => panic!("Unknown field: {}", field.name),
+                            _ => return SetFieldOutcome::Rejected,
                         }
+                        SetFieldOutcome::Accepted
                     }
                 }
             }
@@ -226,7 +265,7 @@ mod tests {
                 unsafe {
                     map_shape
                         .manipulator
-                        .set_field_raw(ptr, field, &mut |field_ptr| match field.name {
+                        .set_field_raw(ptr, field.into(), &mut |field_ptr| match field.name {
                             "foo" => {
                                 *(field_ptr as *mut u64) = 42;
                             }
@@ -246,7 +285,7 @@ mod tests {
         assert_eq!(foo_bar.bar, "Hello, World!");
 
         assert_eq!(
-            FooBar {
+            &FooBar {
                 foo: 42,
                 bar: "Hello, World!".to_string()
             },
