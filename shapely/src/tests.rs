@@ -1,6 +1,6 @@
 use nonmax::NonMaxU32;
 
-use crate::{Innards, Shape, ShapeUninit, Shapely};
+use crate::{Shape, Shapely};
 
 #[derive(Debug, PartialEq, Eq)]
 struct FooBar {
