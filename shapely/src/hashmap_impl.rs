@@ -18,6 +18,9 @@ where
             set_to_default: Some(|addr: *mut u8| unsafe {
                 *(addr as *mut HashMap<String, V>) = HashMap::new();
             }),
+            drop_in_place: Some(|addr: *mut u8| unsafe {
+                std::ptr::drop_in_place(addr as *mut HashMap<String, V>);
+            }),
         }
     }
 }

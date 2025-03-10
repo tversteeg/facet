@@ -22,6 +22,14 @@ pub struct Shape {
 
     /// Set the value at a given address to the default value for this type
     pub set_to_default: Option<fn(*mut u8)>,
+
+    /// Drop the value at a given address
+    ///
+    /// # Safety
+    ///
+    /// This function should be called only for initialized values.
+    /// It's the caller's responsibility to ensure the address points to a valid value.
+    pub drop_in_place: Option<DropFunction>,
 }
 
 impl Shape {
@@ -226,6 +234,9 @@ pub enum Scalar {
 
 /// A function that writes a field to a formatter
 pub type FmtFunction = fn(addr: *const u8, &mut std::fmt::Formatter) -> std::fmt::Result;
+
+/// A function that drops a value at a specific memory address
+pub type DropFunction = fn(*mut u8);
 
 /// A function that returns a shape. There should only be one of these per concrete type in a
 /// program. This enables optimizations.

@@ -24,6 +24,33 @@ pub struct ShapeUninit<'s> {
 
 impl Drop for ShapeUninit<'_> {
     fn drop(&mut self) {
+        // First drop any initialized fields
+        match self.shape_desc.get().innards {
+            crate::Innards::Struct { fields } => {
+                for (i, field) in fields.iter().enumerate() {
+                    if self.init_fields.is_set(i) && field.offset.is_some() {
+                        let offset = field.offset.unwrap().get() as usize;
+                        let field_addr = unsafe { self.addr.as_ptr().add(offset) };
+
+                        // Drop the field using its drop function if available
+                        if let Some(drop_fn) = field.shape.get().drop_in_place {
+                            drop_fn(field_addr);
+                        }
+                    }
+                }
+            }
+            crate::Innards::Scalar(_) => {
+                if self.init_fields.is_set(0) {
+                    // Drop the scalar value if it has a drop function
+                    if let Some(drop_fn) = self.shape_desc.get().drop_in_place {
+                        drop_fn(self.addr.as_ptr());
+                    }
+                }
+            }
+            _ => {}
+        }
+
+        // Then deallocate the memory if we own it
         if matches!(self.source, MemSource::HeapAllocated) {
             unsafe { alloc::dealloc(self.addr.as_ptr(), self.shape_desc.get().layout) }
         }

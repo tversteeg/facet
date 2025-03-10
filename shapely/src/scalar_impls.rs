@@ -19,6 +19,8 @@ macro_rules! impl_shapely_for_integer {
                     set_to_default: Some(|addr: *mut u8| unsafe {
                         *(addr as *mut $type) = 0;
                     }),
+                    // integers don't need to drop
+                    drop_in_place: None,
                 }
             }
         }
@@ -51,6 +53,8 @@ macro_rules! impl_schematic_for_float {
                     set_to_default: Some(|addr: *mut u8| unsafe {
                         *(addr as *mut $type) = 0.0;
                     }),
+                    // floats don't need to drop
+                    drop_in_place: None,
                 }
             }
         }
@@ -75,6 +79,30 @@ impl Shapely for String {
             set_to_default: Some(|addr: *mut u8| unsafe {
                 *(addr as *mut String) = String::new();
             }),
+            drop_in_place: Some(|addr: *mut u8| unsafe {
+                std::ptr::drop_in_place(addr as *mut String);
+            }),
+        }
+    }
+}
+
+impl Shapely for bool {
+    fn shape() -> Shape {
+        Shape {
+            name: "bool",
+            layout: Layout::new::<bool>(),
+            innards: Innards::Scalar(Scalar::Boolean),
+            display: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
+                write!(f, "{}", *(addr as *const bool))
+            }),
+            debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
+                write!(f, "{:?}", *(addr as *const bool))
+            }),
+            set_to_default: Some(|addr: *mut u8| unsafe {
+                *(addr as *mut bool) = false;
+            }),
+            // bool doesn't need to drop
+            drop_in_place: None,
         }
     }
 }

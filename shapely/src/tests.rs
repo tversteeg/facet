@@ -19,6 +19,7 @@ impl Shapely for FooBar {
                 std::fmt::Debug::fmt(unsafe { &*(addr as *const FooBar) }, f)
             }),
             set_to_default: None,
+            drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut FooBar) }),
         };
         SHAPE
     }
@@ -135,6 +136,9 @@ fn build_struct_with_drop_field() {
                 display: None,
                 debug: None,
                 set_to_default: None,
+                drop_in_place: Some(|ptr| unsafe {
+                    std::ptr::drop_in_place(ptr as *mut DropCounter)
+                }),
             }
         }
     }
@@ -161,6 +165,9 @@ fn build_struct_with_drop_field() {
                 display: None,
                 debug: None,
                 set_to_default: None,
+                drop_in_place: Some(|ptr| unsafe {
+                    std::ptr::drop_in_place(ptr as *mut StructWithDrop)
+                }),
             };
             SHAPE
         }
@@ -219,6 +226,9 @@ fn build_scalar_with_drop() {
                 display: None,
                 debug: None,
                 set_to_default: None,
+                drop_in_place: Some(|ptr| unsafe {
+                    std::ptr::drop_in_place(ptr as *mut DropScalar)
+                }),
             }
         }
     }
@@ -286,6 +296,9 @@ fn build_truck_with_drop_fields() {
                 display: None,
                 debug: None,
                 set_to_default: None,
+                drop_in_place: Some(|ptr| unsafe {
+                    std::ptr::drop_in_place(ptr as *mut Engine);
+                }),
             }
         }
     }
@@ -299,6 +312,7 @@ fn build_truck_with_drop_fields() {
                 display: None,
                 debug: None,
                 set_to_default: None,
+                drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Wheels) }),
             }
         }
     }
@@ -319,6 +333,7 @@ fn build_truck_with_drop_fields() {
                 display: None,
                 debug: None,
                 set_to_default: None,
+                drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Truck) }),
             };
             SHAPE
         }
