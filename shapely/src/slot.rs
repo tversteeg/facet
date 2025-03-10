@@ -117,7 +117,6 @@ impl<'s> Slot<'s> {
                 partial.shape_desc().get()
             );
         }
-        partial.check_initialization();
 
         unsafe {
             match self.dest {
@@ -140,13 +139,10 @@ impl<'s> Slot<'s> {
                             field_addr,
                             size
                         );
-                        std::ptr::copy_nonoverlapping(
-                            partial.addr.unwrap().as_ptr(),
-                            field_addr,
-                            size,
-                        );
+                        partial.move_into(field_addr);
                     } else {
                         trace!("Skipping write for ZST field");
+                        drop(partial)
                     }
                 }
                 Destination::HashMap { map: _, ref key } => {
@@ -163,6 +159,5 @@ impl<'s> Slot<'s> {
             }
         }
         self.init_field_slot.mark_as_init();
-        std::mem::forget(partial);
     }
 }

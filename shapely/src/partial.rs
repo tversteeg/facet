@@ -281,6 +281,25 @@ impl Partial<'_> {
     pub fn addr_for_display(&self) -> *const u8 {
         self.addr.map_or(std::ptr::null(), |ptr| ptr.as_ptr())
     }
+
+    /// # Safety
+    ///
+    /// The target pointer must be valid and properly aligned,
+    /// and must be large enough to hold the value.
+    pub unsafe fn move_into(mut self, target: *mut u8) {
+        self.check_initialization();
+        if let Some(addr) = self.addr {
+            unsafe {
+                std::ptr::copy_nonoverlapping(
+                    addr.as_ptr(),
+                    target,
+                    self.shape_desc.get().layout.size(),
+                );
+            }
+        }
+        self.deallocate();
+        std::mem::forget(self);
+    }
 }
 
 /// A bit array to keep track of which fields were initialized, up to 64 fields
