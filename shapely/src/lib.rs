@@ -13,8 +13,8 @@ mod scalar_impls;
 mod shape;
 pub use shape::*;
 
-mod fieldslot;
-pub use fieldslot::FieldSlot;
+mod slot;
+pub use slot::Slot;
 
 mod uninit;
 pub use uninit::*;

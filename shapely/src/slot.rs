@@ -16,8 +16,9 @@ pub enum Destination {
     HashMap { map: *mut u8, key: String },
 }
 
-/// Allows filling in a field of a struct while deserializing.
-pub struct FieldSlot<'s> {
+/// Allows filling in a field of a struct, or inserting a value into a hashmap while deserializing.
+pub struct Slot<'s> {
+    /// Where to write the value
     dest: Destination,
 
     // shape of the struct we're assigning / the value in the hashmap
@@ -26,7 +27,7 @@ pub struct FieldSlot<'s> {
     _phantom: PhantomData<&'s mut ()>,
 }
 
-impl FieldSlot<'_> {
+impl Slot<'_> {
     /// Construct a new `FieldSlot` for a struct field, ready to be filled
     #[inline(always)]
     pub fn for_struct_field<TField: Shapely>(field_addr: *mut TField) -> Self {
