@@ -3,7 +3,7 @@ members = ["shapely", "shapely-derive", "shapely-json"]
 resolver = "3"
 
 [workspace.package]
-version = "0.1.0-alpha.1"
+version = "1.0.0"
 authors = ["Amos Wenger <amos@bearcove.eu>"]
 edition = "2024"
 rust-version = "1.85"
@@ -16,6 +16,6 @@ keywords = ["serialization", "deserialization"]
 categories = ["encoding", "parsing"]
 
 [workspace.dependencies]
-shapely = { version = "0.1.0-alpha.1", path = "shapely" }
-shapely-derive = { version = "0.1.0-alpha.1", path = "shapely-derive" }
-shapely-json = { version = "0.1.0-alpha.1", path = "shapely-json" }
+shapely = { version = "1.0.0", path = "shapely" }
+shapely-derive = { version = "1.0.0", path = "shapely-derive" }
+shapely-json = { version = "1.0.0", path = "shapely-json" }

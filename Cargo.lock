@@ -109,7 +109,7 @@ checksum = "b985e394ee53f8e4c547d5c6fa75b83b243ab6f51563a0323f1475fc8abc8e7f"
 
 [[package]]
 name = "shapely"
-version = "0.1.0-alpha.1"
+version = "1.0.0"
 dependencies = [
  "insta",
  "nonmax",
@@ -118,14 +118,14 @@ dependencies = [
 
 [[package]]
 name = "shapely-derive"
-version = "0.1.0-alpha.1"
+version = "1.0.0"
 dependencies = [
  "unsynn",
 ]
 
 [[package]]
 name = "shapely-json"
-version = "0.1.0-alpha.1"
+version = "1.0.0"
 dependencies = [
  "shapely",
 ]
