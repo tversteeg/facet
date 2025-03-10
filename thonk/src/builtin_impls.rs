@@ -1,6 +1,6 @@
 use std::{collections::HashMap, mem};
 
-use crate::{MapManipulator, Scalar, Schema, Schematic, Shape};
+use crate::{MapManipulator, MapShape, Scalar, Schema, Schematic, Shape};
 
 impl Schematic for u64 {
     fn schema() -> &'static Schema {
@@ -59,12 +59,8 @@ where
                 open_ended: true,
                 manipulator: &HashMapManipulator,
             }),
-            display: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
-                write!(f, "{}", *(addr as *const HashMap<String, V>))
-            }),
-            debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
-                write!(f, "{:?}", *(addr as *const HashMap<String, V>))
-            }),
+            display: None,
+            debug: None,
             set_to_default: Some(|addr: *mut u8| unsafe {
                 *(addr as *mut HashMap<String, V>) = HashMap::new();
             }),
