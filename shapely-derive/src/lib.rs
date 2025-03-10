@@ -49,7 +49,7 @@ pub fn parse_struct_like(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     s.into_token_stream().into()
 }
 
-#[proc_macro_derive(Thonk)]
+#[proc_macro_derive(Shapely)]
 pub fn shapely_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = TokenStream::from(input);
     let mut i = input.to_token_iter();
@@ -57,13 +57,13 @@ pub fn shapely_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream
     let dbg_s = format!("{parsed:#?}");
 
     let struct_def = format!(
-        "struct ThonkInfo {{}}
-
-        impl ThonkInfo {{
+        "impl {name} {{
             fn get_parsed_structure() -> &'static str {{
-                {dbg_s:?}\
+                {dbg_s:?}
             }}
-        }}"
+        }}",
+        // FIXME: interpolation is no good here, does unsynn provide a good way to do this?
+        name = parsed.name
     );
     struct_def.into_token_stream().into()
 }

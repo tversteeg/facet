@@ -2,9 +2,9 @@
 
 #[cfg(test)]
 mod tests {
-    use shapely::Thonk;
+    use shapely::Shapely;
 
-    #[derive(Thonk)]
+    #[derive(Shapely)]
     struct Blah {
         a: u32,
     }
