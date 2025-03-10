@@ -19,3 +19,6 @@ shapely-derive = { workspace = true, optional = true }
 [features]
 default = ["derive"]
 derive = ["shapely-derive"]
+
+[dev-dependencies]
+insta = "1.42.2"
