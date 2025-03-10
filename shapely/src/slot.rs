@@ -65,6 +65,9 @@ impl<'s> Slot<'s> {
         unsafe {
             match self.dest {
                 Destination::StructField { field_addr } => {
+                    if self.init_field_slot.is_init() {
+                        std::ptr::drop_in_place(field_addr as *mut T);
+                    }
                     std::ptr::write(field_addr as *mut T, value);
                 }
                 Destination::HashMap { map, key } => {
@@ -73,6 +76,6 @@ impl<'s> Slot<'s> {
                 }
             }
         }
-        self.init_field_slot.mark_initialized();
+        self.init_field_slot.mark_as_init();
     }
 }

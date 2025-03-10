@@ -205,10 +205,17 @@ pub enum InitFieldSlot<'s> {
 }
 
 impl InitFieldSlot<'_> {
-    pub fn mark_initialized(&mut self) {
+    pub fn mark_as_init(&mut self) {
         match self {
             InitFieldSlot::Struct { index, set } => set.set(*index),
             InitFieldSlot::Ignored => {}
+        }
+    }
+
+    pub fn is_init(&self) -> bool {
+        match self {
+            InitFieldSlot::Struct { index, set } => set.is_set(*index),
+            InitFieldSlot::Ignored => true,
         }
     }
 }
