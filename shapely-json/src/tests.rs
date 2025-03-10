@@ -35,6 +35,7 @@ fn test_from_json() {
     let json = r#"{"name": "Alice", "age": 30}"#;
 
     let mut test_struct = TestStruct::partial();
+    eprintln!("Address of test_struct: {:p}", test_struct.addr());
     let result = from_json(&mut test_struct, json);
     result.unwrap();
 
@@ -53,26 +54,41 @@ fn test_from_json() {
             .byte_offset(name_field.offset.unwrap().get() as isize)
     };
 
+    eprintln!("Age address: \x1b[33m{:p}\x1b[0m", age_addr);
+    eprintln!("Name address: \x1b[33m{:p}\x1b[0m", name_addr);
+
     let age_value = unsafe { *(age_addr as *const u64) };
     let name_value = unsafe { &*(name_addr as *const String) };
 
-    eprintln!("Age value before build: {}", age_value);
-    eprintln!("Name value before build: {}", name_value);
-    eprintln!("Name pointer before build: {:p}", name_value.as_ptr());
-    eprintln!("Name length before build: {}", name_value.len());
+    eprintln!("Age value before build: \x1b[33m{}\x1b[0m", age_value);
+    eprintln!("Name value before build: \x1b[33m{}\x1b[0m", name_value);
+    eprintln!(
+        "Name pointer before build: \x1b[33m{:p}\x1b[0m",
+        name_value.as_ptr()
+    );
+    eprintln!(
+        "Name length before build: \x1b[33m{}\x1b[0m",
+        name_value.len()
+    );
 
     let built_struct = test_struct.build::<TestStruct>();
     eprintln!(
-        "built_struct age address = {:p}",
+        "built_struct age address = \x1b[33m{:p}\x1b[0m",
         &built_struct.age as *const u64
     );
     eprintln!(
-        "built_struct name address = {:p}",
+        "built_struct name address = \x1b[33m{:p}\x1b[0m",
         &built_struct.name as *const String
     );
-    eprintln!("built_struct age = {}", built_struct.age);
-    eprintln!("built_struct name ptr = {:p}", built_struct.name.as_ptr());
-    eprintln!("built_struct name len = {}", built_struct.name.len());
+    eprintln!("built_struct age = \x1b[33m{}\x1b[0m", built_struct.age);
+    eprintln!(
+        "built_struct name ptr = \x1b[33m{:p}\x1b[0m",
+        built_struct.name.as_ptr()
+    );
+    eprintln!(
+        "built_struct name len = \x1b[33m{}\x1b[0m",
+        built_struct.name.len()
+    );
 
     let built_struct_ptr = &built_struct as *const TestStruct as *const u8;
     let built_struct_size = std::mem::size_of::<TestStruct>();

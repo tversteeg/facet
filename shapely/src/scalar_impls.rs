@@ -16,7 +16,7 @@ macro_rules! impl_shapely_for_integer {
                     debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
                         write!(f, "{:?}", *(addr as *const $type))
                     }),
-                    set_to_default: Some(|addr: *mut ()| unsafe {
+                    set_to_default: Some(|addr: *mut u8| unsafe {
                         *(addr as *mut $type) = 0;
                     }),
                     // integers don't need to drop
@@ -50,7 +50,7 @@ macro_rules! impl_schematic_for_float {
                     debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
                         write!(f, "{:?}", *(addr as *const $type))
                     }),
-                    set_to_default: Some(|addr: *mut ()| unsafe {
+                    set_to_default: Some(|addr: *mut u8| unsafe {
                         *(addr as *mut $type) = 0.0;
                     }),
                     // floats don't need to drop
@@ -76,10 +76,10 @@ impl Shapely for String {
             debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
                 write!(f, "{:?}", *(addr as *const String))
             }),
-            set_to_default: Some(|addr: *mut ()| unsafe {
+            set_to_default: Some(|addr: *mut u8| unsafe {
                 *(addr as *mut String) = String::new();
             }),
-            drop_in_place: Some(|addr: *mut ()| unsafe {
+            drop_in_place: Some(|addr: *mut u8| unsafe {
                 std::ptr::drop_in_place(addr as *mut String);
             }),
         }
@@ -98,7 +98,7 @@ impl Shapely for bool {
             debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
                 write!(f, "{:?}", *(addr as *const bool))
             }),
-            set_to_default: Some(|addr: *mut ()| unsafe {
+            set_to_default: Some(|addr: *mut u8| unsafe {
                 *(addr as *mut bool) = false;
             }),
             // bool doesn't need to drop
@@ -115,7 +115,7 @@ impl Shapely for () {
             innards: Innards::Scalar(Scalar::Nothing),
             display: Some(|_addr: *const u8, f: &mut std::fmt::Formatter| write!(f, "()")),
             debug: Some(|_addr: *const u8, f: &mut std::fmt::Formatter| write!(f, "()")),
-            set_to_default: Some(|_addr: *mut ()| {}),
+            set_to_default: Some(|_addr: *mut u8| {}),
             drop_in_place: None,
         }
     }

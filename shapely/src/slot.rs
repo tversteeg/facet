@@ -5,10 +5,10 @@ use crate::{trace, InitFieldSlot, ShapeDesc, Shapely};
 
 enum Destination {
     /// Writes directly to an (uninitialized) struct field
-    StructField { field_addr: NonNull<()> },
+    StructField { field_addr: NonNull<u8> },
 
     /// Inserts into a HashMap
-    HashMap { map: NonNull<()>, key: String },
+    HashMap { map: NonNull<u8>, key: String },
 }
 
 /// Allows writing into a struct field or inserting into a hash map.
@@ -26,7 +26,7 @@ pub struct Slot<'s> {
 impl<'s> Slot<'s> {
     #[inline(always)]
     pub fn for_struct_field(
-        field_addr: NonNull<()>,
+        field_addr: NonNull<u8>,
         field_shape: ShapeDesc,
         init_field_slot: InitFieldSlot<'s>,
     ) -> Self {
@@ -39,7 +39,7 @@ impl<'s> Slot<'s> {
 
     #[inline(always)]
     pub fn for_hash_map(
-        map: NonNull<()>,
+        map: NonNull<u8>,
         field_shape: ShapeDesc,
         key: String,
         init_field_slot: InitFieldSlot<'s>,
@@ -62,7 +62,6 @@ impl<'s> Slot<'s> {
                 T::shape()
             );
         }
-
         trace!(
             "Filling slot with value of type: \x1b[33m{}\x1b[0m",
             std::any::type_name::<T>()
@@ -80,7 +79,6 @@ impl<'s> Slot<'s> {
                         trace!("Field already initialized, dropping existing value");
                         std::ptr::drop_in_place(field_addr as *mut T);
                     }
-                    trace!("Writing new value to field");
                     std::ptr::write(field_addr as *mut T, value);
                 }
                 Destination::HashMap { map, key } => {
@@ -93,7 +91,6 @@ impl<'s> Slot<'s> {
                 }
             }
         }
-        trace!("Marking field as initialized");
         self.init_field_slot.mark_as_init();
     }
 

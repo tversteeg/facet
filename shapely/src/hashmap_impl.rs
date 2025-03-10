@@ -15,10 +15,10 @@ where
             },
             display: Some(hashmap_display::<V>),
             debug: Some(hashmap_debug::<V>),
-            set_to_default: Some(|addr: *mut ()| unsafe {
+            set_to_default: Some(|addr: *mut u8| unsafe {
                 *(addr as *mut HashMap<String, V>) = HashMap::new();
             }),
-            drop_in_place: Some(|addr: *mut ()| unsafe {
+            drop_in_place: Some(|addr: *mut u8| unsafe {
                 std::ptr::drop_in_place(addr as *mut HashMap<String, V>);
             }),
         }

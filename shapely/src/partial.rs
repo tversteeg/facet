@@ -17,7 +17,7 @@ pub struct Partial<'s> {
     pub(crate) phantom: PhantomData<&'s ()>, // NonNull is covariant...
 
     /// Address of the value in memory
-    pub(crate) addr: NonNull<()>,
+    pub(crate) addr: NonNull<u8>,
 
     /// Keeps track of which fields are initialized
     pub(crate) init_fields: InitSet64,
@@ -61,7 +61,7 @@ impl Drop for Partial<'_> {
 
         // Then deallocate the memory if we own it
         if matches!(self.origin, Origin::HeapAllocated) {
-            unsafe { alloc::dealloc(self.addr.as_ptr() as *mut u8, self.shape_desc.get().layout) }
+            unsafe { alloc::dealloc(self.addr.as_ptr(), self.shape_desc.get().layout) }
         }
     }
 }
@@ -93,7 +93,7 @@ impl Partial<'_> {
                 init_field_slot: InitFieldSlot::Ignored,
             },
             phantom: PhantomData,
-            addr: NonNull::new(uninit.as_mut_ptr() as *mut ()).unwrap(),
+            addr: NonNull::new(uninit.as_mut_ptr() as _).unwrap(),
             init_fields: Default::default(),
             shape_desc: T::shape_desc(),
         }
@@ -107,7 +107,7 @@ impl Partial<'_> {
     /// - `self` outlives the returned pointer
     /// - The returned pointer is not aliased
     /// - The provided shape matches the shape of the data
-    pub unsafe fn as_ptr(&self, expected_desc: ShapeDesc) -> *mut () {
+    pub unsafe fn as_ptr(&self, expected_desc: ShapeDesc) -> *mut u8 {
         if self.shape_desc == expected_desc {
             self.addr.as_ptr()
         } else {
@@ -282,7 +282,8 @@ impl Partial<'_> {
         self.shape_desc
     }
 
-    pub fn addr(&self) -> *const () {
+    /// Returns the address of the underlying data — for debugging purposes only.
+    pub fn addr(&self) -> *const u8 {
         self.addr.as_ptr()
     }
 }
