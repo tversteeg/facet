@@ -175,33 +175,73 @@ impl<'a> JsonParser<'a> {
         }
     }
 
-    pub fn expect_object_start(&mut self) -> Result<(), JsonParseErrorWithContext<'a>> {
+    /// Expects the start of an object and returns the first key if present.
+    /// Returns None if the object is empty.
+    pub fn expect_object_start(&mut self) -> Result<Option<String>, JsonParseErrorWithContext<'a>> {
         self.skip_whitespace();
         if self.position >= self.input.len() || self.input.as_bytes()[self.position] != b'{' {
             return Err(self.make_error(JsonParseErrorKind::ExpectedOpeningBrace));
         }
         self.position += 1;
-        Ok(())
+        self.skip_whitespace();
+
+        if self.position < self.input.len() && self.input.as_bytes()[self.position] == b'"' {
+            let key = self.parse_string()?;
+            self.skip_whitespace();
+            if self.position < self.input.len() && self.input.as_bytes()[self.position] == b':' {
+                self.position += 1;
+                Ok(Some(key))
+            } else {
+                Err(self.make_error(JsonParseErrorKind::ExpectedColon))
+            }
+        } else if self.position < self.input.len() && self.input.as_bytes()[self.position] == b'}' {
+            self.position += 1;
+            Ok(None)
+        } else {
+            Err(self.make_error(JsonParseErrorKind::InvalidValue))
+        }
     }
 
+    /// Expects the end of an object or a comma followed by the next key.
+    /// Returns None if the object has ended, or Some(key) if there's another key-value pair.
+    ///
+    /// This function is used to parse the end of an object or to move to the next key-value pair.
+    /// It handles three cases:
+    /// 1. If it encounters a comma, it expects the next key-value pair and returns Some(key).
+    /// 2. If it encounters a closing brace, it returns None to indicate the end of the object.
+    /// 3. If it encounters anything else, it returns an error.
+    ///
+    /// The function also takes care of skipping whitespace before and after tokens.
+    /// If it reaches the end of input unexpectedly, it returns an appropriate error.
     pub fn parse_object_key(&mut self) -> Result<Option<String>, JsonParseErrorWithContext<'a>> {
         self.skip_whitespace();
         if self.position >= self.input.len() {
-            return Ok(None);
+            return Err(self.make_error(JsonParseErrorKind::UnexpectedEndOfInput));
         }
         match self.input.as_bytes()[self.position] {
-            b'"' => {
-                let key = self.parse_string()?;
+            b',' => {
+                self.position += 1;
                 self.skip_whitespace();
-                if self.position < self.input.len() && self.input.as_bytes()[self.position] == b':'
+                if self.position < self.input.len() && self.input.as_bytes()[self.position] == b'"'
                 {
-                    self.position += 1;
-                    Ok(Some(key))
+                    let key = self.parse_string()?;
+                    self.skip_whitespace();
+                    if self.position < self.input.len()
+                        && self.input.as_bytes()[self.position] == b':'
+                    {
+                        self.position += 1;
+                        Ok(Some(key))
+                    } else {
+                        Err(self.make_error(JsonParseErrorKind::ExpectedColon))
+                    }
                 } else {
-                    Err(self.make_error(JsonParseErrorKind::ExpectedColon))
+                    Err(self.make_error(JsonParseErrorKind::InvalidValue))
                 }
             }
-            b'}' => Ok(None),
+            b'}' => {
+                self.position += 1;
+                Ok(None)
+            }
             _ => Err(self.make_error(JsonParseErrorKind::InvalidValue)),
         }
     }
@@ -304,15 +344,6 @@ impl<'a> JsonParser<'a> {
                 }
             }
         }
-        Ok(())
-    }
-
-    pub fn expect_object_end(&mut self) -> Result<(), JsonParseErrorWithContext<'a>> {
-        self.skip_whitespace();
-        if self.position >= self.input.len() || self.input.as_bytes()[self.position] != b'}' {
-            return Err(self.make_error(JsonParseErrorKind::ExpectedClosingBrace));
-        }
-        self.position += 1;
         Ok(())
     }
 }

@@ -53,10 +53,21 @@ pub fn from_json<'input>(
             }
             Innards::Struct { fields } => {
                 trace!("Deserializing struct");
-                parser.expect_object_start()?;
+                if let Some(first_key) = parser.expect_object_start()? {
+                    trace!("Processing struct key: {}", first_key);
+                    if let Some(field) = fields.iter().find(|f| f.name == first_key).copied() {
+                        let mut partial_field = Partial::alloc(field.shape);
+                        trace!("Deserializing field: {}", field.name);
+                        deserialize_value(parser, &mut partial_field)?;
+                        let slot = partial.slot(field).expect("Field slot");
+                        slot.fill_from_partial(partial_field);
+                    } else {
+                        warn!("Unknown field: {}, skipping", first_key);
+                        parser.skip_value()?;
+                    }
+                }
                 while let Some(key) = parser.parse_object_key()? {
                     trace!("Processing struct key: {}", key);
-
                     if let Some(field) = fields.iter().find(|f| f.name == key).copied() {
                         // FIXME: we could definitely optimize this — the struct is already
                         // allocated at this stage, so we could grab the address of its field.
@@ -70,8 +81,7 @@ pub fn from_json<'input>(
                         parser.skip_value()?;
                     }
                 }
-                parser.expect_object_end()?;
-                trace!("Finished deserializing Map");
+                trace!("Finished deserializing struct");
             }
             // Add support for other shapes (Array, Transparent) as needed
             _ => {
