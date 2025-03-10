@@ -118,5 +118,6 @@ impl<'s> Slot<'s> {
             }
         }
         self.init_field_slot.mark_as_init();
+        std::mem::forget(partial);
     }
 }

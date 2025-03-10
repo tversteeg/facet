@@ -36,9 +36,25 @@ fn test_from_json() {
 
     let mut test_struct = TestStruct::partial();
     let result = from_json(&mut test_struct, json);
-
     result.unwrap();
+
     let built_struct = test_struct.build::<TestStruct>();
+    println!("built_struct age = {}", built_struct.age);
+    println!("built_struct name ptr = {:p}", built_struct.name.as_ptr());
+    println!("built_struct name len = {}", built_struct.name.len());
+
+    let built_struct_ptr = &built_struct as *const TestStruct as *const u8;
+    let built_struct_size = std::mem::size_of::<TestStruct>();
+    let built_struct_slice =
+        unsafe { std::slice::from_raw_parts(built_struct_ptr, built_struct_size) };
+    println!("built_struct as hex:");
+    for (i, byte) in built_struct_slice.iter().enumerate() {
+        print!("{:02x} ", byte);
+        if (i + 1) % 16 == 0 {
+            println!();
+        }
+    }
+    println!();
 
     assert_eq!(
         built_struct,
