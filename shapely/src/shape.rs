@@ -2,8 +2,6 @@ use std::{collections::HashSet, fmt::Formatter};
 
 use nonmax::NonMaxU32;
 
-use crate::slot::{AllSlots, SlotsKind};
-
 /// Schema for reflection of a type
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Shape {
