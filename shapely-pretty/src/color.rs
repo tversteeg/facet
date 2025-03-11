@@ -2,6 +2,34 @@
 
 use std::hash::{DefaultHasher, Hash, Hasher};
 
+/// RGB color representation
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RGB {
+    /// Red component (0-255)
+    pub r: u8,
+    /// Green component (0-255)
+    pub g: u8,
+    /// Blue component (0-255)
+    pub b: u8,
+}
+
+impl RGB {
+    /// Create a new RGB color
+    pub fn new(r: u8, g: u8, b: u8) -> Self {
+        Self { r, g, b }
+    }
+    
+    /// Write the RGB color as ANSI foreground color code to the formatter
+    pub fn write_fg<W: std::fmt::Write>(&self, f: &mut W) -> std::fmt::Result {
+        write!(f, "\x1b[38;2;{};{};{}m", self.r, self.g, self.b)
+    }
+    
+    /// Write the RGB color as ANSI background color code to the formatter
+    pub fn write_bg<W: std::fmt::Write>(&self, f: &mut W) -> std::fmt::Result {
+        write!(f, "\x1b[48;2;{};{};{}m", self.r, self.g, self.b)
+    }
+}
+
 /// A color generator that produces unique colors based on a hash value
 pub struct ColorGenerator {
     base_hue: f32,
@@ -44,7 +72,7 @@ impl ColorGenerator {
     }
     
     /// Generate an RGB color based on a hash value
-    pub fn generate_color(&self, hash: u64) -> (u8, u8, u8) {
+    pub fn generate_color(&self, hash: u64) -> RGB {
         // Use the hash to generate a hue offset
         let hue_offset = (hash % 360) as f32;
         let hue = (self.base_hue + hue_offset) % 360.0;
@@ -54,7 +82,7 @@ impl ColorGenerator {
     }
     
     /// Generate an RGB color based on a hashable value
-    pub fn generate_color_for<T: Hash>(&self, value: &T) -> (u8, u8, u8) {
+    pub fn generate_color_for<T: Hash>(&self, value: &T) -> RGB {
         let mut hasher = DefaultHasher::new();
         value.hash(&mut hasher);
         let hash = hasher.finish();
@@ -62,7 +90,7 @@ impl ColorGenerator {
     }
     
     /// Convert HSL color values to RGB
-    fn hsl_to_rgb(&self, h: f32, s: f32, l: f32) -> (u8, u8, u8) {
+    fn hsl_to_rgb(&self, h: f32, s: f32, l: f32) -> RGB {
         let c = (1.0 - (2.0 * l - 1.0).abs()) * s;
         let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
         let m = l - c / 2.0;
@@ -76,7 +104,7 @@ impl ColorGenerator {
             _ => (c, 0.0, x),
         };
         
-        (
+        RGB::new(
             ((r + m) * 255.0) as u8,
             ((g + m) * 255.0) as u8,
             ((b + m) * 255.0) as u8,

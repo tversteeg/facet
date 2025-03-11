@@ -7,9 +7,12 @@ use std::{
     str,
 };
 
-use shapely_core::{Innards, Scalar, ScalarContents, Shape, ShapeDesc, Shapely};
+use shapely_core::{Innards, Scalar, Shape, ShapeDesc, Shapely};
 
-use crate::{ansi, color::ColorGenerator};
+use crate::{
+    ansi,
+    color::{self, ColorGenerator},
+};
 
 /// A formatter for pretty-printing Shapely types
 pub struct PrettyPrinter {
@@ -104,7 +107,9 @@ impl PrettyPrinter {
         // Check if we've reached the maximum depth
         if let Some(max_depth) = self.max_depth {
             if depth > max_depth {
-                return write!(f, "{}...", self.style_punctuation("["));
+                self.write_punctuation(f, "[")?;
+                write!(f, "...")?;
+                return Ok(());
             }
         }
 
@@ -115,22 +120,20 @@ impl PrettyPrinter {
         let mut hasher = DefaultHasher::new();
         shape.typeid.hash(&mut hasher);
         let hash = hasher.finish();
-        let (r, g, b) = self.color_generator.generate_color(hash);
+        let color = self.color_generator.generate_color(hash);
 
         // Format based on the shape's innards
         match &shape.innards {
-            Innards::Scalar(scalar) => self.format_scalar(ptr, *scalar, f, r, g, b),
-            Innards::Struct { fields } => {
-                self.format_struct(ptr, shape, fields, f, depth, visited, r, g, b)
-            }
+            Innards::Scalar(scalar) => self.format_scalar(ptr, *scalar, f, color),
+            Innards::Struct { fields } => self.format_struct(ptr, shape, fields, f, depth, visited),
             Innards::HashMap { value_shape } => {
-                self.format_hashmap(ptr, shape, *value_shape, f, depth, visited, r, g, b)
+                self.format_hashmap(ptr, shape, *value_shape, f, depth, visited)
             }
             Innards::Array(elem_shape) => {
-                self.format_array(ptr, shape, *elem_shape, f, depth, visited, r, g, b)
+                self.format_array(ptr, shape, *elem_shape, f, depth, visited)
             }
             Innards::Transparent(inner_shape) => {
-                self.format_transparent(ptr, shape, *inner_shape, f, depth, visited, r, g, b)
+                self.format_transparent(ptr, shape, *inner_shape, f, depth, visited)
             }
         }
     }
@@ -141,50 +144,60 @@ impl PrettyPrinter {
         ptr: *mut u8,
         scalar: Scalar,
         f: &mut impl Write,
-        r: u8,
-        g: u8,
-        b: u8,
+        color: color::RGB,
     ) -> fmt::Result {
-        let scalar_color = if self.use_colors {
-            ansi::rgb(r, g, b)
-        } else {
-            String::new()
-        };
-        let reset = if self.use_colors { ansi::RESET } else { "" };
-
         // Use Scalar::get_contents for safe access to the scalar value
         let contents = unsafe { scalar.get_contents(ptr) };
-        
+
+        // Apply color if needed
+        if self.use_colors {
+            color.write_fg(f)?;
+        }
+
+        // Format the content
         match contents {
-            ScalarContents::String(s) => write!(f, "{}\"{}\"{}", scalar_color, s.escape_debug(), reset),
+            ScalarContents::String(s) => {
+                write!(f, "\"")?;
+                for c in s.escape_debug() {
+                    write!(f, "{}", c)?;
+                }
+                write!(f, "\"")?;
+            }
             ScalarContents::Bytes(b) => {
-                write!(f, "{}b\"", scalar_color)?;
+                write!(f, "b\"")?;
                 for &byte in b.iter().take(64) {
                     write!(f, "\\x{:02x}", byte)?;
                 }
                 if b.len() > 64 {
                     write!(f, "...")?;
                 }
-                write!(f, "\"{}", reset)
-            },
-            ScalarContents::I8(v) => write!(f, "{}{}{}", scalar_color, v, reset),
-            ScalarContents::I16(v) => write!(f, "{}{}{}", scalar_color, v, reset),
-            ScalarContents::I32(v) => write!(f, "{}{}{}", scalar_color, v, reset),
-            ScalarContents::I64(v) => write!(f, "{}{}{}", scalar_color, v, reset),
-            ScalarContents::I128(v) => write!(f, "{}{}{}", scalar_color, v, reset),
-            ScalarContents::U8(v) => write!(f, "{}{}{}", scalar_color, v, reset),
-            ScalarContents::U16(v) => write!(f, "{}{}{}", scalar_color, v, reset),
-            ScalarContents::U32(v) => write!(f, "{}{}{}", scalar_color, v, reset),
-            ScalarContents::U64(v) => write!(f, "{}{}{}", scalar_color, v, reset),
-            ScalarContents::U128(v) => write!(f, "{}{}{}", scalar_color, v, reset),
-            ScalarContents::F32(v) => write!(f, "{}{}{}", scalar_color, v, reset),
-            ScalarContents::F64(v) => write!(f, "{}{}{}", scalar_color, v, reset),
-            ScalarContents::Boolean(v) => write!(f, "{}{}{}", scalar_color, v, reset),
-            ScalarContents::Nothing => write!(f, "{}(){}", scalar_color, reset),
-            ScalarContents::Unknown => write!(f, "{}<unknown scalar>{}", scalar_color, reset),
+                write!(f, "\"")?;
+            }
+            ScalarContents::I8(v) => write!(f, "{}", v)?,
+            ScalarContents::I16(v) => write!(f, "{}", v)?,
+            ScalarContents::I32(v) => write!(f, "{}", v)?,
+            ScalarContents::I64(v) => write!(f, "{}", v)?,
+            ScalarContents::I128(v) => write!(f, "{}", v)?,
+            ScalarContents::U8(v) => write!(f, "{}", v)?,
+            ScalarContents::U16(v) => write!(f, "{}", v)?,
+            ScalarContents::U32(v) => write!(f, "{}", v)?,
+            ScalarContents::U64(v) => write!(f, "{}", v)?,
+            ScalarContents::U128(v) => write!(f, "{}", v)?,
+            ScalarContents::F32(v) => write!(f, "{}", v)?,
+            ScalarContents::F64(v) => write!(f, "{}", v)?,
+            ScalarContents::Boolean(v) => write!(f, "{}", v)?,
+            ScalarContents::Nothing => write!(f, "()")?,
+            ScalarContents::Unknown => write!(f, "<unknown scalar>")?,
             // Handle future variants that might be added to the non-exhaustive enum
-            _ => write!(f, "{}<unknown scalar type>{}", scalar_color, reset),
+            _ => write!(f, "<unknown scalar type>")?,
         }
+
+        // Reset color if needed
+        if self.use_colors {
+            ansi::write_reset(f)?;
+        }
+
+        Ok(())
     }
 
     /// Format a struct
@@ -196,29 +209,22 @@ impl PrettyPrinter {
         f: &mut impl Write,
         depth: usize,
         visited: &mut HashSet<*mut u8>,
-        _r: u8,
-        _g: u8,
-        _b: u8,
     ) -> fmt::Result {
         // Check for cycles
         if !visited.insert(ptr) {
-            return write!(
-                f,
-                "{}{}{}{}{}",
-                self.style_type_name(&shape.to_string()),
-                self.style_punctuation(" { "),
-                self.style_comment("/* cycle detected */"),
-                self.style_punctuation(" }"),
-                if self.use_colors { ansi::RESET } else { "" }
-            );
+            self.write_type_name(f, &shape.to_string())?;
+            self.write_punctuation(f, " { ")?;
+            self.write_comment(f, "/* cycle detected */")?;
+            self.write_punctuation(f, " }")?;
+            return Ok(());
         }
 
         // Print the struct name
-        write!(f, "{}", self.style_type_name(&shape.to_string()))?;
-        write!(f, "{}", self.style_punctuation(" {"))?;
+        self.write_type_name(f, &shape.to_string())?;
+        self.write_punctuation(f, " {")?;
 
         if fields.is_empty() {
-            write!(f, "{}", self.style_punctuation(" }"))?;
+            self.write_punctuation(f, " }")?;
             visited.remove(&ptr);
             return Ok(());
         }
@@ -264,9 +270,6 @@ impl PrettyPrinter {
         f: &mut impl Write,
         depth: usize,
         _visited: &mut HashSet<*mut u8>,
-        _r: u8,
-        _g: u8,
-        _b: u8,
     ) -> fmt::Result {
         // In a real implementation, we would need to iterate over the HashMap
         // For now, we'll just print a placeholder
@@ -299,9 +302,6 @@ impl PrettyPrinter {
         f: &mut impl Write,
         depth: usize,
         _visited: &mut HashSet<*mut u8>,
-        _r: u8,
-        _g: u8,
-        _b: u8,
     ) -> fmt::Result {
         // In a real implementation, we would need to iterate over the array
         // For now, we'll just print a placeholder
@@ -334,9 +334,6 @@ impl PrettyPrinter {
         f: &mut impl Write,
         depth: usize,
         visited: &mut HashSet<*mut u8>,
-        _r: u8,
-        _g: u8,
-        _b: u8,
     ) -> fmt::Result {
         // Print the wrapper type name
         write!(f, "{}", self.style_type_name(&shape.to_string()))?;
@@ -349,39 +346,47 @@ impl PrettyPrinter {
         write!(f, "{}", self.style_punctuation(")"))
     }
 
-    /// Style a type name
-    fn style_type_name(&self, name: &str) -> String {
+    /// Write styled type name to formatter
+    fn write_type_name<W: fmt::Write>(&self, f: &mut W, name: &str) -> fmt::Result {
         if self.use_colors {
-            format!("{}{}{}", ansi::BOLD, name, ansi::RESET)
+            ansi::write_bold(f)?;
+            write!(f, "{}", name)?;
+            ansi::write_reset(f)
         } else {
-            name.to_string()
+            write!(f, "{}", name)
         }
     }
 
-    /// Style a field name
-    fn style_field_name(&self, name: &str) -> String {
+    /// Write styled field name to formatter
+    fn write_field_name<W: fmt::Write>(&self, f: &mut W, name: &str) -> fmt::Result {
         if self.use_colors {
-            format!("{}{}{}", ansi::rgb(114, 160, 193), name, ansi::RESET)
+            ansi::write_rgb(f, 114, 160, 193)?;
+            write!(f, "{}", name)?;
+            ansi::write_reset(f)
         } else {
-            name.to_string()
+            write!(f, "{}", name)
         }
     }
 
-    /// Style punctuation
-    fn style_punctuation(&self, text: &str) -> String {
+    /// Write styled punctuation to formatter
+    fn write_punctuation<W: fmt::Write>(&self, f: &mut W, text: &str) -> fmt::Result {
         if self.use_colors {
-            format!("{}{}{}", ansi::DIM, text, ansi::RESET)
+            ansi::write_dim(f)?;
+            write!(f, "{}", text)?;
+            ansi::write_reset(f)
         } else {
-            text.to_string()
+            write!(f, "{}", text)
         }
     }
 
-    /// Style a comment
-    fn style_comment(&self, text: &str) -> String {
+    /// Write styled comment to formatter
+    fn write_comment<W: fmt::Write>(&self, f: &mut W, text: &str) -> fmt::Result {
         if self.use_colors {
-            format!("{}{}{}", ansi::DIM, text, ansi::RESET)
+            ansi::write_dim(f)?;
+            write!(f, "{}", text)?;
+            ansi::write_reset(f)
         } else {
-            text.to_string()
+            write!(f, "{}", text)
         }
     }
 }
@@ -396,7 +401,7 @@ mod tests {
         let printer = PrettyPrinter::default();
         assert_eq!(printer.indent_size, 2);
         assert_eq!(printer.max_depth, None);
-        assert_eq!(printer.use_colors, true);
+        assert!(printer.use_colors);
     }
 
     #[test]
@@ -408,7 +413,7 @@ mod tests {
 
         assert_eq!(printer.indent_size, 4);
         assert_eq!(printer.max_depth, Some(3));
-        assert_eq!(printer.use_colors, false);
+        assert!(!printer.use_colors);
     }
 
     #[test]
