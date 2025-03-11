@@ -12,9 +12,18 @@ pub fn write_bold<W: Write>(f: &mut W) -> std::fmt::Result {
     f.write_str("\x1b[1m")
 }
 
+/// ANSI reset code
+pub const RESET: &str = "\x1b[0m";
+
+/// ANSI bold formatting code
+pub const BOLD: &str = "\x1b[1m";
+
+/// ANSI dim formatting code
+pub const DIM: &str = "\x1b[2m";
+
 /// Write ANSI dim formatting to the formatter
 pub fn write_dim<W: Write>(f: &mut W) -> std::fmt::Result {
-    f.write_str("\x1b[2m")
+    f.write_str(DIM)
 }
 
 /// Write ANSI italic formatting to the formatter

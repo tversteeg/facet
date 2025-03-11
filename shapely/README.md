@@ -60,6 +60,22 @@ To implement a custom deserializer for a new format, you'll need to work with th
 ### Example Implementation Skeleton
 
 ```rust
+use shapely_core::{Partial, Innards, Scalar, FieldError, Shape};
+use std::convert::From;
+
+#[derive(Debug)]
+pub enum MyFormatError {
+    UnsupportedType,
+    UnsupportedShape,
+    FieldError(FieldError),
+}
+
+impl From<FieldError> for MyFormatError {
+    fn from(err: FieldError) -> Self {
+        MyFormatError::FieldError(err)
+    }
+}
+
 pub fn from_my_format(partial: &mut Partial, input: &[u8]) -> Result<(), MyFormatError> {
     let shape_desc = partial.shape();
     let shape = shape_desc.get();
@@ -69,15 +85,15 @@ pub fn from_my_format(partial: &mut Partial, input: &[u8]) -> Result<(), MyForma
             let slot = partial.scalar_slot().expect("Scalar slot");
             // Parse scalar value from input and fill slot
             match scalar {
-                Scalar::String => slot.fill(/* parsed string */),
-                Scalar::U64 => slot.fill(/* parsed u64 */),
+                Scalar::String => slot.fill("/* parsed string */".to_string()),
+                Scalar::U64 => slot.fill(0u64),
                 // Handle other scalar types
                 _ => return Err(MyFormatError::UnsupportedType),
             }
         },
         Innards::Struct { .. } => {
             // Parse struct fields from input
-            for (field_name, field_value) in /* parsed fields */ {
+            for (field_name, field_value) in [("field1", "value1"), ("field2", "value2")].iter() {
                 let slot = partial.slot_by_name(field_name)?;
                 
                 // Create a partial for the field and fill it recursively

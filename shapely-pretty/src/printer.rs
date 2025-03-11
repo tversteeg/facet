@@ -7,7 +7,7 @@ use std::{
     str,
 };
 
-use shapely_core::{Innards, Scalar, Shape, ShapeDesc, Shapely};
+use shapely_core::{Innards, Scalar, ScalarContents, Shape, ShapeDesc, Shapely};
 
 use crate::{
     ansi,
@@ -357,6 +357,13 @@ impl PrettyPrinter {
         }
     }
 
+    /// Style a type name and return it as a string
+    fn style_type_name(&self, name: &str) -> String {
+        let mut result = String::new();
+        self.write_type_name(&mut result, name).unwrap();
+        result
+    }
+
     /// Write styled field name to formatter
     fn write_field_name<W: fmt::Write>(&self, f: &mut W, name: &str) -> fmt::Result {
         if self.use_colors {
@@ -366,6 +373,13 @@ impl PrettyPrinter {
         } else {
             write!(f, "{}", name)
         }
+    }
+
+    /// Style a field name and return it as a string
+    fn style_field_name(&self, name: &str) -> String {
+        let mut result = String::new();
+        self.write_field_name(&mut result, name).unwrap();
+        result
     }
 
     /// Write styled punctuation to formatter
@@ -379,6 +393,13 @@ impl PrettyPrinter {
         }
     }
 
+    /// Style punctuation and return it as a string
+    fn style_punctuation(&self, text: &str) -> String {
+        let mut result = String::new();
+        self.write_punctuation(&mut result, text).unwrap();
+        result
+    }
+
     /// Write styled comment to formatter
     fn write_comment<W: fmt::Write>(&self, f: &mut W, text: &str) -> fmt::Result {
         if self.use_colors {
@@ -388,6 +409,13 @@ impl PrettyPrinter {
         } else {
             write!(f, "{}", text)
         }
+    }
+
+    /// Style a comment and return it as a string
+    fn style_comment(&self, text: &str) -> String {
+        let mut result = String::new();
+        self.write_comment(&mut result, text).unwrap();
+        result
     }
 }
 
