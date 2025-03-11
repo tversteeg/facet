@@ -239,9 +239,15 @@ impl PrettyPrinter {
             // Field name
             write!(f, "{}: ", self.style_field_name(field.name))?;
 
-            // Field value - compute the field address
-            let field_ptr = unsafe { ptr.add(field.offset) };
-            self.format_value(field_ptr, field.shape, f, depth + 1, visited)?;
+            // Check if field is sensitive
+            if field.flags.is_sensitive() {
+                // For sensitive fields, display [REDACTED] instead of the actual value
+                write!(f, "{}", self.style_redacted("[REDACTED]"))?;
+            } else {
+                // Field value - compute the field address
+                let field_ptr = unsafe { ptr.add(field.offset) };
+                self.format_value(field_ptr, field.shape, f, depth + 1, visited)?;
+            }
 
             writeln!(f, "{}", self.style_punctuation(","))?;
         }
@@ -415,6 +421,25 @@ impl PrettyPrinter {
     fn style_comment(&self, text: &str) -> String {
         let mut result = String::new();
         self.write_comment(&mut result, text).unwrap();
+        result
+    }
+
+    /// Write styled redacted value to formatter
+    fn write_redacted<W: fmt::Write>(&self, f: &mut W, text: &str) -> fmt::Result {
+        if self.use_colors {
+            ansi::write_rgb(f, 224, 49, 49)?; // Use bright red for redacted values
+            ansi::write_bold(f)?;
+            write!(f, "{}", text)?;
+            ansi::write_reset(f)
+        } else {
+            write!(f, "{}", text)
+        }
+    }
+
+    /// Style a redacted value and return it as a string
+    fn style_redacted(&self, text: &str) -> String {
+        let mut result = String::new();
+        self.write_redacted(&mut result, text).unwrap();
         result
     }
 }
