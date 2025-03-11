@@ -17,6 +17,42 @@ struct Address {
     country: String,
 }
 
+// Used for testing sensitive fields with a real structure
+#[derive(Debug)]
+struct TestSecrets {
+    normal_field: String,
+    sensitive_field: String,
+}
+
+// Manual Shapely implementation with a sensitive field
+impl Shapely for TestSecrets {
+    fn shape() -> Shape {
+        Shape {
+            name: |f| write!(f, "TestSecrets"),
+            typeid: std::any::TypeId::of::<Self>(),
+            layout: Layout::new::<Self>(),
+            innards: Innards::Struct {
+                fields: &[
+                    Field {
+                        name: "normal_field",
+                        shape: ShapeDesc(String::shape),
+                        offset: 0,
+                        flags: FieldFlags::EMPTY,
+                    },
+                    Field {
+                        name: "sensitive_field",
+                        shape: ShapeDesc(String::shape),
+                        offset: std::mem::size_of::<String>(),
+                        flags: FieldFlags::SENSITIVE,
+                    },
+                ],
+            },
+            set_to_default: None,
+            drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
+        }
+    }
+}
+
 #[test]
 fn test_pretty_print() {
     // This is a simplified test that just ensures the code runs without panicking
@@ -83,46 +119,35 @@ fn test_pretty_print() {
 
 #[test]
 fn test_sensitive_fields() {
-    // Create a shape with a sensitive field manually
-    let shape = Shape {
-        name: |f| write!(f, "TestStruct"),
-        typeid: std::any::TypeId::of::<String>(),
-        layout: Layout::new::<String>(),
-        innards: Innards::Struct {
-            fields: &[
-                Field {
-                    name: "normal_field",
-                    shape: ShapeDesc(String::shape),
-                    offset: 0,
-                    flags: FieldFlags::EMPTY,
-                },
-                Field {
-                    name: "sensitive_field",
-                    shape: ShapeDesc(String::shape),
-                    offset: std::mem::size_of::<String>(),
-                    flags: FieldFlags::SENSITIVE,
-                },
-            ],
-        },
-        set_to_default: None,
-        drop_in_place: None,
+    // Create an actual instance with sensitive data
+    let test_data = TestSecrets {
+        normal_field: "This is visible".to_string(),
+        sensitive_field: "TOP SECRET PASSWORD".to_string(),
     };
 
-    // Test debug formatting
-    let mut output = String::new();
-    write!(output, "{:?}", shape).unwrap();
+    // Test using the PrettyPrinter
+    let printer = PrettyPrinter::new();
+    let output = printer.format(&test_data);
 
-    // Verify output
+    // Verify normal field is visible
     assert!(output.contains("normal_field"));
+    assert!(output.contains("This is visible"));
+    
+    // Verify sensitive field name is visible but value is redacted
     assert!(output.contains("sensitive_field"));
     assert!(output.contains("[REDACTED]"));
+    assert!(!output.contains("TOP SECRET PASSWORD"));
 
-    // Test debug formatting with alternate flag
-    let mut output = String::new();
-    write!(output, "{:#?}", shape).unwrap();
-
-    // Verify output
-    assert!(output.contains("normal_field"));
-    assert!(output.contains("sensitive_field"));
-    assert!(output.contains("[REDACTED]"));
+    // Test pretty with trait
+    let mut buffer = String::new();
+    write!(buffer, "{}", test_data.pretty()).unwrap();
+    
+    // Verify normal field is visible
+    assert!(buffer.contains("normal_field"));
+    assert!(buffer.contains("This is visible"));
+    
+    // Verify sensitive field name is visible but value is redacted
+    assert!(buffer.contains("sensitive_field"));
+    assert!(buffer.contains("[REDACTED]"));
+    assert!(!buffer.contains("TOP SECRET PASSWORD"));
 }
