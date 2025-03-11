@@ -13,7 +13,7 @@
 >
 > Expect multiple major versions in the near future — (note left 2025-03-11)
 
-A Rust reflection, introspection, serialization and deserialization framework.
+A Rust reflection, introspection, serialization and deserialization framework with support for multiple formats including JSON, YAML, MessagePack, URL-encoded data, and more.
 
 A single, lightweight derive macro (thanks to [unsynn](https://crates.io/crates/unsynn))
 
