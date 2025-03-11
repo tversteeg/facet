@@ -9,7 +9,7 @@ struct FooBar {
 impl Shapely for FooBar {
     fn shape() -> crate::Shape {
         Shape {
-            name: "FooBar",
+            name: |_, f| write!(f, "FooBar"),
             typeid: mini_typeid::of::<Self>(),
             layout: std::alloc::Layout::new::<Self>(),
             innards: crate::Innards::Struct {
@@ -124,7 +124,7 @@ fn build_struct_with_drop_field() {
     impl Shapely for DropCounter {
         fn shape() -> crate::Shape {
             Shape {
-                name: "DropCounter",
+                name: |_, f| write!(f, "DropCounter"),
                 typeid: mini_typeid::of::<DropCounter>(),
                 layout: std::alloc::Layout::new::<DropCounter>(),
                 innards: crate::Innards::Struct { fields: &[] },
@@ -150,7 +150,7 @@ fn build_struct_with_drop_field() {
     impl Shapely for StructWithDrop {
         fn shape() -> crate::Shape {
             Shape {
-                name: "StructWithDrop",
+                name: |_, f| write!(f, "StructWithDrop"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<StructWithDrop>(),
                 innards: crate::Innards::Struct {
@@ -207,7 +207,7 @@ fn build_scalar_with_drop() {
     impl Shapely for DropScalar {
         fn shape() -> crate::Shape {
             Shape {
-                name: "DropScalar",
+                name: |_, f| write!(f, "DropScalar"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
@@ -274,7 +274,7 @@ fn build_truck_with_drop_fields() {
     impl Shapely for Engine {
         fn shape() -> crate::Shape {
             Shape {
-                name: "Engine",
+                name: |_, f| write!(f, "Engine"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
@@ -289,7 +289,7 @@ fn build_truck_with_drop_fields() {
     impl Shapely for Wheels {
         fn shape() -> crate::Shape {
             Shape {
-                name: "Wheels",
+                name: |_, f| write!(f, "Wheels"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
@@ -307,7 +307,7 @@ fn build_truck_with_drop_fields() {
     impl Shapely for Truck {
         fn shape() -> crate::Shape {
             Shape {
-                name: "Truck",
+                name: |_, f| write!(f, "Truck"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Struct {
@@ -412,7 +412,7 @@ fn test_partial_build_in_place() {
     impl Shapely for DropCounter {
         fn shape() -> crate::Shape {
             Shape {
-                name: "DropCounter",
+                name: |_, f| write!(f, "DropCounter"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Struct { fields: &[] },
@@ -436,7 +436,7 @@ fn test_partial_build_in_place() {
     impl Shapely for TestShape {
         fn shape() -> crate::Shape {
             Shape {
-                name: "TestShape",
+                name: |_, f| write!(f, "TestShape"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Struct {
@@ -475,7 +475,7 @@ fn test_partial_build_transparent() {
     impl Shapely for InnerType {
         fn shape() -> crate::Shape {
             Shape {
-                name: "InnerType",
+                name: |_, f| write!(f, "InnerType"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Scalar(crate::Scalar::U32),
@@ -491,7 +491,7 @@ fn test_partial_build_transparent() {
     impl Shapely for TransparentWrapper {
         fn shape() -> crate::Shape {
             Shape {
-                name: "TransparentWrapper",
+                name: |_, f| write!(f, "TransparentWrapper"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Transparent(InnerType::shape_desc()),

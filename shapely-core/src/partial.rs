@@ -138,9 +138,11 @@ impl Partial<'_> {
     /// Checks if all fields in the struct or scalar value have been initialized.
     /// Panics if any field is not initialized, providing details about the uninitialized field.
     pub(crate) fn assert_all_fields_initialized(&self) {
+        let shape = self.shape.get();
+        
         trace!(
             "Checking initialization of \x1b[1;33m{}\x1b[0m partial at addr \x1b[1;36m{:p}\x1b[0m",
-            self.shape.get().name,
+            shape,
             self.addr
         );
         match self.shape.get().innards {
@@ -244,10 +246,13 @@ impl Partial<'_> {
 
     fn assert_matching_shape<T: Shapely>(&self) {
         if self.shape != T::shape_desc() {
+            let partial_shape = self.shape.get();
+            let target_shape = T::shape();
+            
             panic!(
                 "This is a partial \x1b[1;34m{}\x1b[0m, you can't build a \x1b[1;32m{}\x1b[0m out of it",
-                self.shape.get().name,
-                T::shape().name,
+                partial_shape,
+                target_shape,
             );
         }
     }

@@ -1,5 +1,4 @@
 use std::mem::offset_of;
-
 use shapely::Shapely;
 
 #[test]
@@ -12,7 +11,10 @@ fn simple_struct() {
 
     if !cfg!(miri) {
         let shape = Blah::shape();
-        assert_eq!(shape.name, "Blah");
+        
+        // Check the name using Display
+        assert_eq!(format!("{}", shape), "Blah");
+        
         assert_eq!(shape.layout.size(), 32);
         assert_eq!(shape.layout.align(), 8);
 

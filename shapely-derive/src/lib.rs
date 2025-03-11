@@ -56,7 +56,7 @@ pub fn shapely_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream
         impl shapely::Shapely for {struct_name} {{
             fn shape() -> shapely::Shape {{
                 shapely::Shape {{
-                    name: "{struct_name}",
+                    name: |_, f| std::fmt::Write::write_str(f, "{struct_name}"),
                     typeid: shapely::mini_typeid::of::<Self>(),
                     layout: std::alloc::Layout::new::<Self>(),
                     innards: shapely::Innards::Struct {{

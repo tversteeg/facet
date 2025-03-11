@@ -4,7 +4,7 @@ use std::{alloc::Layout, any::TypeId, collections::HashSet, fmt::Formatter, ptr:
 #[derive(Clone, Copy)]
 pub struct Shape {
     /// A descriptive name for the type, e.g. `u64`, or `Person`
-    pub name: &'static str,
+    pub name: NameFn,
 
     /// The typeid of the underlying type
     pub typeid: TypeId,
@@ -25,6 +25,15 @@ pub struct Shape {
     /// This function should be called only for initialized values.
     /// It's the caller's responsibility to ensure the address points to a valid value.
     pub drop_in_place: Option<DropFn>,
+}
+
+pub type NameFn = fn(shape: &Shape, f: &mut std::fmt::Formatter) -> std::fmt::Result;
+
+// Helper struct to format the name for display
+impl std::fmt::Display for Shape {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        (self.name)(self, f)
+    }
 }
 
 /// A function that sets a value to its default at a specific memory address
@@ -62,24 +71,32 @@ impl Shape {
         indent: usize,
     ) -> std::fmt::Result {
         if !printed_schemas.insert(*self) {
+            write!(
+                f,
+                "{:indent$}\x1b[1;33m",
+                "",
+                indent = indent
+            )?;
+            (self.name)(self, f)?;
             writeln!(
                 f,
-                "{:indent$}\x1b[1;33m{}\x1b[0m (\x1b[1;31malready printed\x1b[0m)",
-                "",
-                self.name,
-                indent = indent
+                "\x1b[0m (\x1b[1;31malready printed\x1b[0m)"
             )?;
             return Ok(());
         }
 
+        write!(
+            f,
+            "{:indent$}\x1b[1;33m",
+            "",
+            indent = indent
+        )?;
+        (self.name)(self, f)?;
         writeln!(
             f,
-            "{:indent$}\x1b[1;33m{}\x1b[0m (size: \x1b[1;34m{}\x1b[0m, align: \x1b[1;35m{}\x1b[0m)",
-            "",
-            self.name,
+            "\x1b[0m (size: \x1b[1;34m{}\x1b[0m, align: \x1b[1;35m{}\x1b[0m)",
             self.layout.size(),
-            self.layout.align(),
-            indent = indent
+            self.layout.align()
         )?;
 
         match &self.innards {

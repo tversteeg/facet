@@ -13,7 +13,7 @@ fn test_from_json() {
     impl Shapely for TestStruct {
         fn shape() -> shapely::Shape {
             shapely::Shape {
-                name: "TestStruct",
+                name: |_, f| write!(f, "TestStruct"),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: shapely::Innards::Struct {
                     fields: shapely::struct_fields!(TestStruct, (name, age)),
