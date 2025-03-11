@@ -141,7 +141,7 @@ impl Partial<'_> {
         trace!(
             "Checking initialization of \x1b[1;33m{}\x1b[0m partial at addr \x1b[1;36m{:p}\x1b[0m",
             self.shape.get().name,
-            self.addr_for_display()
+            self.addr
         );
         match self.shape.get().innards {
             crate::Innards::Struct { fields } => {
@@ -203,48 +203,35 @@ impl Partial<'_> {
 
     /// Returns a slot for initializing a field in the shape.
     pub fn slot_by_name<'s>(&'s mut self, name: &str) -> Result<Slot<'s>, FieldError> {
-        match self.shape.get().innards {
+        let slot = match self.shape.get().innards {
             crate::Innards::Struct { fields } => {
-                if let Some((index, field)) =
-                    fields.iter().enumerate().find(|(_, f)| f.name == name)
-                {
-                    if let Some(offset) = field.offset {
-                        let field_addr = self.addr.map(|addr| unsafe {
-                            NonNull::new(addr.as_ptr().byte_offset(offset.get() as isize)).unwrap()
-                        });
-                        let init_field_slot = InitMark::Struct {
-                            index,
-                            set: &mut self.init_set,
-                        };
-                        let slot = Slot::for_ptr(field_addr, field.shape, init_field_slot);
-                        Ok(slot)
-                    } else {
-                        Err(FieldError::NoSuchStaticField)
-                    }
-                } else {
-                    Err(FieldError::NoSuchStaticField)
-                }
+                let (index, field) = fields
+                    .iter()
+                    .enumerate()
+                    .find(|(_, f)| f.name == name)
+                    .ok_or(FieldError::NoSuchStaticField)?;
+                let field_addr = unsafe {
+                    // SAFETY: self.addr is a valid pointer to the start of the struct,
+                    // and field.offset is the correct offset for this field within the struct.
+                    // The resulting pointer is properly aligned and within the bounds of the allocated memory.
+                    self.addr.byte_add(field.offset)
+                };
+                Slot::for_ptr(field_addr, field.shape, self.init_set.field(index))
             }
             crate::Innards::HashMap { value_shape } => {
-                // Create a slot for inserting into the HashMap
-                let init_field_slot = InitMark::Ignored;
-                let slot = Slot::for_hash_map(
-                    self.addr.unwrap(),
-                    value_shape,
-                    name.to_string(),
-                    init_field_slot,
-                );
-                Ok(slot)
+                Slot::for_hash_map(self.addr, name.to_string(), value_shape)
             }
-            crate::Innards::Array(_shape) => Err(FieldError::NoStaticFields),
-            crate::Innards::Transparent(_shape) => Err(FieldError::NoStaticFields),
-            crate::Innards::Scalar(_scalar) => Err(FieldError::NoStaticFields),
-        }
+            crate::Innards::Array(_shape) => return Err(FieldError::NoStaticFields),
+            crate::Innards::Transparent(_shape) => return Err(FieldError::NoStaticFields),
+            crate::Innards::Scalar(_scalar) => return Err(FieldError::NoStaticFields),
+        };
+        Ok(slot)
     }
 
     /// Returns a slot for initializing a field in the shape by index.
     pub fn slot_by_index<'s>(&'s mut self, index: usize) -> Result<Slot<'s>, FieldError> {
-        let field = self.shape.get().field_by_index(index)?;
+        let sh = self.shape.get();
+        let field = sh.field_by_index(index)?;
         let field_addr = unsafe {
             // SAFETY: self.addr is a valid pointer to the start of the struct,
             // and field.offset is the correct offset for this field within the struct.
@@ -356,12 +343,15 @@ impl Partial<'_> {
     /// and must be large enough to hold the value.
     /// The caller is responsible for ensuring that the target memory is properly deallocated
     /// when it's no longer needed.
-    pub unsafe fn move_into(mut self, target: *mut u8) {
+    pub unsafe fn move_into(mut self, target: NonNull<u8>) {
         self.assert_all_fields_initialized();
         unsafe {
             std::ptr::copy_nonoverlapping(
                 self.addr.as_ptr(),
-                target,
+                target.as_ptr(),
+                // note: copy_nonoverlapping takes a count,
+                // since we're dealing with `*mut u8`, it's a byte count.
+                // if we were dealing with `*mut ()`, we'd have a nasty surprise.
                 self.shape.get().layout.size(),
             );
         }

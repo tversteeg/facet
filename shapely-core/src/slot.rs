@@ -96,7 +96,7 @@ impl<'s> Slot<'s> {
         }
     }
 
-    pub fn fill_from_partial(mut self, partial: crate::Partial<'_>) {
+    pub fn fill_from_partial(self, partial: crate::Partial<'_>) {
         if self.shape != partial.shape() {
             panic!(
                 "Attempted to fill a field with an incompatible shape.\n\
@@ -110,36 +110,21 @@ impl<'s> Slot<'s> {
 
         unsafe {
             match self.dest {
-                Destination::Ptr { ptr: field_addr } => {
+                Destination::Ptr { ptr, mut init_mark } => {
                     let size = self.shape.get().layout.size();
-                    if self.init_field_slot.is_init() {
+                    if init_mark.get() {
                         if let Some(drop_fn) = self.shape.get().drop_in_place {
-                            drop_fn(
-                                field_addr
-                                    .map(|p| p.as_ptr())
-                                    .unwrap_or(std::ptr::null_mut()),
-                            );
+                            drop_fn(ptr.as_ptr());
                         }
                     }
-                    if let Some(field_addr) = field_addr {
-                        let field_addr = field_addr.as_ptr();
-                        trace!(
-                            "Filling struct field: src=\x1b[33m{:?}\x1b[0m, dst=\x1b[33m{:?}\x1b[0m, size=\x1b[33m{}\x1b[0m bytes",
-                            partial.addr.unwrap().as_ptr(),
-                            field_addr,
-                            size
-                        );
-                        partial.move_into(field_addr);
-                    } else {
-                        trace!("Skipping write for ZST field");
-                        drop(partial)
-                    }
+                    partial.move_into(ptr);
+                    init_mark.set();
                 }
                 Destination::HashMap { map: _, ref key } => {
                     trace!(
                         "Filling HashMap entry: key=\x1b[33m{}\x1b[0m, src=\x1b[33m{:?}\x1b[0m, size=\x1b[33m{}\x1b[0m bytes",
                         key,
-                        partial.addr.unwrap().as_ptr(),
+                        partial.addr.as_ptr(),
                         self.shape.get().layout.size()
                     );
                     // TODO: Implement for HashMap
@@ -148,6 +133,5 @@ impl<'s> Slot<'s> {
                 }
             }
         }
-        self.init_field_slot.mark_as_init();
     }
 }

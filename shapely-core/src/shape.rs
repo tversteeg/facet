@@ -153,7 +153,7 @@ impl Shape {
     }
 
     /// Returns a slice of statically known fields. Fields that are not in there might still be inserted if it's a dynamic collection.
-    pub fn known_fields(&self) -> &'static [Field<'static>] {
+    pub fn known_fields(&self) -> &'static [Field] {
         match self.innards {
             Innards::Struct { fields } => fields,
             _ => &[],
@@ -232,7 +232,7 @@ impl std::fmt::Debug for Shape {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Innards {
     /// Struct with statically-known fields
-    Struct { fields: &'static [Field<'static>] },
+    Struct { fields: &'static [Field] },
 
     /// HashMap — keys are dynamic, values are homogeneous
     HashMap { value_shape: ShapeDesc },
@@ -248,9 +248,9 @@ pub enum Innards {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Field<'s> {
+pub struct Field {
     /// key for the map field
-    pub name: &'s str,
+    pub name: &'static str,
 
     /// schema of the inner type
     pub shape: ShapeDesc,
