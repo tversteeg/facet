@@ -458,15 +458,28 @@ impl Default for FieldFlags {
 
 impl std::fmt::Display for FieldFlags {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut first = true;
-
         if self.0 == 0 {
             return write!(f, "none");
         }
 
-        if self.is_sensitive() {
-            first = false;
-            write!(f, "sensitive")?;
+        // Define a vector of flag entries: (flag bit, name)
+        let flags = [
+            (Self::SENSITIVE.0, "sensitive"),
+            // Future flags can be easily added here:
+            // (Self::SOME_FLAG.0, "some_flag"),
+            // (Self::ANOTHER_FLAG.0, "another_flag"),
+        ];
+
+        // Write all active flags with proper separators
+        let mut is_first = true;
+        for (bit, name) in flags {
+            if self.0 & bit != 0 {
+                if !is_first {
+                    write!(f, ", ")?;
+                }
+                is_first = false;
+                write!(f, "{}", name)?;
+            }
         }
 
         Ok(())

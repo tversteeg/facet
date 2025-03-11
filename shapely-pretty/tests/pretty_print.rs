@@ -20,7 +20,12 @@ struct Address {
 // Used for testing sensitive fields with a real structure
 #[derive(Debug)]
 struct TestSecrets {
+    // these are only read through reflection
+    #[allow(dead_code)]
     normal_field: String,
+
+    // these are only read through reflection
+    #[allow(dead_code)]
     sensitive_field: String,
 }
 
