@@ -5,7 +5,7 @@ use std::{alloc, marker::PhantomData, ptr::NonNull};
 pub enum Origin<'s> {
     Borrowed {
         parent: Option<&'s Partial<'s>>,
-        init_field_slot: InitFieldSlot<'s>,
+        init_field_slot: InitMark<'s>,
     },
     HeapAllocated,
 }
@@ -23,7 +23,7 @@ pub struct Partial<'s> {
     pub(crate) init_fields: InitSet64,
 
     /// The shape we're building.
-    pub(crate) shape_desc: ShapeDesc,
+    pub(crate) shape: ShapeDesc,
 }
 
 /// We can build a tree of partials as the parsing process occurs or deserization occurs, which means they have to be covariant.
@@ -34,7 +34,7 @@ fn _assert_partial_covariant<'long: 'short, 'short>(partial: Partial<'long>) -> 
 impl Drop for Partial<'_> {
     fn drop(&mut self) {
         // First drop any initialized fields
-        match self.shape_desc.get().innards {
+        match self.shape.get().innards {
             crate::Innards::Struct { fields } => {
                 for (i, field) in fields.iter().enumerate() {
                     if self.init_fields.is_set(i) && field.offset.is_some() {
@@ -57,7 +57,7 @@ impl Drop for Partial<'_> {
             crate::Innards::Scalar(_) => {
                 if self.init_fields.is_set(0) {
                     // Drop the scalar value if it has a drop function
-                    if let Some(drop_fn) = self.shape_desc.get().drop_in_place {
+                    if let Some(drop_fn) = self.shape.get().drop_in_place {
                         // Use NonNull::dangling() if we don't have an addr.
                         // This is safe because for zero-sized types, the actual address doesn't matter.
                         // The drop function for zero-sized types should not dereference the pointer.
@@ -91,7 +91,7 @@ impl Partial<'_> {
             phantom: PhantomData,
             addr,
             init_fields: Default::default(),
-            shape_desc,
+            shape: shape_desc,
         }
     }
 
@@ -102,12 +102,12 @@ impl Partial<'_> {
         Self {
             origin: Origin::Borrowed {
                 parent: None,
-                init_field_slot: InitFieldSlot::Ignored,
+                init_field_slot: InitMark::Ignored,
             },
             phantom: PhantomData,
             addr: Some(NonNull::new(uninit.as_mut_ptr() as _).unwrap()),
             init_fields: Default::default(),
-            shape_desc: T::shape_desc(),
+            shape: T::shape_desc(),
         }
     }
 
@@ -116,10 +116,10 @@ impl Partial<'_> {
     pub(crate) fn check_initialization(&self) {
         trace!(
             "Checking initialization of \x1b[1;33m{}\x1b[0m partial at addr \x1b[1;36m{:p}\x1b[0m",
-            self.shape_desc.get().name,
+            self.shape.get().name,
             self.addr_for_display()
         );
-        match self.shape_desc.get().innards {
+        match self.shape.get().innards {
             crate::Innards::Struct { fields } => {
                 for (i, field) in fields.iter().enumerate() {
                     if self.init_fields.is_set(i) {
@@ -128,7 +128,7 @@ impl Partial<'_> {
                         panic!(
                             "Field '{}' was not initialized. Complete schema:\n{:?}",
                             field.name,
-                            self.shape_desc.get()
+                            self.shape.get()
                         );
                     }
                 }
@@ -137,7 +137,7 @@ impl Partial<'_> {
                 if !self.init_fields.is_set(0) {
                     panic!(
                         "Scalar value was not initialized. Complete schema:\n{:?}",
-                        self.shape_desc.get()
+                        self.shape.get()
                     );
                 }
             }
@@ -147,12 +147,12 @@ impl Partial<'_> {
 
     /// Returns a slot for assigning this whole shape as a scalar
     pub fn scalar_slot(&mut self) -> Option<Slot<'_>> {
-        match self.shape_desc.get().innards {
+        match self.shape.get().innards {
             crate::Innards::Scalar(_) => {
-                let slot = Slot::for_struct_field(
+                let slot = Slot::for_ptr(
                     self.addr,
-                    self.shape_desc,
-                    InitFieldSlot::Struct {
+                    self.shape,
+                    InitMark::Struct {
                         index: 0,
                         set: &mut self.init_fields,
                     },
@@ -160,10 +160,10 @@ impl Partial<'_> {
                 Some(slot)
             }
             crate::Innards::Transparent(inner_shape) => {
-                let slot = Slot::for_struct_field(
+                let slot = Slot::for_ptr(
                     self.addr,
                     inner_shape,
-                    InitFieldSlot::Struct {
+                    InitMark::Struct {
                         index: 0,
                         set: &mut self.init_fields,
                     },
@@ -172,14 +172,14 @@ impl Partial<'_> {
             }
             _ => panic!(
                 "Expected scalar innards, found {:?}",
-                self.shape_desc.get().innards
+                self.shape.get().innards
             ),
         }
     }
 
     /// Returns a slot for initializing a field in the shape.
     pub fn slot_by_name<'s>(&'s mut self, name: &str) -> Result<Slot<'s>, FieldError> {
-        match self.shape_desc.get().innards {
+        match self.shape.get().innards {
             crate::Innards::Struct { fields } => {
                 if let Some((index, field)) =
                     fields.iter().enumerate().find(|(_, f)| f.name == name)
@@ -188,11 +188,11 @@ impl Partial<'_> {
                         let field_addr = self.addr.map(|addr| unsafe {
                             NonNull::new(addr.as_ptr().byte_offset(offset.get() as isize)).unwrap()
                         });
-                        let init_field_slot = InitFieldSlot::Struct {
+                        let init_field_slot = InitMark::Struct {
                             index,
                             set: &mut self.init_fields,
                         };
-                        let slot = Slot::for_struct_field(field_addr, field.shape, init_field_slot);
+                        let slot = Slot::for_ptr(field_addr, field.shape, init_field_slot);
                         Ok(slot)
                     } else {
                         Err(FieldError::NoSuchStaticField)
@@ -203,7 +203,7 @@ impl Partial<'_> {
             }
             crate::Innards::HashMap { value_shape } => {
                 // Create a slot for inserting into the HashMap
-                let init_field_slot = InitFieldSlot::Ignored;
+                let init_field_slot = InitMark::Ignored;
                 let slot = Slot::for_hash_map(
                     self.addr.unwrap(),
                     value_shape,
@@ -220,7 +220,7 @@ impl Partial<'_> {
 
     /// Returns a slot for initializing a field in the shape by index.
     pub fn slot_by_index<'s>(&'s mut self, index: usize) -> Result<Slot<'s>, FieldError> {
-        match self.shape_desc.get().innards {
+        match self.shape.get().innards {
             crate::Innards::Struct { fields } => {
                 if index < fields.len() {
                     let field = &fields[index];
@@ -228,11 +228,11 @@ impl Partial<'_> {
                         let field_addr = self.addr.map(|addr| unsafe {
                             NonNull::new(addr.as_ptr().byte_offset(offset.get() as isize)).unwrap()
                         });
-                        let init_field_slot = InitFieldSlot::Struct {
+                        let init_field_slot = InitMark::Struct {
                             index,
                             set: &mut self.init_fields,
                         };
-                        let slot = Slot::for_struct_field(field_addr, field.shape, init_field_slot);
+                        let slot = Slot::for_ptr(field_addr, field.shape, init_field_slot);
                         Ok(slot)
                     } else {
                         Err(FieldError::NoSuchStaticField)
@@ -241,26 +241,24 @@ impl Partial<'_> {
                     Err(FieldError::IndexOutOfBounds)
                 }
             }
-            crate::Innards::Array(shape) => {
+            crate::Innards::Array(_) => {
                 unimplemented!()
             }
             crate::Innards::Scalar(_) => {
                 if index != 0 {
                     return Err(FieldError::IndexOutOfBounds);
                 }
-                let slot =
-                    Slot::for_struct_field(self.addr, self.shape_desc, self.init_fields.field(0));
+                let slot = Slot::for_ptr(self.addr, self.shape, self.init_fields.field(0));
                 Ok(slot)
             }
             crate::Innards::Transparent(inner_shape) => {
                 if index != 0 {
                     return Err(FieldError::IndexOutOfBounds);
                 }
-                let slot =
-                    Slot::for_struct_field(self.addr, inner_shape, self.init_fields.field(0));
+                let slot = Slot::for_ptr(self.addr, inner_shape, self.init_fields.field(0));
                 Ok(slot)
             }
-            crate::Innards::HashMap { .. } => Err(SlotError::NoStaticFields),
+            crate::Innards::HashMap { .. } => Err(FieldError::NoStaticFields),
         }
     }
 
@@ -272,7 +270,7 @@ impl Partial<'_> {
                 init_field_slot, ..
             } => {
                 // Mark the borrowed field as initialized
-                init_field_slot.mark_as_init();
+                init_field_slot.set();
             }
             Origin::HeapAllocated => {
                 panic!("Cannot build in place for heap allocated ShapeUninit");
@@ -282,10 +280,10 @@ impl Partial<'_> {
     }
 
     fn check_shape_desc_matches<T: Shapely>(&self) {
-        if self.shape_desc != T::shape_desc() {
+        if self.shape != T::shape_desc() {
             panic!(
                 "This is a partial \x1b[1;34m{}\x1b[0m, you can't build a \x1b[1;32m{}\x1b[0m out of it",
-                self.shape_desc.get().name,
+                self.shape.get().name,
                 T::shape().name,
             );
         }
@@ -293,7 +291,7 @@ impl Partial<'_> {
 
     fn deallocate(&mut self) {
         if let Some(addr) = self.addr {
-            unsafe { alloc::dealloc(addr.as_ptr(), self.shape_desc.get().layout) }
+            unsafe { alloc::dealloc(addr.as_ptr(), self.shape.get().layout) }
         }
     }
 
@@ -328,7 +326,7 @@ impl Partial<'_> {
     }
 
     pub fn shape_desc(&self) -> ShapeDesc {
-        self.shape_desc
+        self.shape
     }
 
     /// Returns the address of the underlying data — for debugging purposes only.
@@ -348,7 +346,7 @@ impl Partial<'_> {
                 std::ptr::copy_nonoverlapping(
                     addr.as_ptr(),
                     target,
-                    self.shape_desc.get().layout.size(),
+                    self.shape.get().layout.size(),
                 );
             }
         }
@@ -384,31 +382,49 @@ impl InitSet64 {
         self.0 & mask == mask
     }
 
-    pub fn field(&mut self, index: usize) -> InitFieldSlot {
-        InitFieldSlot::Struct { index, set: self }
+    pub fn field(&mut self, index: usize) -> InitMark {
+        InitMark::Struct { index, set: self }
     }
 }
 
-pub enum InitFieldSlot<'s> {
+/// `InitMark` is used to track the initialization state of a single field within an `InitSet64`.
+/// It is part of a system used to progressively initialize structs, where each field's
+/// initialization status is represented by a bit in a 64-bit set.
+pub enum InitMark<'s> {
+    /// Represents a field in a struct that needs to be tracked for initialization.
     Struct {
+        /// The index of the field in the struct (0-63).
         index: usize,
+        /// A reference to the `InitSet64` that tracks all fields' initialization states.
         set: &'s mut InitSet64,
     },
+    /// Represents a field or value that doesn't need initialization tracking.
     Ignored,
 }
 
-impl InitFieldSlot<'_> {
-    pub fn mark_as_init(&mut self) {
-        match self {
-            InitFieldSlot::Struct { index, set } => set.set(*index),
-            InitFieldSlot::Ignored => {}
+impl InitMark<'_> {
+    /// Marks the field as initialized by setting its corresponding bit in the `InitSet64`.
+    pub fn set(&mut self) {
+        if let Self::Struct { index, set } = self {
+            set.set(*index);
         }
     }
 
-    pub fn is_init(&self) -> bool {
+    /// Marks the field as uninitialized by clearing its corresponding bit in the `InitSet64`.
+    pub fn unset(&mut self) {
+        if let Self::Struct { index, set } = self {
+            set.0 &= !(1 << *index);
+        }
+    }
+
+    /// Checks if the field is marked as initialized.
+    ///
+    /// Returns `true` if the field is initialized, `false` otherwise.
+    /// Always returns `true` for `Ignored` fields.
+    pub fn get(&self) -> bool {
         match self {
-            InitFieldSlot::Struct { index, set } => set.is_set(*index),
-            InitFieldSlot::Ignored => true,
+            Self::Struct { index, set } => set.is_set(*index),
+            Self::Ignored => true,
         }
     }
 }

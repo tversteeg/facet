@@ -18,7 +18,7 @@ pub struct Shape {
     pub innards: Innards,
 
     /// Set the value at a given address to the default value for this type
-    pub set_to_default: Option<fn(*mut u8)>,
+    pub set_to_default: Option<SetToDefaultFn>,
 
     /// Drop the value at a given address
     ///
@@ -26,8 +26,14 @@ pub struct Shape {
     ///
     /// This function should be called only for initialized values.
     /// It's the caller's responsibility to ensure the address points to a valid value.
-    pub drop_in_place: Option<DropFunction>,
+    pub drop_in_place: Option<DropFn>,
 }
+
+/// A function that sets a value to its default at a specific memory address
+pub type SetToDefaultFn = unsafe fn(*mut u8);
+
+/// A function that drops a value at a specific memory address
+pub type DropFn = unsafe fn(*mut u8);
 
 impl PartialEq for Shape {
     fn eq(&self, other: &Self) -> bool {
@@ -287,9 +293,6 @@ pub enum Scalar {
     /// An empty tuple, null, undefined, whatever you wish
     Nothing,
 }
-
-/// A function that drops a value at a specific memory address
-pub type DropFunction = fn(*mut u8);
 
 /// A function that returns a shape. There should only be one of these per concrete type in a
 /// program. This enables optimizations.
