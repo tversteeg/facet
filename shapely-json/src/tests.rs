@@ -36,8 +36,8 @@ fn test_from_json() {
     result.unwrap();
 
     let shape = TestStruct::shape();
-    let age_field = shape.innards.known_fields()[1];
-    let name_field = shape.innards.known_fields()[0];
+    let age_field = shape.known_fields()[1];
+    let name_field = shape.known_fields()[0];
 
     let age_addr = unsafe {
         test_struct

@@ -26,16 +26,16 @@ fn build_foobar_through_reflection() {
     let shape = FooBar::shape();
     eprintln!("{shape:#?}");
 
-    let mut uninit = FooBar::partial();
-    for (index, field) in shape.innards.known_fields().iter().enumerate() {
-        let slot = uninit.slot_by_index(index).unwrap();
+    let mut partial = FooBar::partial();
+    for (index, field) in shape.known_fields().iter().enumerate() {
+        let slot = partial.slot_by_index(index).unwrap();
         match field.name {
             "foo" => slot.fill(42u64),
             "bar" => slot.fill(String::from("Hello, World!")),
             _ => panic!("Unknown field: {}", field.name),
         }
     }
-    let foo_bar = uninit.build::<FooBar>();
+    let foo_bar = partial.build::<FooBar>();
 
     // Verify the fields were set correctly
     assert_eq!(foo_bar.foo, 42);
@@ -55,10 +55,10 @@ fn build_u64_through_reflection() {
     let shape = u64::shape();
     eprintln!("{shape:#?}");
 
-    let mut uninit = u64::partial();
-    let slot = uninit.scalar_slot().unwrap();
+    let mut partial = u64::partial();
+    let slot = partial.scalar_slot().unwrap();
     slot.fill(42u64);
-    let value = uninit.build::<u64>();
+    let value = partial.build::<u64>();
 
     // Verify the value was set correctly
     assert_eq!(value, 42);
@@ -83,7 +83,7 @@ fn build_foobar_through_reflection_with_missing_field() {
     eprintln!("{shape:#?}");
 
     let mut uninit = FooBar::partial();
-    for field in shape.innards.known_fields() {
+    for field in shape.known_fields() {
         if field.name == "foo" {
             let slot = uninit.slot_by_name(field.name).unwrap();
             slot.fill(42u64);
@@ -164,31 +164,27 @@ fn build_struct_with_drop_field() {
         }
     }
 
-    let shape = StructWithDrop::shape();
-    let mut uninit = StructWithDrop::partial();
-
-    let counter_field = shape.innards.known_fields()[0];
-    let value_field = shape.innards.known_fields()[1];
+    let mut partial = StructWithDrop::partial();
 
     // First assignment
     {
-        let slot = uninit.slot_by_name(counter_field).unwrap();
+        let slot = partial.slot_by_index(0).unwrap();
         slot.fill(DropCounter);
     }
 
     // Second assignment, should trigger drop of the first value
     {
-        let slot = uninit.slot_by_name(counter_field).unwrap();
+        let slot = partial.slot_by_index(0).unwrap();
         slot.fill(DropCounter);
     }
 
     // Set the value field
     {
-        let slot = uninit.slot_by_name(value_field).unwrap();
+        let slot = partial.slot_by_index(1).unwrap();
         slot.fill(42i32);
     }
 
-    let _struct_with_drop = uninit.build::<StructWithDrop>();
+    let _struct_with_drop = partial.build::<StructWithDrop>();
 
     // Check that drop was called once for the first assignment
     assert_eq!(DROP_COUNT.load(Ordering::SeqCst), 1);
@@ -323,10 +319,6 @@ fn build_truck_with_drop_fields() {
         }
     }
 
-    let shape = Truck::shape();
-    let engine_field = shape.innards.known_fields()[0];
-    let wheels_field = shape.innards.known_fields()[1];
-
     fn reset_atomics() {
         ENGINE_COUNT.store(0, Ordering::SeqCst);
         WHEELS_COUNT.store(0, Ordering::SeqCst);
@@ -335,8 +327,8 @@ fn build_truck_with_drop_fields() {
     // Scenario 1: Not filling any fields
     {
         reset_atomics();
-        let uninit = Truck::partial();
-        drop(uninit);
+        let partial = Truck::partial();
+        drop(partial);
         assert_eq!(ENGINE_COUNT.load(Ordering::SeqCst), 0, "No drops occurred.");
         assert_eq!(WHEELS_COUNT.load(Ordering::SeqCst), 0, "No drops occurred.");
     }
@@ -344,12 +336,12 @@ fn build_truck_with_drop_fields() {
     // Scenario 2: Filling only the engine field
     {
         reset_atomics();
-        let mut uninit = Truck::partial();
+        let mut partial = Truck::partial();
         {
-            let slot = uninit.slot_by_name(engine_field).unwrap();
+            let slot = partial.slot_by_name("engine").unwrap();
             slot.fill(Engine);
         }
-        drop(uninit);
+        drop(partial);
         assert_eq!(
             ENGINE_COUNT.load(Ordering::SeqCst),
             1,
@@ -365,12 +357,12 @@ fn build_truck_with_drop_fields() {
     // Scenario 3: Filling only the wheels field
     {
         reset_atomics();
-        let mut uninit = Truck::partial();
+        let mut partial = Truck::partial();
         {
-            let slot = uninit.slot_by_name(wheels_field).unwrap();
+            let slot = partial.slot_by_name("wheels").unwrap();
             slot.fill(Wheels);
         }
-        drop(uninit);
+        drop(partial);
         assert_eq!(
             ENGINE_COUNT.load(Ordering::SeqCst),
             0,
@@ -386,16 +378,16 @@ fn build_truck_with_drop_fields() {
     // Scenario 4: Filling both fields
     {
         reset_atomics();
-        let mut uninit = Truck::partial();
+        let mut partial = Truck::partial();
         {
-            let slot = uninit.slot_by_name(engine_field).unwrap();
+            let slot = partial.slot_by_name("engine").unwrap();
             slot.fill(Engine);
         }
         {
-            let slot = uninit.slot_by_name(wheels_field).unwrap();
+            let slot = partial.slot_by_name("wheels").unwrap();
             slot.fill(Wheels);
         }
-        drop(uninit);
+        drop(partial);
         assert_eq!(
             ENGINE_COUNT.load(Ordering::SeqCst),
             1,
@@ -458,26 +450,10 @@ fn test_partial_build_in_place() {
 
     let mut test_shape = std::mem::MaybeUninit::<TestShape>::uninit();
     {
-        let shape = TestShape::shape();
-        let mut uninit = TestShape::partial_from_uninit(&mut test_shape);
-
-        let counter_field = shape.innards.known_fields()[0];
-        let unit_field = shape.innards.known_fields()[1];
-
-        // Set the counter field
-        {
-            let slot = uninit.slot_by_name(counter_field).unwrap();
-            slot.fill(DropCounter);
-        }
-
-        // Set the unit field
-        {
-            let slot = uninit.slot_by_name(unit_field).unwrap();
-            slot.fill(());
-        }
-
-        // Build in place
-        uninit.build_in_place();
+        let mut partial = TestShape::partial_from_uninit(&mut test_shape);
+        partial.slot_by_name("counter").unwrap().fill(DropCounter);
+        partial.slot_by_name("unit").unwrap().fill(());
+        partial.build_in_place();
     }
     let test_shape = unsafe { test_shape.assume_init() };
 
