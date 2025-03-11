@@ -1,3 +1,8 @@
+//! The shapely-json parser.
+//!
+//! For now it is extremely naive, it's just a proof of concept, it doesn't use SIMD or anything,
+//! it's not fast, it's nothing, it's just proving that we can use shapely types to deserialize something.
+
 #[derive(Debug)]
 pub struct JsonParseError {
     pub kind: JsonParseErrorKind,
@@ -248,106 +253,5 @@ impl<'a> JsonParser<'a> {
             }
             _ => Err(self.make_error(JsonParseErrorKind::InvalidValue)),
         }
-    }
-
-    pub fn skip_value(&mut self) -> Result<(), JsonParseErrorWithContext<'a>> {
-        self.skip_whitespace();
-        if self.position >= self.input.len() {
-            return Err(self.make_error(JsonParseErrorKind::UnexpectedEndOfInput));
-        }
-        match self.input.as_bytes()[self.position] {
-            b'{' => self.skip_object(),
-            b'[' => self.skip_array(),
-            b'"' => {
-                self.parse_string()?;
-                Ok(())
-            }
-            b'0'..=b'9' | b'-' => {
-                while self.position < self.input.len() {
-                    match self.input.as_bytes()[self.position] {
-                        b'0'..=b'9' | b'.' | b'e' | b'E' | b'+' | b'-' => self.position += 1,
-                        _ => break,
-                    }
-                }
-                Ok(())
-            }
-            b't' => {
-                if self.input[self.position..].starts_with("true") {
-                    self.position += 4;
-                    Ok(())
-                } else {
-                    Err(self.make_error(JsonParseErrorKind::InvalidValue))
-                }
-            }
-            b'f' => {
-                if self.input[self.position..].starts_with("false") {
-                    self.position += 5;
-                    Ok(())
-                } else {
-                    Err(self.make_error(JsonParseErrorKind::InvalidValue))
-                }
-            }
-            b'n' => {
-                if self.input[self.position..].starts_with("null") {
-                    self.position += 4;
-                    Ok(())
-                } else {
-                    Err(self.make_error(JsonParseErrorKind::InvalidValue))
-                }
-            }
-            _ => Err(self.make_error(JsonParseErrorKind::InvalidValue)),
-        }
-    }
-
-    pub fn skip_object(&mut self) -> Result<(), JsonParseErrorWithContext<'a>> {
-        self.expect_object_start()?;
-        let mut depth = 1;
-        while depth > 0 {
-            match self.parse_object_key()? {
-                Some(_) => {
-                    self.skip_value()?;
-                }
-                None => {
-                    depth -= 1;
-                    if depth > 0 {
-                        self.expect_object_start()?;
-                        depth += 1;
-                    }
-                }
-            }
-        }
-        Ok(())
-    }
-
-    pub fn skip_array(&mut self) -> Result<(), JsonParseErrorWithContext<'a>> {
-        self.skip_whitespace();
-        if self.position >= self.input.len() || self.input.as_bytes()[self.position] != b'[' {
-            return Err(self.make_error(JsonParseErrorKind::InvalidValue));
-        }
-        self.position += 1;
-        let mut depth = 1;
-        while depth > 0 {
-            self.skip_whitespace();
-            if self.position >= self.input.len() {
-                return Err(self.make_error(JsonParseErrorKind::UnexpectedEndOfInput));
-            }
-            match self.input.as_bytes()[self.position] {
-                b']' => {
-                    depth -= 1;
-                    self.position += 1;
-                }
-                b'[' => {
-                    depth += 1;
-                    self.position += 1;
-                }
-                b',' => {
-                    self.position += 1;
-                }
-                _ => {
-                    self.skip_value()?;
-                }
-            }
-        }
-        Ok(())
     }
 }

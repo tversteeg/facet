@@ -26,19 +26,12 @@ pub fn from_json<'input>(
 
         match &shape.innards {
             Innards::Scalar(scalar) => {
+                let slot = partial.scalar_slot().expect("Scalar slot");
+                trace!("Deserializing \x1b[1;36mscalar\x1b[0m, \x1b[1;35m{scalar:?}\x1b[0m");
+
                 match scalar {
-                    Scalar::String => {
-                        trace!("Deserializing String");
-                        let s = parser.parse_string()?;
-                        trace!("Deserialized String: {}", s);
-                        partial.scalar_slot().expect("String scalar slot").fill(s);
-                    }
-                    Scalar::U64 => {
-                        trace!("Deserializing U64");
-                        let n = parser.parse_u64()?;
-                        partial.scalar_slot().expect("U64 scalar slot").fill(n);
-                        trace!("Deserialized U64: {}", n);
-                    }
+                    Scalar::String => slot.fill(parser.parse_string()?),
+                    Scalar::U64 => slot.fill(parser.parse_u64()?),
                     // Add other scalar types as needed
                     _ => {
                         warn!("Unsupported scalar type: {:?}", scalar);
@@ -49,7 +42,7 @@ pub fn from_json<'input>(
                     }
                 }
             }
-            Innards::Struct { fields } => {
+            Innards::Struct { .. } => {
                 trace!("Deserializing \x1b[1;36mstruct\x1b[0m");
 
                 let mut first = true;

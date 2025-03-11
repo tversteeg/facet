@@ -111,7 +111,6 @@ impl<'s> Slot<'s> {
         unsafe {
             match self.dest {
                 Destination::Ptr { ptr, mut init_mark } => {
-                    let size = self.shape.get().layout.size();
                     if init_mark.get() {
                         if let Some(drop_fn) = self.shape.get().drop_in_place {
                             drop_fn(ptr.as_ptr());
