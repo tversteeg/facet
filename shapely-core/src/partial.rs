@@ -298,6 +298,9 @@ impl Partial<'_> {
         self.assert_all_fields_initialized();
         self.assert_matching_shape::<T>();
 
+        // SAFETY: We've verified that all fields are initialized and that the shape matches T.
+        // For zero-sized types, all pointer values are valid.
+        // See https://doc.rust-lang.org/stable/std/ptr/index.html#safety for more details.
         let result = unsafe {
             let ptr = self.addr.as_ptr() as *const T;
             std::ptr::read(ptr)
