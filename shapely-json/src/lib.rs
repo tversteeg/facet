@@ -57,7 +57,7 @@ pub fn from_json<'input>(
                         let mut partial_field = Partial::alloc(field.shape);
                         trace!("Deserializing field: \x1b[1;32m{}\x1b[0m", field.name);
                         deserialize_value(parser, &mut partial_field)?;
-                        let slot = partial.slot(field).expect("Field slot");
+                        let slot = partial.slot_by_name(field).expect("Field slot");
                         slot.fill_from_partial(partial_field);
                     } else {
                         warn!("Unknown field: \x1b[1;31m{}\x1b[0m, skipping", first_key);
@@ -72,7 +72,7 @@ pub fn from_json<'input>(
                         let mut partial_field = Partial::alloc(field.shape);
                         trace!("Deserializing field: \x1b[1;32m{}\x1b[0m", field.name);
                         deserialize_value(parser, &mut partial_field)?;
-                        let slot = partial.slot(field).expect("Field slot");
+                        let slot = partial.slot_by_name(field).expect("Field slot");
                         slot.fill_from_partial(partial_field);
                     } else {
                         warn!("Unknown field: \x1b[1;31m{}\x1b[0m, skipping", key);

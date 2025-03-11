@@ -28,7 +28,7 @@ fn build_foobar_through_reflection() {
 
     let mut uninit = FooBar::partial();
     for field in shape.innards.static_fields() {
-        let slot = uninit.slot(*field).unwrap();
+        let slot = uninit.slot_by_name(*field).unwrap();
         match field.name {
             "foo" => {
                 slot.fill(42u64);
@@ -89,7 +89,7 @@ fn build_foobar_through_reflection_with_missing_field() {
     let mut uninit = FooBar::partial();
     for field in shape.innards.static_fields() {
         if field.name == "foo" {
-            let slot = uninit.slot(*field).unwrap();
+            let slot = uninit.slot_by_name(*field).unwrap();
             slot.fill(42u64);
             // Intentionally not setting the 'bar' field
         }
@@ -176,19 +176,19 @@ fn build_struct_with_drop_field() {
 
     // First assignment
     {
-        let slot = uninit.slot(counter_field).unwrap();
+        let slot = uninit.slot_by_name(counter_field).unwrap();
         slot.fill(DropCounter);
     }
 
     // Second assignment, should trigger drop of the first value
     {
-        let slot = uninit.slot(counter_field).unwrap();
+        let slot = uninit.slot_by_name(counter_field).unwrap();
         slot.fill(DropCounter);
     }
 
     // Set the value field
     {
-        let slot = uninit.slot(value_field).unwrap();
+        let slot = uninit.slot_by_name(value_field).unwrap();
         slot.fill(42i32);
     }
 
@@ -350,7 +350,7 @@ fn build_truck_with_drop_fields() {
         reset_atomics();
         let mut uninit = Truck::partial();
         {
-            let slot = uninit.slot(engine_field).unwrap();
+            let slot = uninit.slot_by_name(engine_field).unwrap();
             slot.fill(Engine);
         }
         drop(uninit);
@@ -371,7 +371,7 @@ fn build_truck_with_drop_fields() {
         reset_atomics();
         let mut uninit = Truck::partial();
         {
-            let slot = uninit.slot(wheels_field).unwrap();
+            let slot = uninit.slot_by_name(wheels_field).unwrap();
             slot.fill(Wheels);
         }
         drop(uninit);
@@ -392,11 +392,11 @@ fn build_truck_with_drop_fields() {
         reset_atomics();
         let mut uninit = Truck::partial();
         {
-            let slot = uninit.slot(engine_field).unwrap();
+            let slot = uninit.slot_by_name(engine_field).unwrap();
             slot.fill(Engine);
         }
         {
-            let slot = uninit.slot(wheels_field).unwrap();
+            let slot = uninit.slot_by_name(wheels_field).unwrap();
             slot.fill(Wheels);
         }
         drop(uninit);
@@ -470,13 +470,13 @@ fn test_partial_build_in_place() {
 
         // Set the counter field
         {
-            let slot = uninit.slot(counter_field).unwrap();
+            let slot = uninit.slot_by_name(counter_field).unwrap();
             slot.fill(DropCounter);
         }
 
         // Set the unit field
         {
-            let slot = uninit.slot(unit_field).unwrap();
+            let slot = uninit.slot_by_name(unit_field).unwrap();
             slot.fill(());
         }
 

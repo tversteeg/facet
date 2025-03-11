@@ -90,6 +90,18 @@ pub enum SlotError {
     OutOfBounds,
 }
 
+impl std::error::Error for SlotError {}
+
+impl std::fmt::Display for SlotError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SlotError::NoStaticFields => write!(f, "No static fields available"),
+            SlotError::NoSuchStaticField => write!(f, "No such static field"),
+            SlotError::OutOfBounds => write!(f, "Index out of bounds"),
+        }
+    }
+}
+
 impl Partial<'_> {
     /// Allocates a partial on the heap for the given shape descriptor.
     pub fn alloc(shape_desc: ShapeDesc) -> Self {
@@ -195,13 +207,11 @@ impl Partial<'_> {
     }
 
     /// Returns a slot for initializing a field in the shape.
-    pub fn slot<'s>(&'s mut self, field: Field) -> Option<Slot<'s>> {
+    pub fn slot_by_name<'s>(&'s mut self, name: &str) -> Result<Slot<'s>, SlotError> {
         match self.shape_desc.get().innards {
             crate::Innards::Struct { fields } => {
-                if let Some((index, field)) = fields
-                    .iter()
-                    .enumerate()
-                    .find(|(_, f)| f.name == field.name)
+                if let Some((index, field)) =
+                    fields.iter().enumerate().find(|(_, f)| f.name == name)
                 {
                     if let Some(offset) = field.offset {
                         let field_addr = self.addr.map(|addr| unsafe {
@@ -212,12 +222,12 @@ impl Partial<'_> {
                             set: &mut self.init_fields,
                         };
                         let slot = Slot::for_struct_field(field_addr, field.shape, init_field_slot);
-                        Some(slot)
+                        Ok(slot)
                     } else {
-                        None
+                        Err(SlotError::NoSuchStaticField)
                     }
                 } else {
-                    None
+                    Err(SlotError::NoSuchStaticField)
                 }
             }
             crate::Innards::HashMap { value_shape } => {
@@ -226,14 +236,74 @@ impl Partial<'_> {
                 let slot = Slot::for_hash_map(
                     self.addr.unwrap(),
                     value_shape,
-                    field.name.to_string(),
+                    name.to_string(),
                     init_field_slot,
                 );
-                Some(slot)
+                Ok(slot)
             }
-            crate::Innards::Array(_shape) => None,
-            crate::Innards::Transparent(_shape) => None,
-            crate::Innards::Scalar(_scalar) => None,
+            crate::Innards::Array(_shape) => Err(SlotError::NoStaticFields),
+            crate::Innards::Transparent(_shape) => Err(SlotError::NoStaticFields),
+            crate::Innards::Scalar(_scalar) => Err(SlotError::NoStaticFields),
+        }
+    }
+
+    /// Returns a slot for initializing a field in the shape by index.
+    pub fn slot_by_index<'s>(&'s mut self, index: usize) -> Result<Slot<'s>, SlotError> {
+        match self.shape_desc.get().innards {
+            crate::Innards::Struct { fields } => {
+                if index < fields.len() {
+                    let field = &fields[index];
+                    if let Some(offset) = field.offset {
+                        let field_addr = self.addr.map(|addr| unsafe {
+                            NonNull::new(addr.as_ptr().byte_offset(offset.get() as isize)).unwrap()
+                        });
+                        let init_field_slot = InitFieldSlot::Struct {
+                            index,
+                            set: &mut self.init_fields,
+                        };
+                        let slot = Slot::for_struct_field(field_addr, field.shape, init_field_slot);
+                        Ok(slot)
+                    } else {
+                        Err(SlotError::NoSuchStaticField)
+                    }
+                } else {
+                    Err(SlotError::OutOfBounds)
+                }
+            }
+            crate::Innards::Array(shape) => {
+                unimplemented!()
+            }
+            crate::Innards::Scalar(_) => {
+                if index == 0 {
+                    let slot = Slot::for_struct_field(
+                        self.addr,
+                        self.shape_desc,
+                        InitFieldSlot::Struct {
+                            index: 0,
+                            set: &mut self.init_fields,
+                        },
+                    );
+                    Ok(slot)
+                } else {
+                    Err(SlotError::OutOfBounds)
+                }
+            }
+            crate::Innards::Transparent(inner_shape) => {
+                if index == 0 {
+                    let slot = Slot::for_struct_field(
+                        self.addr,
+                        inner_shape,
+                        InitFieldSlot::Struct {
+                            index: 0,
+                            set: &mut self.init_fields,
+                        },
+                    );
+                    Ok(slot)
+                } else {
+                    Err(SlotError::OutOfBounds)
+                }
+            }
+            crate::Innards::HashMap { .. } => Err(SlotError::NoStaticFields),
         }
     }
 
