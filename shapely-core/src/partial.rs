@@ -73,6 +73,23 @@ impl Drop for Partial<'_> {
     }
 }
 
+/// Errors encountered when calling `slot_by_index` or `slot_by_key`
+#[derive(Debug)]
+pub enum SlotError {
+    /// `slot_by_index` was called on a dynamic collection, that has no
+    /// static fields. a HashMap doesn't have a "first slot", it can only
+    /// associate by keys.
+    NoStaticFields,
+
+    /// `slot_by_key` was called on a struct, and there is no static field
+    /// with the given key.
+    NoSuchStaticField,
+
+    /// `slot_by_index` was called on a fixed-size collection (like a tuple,
+    /// a struct, or a fixed-size array) and the index was out of bounds.
+    OutOfBounds,
+}
+
 impl Partial<'_> {
     /// Allocates a partial on the heap for the given shape descriptor.
     pub fn alloc(shape_desc: ShapeDesc) -> Self {
