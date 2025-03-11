@@ -21,7 +21,7 @@ absolve:
 
 clippy:
   echo -e "\033[1;35m🔍 Running Clippy on all targets...\033[0m"
-  cargo +nightly clippy --all-targets
+  cargo +nightly clippy --all-targets -- -D warnings
 
 nextest:
   echo -e "\033[1;33m🏃 Running all but doc-tests with nextest...\033[0m"
@@ -29,7 +29,7 @@ nextest:
 
 doc-tests:
   echo -e "\033[1;36m📚 Running documentation tests...\033[0m"
-  cargo +nightly test --doc
+  RUSTDOCFLAGS="-D warnings" cargo +nightly test --doc
 
 miri:
   echo -e "\033[1;31m🧪 Running tests under Miri...\033[0m"
