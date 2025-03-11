@@ -1,0 +1,17 @@
+[package]
+name = "shapely-urlencoded"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/shapely-urlencoded"
+description = "URL encoded form serialization and deserialization for Shapely types"
+keywords = ["urlencoded", "form", "serialization", "deserialization", "shapely"]
+categories = ["encoding", "parsing", "data-structures"]
+rust-version.workspace = true
+
+[dependencies]
+shapely = { workspace = true }
+form_urlencoded = { workspace = true }

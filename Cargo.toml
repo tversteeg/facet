@@ -1,5 +1,5 @@
 [workspace]
-members = ["shapely", "shapely-core", "shapely-derive", "shapely-json", "shapely-msgpack", "shapely-yaml"]
+members = ["shapely", "shapely-core", "shapely-derive", "shapely-json", "shapely-msgpack", "shapely-urlencoded", "shapely-yaml"]
 resolver = "3"
 
 [workspace.package]
@@ -26,3 +26,4 @@ shapely = { version = "2.0.0", path = "shapely" }
 shapely-core = { version = "2.0.0", path = "shapely-core" }
 shapely-derive = { version = "2.0.0", path = "shapely-derive" }
 unsynn = "0.0.25"
+form_urlencoded = "1.2.1"

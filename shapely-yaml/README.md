@@ -13,7 +13,31 @@
 >
 > Expect multiple major versions in the near future — (note left 2025-03-11)
 
-YAML serialization and deserialization for Shapely types.
+[YAML](https://yaml.org/) serialization and deserialization for Shapely types.
+
+## Example
+
+```rust
+use shapely::Shapely;
+use shapely_yaml::from_yaml;
+
+#[derive(Debug, Shapely, PartialEq)]
+struct Config {
+    name: String,
+    version: u64,
+}
+
+let yaml = r#"
+name: MyApp
+version: 1
+"#;
+
+let mut partial = Config::partial();
+from_yaml(&mut partial, yaml).expect("Failed to parse YAML");
+
+let config = partial.build::<Config>();
+assert_eq!(config, Config { name: "MyApp".to_string(), version: 1 });
+```
 
 ## License
 
