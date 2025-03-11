@@ -7,7 +7,7 @@ use std::{
     str,
 };
 
-use shapely_core::{Innards, Scalar, Shape, ShapeDesc, Shapely};
+use shapely_core::{Innards, Scalar, ScalarContents, Shape, ShapeDesc, Shapely};
 
 use crate::{ansi, color::ColorGenerator};
 
@@ -152,102 +152,38 @@ impl PrettyPrinter {
         };
         let reset = if self.use_colors { ansi::RESET } else { "" };
 
-        // Read and format the actual value from memory
-        match scalar {
-            Scalar::String => {
-                // For String, we need to read the String struct (ptr, len, capacity)
-                // and then read the actual string data
-                unsafe {
-                    let string_ptr = *(ptr as *const *const u8);
-                    let string_len = *((ptr as *const usize).add(1));
-
-                    if string_ptr.is_null() || string_len == 0 {
-                        write!(f, "{}\"\"{}", scalar_color, reset)
-                    } else {
-                        let slice = std::slice::from_raw_parts(string_ptr, string_len);
-                        match str::from_utf8(slice) {
-                            Ok(s) => write!(f, "{}\"{}\"{}", scalar_color, s.escape_debug(), reset),
-                            Err(_) => write!(f, "{}\"<invalid utf8>\"{}", scalar_color, reset),
-                        }
-                    }
+        // Use Scalar::get_contents for safe access to the scalar value
+        let contents = unsafe { scalar.get_contents(ptr) };
+        
+        match contents {
+            ScalarContents::String(s) => write!(f, "{}\"{}\"{}", scalar_color, s.escape_debug(), reset),
+            ScalarContents::Bytes(b) => {
+                write!(f, "{}b\"", scalar_color)?;
+                for &byte in b.iter().take(64) {
+                    write!(f, "\\x{:02x}", byte)?;
                 }
-            }
-            Scalar::Bytes => {
-                // Similar to String but we display as bytes
-                unsafe {
-                    let bytes_ptr = *(ptr as *const *const u8);
-                    let bytes_len = *((ptr as *const usize).add(1));
-
-                    if bytes_ptr.is_null() || bytes_len == 0 {
-                        write!(f, "{}b\"\"{}", scalar_color, reset)
-                    } else {
-                        let slice = std::slice::from_raw_parts(bytes_ptr, bytes_len);
-                        write!(f, "{}b\"", scalar_color)?;
-                        for &byte in slice.iter().take(64) {
-                            write!(f, "\\x{:02x}", byte)?;
-                        }
-                        if bytes_len > 64 {
-                            write!(f, "...")?;
-                        }
-                        write!(f, "\"{}", reset)
-                    }
+                if b.len() > 64 {
+                    write!(f, "...")?;
                 }
-            }
-            Scalar::I8 => {
-                let value = unsafe { *(ptr as *const i8) };
-                write!(f, "{}{}{}", scalar_color, value, reset)
-            }
-            Scalar::I16 => {
-                let value = unsafe { *(ptr as *const i16) };
-                write!(f, "{}{}{}", scalar_color, value, reset)
-            }
-            Scalar::I32 => {
-                let value = unsafe { *(ptr as *const i32) };
-                write!(f, "{}{}{}", scalar_color, value, reset)
-            }
-            Scalar::I64 => {
-                let value = unsafe { *(ptr as *const i64) };
-                write!(f, "{}{}{}", scalar_color, value, reset)
-            }
-            Scalar::I128 => {
-                let value = unsafe { *(ptr as *const i128) };
-                write!(f, "{}{}{}", scalar_color, value, reset)
-            }
-            Scalar::U8 => {
-                let value = unsafe { *(ptr as *const u8) };
-                write!(f, "{}{}{}", scalar_color, value, reset)
-            }
-            Scalar::U16 => {
-                let value = unsafe { *(ptr as *const u16) };
-                write!(f, "{}{}{}", scalar_color, value, reset)
-            }
-            Scalar::U32 => {
-                let value = unsafe { *(ptr as *const u32) };
-                write!(f, "{}{}{}", scalar_color, value, reset)
-            }
-            Scalar::U64 => {
-                let value = unsafe { *(ptr as *const u64) };
-                write!(f, "{}{}{}", scalar_color, value, reset)
-            }
-            Scalar::U128 => {
-                let value = unsafe { *(ptr as *const u128) };
-                write!(f, "{}{}{}", scalar_color, value, reset)
-            }
-            Scalar::F32 => {
-                let value = unsafe { *(ptr as *const f32) };
-                write!(f, "{}{}{}", scalar_color, value, reset)
-            }
-            Scalar::F64 => {
-                let value = unsafe { *(ptr as *const f64) };
-                write!(f, "{}{}{}", scalar_color, value, reset)
-            }
-            Scalar::Boolean => {
-                let value = unsafe { *(ptr as *const bool) };
-                write!(f, "{}{}{}", scalar_color, value, reset)
-            }
-            Scalar::Nothing => write!(f, "{}(){}", scalar_color, reset),
-            // Handle any future scalar types
-            _ => write!(f, "{}<unknown scalar>{}", scalar_color, reset),
+                write!(f, "\"{}", reset)
+            },
+            ScalarContents::I8(v) => write!(f, "{}{}{}", scalar_color, v, reset),
+            ScalarContents::I16(v) => write!(f, "{}{}{}", scalar_color, v, reset),
+            ScalarContents::I32(v) => write!(f, "{}{}{}", scalar_color, v, reset),
+            ScalarContents::I64(v) => write!(f, "{}{}{}", scalar_color, v, reset),
+            ScalarContents::I128(v) => write!(f, "{}{}{}", scalar_color, v, reset),
+            ScalarContents::U8(v) => write!(f, "{}{}{}", scalar_color, v, reset),
+            ScalarContents::U16(v) => write!(f, "{}{}{}", scalar_color, v, reset),
+            ScalarContents::U32(v) => write!(f, "{}{}{}", scalar_color, v, reset),
+            ScalarContents::U64(v) => write!(f, "{}{}{}", scalar_color, v, reset),
+            ScalarContents::U128(v) => write!(f, "{}{}{}", scalar_color, v, reset),
+            ScalarContents::F32(v) => write!(f, "{}{}{}", scalar_color, v, reset),
+            ScalarContents::F64(v) => write!(f, "{}{}{}", scalar_color, v, reset),
+            ScalarContents::Boolean(v) => write!(f, "{}{}{}", scalar_color, v, reset),
+            ScalarContents::Nothing => write!(f, "{}(){}", scalar_color, reset),
+            ScalarContents::Unknown => write!(f, "{}<unknown scalar>{}", scalar_color, reset),
+            // Handle future variants that might be added to the non-exhaustive enum
+            _ => write!(f, "{}<unknown scalar type>{}", scalar_color, reset),
         }
     }
 
