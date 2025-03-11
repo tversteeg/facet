@@ -11,7 +11,6 @@ install-nightly:
 
 absolve:
   #!/bin/bash
-  echo -e "\033[1;34m🌳 Checking dependency tree...\033[0m"
   if ! cargo +nightly tree -i syn 2>/dev/null | grep -q .; then
   echo -e "\033[38;2;255;255;255;48;2;0;0;0m free of \033[38;2;255;255;255;48;2;255;105;180m syn \033[38;2;255;255;255;48;2;0;0;0m\033[0m"
   else
