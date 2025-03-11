@@ -20,7 +20,7 @@ pub fn from_json<'input>(
         parser: &mut JsonParser<'input>,
         partial: &mut Partial,
     ) -> Result<(), JsonParseErrorWithContext<'input>> {
-        let shape_desc = partial.shape_desc();
+        let shape_desc = partial.shape();
         let shape = shape_desc.get();
         trace!("Deserializing value with shape:\n{:?}", shape);
 

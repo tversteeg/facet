@@ -1,7 +1,5 @@
 use std::mem::MaybeUninit;
 
-pub use nonmax;
-
 mod hashmap_impl;
 mod scalar_impls;
 

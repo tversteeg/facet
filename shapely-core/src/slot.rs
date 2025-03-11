@@ -97,14 +97,14 @@ impl<'s> Slot<'s> {
     }
 
     pub fn fill_from_partial(mut self, partial: crate::Partial<'_>) {
-        if self.shape != partial.shape_desc() {
+        if self.shape != partial.shape() {
             panic!(
                 "Attempted to fill a field with an incompatible shape.\n\
                 Expected shape: {:?}\n\
                 Actual shape: {:?}\n\
                 This is undefined behavior and we're refusing to proceed.",
                 self.shape.get(),
-                partial.shape_desc().get()
+                partial.shape().get()
             );
         }
 

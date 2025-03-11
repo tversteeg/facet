@@ -83,19 +83,23 @@ impl Drop for Partial<'_> {
 impl Partial<'_> {
     /// Allocates a partial on the heap for the given shape descriptor.
     pub fn alloc(shape_desc: ShapeDesc) -> Self {
-        let layout = shape_desc.get().layout;
-        let addr = if layout.size() != 0 {
+        let shape = shape_desc.get();
+        let layout = shape.layout;
+        let addr = if layout.size() == 0 {
+            // ZSTs need a well-aligned address
+            shape.dangling()
+        } else {
             let addr = unsafe { alloc::alloc(layout) };
             if addr.is_null() {
                 alloc::handle_alloc_error(layout);
             }
-            Some(NonNull::new(addr).unwrap())
-        } else {
-            None
+            // SAFETY: We just allocated this memory and checked that it's not null,
+            // so it's safe to create a NonNull from it.
+            unsafe { NonNull::new_unchecked(addr) }
         };
+
         Self {
             origin: Origin::HeapAllocated,
-            phantom: PhantomData,
             addr,
             init_set: Default::default(),
             shape: shape_desc,
@@ -303,12 +307,19 @@ impl Partial<'_> {
         }
     }
 
+    /// Build that partial into the completed shape.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if:
+    /// - Not all the fields have been initialized.
+    /// - The generic type parameter T does not match the shape that this partial is building.
     pub fn build<T: Shapely>(mut self) -> T {
         self.check_initialization();
         self.check_shape_desc_matches::<T>();
 
         let result = unsafe {
-            let ptr = self.addr.map_or(NonNull::dangling(), |ptr| ptr).as_ptr() as *const T;
+            let ptr = self.addr.as_ptr() as *const T;
             std::ptr::read(ptr)
         };
         trace!(
@@ -319,47 +330,55 @@ impl Partial<'_> {
         std::mem::forget(self);
         result
     }
-
-    pub fn build_boxed<T: Shapely>(mut self) -> Box<T> {
+    /// Build that partial into a boxed completed shape.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if:
+    /// - Not all the fields have been initialized.
+    /// - The generic type parameter T does not match the shape that this partial is building.
+    ///
+    /// # Safety
+    ///
+    /// This function uses unsafe code to create a Box from a raw pointer.
+    /// It's safe because we've verified the initialization and shape matching,
+    /// and we forget `self` to prevent double-freeing.
+    pub fn build_boxed<T: Shapely>(self) -> Box<T> {
         self.check_initialization();
         self.check_shape_desc_matches::<T>();
 
-        let boxed = unsafe {
-            let ptr = self.addr.map_or(NonNull::dangling(), |ptr| ptr).as_ptr() as *mut T;
-            Box::from_raw(ptr)
-        };
-        self.deallocate();
+        let boxed = unsafe { Box::from_raw(self.addr.as_ptr() as *mut T) };
         std::mem::forget(self);
         boxed
     }
 
-    pub fn shape_desc(&self) -> ShapeDesc {
-        self.shape
-    }
-
-    /// Returns the address of the underlying data — for debugging purposes only.
-    /// Returns null if the data is zero-sized.
-    pub fn addr_for_display(&self) -> *const u8 {
-        self.addr.map_or(std::ptr::null(), |ptr| ptr.as_ptr())
-    }
-
+    /// Moves the contents of this `Partial` into a target memory location.
+    ///
+    /// This function is useful when you need to place the fully initialized value
+    /// into a specific memory address, such as when working with FFI or custom allocators.
+    ///
     /// # Safety
     ///
     /// The target pointer must be valid and properly aligned,
     /// and must be large enough to hold the value.
+    /// The caller is responsible for ensuring that the target memory is properly deallocated
+    /// when it's no longer needed.
     pub unsafe fn move_into(mut self, target: *mut u8) {
         self.check_initialization();
-        if let Some(addr) = self.addr {
-            unsafe {
-                std::ptr::copy_nonoverlapping(
-                    addr.as_ptr(),
-                    target,
-                    self.shape.get().layout.size(),
-                );
-            }
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                self.addr.as_ptr(),
+                target,
+                self.shape.get().layout.size(),
+            );
         }
         self.deallocate();
         std::mem::forget(self);
+    }
+
+    /// Returns the shape we're currently building.
+    pub fn shape(&self) -> ShapeDesc {
+        self.shape
     }
 }
 

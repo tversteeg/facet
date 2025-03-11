@@ -1,6 +1,4 @@
-use std::{alloc::Layout, any::TypeId, collections::HashSet, fmt::Formatter};
-
-use nonmax::NonMaxU32;
+use std::{alloc::Layout, any::TypeId, collections::HashSet, fmt::Formatter, ptr::NonNull};
 
 /// Schema for reflection of a type
 #[derive(Clone, Copy)]
@@ -173,6 +171,21 @@ impl Shape {
             Innards::Struct { fields } => fields.get(index).ok_or(FieldError::IndexOutOfBounds),
             _ => Err(FieldError::NotAStruct),
         }
+    }
+
+    /// Returns a dangling pointer for this shape.
+    ///
+    /// This is useful for zero-sized types (ZSTs) which don't need actual memory allocation,
+    /// but still need a properly aligned "some address".
+    ///
+    /// # Safety
+    ///
+    /// This function returns a dangling pointer. It should only be used in contexts where
+    /// a non-null pointer is required but no actual memory access will occur, such as for ZSTs.
+    pub fn dangling(&self) -> NonNull<u8> {
+        let dang = NonNull::dangling();
+        let offset = dang.align_offset(self.layout.align());
+        unsafe { dang.byte_add(offset) }
     }
 }
 
