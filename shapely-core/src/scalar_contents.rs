@@ -5,6 +5,7 @@ use std::fmt::{self, Display, Formatter};
 /// Represents the contents of a scalar value with a lifetime.
 /// This allows safe access to the actual values stored in memory.
 #[derive(Debug, PartialEq)]
+#[non_exhaustive]
 pub enum ScalarContents<'a> {
     /// A string value
     String(Cow<'a, str>),
