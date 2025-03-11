@@ -59,6 +59,24 @@ impl std::hash::Hash for Shape {
 impl Shape {
     const INDENT: usize = 2;
 
+    /// Extract the scalar contents from a shape and a pointer
+    ///
+    /// # Safety
+    ///
+    /// This function is unsafe because it reads from raw memory.
+    /// The caller must ensure that:
+    /// 1. The pointer points to a valid, initialized value of the correct type
+    /// 2. The memory is properly aligned for the type
+    /// 3. The memory is not mutated while the returned ScalarContents is in use
+    pub unsafe fn get_scalar_contents<'a>(&self, ptr: *const u8) -> crate::ScalarContents<'a> {
+        match self.innards {
+            Innards::Scalar(scalar) => unsafe {
+                scalar.get_contents(ptr)
+            },
+            _ => panic!("Expected a scalar shape"),
+        }
+    }
+
     /// Pretty-print this shape, recursively.
     pub fn pretty_print_recursive(&self, f: &mut Formatter) -> std::fmt::Result {
         self.pretty_print_recursive_internal(f, &mut HashSet::new(), 0)

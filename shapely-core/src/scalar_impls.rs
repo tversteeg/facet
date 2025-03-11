@@ -26,10 +26,12 @@ impl_shapely_for_integer!(u8, Scalar::U8);
 impl_shapely_for_integer!(u16, Scalar::U16);
 impl_shapely_for_integer!(u32, Scalar::U32);
 impl_shapely_for_integer!(u64, Scalar::U64);
+impl_shapely_for_integer!(u128, Scalar::U128);
 impl_shapely_for_integer!(i8, Scalar::I8);
 impl_shapely_for_integer!(i16, Scalar::I16);
 impl_shapely_for_integer!(i32, Scalar::I32);
 impl_shapely_for_integer!(i64, Scalar::I64);
+impl_shapely_for_integer!(i128, Scalar::I128);
 
 macro_rules! impl_shapely_for_float {
     ($type:ty, $scalar:expr) => {
