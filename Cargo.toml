@@ -1,5 +1,5 @@
 [workspace]
-members = ["shapely", "shapely-core", "shapely-derive", "shapely-json", "shapely-msgpack", "shapely-urlencoded", "shapely-yaml"]
+members = ["shapely", "shapely-core", "shapely-derive", "shapely-json", "shapely-msgpack", "shapely-pretty", "shapely-urlencoded", "shapely-yaml"]
 resolver = "3"
 
 [workspace.package]
@@ -25,5 +25,6 @@ categories = ["encoding", "parsing", "development-tools", "data-structures"]
 shapely = { version = "2.0.1", path = "shapely" }
 shapely-core = { version = "2.0.1", path = "shapely-core" }
 shapely-derive = { version = "2.0.1", path = "shapely-derive" }
+shapely-pretty = { version = "2.0.1", path = "shapely-pretty" }
 unsynn = "0.0.25"
 form_urlencoded = "1.2.1"
