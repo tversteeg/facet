@@ -96,6 +96,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "shapely-msgpack"
+version = "2.0.0"
+dependencies = [
+ "shapely-core",
+ "shapely-derive",
+]
+
+[[package]]
 name = "shapely-yaml"
 version = "2.0.0"
 dependencies = [
