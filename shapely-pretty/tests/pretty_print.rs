@@ -1,6 +1,7 @@
 use shapely::Shapely;
+use shapely_core::{Field, FieldFlags, Shape, ShapeDesc, Innards};
 use shapely_pretty::{PrettyPrinter, ShapelyPretty};
-use std::fmt::Write;
+use std::{alloc::Layout, fmt::Write};
 
 #[derive(Debug, Shapely)]
 struct Person {
@@ -78,4 +79,50 @@ fn test_pretty_print() {
     assert!(custom_buffer.contains("name"));
     assert!(custom_buffer.contains("age"));
     assert!(custom_buffer.contains("address"));
+}
+
+#[test]
+fn test_sensitive_fields() {
+    // Create a shape with a sensitive field manually
+    let shape = Shape {
+        name: |f| write!(f, "TestStruct"),
+        typeid: std::any::TypeId::of::<String>(),
+        layout: Layout::new::<String>(),
+        innards: Innards::Struct {
+            fields: &[
+                Field {
+                    name: "normal_field",
+                    shape: ShapeDesc(String::shape),
+                    offset: 0,
+                    flags: FieldFlags::EMPTY,
+                },
+                Field {
+                    name: "sensitive_field",
+                    shape: ShapeDesc(String::shape),
+                    offset: std::mem::size_of::<String>(),
+                    flags: FieldFlags::SENSITIVE,
+                },
+            ],
+        },
+        set_to_default: None,
+        drop_in_place: None,
+    };
+
+    // Test debug formatting
+    let mut output = String::new();
+    write!(output, "{:?}", shape).unwrap();
+
+    // Verify output
+    assert!(output.contains("normal_field"));
+    assert!(output.contains("sensitive_field"));
+    assert!(output.contains("[REDACTED]"));
+
+    // Test debug formatting with alternate flag
+    let mut output = String::new();
+    write!(output, "{:#?}", shape).unwrap();
+
+    // Verify output
+    assert!(output.contains("normal_field"));
+    assert!(output.contains("sensitive_field"));
+    assert!(output.contains("[REDACTED]"));
 }

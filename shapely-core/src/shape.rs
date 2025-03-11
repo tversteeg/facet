@@ -112,11 +112,20 @@ impl Shape {
                         field.name,
                         indent = indent + Self::INDENT
                     )?;
-                    field.shape.get().pretty_print_recursive_internal(
-                        f,
-                        printed_schemas,
-                        indent + Self::INDENT * 2,
-                    )?;
+                    if field.flags.is_sensitive() {
+                        writeln!(
+                            f,
+                            "{:indent$}[REDACTED]",
+                            "",
+                            indent = indent + Self::INDENT * 2
+                        )?;
+                    } else {
+                        field.shape.get().pretty_print_recursive_internal(
+                            f,
+                            printed_schemas,
+                            indent + Self::INDENT * 2,
+                        )?;
+                    }
                 }
             }
             Innards::HashMap { value_shape } => {
@@ -375,45 +384,68 @@ impl std::fmt::Debug for ShapeDesc {
     }
 }
 
+/// Flags that can be applied to fields to modify their behavior
+/// 
+/// # Examples
+/// 
+/// ```rust
+/// use shapely_core::FieldFlags;
+/// 
+/// // Create flags with the sensitive bit set
+/// let flags = FieldFlags::SENSITIVE;
+/// assert!(flags.is_sensitive());
+/// 
+/// // Combine multiple flags using bitwise OR
+/// let flags = FieldFlags::SENSITIVE | FieldFlags::EMPTY;
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FieldFlags(u64);
 
 impl FieldFlags {
-    const SENSITIVE: u64 = 1 << 0;
-
     /// An empty set of flags
     pub const EMPTY: Self = Self(0);
-    
-    /// Creates a new FieldFlags with no flags set
-    #[inline(always)]
-    pub fn new() -> Self {
-        Self(0)
-    }
+
+    /// Flag indicating this field contains sensitive data that should not be displayed
+    pub const SENSITIVE: Self = Self(1 << 0);
 
     /// Returns true if the sensitive flag is set
     #[inline]
     pub fn is_sensitive(&self) -> bool {
-        self.0 & Self::SENSITIVE != 0
+        self.0 & Self::SENSITIVE.0 != 0
     }
 
     /// Sets the sensitive flag and returns self for chaining
     #[inline]
     pub fn set_sensitive(&mut self) -> &mut Self {
-        self.0 |= Self::SENSITIVE;
+        self.0 |= Self::SENSITIVE.0;
         self
     }
 
     /// Unsets the sensitive flag and returns self for chaining
     #[inline]
     pub fn unset_sensitive(&mut self) -> &mut Self {
-        self.0 &= !Self::SENSITIVE;
+        self.0 &= !Self::SENSITIVE.0;
         self
     }
 
     /// Creates a new FieldFlags with the sensitive flag set
     #[inline]
     pub const fn sensitive() -> Self {
-        Self(Self::SENSITIVE)
+        Self::SENSITIVE
+    }
+}
+
+impl std::ops::BitOr for FieldFlags {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self {
+        Self(self.0 | rhs.0)
+    }
+}
+
+impl std::ops::BitOrAssign for FieldFlags {
+    fn bitor_assign(&mut self, rhs: Self) {
+        self.0 |= rhs.0;
     }
 }
 
@@ -427,16 +459,16 @@ impl Default for FieldFlags {
 impl std::fmt::Display for FieldFlags {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut first = true;
-        
+
         if self.0 == 0 {
             return write!(f, "none");
         }
-        
+
         if self.is_sensitive() {
             first = false;
             write!(f, "sensitive")?;
         }
-        
+
         Ok(())
     }
 }
