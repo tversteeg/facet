@@ -28,10 +28,7 @@ fn test_from_json() {
     let json = r#"{"name": "Alice", "age": 30}"#;
 
     let mut test_struct = TestStruct::partial();
-    eprintln!(
-        "Address of test_struct: {:p}",
-        test_struct.addr_for_display()
-    );
+    eprintln!("Address of test_struct: {:p}", test_struct.addr());
     let result = from_json(&mut test_struct, json);
     result.unwrap();
 
@@ -39,22 +36,13 @@ fn test_from_json() {
     let age_field = shape.known_fields()[1];
     let name_field = shape.known_fields()[0];
 
-    let age_addr = unsafe {
-        test_struct
-            .addr_for_display()
-            .byte_offset(age_field.offset.unwrap().get() as isize)
-    };
-    let name_addr = unsafe {
-        test_struct
-            .addr_for_display()
-            .byte_offset(name_field.offset.unwrap().get() as isize)
-    };
-
+    let age_addr = unsafe { test_struct.addr().byte_add(age_field.offset) };
+    let name_addr = unsafe { test_struct.addr().byte_add(name_field.offset) };
     eprintln!("Age address: \x1b[33m{:p}\x1b[0m", age_addr);
     eprintln!("Name address: \x1b[33m{:p}\x1b[0m", name_addr);
 
-    let age_value = unsafe { *(age_addr as *const u64) };
-    let name_value = unsafe { &*(name_addr as *const String) };
+    let age_value = unsafe { *(age_addr.as_ptr() as *const u64) };
+    let name_value = unsafe { &*(name_addr.as_ptr() as *const String) };
 
     eprintln!("Age value before build: \x1b[33m{}\x1b[0m", age_value);
     eprintln!("Name value before build: \x1b[33m{}\x1b[0m", name_value);
