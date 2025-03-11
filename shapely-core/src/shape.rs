@@ -147,6 +147,60 @@ impl Shape {
 
         Ok(())
     }
+
+    /// Returns a slice of statically known fields. Fields that are not in there might still be inserted if it's a dynamic collection.
+    pub fn known_fields(&self) -> &'static [Field<'static>] {
+        match self.innards {
+            Innards::Struct { fields } => fields,
+            _ => &[],
+        }
+    }
+
+    /// Returns a reference to a field with the given name, if it exists
+    pub fn field_by_name(&self, name: &str) -> Option<&Field> {
+        self.known_fields().iter().find(|field| field.name == name)
+    }
+
+    /// Returns a reference to a field with the given index, if it exists
+    pub fn field_by_index(&self, index: usize) -> Result<&Field, FieldError> {
+        match self.innards {
+            Innards::Struct { fields } => fields.get(index).ok_or(FieldError::IndexOutOfBounds),
+            _ => Err(FieldError::NotAStruct),
+        }
+    }
+}
+
+/// Errors encountered when calling `field_by_index` or `field_by_name`
+#[derive(Debug)]
+pub enum FieldError {
+    /// `field_by_index` was called on a dynamic collection, that has no
+    /// static fields. a HashMap doesn't have a "first field", it can only
+    /// associate by keys.
+    NoStaticFields,
+
+    /// `field_by_name` was called on a struct, and there is no static field
+    /// with the given key.
+    NoSuchStaticField,
+
+    /// `field_by_index` was called on a fixed-size collection (like a tuple,
+    /// a struct, or a fixed-size array) and the index was out of bounds.
+    IndexOutOfBounds,
+
+    /// `field_by_index` or `field_by_name` was called on a non-struct type.
+    NotAStruct,
+}
+
+impl std::error::Error for FieldError {}
+
+impl std::fmt::Display for FieldError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FieldError::NoStaticFields => write!(f, "No static fields available"),
+            FieldError::NoSuchStaticField => write!(f, "No such static field"),
+            FieldError::IndexOutOfBounds => write!(f, "Index out of bounds"),
+            FieldError::NotAStruct => write!(f, "Not a struct"),
+        }
+    }
 }
 
 impl std::fmt::Debug for Shape {
@@ -174,15 +228,6 @@ pub enum Innards {
     Scalar(Scalar),
 }
 
-impl Innards {
-    /// Returns a reference to the fields of this map
-    pub fn static_fields(&self) -> &'static [Field<'static>] {
-        match self {
-            Innards::Struct { fields } => fields,
-            _ => &[],
-        }
-    }
-}
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Field<'s> {
     /// key for the map field

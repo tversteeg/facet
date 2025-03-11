@@ -1,4 +1,4 @@
-use crate::{trace, Field, ShapeDesc, Shapely, Slot};
+use crate::{trace, FieldError, ShapeDesc, Shapely, Slot};
 use std::{alloc, marker::PhantomData, ptr::NonNull};
 
 /// Origin of the partial — did we allocate it? Or is it borrowed?
@@ -70,35 +70,6 @@ impl Drop for Partial<'_> {
         }
 
         self.deallocate()
-    }
-}
-
-/// Errors encountered when calling `slot_by_index` or `slot_by_key`
-#[derive(Debug)]
-pub enum SlotError {
-    /// `slot_by_index` was called on a dynamic collection, that has no
-    /// static fields. a HashMap doesn't have a "first slot", it can only
-    /// associate by keys.
-    NoStaticFields,
-
-    /// `slot_by_key` was called on a struct, and there is no static field
-    /// with the given key.
-    NoSuchStaticField,
-
-    /// `slot_by_index` was called on a fixed-size collection (like a tuple,
-    /// a struct, or a fixed-size array) and the index was out of bounds.
-    OutOfBounds,
-}
-
-impl std::error::Error for SlotError {}
-
-impl std::fmt::Display for SlotError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            SlotError::NoStaticFields => write!(f, "No static fields available"),
-            SlotError::NoSuchStaticField => write!(f, "No such static field"),
-            SlotError::OutOfBounds => write!(f, "Index out of bounds"),
-        }
     }
 }
 
@@ -207,7 +178,7 @@ impl Partial<'_> {
     }
 
     /// Returns a slot for initializing a field in the shape.
-    pub fn slot_by_name<'s>(&'s mut self, name: &str) -> Result<Slot<'s>, SlotError> {
+    pub fn slot_by_name<'s>(&'s mut self, name: &str) -> Result<Slot<'s>, FieldError> {
         match self.shape_desc.get().innards {
             crate::Innards::Struct { fields } => {
                 if let Some((index, field)) =
@@ -224,10 +195,10 @@ impl Partial<'_> {
                         let slot = Slot::for_struct_field(field_addr, field.shape, init_field_slot);
                         Ok(slot)
                     } else {
-                        Err(SlotError::NoSuchStaticField)
+                        Err(FieldError::NoSuchStaticField)
                     }
                 } else {
-                    Err(SlotError::NoSuchStaticField)
+                    Err(FieldError::NoSuchStaticField)
                 }
             }
             crate::Innards::HashMap { value_shape } => {
@@ -241,14 +212,14 @@ impl Partial<'_> {
                 );
                 Ok(slot)
             }
-            crate::Innards::Array(_shape) => Err(SlotError::NoStaticFields),
-            crate::Innards::Transparent(_shape) => Err(SlotError::NoStaticFields),
-            crate::Innards::Scalar(_scalar) => Err(SlotError::NoStaticFields),
+            crate::Innards::Array(_shape) => Err(FieldError::NoStaticFields),
+            crate::Innards::Transparent(_shape) => Err(FieldError::NoStaticFields),
+            crate::Innards::Scalar(_scalar) => Err(FieldError::NoStaticFields),
         }
     }
 
     /// Returns a slot for initializing a field in the shape by index.
-    pub fn slot_by_index<'s>(&'s mut self, index: usize) -> Result<Slot<'s>, SlotError> {
+    pub fn slot_by_index<'s>(&'s mut self, index: usize) -> Result<Slot<'s>, FieldError> {
         match self.shape_desc.get().innards {
             crate::Innards::Struct { fields } => {
                 if index < fields.len() {
@@ -264,44 +235,30 @@ impl Partial<'_> {
                         let slot = Slot::for_struct_field(field_addr, field.shape, init_field_slot);
                         Ok(slot)
                     } else {
-                        Err(SlotError::NoSuchStaticField)
+                        Err(FieldError::NoSuchStaticField)
                     }
                 } else {
-                    Err(SlotError::OutOfBounds)
+                    Err(FieldError::IndexOutOfBounds)
                 }
             }
             crate::Innards::Array(shape) => {
                 unimplemented!()
             }
             crate::Innards::Scalar(_) => {
-                if index == 0 {
-                    let slot = Slot::for_struct_field(
-                        self.addr,
-                        self.shape_desc,
-                        InitFieldSlot::Struct {
-                            index: 0,
-                            set: &mut self.init_fields,
-                        },
-                    );
-                    Ok(slot)
-                } else {
-                    Err(SlotError::OutOfBounds)
+                if index != 0 {
+                    return Err(FieldError::IndexOutOfBounds);
                 }
+                let slot =
+                    Slot::for_struct_field(self.addr, self.shape_desc, self.init_fields.field(0));
+                Ok(slot)
             }
             crate::Innards::Transparent(inner_shape) => {
-                if index == 0 {
-                    let slot = Slot::for_struct_field(
-                        self.addr,
-                        inner_shape,
-                        InitFieldSlot::Struct {
-                            index: 0,
-                            set: &mut self.init_fields,
-                        },
-                    );
-                    Ok(slot)
-                } else {
-                    Err(SlotError::OutOfBounds)
+                if index != 0 {
+                    return Err(FieldError::IndexOutOfBounds);
                 }
+                let slot =
+                    Slot::for_struct_field(self.addr, inner_shape, self.init_fields.field(0));
+                Ok(slot)
             }
             crate::Innards::HashMap { .. } => Err(SlotError::NoStaticFields),
         }
@@ -406,26 +363,29 @@ pub struct InitSet64(u64);
 
 impl InitSet64 {
     pub fn set(&mut self, index: usize) {
-        if index < 64 {
-            self.0 |= 1 << index;
+        if index >= 64 {
+            panic!("InitSet64 can only track up to 64 fields. Index {index} is out of bounds.");
         }
+        self.0 |= 1 << index;
     }
 
     pub fn is_set(&self, index: usize) -> bool {
-        if index < 64 {
-            (self.0 & (1 << index)) != 0
-        } else {
-            false
+        if index >= 64 {
+            panic!("InitSet64 can only track up to 64 fields. Index {index} is out of bounds.");
         }
+        (self.0 & (1 << index)) != 0
     }
 
     pub fn all_set(&self, count: usize) -> bool {
-        if count <= 64 {
-            let mask = (1 << count) - 1;
-            self.0 & mask == mask
-        } else {
-            false
+        if count > 64 {
+            panic!("InitSet64 can only track up to 64 fields. Count {count} is out of bounds.");
         }
+        let mask = (1 << count) - 1;
+        self.0 & mask == mask
+    }
+
+    pub fn field(&mut self, index: usize) -> InitFieldSlot {
+        InitFieldSlot::Struct { index, set: self }
     }
 }
 

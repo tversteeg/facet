@@ -27,15 +27,11 @@ fn build_foobar_through_reflection() {
     eprintln!("{shape:#?}");
 
     let mut uninit = FooBar::partial();
-    for field in shape.innards.static_fields() {
-        let slot = uninit.slot_by_name(*field).unwrap();
+    for (index, field) in shape.innards.known_fields().iter().enumerate() {
+        let slot = uninit.slot_by_index(index).unwrap();
         match field.name {
-            "foo" => {
-                slot.fill(42u64);
-            }
-            "bar" => {
-                slot.fill(String::from("Hello, World!"));
-            }
+            "foo" => slot.fill(42u64),
+            "bar" => slot.fill(String::from("Hello, World!")),
             _ => panic!("Unknown field: {}", field.name),
         }
     }
@@ -87,9 +83,9 @@ fn build_foobar_through_reflection_with_missing_field() {
     eprintln!("{shape:#?}");
 
     let mut uninit = FooBar::partial();
-    for field in shape.innards.static_fields() {
+    for field in shape.innards.known_fields() {
         if field.name == "foo" {
-            let slot = uninit.slot_by_name(*field).unwrap();
+            let slot = uninit.slot_by_name(field.name).unwrap();
             slot.fill(42u64);
             // Intentionally not setting the 'bar' field
         }
@@ -171,8 +167,8 @@ fn build_struct_with_drop_field() {
     let shape = StructWithDrop::shape();
     let mut uninit = StructWithDrop::partial();
 
-    let counter_field = shape.innards.static_fields()[0];
-    let value_field = shape.innards.static_fields()[1];
+    let counter_field = shape.innards.known_fields()[0];
+    let value_field = shape.innards.known_fields()[1];
 
     // First assignment
     {
@@ -328,8 +324,8 @@ fn build_truck_with_drop_fields() {
     }
 
     let shape = Truck::shape();
-    let engine_field = shape.innards.static_fields()[0];
-    let wheels_field = shape.innards.static_fields()[1];
+    let engine_field = shape.innards.known_fields()[0];
+    let wheels_field = shape.innards.known_fields()[1];
 
     fn reset_atomics() {
         ENGINE_COUNT.store(0, Ordering::SeqCst);
@@ -465,8 +461,8 @@ fn test_partial_build_in_place() {
         let shape = TestShape::shape();
         let mut uninit = TestShape::partial_from_uninit(&mut test_shape);
 
-        let counter_field = shape.innards.static_fields()[0];
-        let unit_field = shape.innards.static_fields()[1];
+        let counter_field = shape.innards.known_fields()[0];
+        let unit_field = shape.innards.known_fields()[1];
 
         // Set the counter field
         {
