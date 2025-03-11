@@ -25,5 +25,4 @@ categories = ["encoding", "parsing", "development-tools", "data-structures"]
 shapely = { version = "1.0.0", path = "shapely" }
 shapely-core = { version = "1.0.0", path = "shapely-core" }
 shapely-derive = { version = "1.0.0", path = "shapely-derive" }
-shapely-json = { version = "1.0.0", path = "shapely-json" }
 unsynn = "0.0.25"

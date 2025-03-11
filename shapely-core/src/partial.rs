@@ -5,22 +5,22 @@ use std::{alloc, marker::PhantomData, ptr::NonNull};
 pub enum Origin<'s> {
     Borrowed {
         parent: Option<&'s Partial<'s>>,
-        init_field_slot: InitMark<'s>,
+        init_mark: InitMark<'s>,
     },
     HeapAllocated,
 }
 
 /// A partially-initialized shape, useful when deserializing for example.
 pub struct Partial<'s> {
+    /// Where `addr` came from (ie. are we responsible for freeing it?)
     pub(crate) origin: Origin<'s>,
 
-    pub(crate) phantom: PhantomData<&'s ()>, // NonNull is covariant...
-
-    /// Address of the value in memory. If None, the value is zero-sized.
-    pub(crate) addr: Option<NonNull<u8>>,
+    /// Address of the value we're buildin in memory.
+    /// If the type is a ZST, then the addr will be dangling.
+    pub(crate) addr: NonNull<u8>,
 
     /// Keeps track of which fields are initialized
-    pub(crate) init_fields: InitSet64,
+    pub(crate) init_set: InitSet64,
 
     /// The shape we're building.
     pub(crate) shape: ShapeDesc,
@@ -36,33 +36,40 @@ impl Drop for Partial<'_> {
         // First drop any initialized fields
         match self.shape.get().innards {
             crate::Innards::Struct { fields } => {
-                for (i, field) in fields.iter().enumerate() {
-                    if self.init_fields.is_set(i) && field.offset.is_some() {
-                        // Drop the field using its drop function if available
-                        if let Some(drop_fn) = field.shape.get().drop_in_place {
-                            let field_addr = {
-                                let offset = field.offset.unwrap().get() as usize;
-                                if let Some(addr) = self.addr {
-                                    unsafe { addr.byte_add(offset) }
-                                } else {
-                                    // Zero-sized types don't have a valid address
-                                    NonNull::dangling()
-                                }
-                            };
-                            drop_fn(field_addr.as_ptr());
+                fields
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, field)| {
+                        if self.init_set.is_set(i) {
+                            Some((field, field.shape.get().drop_in_place?))
+                        } else {
+                            None
                         }
-                    }
-                }
+                    })
+                    .for_each(|(field, drop_fn)| {
+                        unsafe {
+                            // SAFETY: field_addr is valid, aligned, and initialized.
+                            //
+                            // If the struct is a ZST, then `self.addr` is dangling.
+                            // That also means that all the fields are ZSTs, which means
+                            // the actual address we pass to the drop fn does not matter,
+                            // but we do want the side effects.
+                            //
+                            // If the struct is not a ZST, then `self.addr` is a valid address.
+                            // The fields can still be ZST and that's not a special case, really.
+                            drop_fn(self.addr.byte_add(field.offset).as_ptr());
+                        }
+                    })
             }
             crate::Innards::Scalar(_) => {
-                if self.init_fields.is_set(0) {
+                if self.init_set.is_set(0) {
                     // Drop the scalar value if it has a drop function
                     if let Some(drop_fn) = self.shape.get().drop_in_place {
-                        // Use NonNull::dangling() if we don't have an addr.
-                        // This is safe because for zero-sized types, the actual address doesn't matter.
-                        // The drop function for zero-sized types should not dereference the pointer.
-                        let ptr = self.addr.map_or(NonNull::dangling(), |addr| addr).as_ptr();
-                        drop_fn(ptr);
+                        // SAFETY: self.addr is always valid for Scalar types,
+                        // even for ZSTs where it might be dangling.
+                        unsafe {
+                            drop_fn(self.addr.as_ptr());
+                        }
                     }
                 }
             }
@@ -90,7 +97,7 @@ impl Partial<'_> {
             origin: Origin::HeapAllocated,
             phantom: PhantomData,
             addr,
-            init_fields: Default::default(),
+            init_set: Default::default(),
             shape: shape_desc,
         }
     }
@@ -102,11 +109,11 @@ impl Partial<'_> {
         Self {
             origin: Origin::Borrowed {
                 parent: None,
-                init_field_slot: InitMark::Ignored,
+                init_mark: InitMark::Ignored,
             },
             phantom: PhantomData,
             addr: Some(NonNull::new(uninit.as_mut_ptr() as _).unwrap()),
-            init_fields: Default::default(),
+            init_set: Default::default(),
             shape: T::shape_desc(),
         }
     }
@@ -122,7 +129,7 @@ impl Partial<'_> {
         match self.shape.get().innards {
             crate::Innards::Struct { fields } => {
                 for (i, field) in fields.iter().enumerate() {
-                    if self.init_fields.is_set(i) {
+                    if self.init_set.is_set(i) {
                         trace!("Field \x1b[1;33m{}\x1b[0m is initialized", field.name);
                     } else {
                         panic!(
@@ -134,7 +141,7 @@ impl Partial<'_> {
                 }
             }
             crate::Innards::Scalar(_) => {
-                if !self.init_fields.is_set(0) {
+                if !self.init_set.is_set(0) {
                     panic!(
                         "Scalar value was not initialized. Complete schema:\n{:?}",
                         self.shape.get()
@@ -154,7 +161,7 @@ impl Partial<'_> {
                     self.shape,
                     InitMark::Struct {
                         index: 0,
-                        set: &mut self.init_fields,
+                        set: &mut self.init_set,
                     },
                 );
                 Some(slot)
@@ -165,7 +172,7 @@ impl Partial<'_> {
                     inner_shape,
                     InitMark::Struct {
                         index: 0,
-                        set: &mut self.init_fields,
+                        set: &mut self.init_set,
                     },
                 );
                 Some(slot)
@@ -190,7 +197,7 @@ impl Partial<'_> {
                         });
                         let init_field_slot = InitMark::Struct {
                             index,
-                            set: &mut self.init_fields,
+                            set: &mut self.init_set,
                         };
                         let slot = Slot::for_ptr(field_addr, field.shape, init_field_slot);
                         Ok(slot)
@@ -230,7 +237,7 @@ impl Partial<'_> {
                         });
                         let init_field_slot = InitMark::Struct {
                             index,
-                            set: &mut self.init_fields,
+                            set: &mut self.init_set,
                         };
                         let slot = Slot::for_ptr(field_addr, field.shape, init_field_slot);
                         Ok(slot)
@@ -248,14 +255,14 @@ impl Partial<'_> {
                 if index != 0 {
                     return Err(FieldError::IndexOutOfBounds);
                 }
-                let slot = Slot::for_ptr(self.addr, self.shape, self.init_fields.field(0));
+                let slot = Slot::for_ptr(self.addr, self.shape, self.init_set.field(0));
                 Ok(slot)
             }
             crate::Innards::Transparent(inner_shape) => {
                 if index != 0 {
                     return Err(FieldError::IndexOutOfBounds);
                 }
-                let slot = Slot::for_ptr(self.addr, inner_shape, self.init_fields.field(0));
+                let slot = Slot::for_ptr(self.addr, inner_shape, self.init_set.field(0));
                 Ok(slot)
             }
             crate::Innards::HashMap { .. } => Err(FieldError::NoStaticFields),
@@ -267,7 +274,8 @@ impl Partial<'_> {
 
         match &mut self.origin {
             Origin::Borrowed {
-                init_field_slot, ..
+                init_mark: init_field_slot,
+                ..
             } => {
                 // Mark the borrowed field as initialized
                 init_field_slot.set();
@@ -360,6 +368,7 @@ impl Partial<'_> {
 pub struct InitSet64(u64);
 
 impl InitSet64 {
+    /// Sets the bit at the given index.
     pub fn set(&mut self, index: usize) {
         if index >= 64 {
             panic!("InitSet64 can only track up to 64 fields. Index {index} is out of bounds.");
@@ -367,6 +376,15 @@ impl InitSet64 {
         self.0 |= 1 << index;
     }
 
+    /// Unsets the bit at the given index.
+    pub fn unset(&mut self, index: usize) {
+        if index >= 64 {
+            panic!("InitSet64 can only track up to 64 fields. Index {index} is out of bounds.");
+        }
+        self.0 &= !(1 << index);
+    }
+
+    /// Checks if the bit at the given index is set.
     pub fn is_set(&self, index: usize) -> bool {
         if index >= 64 {
             panic!("InitSet64 can only track up to 64 fields. Index {index} is out of bounds.");
@@ -374,6 +392,7 @@ impl InitSet64 {
         (self.0 & (1 << index)) != 0
     }
 
+    /// Checks if all bits up to the given count are set.
     pub fn all_set(&self, count: usize) -> bool {
         if count > 64 {
             panic!("InitSet64 can only track up to 64 fields. Count {count} is out of bounds.");
@@ -382,6 +401,7 @@ impl InitSet64 {
         self.0 & mask == mask
     }
 
+    /// Gets an [InitMark] to track the initialization state of a single field
     pub fn field(&mut self, index: usize) -> InitMark {
         InitMark::Struct { index, set: self }
     }

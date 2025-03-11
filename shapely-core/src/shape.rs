@@ -251,7 +251,7 @@ pub struct Field<'s> {
     /// However, when deserializing formats that are non-self descriptive and working from an
     /// existing shape, then their map fields are probably going to have offsets, especially if
     /// they're using derived macros.
-    pub offset: Option<NonMaxU32>,
+    pub offset: usize,
 }
 
 /// The outcome of trying to set a field on a map

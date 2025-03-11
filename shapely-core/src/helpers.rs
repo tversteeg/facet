@@ -17,14 +17,7 @@ macro_rules! struct_field {
         $crate::Field {
             name: stringify!($field),
             shape: $crate::shape_desc_of(&|s: $struct| s.$field),
-            offset: Some({
-                let offset = ::std::mem::offset_of!($struct, $field);
-                if offset > u32::MAX as usize {
-                    panic!("Struct field offset exceeds u32::MAX");
-                }
-                $crate::nonmax::NonMaxU32::new(offset as u32)
-                    .expect("Field offset should never be u32::MAX")
-            }),
+            offset: ::std::mem::offset_of!($struct, $field),
         }
     };
 }

@@ -1,6 +1,5 @@
 use std::mem::offset_of;
 
-use nonmax::NonMaxU32;
 use shapely::Shapely;
 
 #[test]
@@ -24,19 +23,13 @@ fn simple_struct() {
             assert_eq!(foo_field.name, "foo");
             assert_eq!(foo_field.shape.get().layout.size(), 4);
             assert_eq!(foo_field.shape.get().layout.align(), 4);
-            assert_eq!(
-                foo_field.offset,
-                Some(NonMaxU32::new(offset_of!(Blah, foo) as u32).unwrap())
-            );
+            assert_eq!(foo_field.offset, Some(offset_of!(Blah, foo)));
 
             let bar_field = &fields[1];
             assert_eq!(bar_field.name, "bar");
             assert_eq!(bar_field.shape.get().layout.size(), 24);
             assert_eq!(bar_field.shape.get().layout.align(), 8);
-            assert_eq!(
-                bar_field.offset,
-                Some(NonMaxU32::new(offset_of!(Blah, bar) as u32).unwrap())
-            );
+            assert_eq!(bar_field.offset, Some(offset_of!(Blah, bar)));
         } else {
             panic!("Expected Struct innards");
         }

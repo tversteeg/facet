@@ -13,7 +13,6 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
-nonmax = "0.5.5"
 shapely-core.workspace = true
 shapely-derive.workspace = true
 
