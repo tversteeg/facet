@@ -10,7 +10,7 @@ pub struct PrettyDisplay<'a, T: shapely_core::Shapely> {
     pub(crate) printer: PrettyPrinter,
 }
 
-impl<'a, T: shapely_core::Shapely> Display for PrettyDisplay<'a, T> {
+impl<T: shapely_core::Shapely> Display for PrettyDisplay<'_, T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         self.printer.format_to(self.value, f)
     }
@@ -44,36 +44,36 @@ impl<T: shapely_core::Shapely> ShapelyPretty for T {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fmt::Write;
     use shapely::Shapely;
-    
+    use std::fmt::Write;
+
     // Use the derive macro from shapely
     #[derive(Shapely)]
     struct TestStruct {
         field: u32,
     }
-    
+
     #[test]
     fn test_pretty_display() {
         let test = TestStruct { field: 42 };
         let display = test.pretty();
-        
+
         let mut output = String::new();
         write!(output, "{}", display).unwrap();
-        
+
         // Just check that it contains the field name and doesn't panic
         assert!(output.contains("field"));
     }
-    
+
     #[test]
     fn test_pretty_with_custom_printer() {
         let test = TestStruct { field: 42 };
         let printer = PrettyPrinter::new().with_colors(false);
         let display = test.pretty_with(printer);
-        
+
         let mut output = String::new();
         write!(output, "{}", display).unwrap();
-        
+
         // Just check that it contains the field name and doesn't panic
         assert!(output.contains("field"));
     }

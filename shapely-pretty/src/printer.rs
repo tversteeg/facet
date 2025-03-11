@@ -4,6 +4,7 @@ use std::{
     collections::HashSet,
     fmt::{self, Write},
     hash::{DefaultHasher, Hash, Hasher},
+    str,
 };
 
 use shapely_core::{Innards, Scalar, Shape, ShapeDesc, Shapely};
@@ -34,63 +35,63 @@ impl PrettyPrinter {
     pub fn new() -> Self {
         Self::default()
     }
-    
+
     /// Set the indentation size
     pub fn with_indent_size(mut self, size: usize) -> Self {
         self.indent_size = size;
         self
     }
-    
+
     /// Set the maximum depth for recursive printing
     pub fn with_max_depth(mut self, depth: usize) -> Self {
         self.max_depth = Some(depth);
         self
     }
-    
+
     /// Set the color generator
     pub fn with_color_generator(mut self, generator: ColorGenerator) -> Self {
         self.color_generator = generator;
         self
     }
-    
+
     /// Enable or disable colors
     pub fn with_colors(mut self, use_colors: bool) -> Self {
         self.use_colors = use_colors;
         self
     }
-    
+
     /// Pretty-print a value that implements Shapely
     pub fn print<T: Shapely>(&self, value: &T) {
         let shape_desc = T::shape_desc();
         let ptr = value as *const T as *mut u8;
-        
+
         let mut output = String::new();
         self.format_value(ptr, shape_desc, &mut output, 0, &mut HashSet::new())
             .expect("Formatting failed");
-        
+
         print!("{}", output);
     }
-    
+
     /// Format a value to a string
     pub fn format<T: Shapely>(&self, value: &T) -> String {
         let shape_desc = T::shape_desc();
         let ptr = value as *const T as *mut u8;
-        
+
         let mut output = String::new();
         self.format_value(ptr, shape_desc, &mut output, 0, &mut HashSet::new())
             .expect("Formatting failed");
-        
+
         output
     }
-    
+
     /// Format a value to a formatter
     pub fn format_to<T: Shapely>(&self, value: &T, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let shape_desc = T::shape_desc();
         let ptr = value as *const T as *mut u8;
-        
+
         self.format_value(ptr, shape_desc, f, 0, &mut HashSet::new())
     }
-    
+
     /// Internal method to format a value at a specific memory address
     pub(crate) fn format_value(
         &self,
@@ -106,21 +107,19 @@ impl PrettyPrinter {
                 return write!(f, "{}...", self.style_punctuation("["));
             }
         }
-        
+
         // Get the shape
         let shape = shape_desc.get();
-        
+
         // Generate a color for this shape
         let mut hasher = DefaultHasher::new();
         shape.typeid.hash(&mut hasher);
         let hash = hasher.finish();
         let (r, g, b) = self.color_generator.generate_color(hash);
-        
+
         // Format based on the shape's innards
         match &shape.innards {
-            Innards::Scalar(scalar) => {
-                self.format_scalar(ptr, *scalar, f, r, g, b)
-            }
+            Innards::Scalar(scalar) => self.format_scalar(ptr, *scalar, f, r, g, b),
             Innards::Struct { fields } => {
                 self.format_struct(ptr, shape, fields, f, depth, visited, r, g, b)
             }
@@ -135,51 +134,123 @@ impl PrettyPrinter {
             }
         }
     }
-    
+
     /// Format a scalar value
     fn format_scalar(
         &self,
-        _ptr: *mut u8,
+        ptr: *mut u8,
         scalar: Scalar,
         f: &mut impl Write,
         r: u8,
         g: u8,
         b: u8,
     ) -> fmt::Result {
-        // This is a simplified implementation - in a real implementation,
-        // we would need to read the actual value from the pointer
-        // For now, we'll just print the scalar type with a placeholder
-        
         let scalar_color = if self.use_colors {
             ansi::rgb(r, g, b)
         } else {
             String::new()
         };
-        
         let reset = if self.use_colors { ansi::RESET } else { "" };
-        
+
+        // Read and format the actual value from memory
         match scalar {
-            Scalar::String => write!(f, "{}\"<string>\"{}",  scalar_color, reset),
-            Scalar::Bytes => write!(f, "{}b\"<bytes>\"{}",  scalar_color, reset),
-            Scalar::I8 => write!(f, "{}<i8>{}",  scalar_color, reset),
-            Scalar::I16 => write!(f, "{}<i16>{}",  scalar_color, reset),
-            Scalar::I32 => write!(f, "{}<i32>{}",  scalar_color, reset),
-            Scalar::I64 => write!(f, "{}<i64>{}",  scalar_color, reset),
-            Scalar::I128 => write!(f, "{}<i128>{}",  scalar_color, reset),
-            Scalar::U8 => write!(f, "{}<u8>{}",  scalar_color, reset),
-            Scalar::U16 => write!(f, "{}<u16>{}",  scalar_color, reset),
-            Scalar::U32 => write!(f, "{}<u32>{}",  scalar_color, reset),
-            Scalar::U64 => write!(f, "{}<u64>{}",  scalar_color, reset),
-            Scalar::U128 => write!(f, "{}<u128>{}",  scalar_color, reset),
-            Scalar::F32 => write!(f, "{}<f32>{}",  scalar_color, reset),
-            Scalar::F64 => write!(f, "{}<f64>{}",  scalar_color, reset),
-            Scalar::Boolean => write!(f, "{}<bool>{}",  scalar_color, reset),
-            Scalar::Nothing => write!(f, "{}(){}",  scalar_color, reset),
+            Scalar::String => {
+                // For String, we need to read the String struct (ptr, len, capacity)
+                // and then read the actual string data
+                unsafe {
+                    let string_ptr = *(ptr as *const *const u8);
+                    let string_len = *((ptr as *const usize).add(1));
+
+                    if string_ptr.is_null() || string_len == 0 {
+                        write!(f, "{}\"\"{}", scalar_color, reset)
+                    } else {
+                        let slice = std::slice::from_raw_parts(string_ptr, string_len);
+                        match str::from_utf8(slice) {
+                            Ok(s) => write!(f, "{}\"{}\"{}", scalar_color, s.escape_debug(), reset),
+                            Err(_) => write!(f, "{}\"<invalid utf8>\"{}", scalar_color, reset),
+                        }
+                    }
+                }
+            }
+            Scalar::Bytes => {
+                // Similar to String but we display as bytes
+                unsafe {
+                    let bytes_ptr = *(ptr as *const *const u8);
+                    let bytes_len = *((ptr as *const usize).add(1));
+
+                    if bytes_ptr.is_null() || bytes_len == 0 {
+                        write!(f, "{}b\"\"{}", scalar_color, reset)
+                    } else {
+                        let slice = std::slice::from_raw_parts(bytes_ptr, bytes_len);
+                        write!(f, "{}b\"", scalar_color)?;
+                        for &byte in slice.iter().take(64) {
+                            write!(f, "\\x{:02x}", byte)?;
+                        }
+                        if bytes_len > 64 {
+                            write!(f, "...")?;
+                        }
+                        write!(f, "\"{}", reset)
+                    }
+                }
+            }
+            Scalar::I8 => {
+                let value = unsafe { *(ptr as *const i8) };
+                write!(f, "{}{}{}", scalar_color, value, reset)
+            }
+            Scalar::I16 => {
+                let value = unsafe { *(ptr as *const i16) };
+                write!(f, "{}{}{}", scalar_color, value, reset)
+            }
+            Scalar::I32 => {
+                let value = unsafe { *(ptr as *const i32) };
+                write!(f, "{}{}{}", scalar_color, value, reset)
+            }
+            Scalar::I64 => {
+                let value = unsafe { *(ptr as *const i64) };
+                write!(f, "{}{}{}", scalar_color, value, reset)
+            }
+            Scalar::I128 => {
+                let value = unsafe { *(ptr as *const i128) };
+                write!(f, "{}{}{}", scalar_color, value, reset)
+            }
+            Scalar::U8 => {
+                let value = unsafe { *(ptr as *const u8) };
+                write!(f, "{}{}{}", scalar_color, value, reset)
+            }
+            Scalar::U16 => {
+                let value = unsafe { *(ptr as *const u16) };
+                write!(f, "{}{}{}", scalar_color, value, reset)
+            }
+            Scalar::U32 => {
+                let value = unsafe { *(ptr as *const u32) };
+                write!(f, "{}{}{}", scalar_color, value, reset)
+            }
+            Scalar::U64 => {
+                let value = unsafe { *(ptr as *const u64) };
+                write!(f, "{}{}{}", scalar_color, value, reset)
+            }
+            Scalar::U128 => {
+                let value = unsafe { *(ptr as *const u128) };
+                write!(f, "{}{}{}", scalar_color, value, reset)
+            }
+            Scalar::F32 => {
+                let value = unsafe { *(ptr as *const f32) };
+                write!(f, "{}{}{}", scalar_color, value, reset)
+            }
+            Scalar::F64 => {
+                let value = unsafe { *(ptr as *const f64) };
+                write!(f, "{}{}{}", scalar_color, value, reset)
+            }
+            Scalar::Boolean => {
+                let value = unsafe { *(ptr as *const bool) };
+                write!(f, "{}{}{}", scalar_color, value, reset)
+            }
+            Scalar::Nothing => write!(f, "{}(){}", scalar_color, reset),
             // Handle any future scalar types
-            _ => write!(f, "{}<unknown scalar>{}",  scalar_color, reset),
+            _ => write!(f, "{}<unknown scalar>{}", scalar_color, reset),
         }
     }
-    
+
     /// Format a struct
     fn format_struct(
         &self,
@@ -195,7 +266,9 @@ impl PrettyPrinter {
     ) -> fmt::Result {
         // Check for cycles
         if !visited.insert(ptr) {
-            return write!(f, "{}{}{}{}{}",
+            return write!(
+                f,
+                "{}{}{}{}{}",
                 self.style_type_name(&shape.to_string()),
                 self.style_punctuation(" { "),
                 self.style_comment("/* cycle detected */"),
@@ -203,43 +276,49 @@ impl PrettyPrinter {
                 if self.use_colors { ansi::RESET } else { "" }
             );
         }
-        
+
         // Print the struct name
         write!(f, "{}", self.style_type_name(&shape.to_string()))?;
         write!(f, "{}", self.style_punctuation(" {"))?;
-        
+
         if fields.is_empty() {
             write!(f, "{}", self.style_punctuation(" }"))?;
             visited.remove(&ptr);
             return Ok(());
         }
-        
+
         writeln!(f)?;
-        
+
         // Print each field
         for field in fields {
             // Indent
             write!(f, "{:width$}", "", width = (depth + 1) * self.indent_size)?;
-            
+
             // Field name
             write!(f, "{}: ", self.style_field_name(field.name))?;
-            
+
             // Field value - compute the field address
             let field_ptr = unsafe { ptr.add(field.offset) };
             self.format_value(field_ptr, field.shape, f, depth + 1, visited)?;
-            
+
             writeln!(f, "{}", self.style_punctuation(","))?;
         }
-        
+
         // Closing brace with proper indentation
-        write!(f, "{:width$}{}", "", self.style_punctuation("}"), width = depth * self.indent_size)?;
-        
+        write!(
+            f,
+            "{:width$}{}",
+            "",
+            self.style_punctuation("}"),
+            width = depth * self.indent_size
+        )?;
+
         // Remove from visited set when we're done with this struct
         visited.remove(&ptr);
-        
+
         Ok(())
     }
-    
+
     /// Format a HashMap
     fn format_hashmap(
         &self,
@@ -255,20 +334,26 @@ impl PrettyPrinter {
     ) -> fmt::Result {
         // In a real implementation, we would need to iterate over the HashMap
         // For now, we'll just print a placeholder
-        
+
         write!(f, "{}", self.style_type_name(&shape.to_string()))?;
         write!(f, "{}", self.style_punctuation(" {"))?;
         writeln!(f)?;
-        
+
         // Indent
         write!(f, "{:width$}", "", width = (depth + 1) * self.indent_size)?;
         write!(f, "{}", self.style_comment("/* HashMap contents */"))?;
         writeln!(f)?;
-        
+
         // Closing brace with proper indentation
-        write!(f, "{:width$}{}", "", self.style_punctuation("}"), width = depth * self.indent_size)
+        write!(
+            f,
+            "{:width$}{}",
+            "",
+            self.style_punctuation("}"),
+            width = depth * self.indent_size
+        )
     }
-    
+
     /// Format an array
     fn format_array(
         &self,
@@ -284,20 +369,26 @@ impl PrettyPrinter {
     ) -> fmt::Result {
         // In a real implementation, we would need to iterate over the array
         // For now, we'll just print a placeholder
-        
+
         write!(f, "{}", self.style_type_name(&shape.to_string()))?;
         write!(f, "{}", self.style_punctuation(" ["))?;
         writeln!(f)?;
-        
+
         // Indent
         write!(f, "{:width$}", "", width = (depth + 1) * self.indent_size)?;
         write!(f, "{}", self.style_comment("/* Array contents */"))?;
         writeln!(f)?;
-        
+
         // Closing bracket with proper indentation
-        write!(f, "{:width$}{}", "", self.style_punctuation("]"), width = depth * self.indent_size)
+        write!(
+            f,
+            "{:width$}{}",
+            "",
+            self.style_punctuation("]"),
+            width = depth * self.indent_size
+        )
     }
-    
+
     /// Format a transparent wrapper
     fn format_transparent(
         &self,
@@ -314,14 +405,14 @@ impl PrettyPrinter {
         // Print the wrapper type name
         write!(f, "{}", self.style_type_name(&shape.to_string()))?;
         write!(f, "{}", self.style_punctuation("("))?;
-        
+
         // Format the inner value
         self.format_value(ptr, inner_shape, f, depth, visited)?;
-        
+
         // Closing parenthesis
         write!(f, "{}", self.style_punctuation(")"))
     }
-    
+
     /// Style a type name
     fn style_type_name(&self, name: &str) -> String {
         if self.use_colors {
@@ -330,7 +421,7 @@ impl PrettyPrinter {
             name.to_string()
         }
     }
-    
+
     /// Style a field name
     fn style_field_name(&self, name: &str) -> String {
         if self.use_colors {
@@ -339,7 +430,7 @@ impl PrettyPrinter {
             name.to_string()
         }
     }
-    
+
     /// Style punctuation
     fn style_punctuation(&self, text: &str) -> String {
         if self.use_colors {
@@ -348,7 +439,7 @@ impl PrettyPrinter {
             text.to_string()
         }
     }
-    
+
     /// Style a comment
     fn style_comment(&self, text: &str) -> String {
         if self.use_colors {
@@ -362,7 +453,7 @@ impl PrettyPrinter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     // Basic tests for the PrettyPrinter
     #[test]
     fn test_pretty_printer_default() {
@@ -371,34 +462,31 @@ mod tests {
         assert_eq!(printer.max_depth, None);
         assert_eq!(printer.use_colors, true);
     }
-    
+
     #[test]
     fn test_pretty_printer_with_methods() {
         let printer = PrettyPrinter::new()
             .with_indent_size(4)
             .with_max_depth(3)
             .with_colors(false);
-            
+
         assert_eq!(printer.indent_size, 4);
         assert_eq!(printer.max_depth, Some(3));
         assert_eq!(printer.use_colors, false);
     }
-    
+
     #[test]
     fn test_style_methods() {
         let printer_with_colors = PrettyPrinter::new().with_colors(true);
         let printer_without_colors = PrettyPrinter::new().with_colors(false);
-        
+
         // With colors
         assert_eq!(
             printer_with_colors.style_type_name("Test"),
             format!("{}Test{}", ansi::BOLD, ansi::RESET)
         );
-        
+
         // Without colors
-        assert_eq!(
-            printer_without_colors.style_type_name("Test"),
-            "Test"
-        );
+        assert_eq!(printer_without_colors.style_type_name("Test"), "Test");
     }
 }
