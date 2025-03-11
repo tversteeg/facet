@@ -18,6 +18,7 @@ macro_rules! struct_field {
             name: stringify!($field),
             shape: $crate::shape_desc_of(&|s: $struct| s.$field),
             offset: ::std::mem::offset_of!($struct, $field),
+            flags: $crate::FieldFlags::EMPTY,
         }
     };
 }

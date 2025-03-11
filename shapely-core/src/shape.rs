@@ -70,9 +70,7 @@ impl Shape {
     /// 3. The memory is not mutated while the returned ScalarContents is in use
     pub unsafe fn get_scalar_contents<'a>(&self, ptr: *const u8) -> crate::ScalarContents<'a> {
         match self.innards {
-            Innards::Scalar(scalar) => unsafe {
-                scalar.get_contents(ptr)
-            },
+            Innards::Scalar(scalar) => unsafe { scalar.get_contents(ptr) },
             _ => panic!("Expected a scalar shape"),
         }
     }
@@ -89,26 +87,13 @@ impl Shape {
         indent: usize,
     ) -> std::fmt::Result {
         if !printed_schemas.insert(*self) {
-            write!(
-                f,
-                "{:indent$}\x1b[1;33m",
-                "",
-                indent = indent
-            )?;
+            write!(f, "{:indent$}\x1b[1;33m", "", indent = indent)?;
             (self.name)(f)?;
-            writeln!(
-                f,
-                "\x1b[0m (\x1b[1;31malready printed\x1b[0m)"
-            )?;
+            writeln!(f, "\x1b[0m (\x1b[1;31malready printed\x1b[0m)")?;
             return Ok(());
         }
 
-        write!(
-            f,
-            "{:indent$}\x1b[1;33m",
-            "",
-            indent = indent
-        )?;
+        write!(f, "{:indent$}\x1b[1;33m", "", indent = indent)?;
         (self.name)(f)?;
         writeln!(
             f,
@@ -300,6 +285,9 @@ pub struct Field {
     /// existing shape, then their map fields are probably going to have offsets, especially if
     /// they're using derived macros.
     pub offset: usize,
+
+    /// Flags for the field (e.g. sensitive)
+    pub flags: FieldFlags,
 }
 
 /// The outcome of trying to set a field on a map
@@ -343,7 +331,6 @@ pub enum Scalar {
 }
 
 /// A function that returns a shape. There should only be one of these per concrete type in a
-/// program. This enables optimizations.
 #[derive(Clone, Copy)]
 pub struct ShapeDesc(pub fn() -> Shape);
 
@@ -385,5 +372,71 @@ impl std::hash::Hash for ShapeDesc {
 impl std::fmt::Debug for ShapeDesc {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.get().fmt(f)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct FieldFlags(u64);
+
+impl FieldFlags {
+    const SENSITIVE: u64 = 1 << 0;
+
+    /// An empty set of flags
+    pub const EMPTY: Self = Self(0);
+    
+    /// Creates a new FieldFlags with no flags set
+    #[inline(always)]
+    pub fn new() -> Self {
+        Self(0)
+    }
+
+    /// Returns true if the sensitive flag is set
+    #[inline]
+    pub fn is_sensitive(&self) -> bool {
+        self.0 & Self::SENSITIVE != 0
+    }
+
+    /// Sets the sensitive flag and returns self for chaining
+    #[inline]
+    pub fn set_sensitive(&mut self) -> &mut Self {
+        self.0 |= Self::SENSITIVE;
+        self
+    }
+
+    /// Unsets the sensitive flag and returns self for chaining
+    #[inline]
+    pub fn unset_sensitive(&mut self) -> &mut Self {
+        self.0 &= !Self::SENSITIVE;
+        self
+    }
+
+    /// Creates a new FieldFlags with the sensitive flag set
+    #[inline]
+    pub const fn sensitive() -> Self {
+        Self(Self::SENSITIVE)
+    }
+}
+
+impl Default for FieldFlags {
+    #[inline(always)]
+    fn default() -> Self {
+        Self::EMPTY
+    }
+}
+
+impl std::fmt::Display for FieldFlags {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut first = true;
+        
+        if self.0 == 0 {
+            return write!(f, "none");
+        }
+        
+        if self.is_sensitive() {
+            first = false;
+            write!(f, "sensitive")?;
+        }
+        
+        Ok(())
     }
 }
