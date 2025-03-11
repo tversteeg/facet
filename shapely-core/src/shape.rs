@@ -320,6 +320,7 @@ impl From<fn() -> Shape> for ShapeDesc {
 
 impl ShapeDesc {
     /// Build the inner shape
+    #[inline(always)]
     pub fn get(&self) -> Shape {
         (self.0)()
     }

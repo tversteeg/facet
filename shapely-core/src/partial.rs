@@ -3,37 +3,51 @@ use std::{alloc, marker::PhantomData, ptr::NonNull};
 
 /// Origin of the partial — did we allocate it? Or is it borrowed?
 pub enum Origin<'s> {
+    /// It was allocated via `alloc::alloc` and needs to be deallocated on drop,
+    /// moving out, etc.
+    HeapAllocated,
+
+    /// It was generously lent to us by some outside code, and we are NOT
+    /// to free it (although we should still uninitialize any fields that we initialized).
     Borrowed {
         parent: Option<&'s Partial<'s>>,
         init_mark: InitMark<'s>,
     },
-    HeapAllocated,
 }
 
-/// A partially-initialized shape, useful when deserializing for example.
+/// A partially-initialized shape.
+///
+/// This type keeps track of the initialized state of every field and only allows getting out the
+/// concrete type or the boxed concrete type or moving out of this partial into a pointer if all the
+/// fields have been initialized.
 pub struct Partial<'s> {
-    /// Where `addr` came from (ie. are we responsible for freeing it?)
-    pub(crate) origin: Origin<'s>,
-
-    /// Address of the value we're buildin in memory.
+    /// Address of the value we're building in memory.
     /// If the type is a ZST, then the addr will be dangling.
     pub(crate) addr: NonNull<u8>,
+
+    /// Where `addr` came from (ie. are we responsible for freeing it?)
+    pub(crate) origin: Origin<'s>,
 
     /// Keeps track of which fields are initialized
     pub(crate) init_set: InitSet64,
 
-    /// The shape we're building.
+    /// The shape we're building, asserted when building, but
+    /// also when getting fields slots, etc.
     pub(crate) shape: ShapeDesc,
 }
 
-/// We can build a tree of partials as the parsing process occurs or deserization occurs, which means they have to be covariant.
+/// We can build a tree of partials when deserializing, so `Partial<'s>` has to be covariant over 's.
 fn _assert_partial_covariant<'long: 'short, 'short>(partial: Partial<'long>) -> Partial<'short> {
     partial
 }
 
 impl Drop for Partial<'_> {
+    // This drop function is only really called when a partial is dropped without being fully
+    // built out. Otherwise, it's forgotten because the value has been moved elsewhere.
+    //
+    // As a result, its only job is to drop any fields that may have been initialized. And finally
+    // to free the memory for the partial itself if we own it.
     fn drop(&mut self) {
-        // First drop any initialized fields
         match self.shape.get().innards {
             crate::Innards::Struct { fields } => {
                 fields
@@ -82,12 +96,12 @@ impl Drop for Partial<'_> {
 
 impl Partial<'_> {
     /// Allocates a partial on the heap for the given shape descriptor.
-    pub fn alloc(shape_desc: ShapeDesc) -> Self {
-        let shape = shape_desc.get();
-        let layout = shape.layout;
+    pub fn alloc(shape: ShapeDesc) -> Self {
+        let sh = shape.get();
+        let layout = sh.layout;
         let addr = if layout.size() == 0 {
             // ZSTs need a well-aligned address
-            shape.dangling()
+            sh.dangling()
         } else {
             let addr = unsafe { alloc::alloc(layout) };
             if addr.is_null() {
@@ -102,7 +116,7 @@ impl Partial<'_> {
             origin: Origin::HeapAllocated,
             addr,
             init_set: Default::default(),
-            shape: shape_desc,
+            shape,
         }
     }
 
@@ -115,8 +129,7 @@ impl Partial<'_> {
                 parent: None,
                 init_mark: InitMark::Ignored,
             },
-            phantom: PhantomData,
-            addr: Some(NonNull::new(uninit.as_mut_ptr() as _).unwrap()),
+            addr: NonNull::new(uninit.as_mut_ptr() as _).unwrap(),
             init_set: Default::default(),
             shape: T::shape_desc(),
         }
@@ -233,24 +246,19 @@ impl Partial<'_> {
     pub fn slot_by_index<'s>(&'s mut self, index: usize) -> Result<Slot<'s>, FieldError> {
         match self.shape.get().innards {
             crate::Innards::Struct { fields } => {
-                if index < fields.len() {
-                    let field = &fields[index];
-                    if let Some(offset) = field.offset {
-                        let field_addr = self.addr.map(|addr| unsafe {
-                            NonNull::new(addr.as_ptr().byte_offset(offset.get() as isize)).unwrap()
-                        });
-                        let init_field_slot = InitMark::Struct {
-                            index,
-                            set: &mut self.init_set,
-                        };
-                        let slot = Slot::for_ptr(field_addr, field.shape, init_field_slot);
-                        Ok(slot)
-                    } else {
-                        Err(FieldError::NoSuchStaticField)
-                    }
-                } else {
-                    Err(FieldError::IndexOutOfBounds)
+                if index >= fields.len() {
+                    return Err(FieldError::IndexOutOfBounds);
                 }
+
+                let field = &fields[index];
+                let field_addr = unsafe {
+                    // SAFETY: self.addr is a valid pointer to the start of the struct,
+                    // and field.offset is the correct offset for this field within the struct.
+                    // The resulting pointer is properly aligned and within the bounds of the allocated memory.
+                    self.addr.byte_add(field.offset)
+                };
+                let slot = Slot::for_ptr(field_addr, field.shape, self.init_set.field(index));
+                Ok(slot)
             }
             crate::Innards::Array(_) => {
                 unimplemented!()
