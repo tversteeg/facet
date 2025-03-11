@@ -30,6 +30,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a0d2fde1f7b3d48b8395d5f2de76c18a528bd6a9cdde438df747bfcba3e05d6f"
 
 [[package]]
+name = "form_urlencoded"
+version = "1.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e13624c2627564efccf4934284bdd98cbaa14e79b0b5a141218e507b3a823456"
+dependencies = [
+ "percent-encoding",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -52,6 +61,12 @@ name = "mutants"
 version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc0287524726960e07b119cebd01678f852f147742ae0d925e6a520dca956126"
+
+[[package]]
+name = "percent-encoding"
+version = "2.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
 
 [[package]]
 name = "proc-macro2"
@@ -99,14 +114,24 @@ dependencies = [
 name = "shapely-msgpack"
 version = "2.0.0"
 dependencies = [
+ "shapely",
  "shapely-core",
  "shapely-derive",
+]
+
+[[package]]
+name = "shapely-urlencoded"
+version = "2.0.0"
+dependencies = [
+ "form_urlencoded",
+ "shapely",
 ]
 
 [[package]]
 name = "shapely-yaml"
 version = "2.0.0"
 dependencies = [
+ "shapely",
  "shapely-core",
  "yaml-rust2",
 ]

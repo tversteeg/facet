@@ -18,6 +18,32 @@ mod tests;
 /// This function takes a MessagePack byte array and populates a Partial object
 /// according to the shape description provided by the Partial.
 ///
+/// # Example
+///
+/// ```
+/// use shapely::Shapely;
+/// use shapely_msgpack::from_msgpack;
+///
+/// #[derive(Debug, Shapely, PartialEq)]
+/// struct User {
+///     id: u64,
+///     username: String,
+/// }
+///
+/// // MessagePack binary data (equivalent to {"id": 42, "username": "user123"})
+/// let msgpack_data = [
+///     0x82, 0xa2, 0x69, 0x64, 0x2a, 0xa8, 0x75, 0x73,
+///     0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0xa7, 0x75,
+///     0x73, 0x65, 0x72, 0x31, 0x32, 0x33
+/// ];
+///
+/// let mut partial = User::partial();
+/// from_msgpack(&mut partial, &msgpack_data).expect("Failed to parse MessagePack data");
+///
+/// let user = partial.build::<User>();
+/// assert_eq!(user, User { id: 42, username: "user123".to_string() });
+/// ```
+///
 /// # Parameters
 /// * `partial` - A mutable reference to a Partial object that will be filled with deserialized data
 /// * `msgpack` - A byte slice containing MessagePack-encoded data

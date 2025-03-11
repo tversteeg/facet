@@ -26,9 +26,9 @@ mod tests;
 /// let params = partial.build::<SearchParams>();
 /// assert_eq!(params, SearchParams { query: "rust programming".to_string(), page: 2 });
 /// ```
-pub fn from_urlencoded<'input>(
+pub fn from_urlencoded(
     partial: &mut Partial,
-    input: &'input str,
+    input: &str,
 ) -> Result<(), UrlEncodedError> {
     use shapely::{Innards, Scalar};
 
