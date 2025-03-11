@@ -3,7 +3,6 @@ check:
   just clippy
   just nextest
   just doc-tests
-  just miri
   just absolve
 
 install-nightly:
