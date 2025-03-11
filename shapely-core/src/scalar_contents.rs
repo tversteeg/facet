@@ -131,7 +131,6 @@ impl Scalar {
                 Scalar::F64 => ScalarContents::F64(*(ptr as *const f64)),
                 Scalar::Boolean => ScalarContents::Boolean(*(ptr as *const bool)),
                 Scalar::Nothing => ScalarContents::Nothing,
-                _ => ScalarContents::Unknown,
             }
         }
     }
