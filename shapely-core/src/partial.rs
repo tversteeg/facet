@@ -1,5 +1,5 @@
 use crate::{trace, FieldError, ShapeDesc, Shapely, Slot};
-use std::{alloc, marker::PhantomData, ptr::NonNull};
+use std::{alloc, ptr::NonNull};
 
 /// Origin of the partial — did we allocate it? Or is it borrowed?
 pub enum Origin<'s> {
@@ -137,7 +137,7 @@ impl Partial<'_> {
 
     /// Checks if all fields in the struct or scalar value have been initialized.
     /// Panics if any field is not initialized, providing details about the uninitialized field.
-    pub(crate) fn check_initialization(&self) {
+    pub(crate) fn assert_all_fields_initialized(&self) {
         trace!(
             "Checking initialization of \x1b[1;33m{}\x1b[0m partial at addr \x1b[1;36m{:p}\x1b[0m",
             self.shape.get().name,
@@ -244,62 +244,18 @@ impl Partial<'_> {
 
     /// Returns a slot for initializing a field in the shape by index.
     pub fn slot_by_index<'s>(&'s mut self, index: usize) -> Result<Slot<'s>, FieldError> {
-        match self.shape.get().innards {
-            crate::Innards::Struct { fields } => {
-                if index >= fields.len() {
-                    return Err(FieldError::IndexOutOfBounds);
-                }
-
-                let field = &fields[index];
-                let field_addr = unsafe {
-                    // SAFETY: self.addr is a valid pointer to the start of the struct,
-                    // and field.offset is the correct offset for this field within the struct.
-                    // The resulting pointer is properly aligned and within the bounds of the allocated memory.
-                    self.addr.byte_add(field.offset)
-                };
-                let slot = Slot::for_ptr(field_addr, field.shape, self.init_set.field(index));
-                Ok(slot)
-            }
-            crate::Innards::Array(_) => {
-                unimplemented!()
-            }
-            crate::Innards::Scalar(_) => {
-                if index != 0 {
-                    return Err(FieldError::IndexOutOfBounds);
-                }
-                let slot = Slot::for_ptr(self.addr, self.shape, self.init_set.field(0));
-                Ok(slot)
-            }
-            crate::Innards::Transparent(inner_shape) => {
-                if index != 0 {
-                    return Err(FieldError::IndexOutOfBounds);
-                }
-                let slot = Slot::for_ptr(self.addr, inner_shape, self.init_set.field(0));
-                Ok(slot)
-            }
-            crate::Innards::HashMap { .. } => Err(FieldError::NoStaticFields),
-        }
+        let field = self.shape.get().field_by_index(index)?;
+        let field_addr = unsafe {
+            // SAFETY: self.addr is a valid pointer to the start of the struct,
+            // and field.offset is the correct offset for this field within the struct.
+            // The resulting pointer is properly aligned and within the bounds of the allocated memory.
+            self.addr.byte_add(field.offset)
+        };
+        let slot = Slot::for_ptr(field_addr, field.shape, self.init_set.field(index));
+        Ok(slot)
     }
 
-    pub fn build_in_place(mut self) {
-        self.check_initialization();
-
-        match &mut self.origin {
-            Origin::Borrowed {
-                init_mark: init_field_slot,
-                ..
-            } => {
-                // Mark the borrowed field as initialized
-                init_field_slot.set();
-            }
-            Origin::HeapAllocated => {
-                panic!("Cannot build in place for heap allocated ShapeUninit");
-            }
-        }
-        std::mem::forget(self);
-    }
-
-    fn check_shape_desc_matches<T: Shapely>(&self) {
+    fn assert_matching_shape<T: Shapely>(&self) {
         if self.shape != T::shape_desc() {
             panic!(
                 "This is a partial \x1b[1;34m{}\x1b[0m, you can't build a \x1b[1;32m{}\x1b[0m out of it",
@@ -310,9 +266,38 @@ impl Partial<'_> {
     }
 
     fn deallocate(&mut self) {
-        if let Some(addr) = self.addr {
-            unsafe { alloc::dealloc(addr.as_ptr(), self.shape.get().layout) }
+        // ZSTs don't need to be deallocated
+        if self.shape.get().layout.size() != 0 {
+            unsafe { alloc::dealloc(self.addr.as_ptr(), self.shape.get().layout) }
         }
+    }
+
+    /// Asserts that every field has been initialized and forgets the Partial.
+    ///
+    /// This method is only used when the origin is borrowed.
+    /// If this method is not called, all fields will be freed when the Partial is dropped.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if:
+    /// - The origin is not borrowed (i.e., it's heap allocated).
+    /// - Any field is not initialized.
+    pub fn build_in_place(mut self) {
+        // ensure all fields are initialized
+        self.assert_all_fields_initialized();
+
+        match &mut self.origin {
+            Origin::Borrowed { init_mark, .. } => {
+                // Mark the borrowed field as initialized
+                init_mark.set();
+            }
+            Origin::HeapAllocated => {
+                panic!("Cannot build in place for heap allocated Partial");
+            }
+        }
+
+        // prevent field drops when the Partial is dropped
+        std::mem::forget(self);
     }
 
     /// Build that partial into the completed shape.
@@ -323,8 +308,8 @@ impl Partial<'_> {
     /// - Not all the fields have been initialized.
     /// - The generic type parameter T does not match the shape that this partial is building.
     pub fn build<T: Shapely>(mut self) -> T {
-        self.check_initialization();
-        self.check_shape_desc_matches::<T>();
+        self.assert_all_fields_initialized();
+        self.assert_matching_shape::<T>();
 
         let result = unsafe {
             let ptr = self.addr.as_ptr() as *const T;
@@ -352,8 +337,8 @@ impl Partial<'_> {
     /// It's safe because we've verified the initialization and shape matching,
     /// and we forget `self` to prevent double-freeing.
     pub fn build_boxed<T: Shapely>(self) -> Box<T> {
-        self.check_initialization();
-        self.check_shape_desc_matches::<T>();
+        self.assert_all_fields_initialized();
+        self.assert_matching_shape::<T>();
 
         let boxed = unsafe { Box::from_raw(self.addr.as_ptr() as *mut T) };
         std::mem::forget(self);
@@ -372,7 +357,7 @@ impl Partial<'_> {
     /// The caller is responsible for ensuring that the target memory is properly deallocated
     /// when it's no longer needed.
     pub unsafe fn move_into(mut self, target: *mut u8) {
-        self.check_initialization();
+        self.assert_all_fields_initialized();
         unsafe {
             std::ptr::copy_nonoverlapping(
                 self.addr.as_ptr(),
