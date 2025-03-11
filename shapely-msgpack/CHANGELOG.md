@@ -7,15 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.1](https://github.com/bearcove/shapely/compare/shapely-yaml-v2.0.0...shapely-yaml-v2.0.1) - 2025-03-11
+## [2.0.1](https://github.com/bearcove/shapely/compare/shapely-msgpack-v2.0.0...shapely-msgpack-v2.0.1) - 2025-03-11
 
 ### Other
 
+- Last few fixes
 - Add examples to YAML and MessagePack crates, simplify READMEs, and fix doc tests
-- Clippy fixes
-
-## [2.0.0](https://github.com/bearcove/shapely/compare/shapely-yaml-v1.0.0...shapely-yaml-v2.0.0) - 2025-03-11
-
-### Other
-
-- Stub out shapely-yaml
