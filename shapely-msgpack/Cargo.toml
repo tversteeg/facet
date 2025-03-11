@@ -14,6 +14,6 @@ categories = ["encoding", "parsing", "data-structures"]
 
 [dependencies]
 shapely-core = { workspace = true }
-
 [dev-dependencies]
+shapely = { workspace = true }
 shapely-derive = { workspace = true }
