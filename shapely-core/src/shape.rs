@@ -70,9 +70,7 @@ impl Shape {
     /// 3. The memory is not mutated while the returned ScalarContents is in use
     pub unsafe fn get_scalar_contents<'a>(&self, ptr: *const u8) -> crate::ScalarContents<'a> {
         match self.innards {
-            Innards::Scalar(scalar) => unsafe {
-                scalar.get_contents(ptr)
-            },
+            Innards::Scalar(scalar) => unsafe { scalar.get_contents(ptr) },
             _ => panic!("Expected a scalar shape"),
         }
     }
@@ -89,26 +87,13 @@ impl Shape {
         indent: usize,
     ) -> std::fmt::Result {
         if !printed_schemas.insert(*self) {
-            write!(
-                f,
-                "{:indent$}\x1b[1;33m",
-                "",
-                indent = indent
-            )?;
+            write!(f, "{:indent$}\x1b[1;33m", "", indent = indent)?;
             (self.name)(f)?;
-            writeln!(
-                f,
-                "\x1b[0m (\x1b[1;31malready printed\x1b[0m)"
-            )?;
+            writeln!(f, "\x1b[0m (\x1b[1;31malready printed\x1b[0m)")?;
             return Ok(());
         }
 
-        write!(
-            f,
-            "{:indent$}\x1b[1;33m",
-            "",
-            indent = indent
-        )?;
+        write!(f, "{:indent$}\x1b[1;33m", "", indent = indent)?;
         (self.name)(f)?;
         writeln!(
             f,
@@ -127,11 +112,20 @@ impl Shape {
                         field.name,
                         indent = indent + Self::INDENT
                     )?;
-                    field.shape.get().pretty_print_recursive_internal(
-                        f,
-                        printed_schemas,
-                        indent + Self::INDENT * 2,
-                    )?;
+                    if field.flags.is_sensitive() {
+                        writeln!(
+                            f,
+                            "{:indent$}[REDACTED]",
+                            "",
+                            indent = indent + Self::INDENT * 2
+                        )?;
+                    } else {
+                        field.shape.get().pretty_print_recursive_internal(
+                            f,
+                            printed_schemas,
+                            indent + Self::INDENT * 2,
+                        )?;
+                    }
                 }
             }
             Innards::HashMap { value_shape } => {
@@ -300,6 +294,9 @@ pub struct Field {
     /// existing shape, then their map fields are probably going to have offsets, especially if
     /// they're using derived macros.
     pub offset: usize,
+
+    /// Flags for the field (e.g. sensitive)
+    pub flags: FieldFlags,
 }
 
 /// The outcome of trying to set a field on a map
@@ -343,7 +340,6 @@ pub enum Scalar {
 }
 
 /// A function that returns a shape. There should only be one of these per concrete type in a
-/// program. This enables optimizations.
 #[derive(Clone, Copy)]
 pub struct ShapeDesc(pub fn() -> Shape);
 
@@ -385,5 +381,107 @@ impl std::hash::Hash for ShapeDesc {
 impl std::fmt::Debug for ShapeDesc {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.get().fmt(f)
+    }
+}
+
+/// Flags that can be applied to fields to modify their behavior
+/// 
+/// # Examples
+/// 
+/// ```rust
+/// use shapely_core::FieldFlags;
+/// 
+/// // Create flags with the sensitive bit set
+/// let flags = FieldFlags::SENSITIVE;
+/// assert!(flags.is_sensitive());
+/// 
+/// // Combine multiple flags using bitwise OR
+/// let flags = FieldFlags::SENSITIVE | FieldFlags::EMPTY;
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct FieldFlags(u64);
+
+impl FieldFlags {
+    /// An empty set of flags
+    pub const EMPTY: Self = Self(0);
+
+    /// Flag indicating this field contains sensitive data that should not be displayed
+    pub const SENSITIVE: Self = Self(1 << 0);
+
+    /// Returns true if the sensitive flag is set
+    #[inline]
+    pub fn is_sensitive(&self) -> bool {
+        self.0 & Self::SENSITIVE.0 != 0
+    }
+
+    /// Sets the sensitive flag and returns self for chaining
+    #[inline]
+    pub fn set_sensitive(&mut self) -> &mut Self {
+        self.0 |= Self::SENSITIVE.0;
+        self
+    }
+
+    /// Unsets the sensitive flag and returns self for chaining
+    #[inline]
+    pub fn unset_sensitive(&mut self) -> &mut Self {
+        self.0 &= !Self::SENSITIVE.0;
+        self
+    }
+
+    /// Creates a new FieldFlags with the sensitive flag set
+    #[inline]
+    pub const fn sensitive() -> Self {
+        Self::SENSITIVE
+    }
+}
+
+impl std::ops::BitOr for FieldFlags {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self {
+        Self(self.0 | rhs.0)
+    }
+}
+
+impl std::ops::BitOrAssign for FieldFlags {
+    fn bitor_assign(&mut self, rhs: Self) {
+        self.0 |= rhs.0;
+    }
+}
+
+impl Default for FieldFlags {
+    #[inline(always)]
+    fn default() -> Self {
+        Self::EMPTY
+    }
+}
+
+impl std::fmt::Display for FieldFlags {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.0 == 0 {
+            return write!(f, "none");
+        }
+
+        // Define a vector of flag entries: (flag bit, name)
+        let flags = [
+            (Self::SENSITIVE.0, "sensitive"),
+            // Future flags can be easily added here:
+            // (Self::SOME_FLAG.0, "some_flag"),
+            // (Self::ANOTHER_FLAG.0, "another_flag"),
+        ];
+
+        // Write all active flags with proper separators
+        let mut is_first = true;
+        for (bit, name) in flags {
+            if self.0 & bit != 0 {
+                if !is_first {
+                    write!(f, ", ")?;
+                }
+                is_first = false;
+                write!(f, "{}", name)?;
+            }
+        }
+
+        Ok(())
     }
 }
