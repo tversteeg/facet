@@ -138,8 +138,6 @@ impl Partial<'_> {
     /// Checks if all fields in the struct or scalar value have been initialized.
     /// Panics if any field is not initialized, providing details about the uninitialized field.
     pub(crate) fn assert_all_fields_initialized(&self) {
-        let shape = self.shape.get();
-
         match self.shape.get().innards {
             crate::Innards::Struct { fields } => {
                 for (i, field) in fields.iter().enumerate() {
