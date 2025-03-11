@@ -139,18 +139,11 @@ impl Partial<'_> {
     /// Panics if any field is not initialized, providing details about the uninitialized field.
     pub(crate) fn assert_all_fields_initialized(&self) {
         let shape = self.shape.get();
-        
-        trace!(
-            "Checking initialization of \x1b[1;33m{}\x1b[0m partial at addr \x1b[1;36m{:p}\x1b[0m",
-            shape,
-            self.addr
-        );
+
         match self.shape.get().innards {
             crate::Innards::Struct { fields } => {
                 for (i, field) in fields.iter().enumerate() {
-                    if self.init_set.is_set(i) {
-                        trace!("Field \x1b[1;33m{}\x1b[0m is initialized", field.name);
-                    } else {
+                    if !self.init_set.is_set(i) {
                         panic!(
                             "Field '{}' was not initialized. Complete schema:\n{:?}",
                             field.name,
@@ -248,7 +241,7 @@ impl Partial<'_> {
         if self.shape != T::shape_desc() {
             let partial_shape = self.shape.get();
             let target_shape = T::shape();
-            
+
             panic!(
                 "This is a partial \x1b[1;34m{}\x1b[0m, you can't build a \x1b[1;32m{}\x1b[0m out of it",
                 partial_shape,
@@ -310,10 +303,7 @@ impl Partial<'_> {
             let ptr = self.addr.as_ptr() as *const T;
             std::ptr::read(ptr)
         };
-        trace!(
-            "Built \x1b[1;33m{}\x1b[0m successfully",
-            std::any::type_name::<T>()
-        );
+        trace!("Built \x1b[1;33m{}\x1b[0m successfully", T::shape());
         self.deallocate();
         std::mem::forget(self);
         result

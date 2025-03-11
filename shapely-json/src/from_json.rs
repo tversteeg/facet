@@ -50,7 +50,6 @@ pub fn from_json<'input>(
                     let slot = partial
                         .slot_by_name(&key)
                         .map_err(|_| parser.make_error(JsonParseErrorKind::UnknownField(key)))?;
-
                     let mut partial_field = Partial::alloc(slot.shape());
                     deserialize_value(parser, &mut partial_field)?;
                     slot.fill_from_partial(partial_field);
@@ -69,23 +68,8 @@ pub fn from_json<'input>(
                 ))));
             }
         }
-
-        trace!(
-            "Successfully deserialized value for shape: \x1b[1;32m{}\x1b[0m at address \x1b[1;34m{:?}\x1b[0m\n",
-            shape,
-            partial.addr()
-        );
         Ok(())
     }
 
-    let result = deserialize_value(&mut parser, partial);
-    match &result {
-        Ok(_) => {
-            trace!("JSON deserialization completed successfully");
-        }
-        Err(e) => {
-            error!("JSON deserialization failed: {}", e);
-        }
-    }
-    result
+    deserialize_value(&mut parser, partial)
 }

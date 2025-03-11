@@ -1,5 +1,5 @@
 #[doc = include_str!("../README.md")]
-use shapely::{Partial, error, trace, warn};
+use shapely::{error, trace, warn, Partial};
 
 #[cfg(test)]
 mod tests;
@@ -26,10 +26,7 @@ mod tests;
 /// let params = partial.build::<SearchParams>();
 /// assert_eq!(params, SearchParams { query: "rust programming".to_string(), page: 2 });
 /// ```
-pub fn from_urlencoded(
-    partial: &mut Partial,
-    input: &str,
-) -> Result<(), UrlEncodedError> {
+pub fn from_urlencoded(partial: &mut Partial, input: &str) -> Result<(), UrlEncodedError> {
     use shapely::{Innards, Scalar};
 
     trace!("Starting URL encoded form data deserialization");

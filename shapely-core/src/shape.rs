@@ -95,31 +95,32 @@ impl Shape {
 
         write!(f, "{:indent$}\x1b[1;33m", "", indent = indent)?;
         (self.name)(f)?;
-        writeln!(
-            f,
-            "\x1b[0m (size: \x1b[1;34m{}\x1b[0m, align: \x1b[1;35m{}\x1b[0m)",
-            self.layout.size(),
-            self.layout.align()
-        )?;
+        writeln!(f, "\x1b[0m (\x1b[1;34m{}\x1b[0m bytes)", self.layout.size())?;
 
         match &self.innards {
             Innards::Struct { fields } => {
+                let max_name_length = fields.iter().map(|f| f.name.len()).max().unwrap_or(0);
                 for field in *fields {
-                    writeln!(
+                    write!(
                         f,
-                        "{:indent$}\x1b[1;32m{}\x1b[0m: ",
+                        "{:indent$}\x1b[1;34m{:>4}\x1b[0m \x1b[1;32m{:<width$}\x1b[0m ",
                         "",
+                        field.offset,
                         field.name,
-                        indent = indent + Self::INDENT
+                        indent = indent + Self::INDENT,
+                        width = max_name_length
                     )?;
                     if field.flags.is_sensitive() {
-                        writeln!(
+                        write!(f, "(sensitive) ")?;
+                    }
+                    if let Innards::Scalar(_) = field.shape.get().innards {
+                        field.shape.get().pretty_print_recursive_internal(
                             f,
-                            "{:indent$}[REDACTED]",
-                            "",
-                            indent = indent + Self::INDENT * 2
+                            printed_schemas,
+                            indent + Self::INDENT * 2,
                         )?;
                     } else {
+                        writeln!(f)?;
                         field.shape.get().pretty_print_recursive_internal(
                             f,
                             printed_schemas,
@@ -167,14 +168,8 @@ impl Shape {
                     indent + Self::INDENT * 2,
                 )?;
             }
-            Innards::Scalar(scalar) => {
-                writeln!(
-                    f,
-                    "{:indent$}\x1b[1;36mScalar:\x1b[0m \x1b[1;33m{:?}\x1b[0m",
-                    "",
-                    scalar,
-                    indent = indent
-                )?;
+            Innards::Scalar(_scalar) => {
+                // let's not duplicate `u64 => U64` for example
             }
         }
 
@@ -385,16 +380,16 @@ impl std::fmt::Debug for ShapeDesc {
 }
 
 /// Flags that can be applied to fields to modify their behavior
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```rust
 /// use shapely_core::FieldFlags;
-/// 
+///
 /// // Create flags with the sensitive bit set
 /// let flags = FieldFlags::SENSITIVE;
 /// assert!(flags.is_sensitive());
-/// 
+///
 /// // Combine multiple flags using bitwise OR
 /// let flags = FieldFlags::SENSITIVE | FieldFlags::EMPTY;
 /// ```

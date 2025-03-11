@@ -64,11 +64,6 @@ impl<'s> Slot<'s> {
                 T::shape()
             );
         }
-        trace!(
-            "Filling slot with value of type: \x1b[33m{}\x1b[0m",
-            std::any::type_name::<T>()
-        );
-
         match self.dest {
             Destination::Ptr { ptr, mut init_mark } => {
                 if init_mark.get() {
@@ -84,13 +79,13 @@ impl<'s> Slot<'s> {
                     }
                 }
 
-                trace!("Filling struct field at address: \x1b[33m{:?}\x1b[0m", ptr);
+                trace!("Filling struct field at address: \x1b[33m{:?}\x1b[0m with type: \x1b[33m{}\x1b[0m", ptr, T::shape());
                 unsafe { std::ptr::write(ptr.as_ptr() as *mut T, value) };
                 init_mark.set();
             }
             Destination::HashMap { map, key } => {
                 let map = unsafe { &mut *(map.as_ptr() as *mut HashMap<String, T>) };
-                trace!("Inserting value into HashMap with key: \x1b[33m{key}\x1b[0m");
+                trace!("Inserting value of type: \x1b[33m{}\x1b[0m into HashMap with key: \x1b[33m{key}\x1b[0m", T::shape());
                 map.insert(key, value);
             }
         }
