@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 // MessagePack type tags
 pub const MSGPACK_NIL: u8 = 0xc0;
 pub const MSGPACK_FALSE: u8 = 0xc2;

@@ -12,9 +12,10 @@ use constants::*;
 #[cfg(test)]
 mod tests;
 
-pub fn from_msgpack<'input>(
+#[allow(clippy::needless_lifetimes)]
+pub fn from_msgpack(
     partial: &mut Partial,
-    msgpack: &'input [u8],
+    msgpack: &[u8],
 ) -> Result<(), DecodeError> {
     let mut decoder = Decoder::new(msgpack);
 
@@ -152,7 +153,7 @@ impl<'input> Decoder<'input> {
             prefix @ MSGPACK_FIXMAP_MIN..=MSGPACK_FIXMAP_MAX => Ok((prefix & 0x0f) as usize),
             MSGPACK_MAP16 => Ok(self.decode_u16()? as usize),
             MSGPACK_MAP32 => Ok(self.decode_u32()? as usize),
-            _ => return Err(DecodeError::UnexpectedType),
+            _ => Err(DecodeError::UnexpectedType),
         }
     }
 }
