@@ -11,12 +11,6 @@ macro_rules! impl_shapely_for_integer {
                     typeid: mini_typeid::of::<Self>(),
                     layout: Layout::new::<$type>(),
                     innards: Innards::Scalar($scalar),
-                    display: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
-                        write!(f, "{}", *(addr as *const $type))
-                    }),
-                    debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
-                        write!(f, "{:?}", *(addr as *const $type))
-                    }),
                     set_to_default: Some(|addr: *mut u8| unsafe {
                         *(addr as *mut $type) = 0;
                     }),
@@ -46,12 +40,6 @@ macro_rules! impl_schematic_for_float {
                     typeid: mini_typeid::of::<Self>(),
                     layout: Layout::new::<$type>(),
                     innards: Innards::Scalar($scalar),
-                    display: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
-                        write!(f, "{}", *(addr as *const $type))
-                    }),
-                    debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
-                        write!(f, "{:?}", *(addr as *const $type))
-                    }),
                     set_to_default: Some(|addr: *mut u8| unsafe {
                         *(addr as *mut $type) = 0.0;
                     }),
@@ -73,12 +61,6 @@ impl Shapely for String {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<String>(),
             innards: Innards::Scalar(Scalar::String),
-            display: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
-                write!(f, "{}", *(addr as *const String))
-            }),
-            debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
-                write!(f, "{:?}", *(addr as *const String))
-            }),
             set_to_default: Some(|addr: *mut u8| unsafe {
                 *(addr as *mut String) = String::new();
             }),
@@ -96,12 +78,6 @@ impl Shapely for bool {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<bool>(),
             innards: Innards::Scalar(Scalar::Boolean),
-            display: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
-                write!(f, "{}", *(addr as *const bool))
-            }),
-            debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| unsafe {
-                write!(f, "{:?}", *(addr as *const bool))
-            }),
             set_to_default: Some(|addr: *mut u8| unsafe {
                 *(addr as *mut bool) = false;
             }),
@@ -118,8 +94,6 @@ impl Shapely for () {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<()>(),
             innards: Innards::Scalar(Scalar::Nothing),
-            display: Some(|_addr: *const u8, f: &mut std::fmt::Formatter| write!(f, "()")),
-            debug: Some(|_addr: *const u8, f: &mut std::fmt::Formatter| write!(f, "()")),
             set_to_default: Some(|_addr: *mut u8| {}),
             drop_in_place: None,
         }

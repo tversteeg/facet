@@ -18,10 +18,6 @@ fn test_from_json() {
                 innards: shapely::Innards::Struct {
                     fields: shapely::struct_fields!(TestStruct, (name, age)),
                 },
-                display: None,
-                debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| {
-                    std::fmt::Debug::fmt(unsafe { &*(addr as *const Self) }, f)
-                }),
                 set_to_default: None,
                 drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
                 typeid: std::any::TypeId::of::<Self>(),

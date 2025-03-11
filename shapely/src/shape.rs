@@ -17,12 +17,6 @@ pub struct Shape {
     /// Details/contents of the value
     pub innards: Innards,
 
-    /// Display impl, if any
-    pub display: Option<FmtFunction>,
-
-    /// Debug impl, if any
-    pub debug: Option<FmtFunction>,
-
     /// Set the value at a given address to the default value for this type
     pub set_to_default: Option<fn(*mut u8)>,
 
@@ -248,9 +242,6 @@ pub enum Scalar {
     /// An empty tuple, null, undefined, whatever you wish
     Nothing,
 }
-
-/// A function that writes a field to a formatter
-pub type FmtFunction = fn(addr: *const u8, &mut std::fmt::Formatter) -> std::fmt::Result;
 
 /// A function that drops a value at a specific memory address
 pub type DropFunction = fn(*mut u8);

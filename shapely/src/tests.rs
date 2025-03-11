@@ -15,10 +15,6 @@ impl Shapely for FooBar {
             innards: crate::Innards::Struct {
                 fields: crate::struct_fields!(FooBar, (foo, bar)),
             },
-            display: None,
-            debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| {
-                std::fmt::Debug::fmt(unsafe { &*(addr as *const Self) }, f)
-            }),
             set_to_default: None,
             drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
         }
@@ -136,8 +132,6 @@ fn build_struct_with_drop_field() {
                 typeid: mini_typeid::of::<DropCounter>(),
                 layout: std::alloc::Layout::new::<DropCounter>(),
                 innards: crate::Innards::Struct { fields: &[] },
-                display: None,
-                debug: None,
                 set_to_default: None,
                 drop_in_place: Some(|ptr| unsafe {
                     std::ptr::drop_in_place(ptr as *mut DropCounter)
@@ -166,8 +160,6 @@ fn build_struct_with_drop_field() {
                 innards: crate::Innards::Struct {
                     fields: crate::struct_fields!(StructWithDrop, (counter, value)),
                 },
-                display: None,
-                debug: None,
                 set_to_default: None,
                 drop_in_place: Some(|ptr| unsafe {
                     std::ptr::drop_in_place(ptr as *mut StructWithDrop)
@@ -227,8 +219,6 @@ fn build_scalar_with_drop() {
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
-                display: None,
-                debug: None,
                 set_to_default: None,
                 drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
             }
@@ -296,8 +286,6 @@ fn build_truck_with_drop_fields() {
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
-                display: None,
-                debug: None,
                 set_to_default: None,
                 drop_in_place: Some(|ptr| unsafe {
                     std::ptr::drop_in_place(ptr as *mut Self);
@@ -313,8 +301,6 @@ fn build_truck_with_drop_fields() {
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
-                display: None,
-                debug: None,
                 set_to_default: None,
                 drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
             }
@@ -335,8 +321,6 @@ fn build_truck_with_drop_fields() {
                 innards: crate::Innards::Struct {
                     fields: crate::struct_fields!(Truck, (engine, wheels)),
                 },
-                display: None,
-                debug: None,
                 set_to_default: None,
                 drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
             }
@@ -444,8 +428,6 @@ fn test_partial_build_in_place() {
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Struct { fields: &[] },
-                display: None,
-                debug: None,
                 set_to_default: None,
                 drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
             }
@@ -472,8 +454,6 @@ fn test_partial_build_in_place() {
                 innards: crate::Innards::Struct {
                     fields: crate::struct_fields!(TestShape, (counter, unit)),
                 },
-                display: None,
-                debug: None,
                 set_to_default: None,
                 drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
             }
@@ -527,10 +507,6 @@ fn test_partial_build_transparent() {
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Scalar(crate::Scalar::U32),
-                display: None,
-                debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| {
-                    std::fmt::Debug::fmt(unsafe { &*(addr as *const Self) }, f)
-                }),
                 set_to_default: None,
                 drop_in_place: None,
             }
@@ -547,10 +523,6 @@ fn test_partial_build_transparent() {
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Transparent(InnerType::shape_desc()),
-                display: None,
-                debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| {
-                    std::fmt::Debug::fmt(unsafe { &*(addr as *const Self) }, f)
-                }),
                 set_to_default: None,
                 drop_in_place: None,
             }

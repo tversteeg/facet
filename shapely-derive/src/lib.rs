@@ -62,10 +62,6 @@ pub fn shapely_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream
                     innards: shapely::Innards::Struct {{
                         fields: shapely::struct_fields!({struct_name}, ({fields_str})),
                     }},
-                    display: None,
-                    debug: Some(|addr: *const u8, f: &mut std::fmt::Formatter| {{
-                        std::fmt::Debug::fmt(unsafe {{ &*(addr as *const Self) }}, f)
-                    }}),
                     set_to_default: None,
                     drop_in_place: Some(|ptr| unsafe {{ std::ptr::drop_in_place(ptr as *mut Self) }}),
                 }}
