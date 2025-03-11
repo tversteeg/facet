@@ -1,9 +1,9 @@
 #![doc = include_str!("../README.md")]
 
-use shapely_core::{Partial};
+use shapely_core::Partial;
 use yaml_rust2::YamlLoader;
 
-pub fn from_yaml<'input>(partial: &mut Partial, yaml: &'input str) -> Result<(), String> {
+pub fn from_yaml(partial: &mut Partial, yaml: &str) -> Result<(), String> {
     let docs = YamlLoader::load_from_str(yaml).map_err(|e| e.to_string())?;
 
     // Assuming only one document in the YAML string
