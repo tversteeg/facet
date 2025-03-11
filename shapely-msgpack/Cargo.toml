@@ -1,0 +1,19 @@
+[package]
+name = "shapely-msgpack"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/shapely-msgpack"
+description = "MessagePack serialization and deserialization for Shapely types"
+keywords = ["msgpack", "serialization", "deserialization", "reflection", "shapely"]
+categories = ["encoding", "parsing", "data-structures"]
+
+[dependencies]
+shapely-core = { workspace = true }
+
+[dev-dependencies]
+shapely-derive = { workspace = true }
