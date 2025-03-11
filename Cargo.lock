@@ -120,6 +120,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "shapely-pretty"
+version = "2.0.1"
+dependencies = [
+ "shapely",
+ "shapely-core",
+]
+
+[[package]]
 name = "shapely-urlencoded"
 version = "2.0.1"
 dependencies = [

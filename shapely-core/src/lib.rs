@@ -3,6 +3,9 @@ use std::mem::MaybeUninit;
 mod hashmap_impl;
 mod scalar_impls;
 
+mod scalar_contents;
+pub use scalar_contents::ScalarContents;
+
 mod shape;
 pub use shape::*;
 
@@ -23,6 +26,30 @@ pub use log::*;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod scalar_contents_tests;
+
+/// A wrapper around Vec<u8> for binary data
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Bytes(pub Vec<u8>);
+
+impl Shapely for Bytes {
+    fn shape() -> Shape {
+        Shape {
+            name: |f| write!(f, "Bytes"),
+            typeid: mini_typeid::of::<Self>(),
+            layout: std::alloc::Layout::new::<Self>(),
+            innards: Innards::Scalar(Scalar::Bytes),
+            set_to_default: Some(|addr: *mut u8| unsafe {
+                *(addr as *mut Bytes) = Bytes(Vec::new());
+            }),
+            drop_in_place: Some(|addr: *mut u8| unsafe {
+                std::ptr::drop_in_place(addr as *mut Bytes);
+            }),
+        }
+    }
+}
 
 /// Allows querying the [Shape] of a type, which in turn lets us inspect any fields, build a value of
 /// this type progressively, etc.
