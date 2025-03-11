@@ -27,12 +27,12 @@ pub struct Shape {
     pub drop_in_place: Option<DropFn>,
 }
 
-pub type NameFn = fn(shape: &Shape, f: &mut std::fmt::Formatter) -> std::fmt::Result;
+pub type NameFn = fn(f: &mut std::fmt::Formatter) -> std::fmt::Result;
 
 // Helper struct to format the name for display
 impl std::fmt::Display for Shape {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        (self.name)(self, f)
+        (self.name)(f)
     }
 }
 
@@ -77,7 +77,7 @@ impl Shape {
                 "",
                 indent = indent
             )?;
-            (self.name)(self, f)?;
+            (self.name)(f)?;
             writeln!(
                 f,
                 "\x1b[0m (\x1b[1;31malready printed\x1b[0m)"
@@ -91,7 +91,7 @@ impl Shape {
             "",
             indent = indent
         )?;
-        (self.name)(self, f)?;
+        (self.name)(f)?;
         writeln!(
             f,
             "\x1b[0m (size: \x1b[1;34m{}\x1b[0m, align: \x1b[1;35m{}\x1b[0m)",
