@@ -1,0 +1,16 @@
+[package]
+name = "shapely-core"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "Core types and traits for the shapely ecosystem, providing fundamental reflection capabilities"
+keywords = ["reflection", "introspection", "serialization", "deserialization"]
+categories = ["development-tools", "encoding"]
+
+[dependencies]
+nonmax = "0.5.5"

@@ -1,5 +1,5 @@
 [workspace]
-members = ["shapely", "shapely-derive", "shapely-json"]
+members = ["shapely", "shapely-core", "shapely-derive", "shapely-json"]
 resolver = "3"
 
 [workspace.package]
@@ -11,11 +11,19 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/bearcove/shapely"
 homepage = "https://github.com/bearcove/shapely"
 documentation = "https://docs.rs/shapely"
-description = "Know the shape of your types"
-keywords = ["serialization", "deserialization"]
-categories = ["encoding", "parsing"]
+description = "One trait for reflection, serialization, deserialization"
+keywords = [
+  "serialization",
+  "deserialization",
+  "reflection",
+  "schema",
+  "validation",
+]
+categories = ["encoding", "parsing", "development-tools", "data-structures"]
 
 [workspace.dependencies]
 shapely = { version = "1.0.0", path = "shapely" }
+shapely-core = { version = "1.0.0", path = "shapely-core" }
 shapely-derive = { version = "1.0.0", path = "shapely-derive" }
 shapely-json = { version = "1.0.0", path = "shapely-json" }
+unsynn = "0.0.25"

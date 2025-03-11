@@ -113,13 +113,22 @@ version = "1.0.0"
 dependencies = [
  "insta",
  "nonmax",
+ "shapely-core",
  "shapely-derive",
+]
+
+[[package]]
+name = "shapely-core"
+version = "1.0.0"
+dependencies = [
+ "nonmax",
 ]
 
 [[package]]
 name = "shapely-derive"
 version = "1.0.0"
 dependencies = [
+ "shapely-core",
  "unsynn",
 ]
 

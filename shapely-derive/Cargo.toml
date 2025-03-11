@@ -22,4 +22,8 @@ categories = ["development-tools", "encoding"]
 proc-macro = true
 
 [dependencies]
-unsynn = "0.0.25"
+unsynn.workspace = true
+
+# cf. https://hachyderm.io/@epage/114141126315983016
+[target.'cfg(any())'.dependencies]
+shapely-core = { workspace = true }

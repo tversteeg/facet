@@ -7,9 +7,9 @@ repository.workspace = true
 license.workspace = true
 homepage.workspace = true
 documentation = "https://docs.rs/shapely-json"
-description = "A serialization and deserialization library for JSON"
-keywords = ["json", "serialization", "deserialization"]
-categories = ["encoding", "parsing"]
+description = "JSON serialization and deserialization for Shapely types"
+keywords = ["json", "serialization", "deserialization", "reflection", "shapely"]
+categories = ["encoding", "parsing", "data-structures"]
 rust-version.workspace = true
 
 [dependencies]
