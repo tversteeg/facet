@@ -8,23 +8,15 @@ where
 {
     fn shape() -> Shape {
         // This name function doesn't need the type parameter
-        fn name(shape: &Shape, f: &mut fmt::Formatter) -> fmt::Result {
+        fn name<V: Shapely>(_shape: &Shape, f: &mut fmt::Formatter) -> fmt::Result {
             write!(f, "HashMap<String, ")?;
-            
-            // Get the value shape from the innards
-            if let Innards::HashMap { value_shape } = &shape.innards {
-                let value_shape_obj = value_shape.get();
-                // Use the shape's name function to write its name
-                (value_shape_obj.name)(&value_shape_obj, f)?;
-            } else {
-                write!(f, "?")?;
-            }
-            
+            let shape = V::shape();
+            (shape.name)(&shape, f)?;
             write!(f, ">")
         }
 
         Shape {
-            name,
+            name: name::<V>,
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<HashMap<String, V>>(),
             innards: Innards::HashMap {
