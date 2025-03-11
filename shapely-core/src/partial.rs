@@ -229,7 +229,7 @@ impl Partial<'_> {
     }
 
     /// Returns a slot for initializing a field in the shape by index.
-    pub fn slot_by_index<'s>(&'s mut self, index: usize) -> Result<Slot<'s>, FieldError> {
+    pub fn slot_by_index(&mut self, index: usize) -> Result<Slot<'_>, FieldError> {
         let sh = self.shape.get();
         let field = sh.field_by_index(index)?;
         let field_addr = unsafe {

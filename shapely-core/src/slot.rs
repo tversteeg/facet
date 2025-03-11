@@ -52,7 +52,7 @@ impl<'s> Slot<'s> {
     /// type is incompatible with the slot's shape.
     ///
     /// If the slot is already initialized, the old value is dropped.
-    pub fn fill<T: Shapely>(mut self, value: T) {
+    pub fn fill<T: Shapely>(self, value: T) {
         // should we provide fill_unchecked?
         if self.shape != T::shape_desc() {
             panic!(
