@@ -1,5 +1,6 @@
 # shapely
 
+[![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://crates.io/crates/unsynn)
 [![crates.io](https://img.shields.io/crates/v/shapely.svg)](https://crates.io/crates/shapely)
 [![documentation](https://docs.rs/shapely/badge.svg)](https://docs.rs/shapely)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/shapely.svg)](./LICENSE)

@@ -1,5 +1,6 @@
 # shapely-derive
 
+[![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://crates.io/crates/unsynn)
 [![crates.io](https://img.shields.io/crates/v/shapely-derive.svg)](https://crates.io/crates/shapely-derive)
 [![documentation](https://docs.rs/shapely-derive/badge.svg)](https://docs.rs/shapely-derive)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/shapely-derive.svg)](./LICENSE)
