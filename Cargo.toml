@@ -1,5 +1,5 @@
 [workspace]
-members = ["shapely", "shapely-core", "shapely-derive", "shapely-json"]
+members = ["shapely", "shapely-core", "shapely-derive", "shapely-json", "shapely-yaml"]
 resolver = "3"
 
 [workspace.package]
