@@ -31,7 +31,7 @@ impl_shapely_for_integer!(i16, Scalar::I16);
 impl_shapely_for_integer!(i32, Scalar::I32);
 impl_shapely_for_integer!(i64, Scalar::I64);
 
-macro_rules! impl_schematic_for_float {
+macro_rules! impl_shapely_for_float {
     ($type:ty, $scalar:expr) => {
         impl Shapely for $type {
             fn shape() -> Shape {
@@ -51,8 +51,8 @@ macro_rules! impl_schematic_for_float {
     };
 }
 
-impl_schematic_for_float!(f32, Scalar::F32);
-impl_schematic_for_float!(f64, Scalar::F64);
+impl_shapely_for_float!(f32, Scalar::F32);
+impl_shapely_for_float!(f64, Scalar::F64);
 
 impl Shapely for String {
     fn shape() -> Shape {
