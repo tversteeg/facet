@@ -134,4 +134,8 @@ impl<'s> Slot<'s> {
             }
         }
     }
+
+    pub fn shape(&self) -> ShapeDesc {
+        self.shape
+    }
 }

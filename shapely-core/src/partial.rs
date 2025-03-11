@@ -363,6 +363,11 @@ impl Partial<'_> {
     pub fn shape(&self) -> ShapeDesc {
         self.shape
     }
+
+    /// Returns the address of the value we're building in memory.
+    pub fn addr(&self) -> NonNull<u8> {
+        self.addr
+    }
 }
 
 /// A bit array to keep track of which fields were initialized, up to 64 fields

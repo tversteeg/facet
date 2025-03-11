@@ -51,35 +51,27 @@ pub fn from_json<'input>(
             }
             Innards::Struct { fields } => {
                 trace!("Deserializing \x1b[1;36mstruct\x1b[0m");
-                if let Some(first_key) = parser.expect_object_start()? {
-                    trace!("Processing struct key: \x1b[1;33m{}\x1b[0m", first_key);
-                    if let Some(field) = fields.iter().find(|f| f.name == first_key).copied() {
-                        let mut partial_field = Partial::alloc(field.shape);
-                        trace!("Deserializing field: \x1b[1;32m{}\x1b[0m", field.name);
-                        deserialize_value(parser, &mut partial_field)?;
-                        let slot = partial.slot_by_name(field).expect("Field slot");
-                        slot.fill_from_partial(partial_field);
-                    } else {
-                        warn!("Unknown field: \x1b[1;31m{}\x1b[0m, skipping", first_key);
-                        parser.skip_value()?;
-                    }
-                }
-                while let Some(key) = parser.parse_object_key()? {
+
+                let mut first = true;
+                while let Some(key) = if first {
+                    first = false;
+                    parser.expect_object_start()?
+                } else {
+                    parser.parse_object_key()?
+                } {
                     trace!("Processing struct key: \x1b[1;33m{}\x1b[0m", key);
-                    if let Some(field) = fields.iter().find(|f| f.name == key).copied() {
-                        // FIXME: we could definitely optimize this — the struct is already
-                        // allocated at this stage, so we could grab the address of its field.
-                        let mut partial_field = Partial::alloc(field.shape);
-                        trace!("Deserializing field: \x1b[1;32m{}\x1b[0m", field.name);
-                        deserialize_value(parser, &mut partial_field)?;
-                        let slot = partial.slot_by_name(field).expect("Field slot");
-                        slot.fill_from_partial(partial_field);
-                    } else {
-                        warn!("Unknown field: \x1b[1;31m{}\x1b[0m, skipping", key);
-                        parser.skip_value()?;
-                    }
+                    let slot = partial
+                        .slot_by_name(&key)
+                        .map_err(|_| parser.make_error(JsonParseErrorKind::UnknownField(key)))?;
+
+                    let mut partial_field = Partial::alloc(slot.shape());
+                    deserialize_value(parser, &mut partial_field)?;
+                    slot.fill_from_partial(partial_field);
                 }
                 trace!("Finished deserializing \x1b[1;36mstruct\x1b[0m");
+
+                // TODO: this would be a good place to decide what to do about unset fields? Is this
+                // where we finally get to use `set_default`?
             }
             // Add support for other shapes (Array, Transparent) as needed
             _ => {
@@ -94,7 +86,7 @@ pub fn from_json<'input>(
         trace!(
             "Successfully deserialized value for shape: \x1b[1;32m{}\x1b[0m at address \x1b[1;34m{:?}\x1b[0m\n",
             shape.name,
-            partial.addr_for_display()
+            partial.addr()
         );
         Ok(())
     }

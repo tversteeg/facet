@@ -17,6 +17,7 @@ pub enum JsonParseErrorKind {
     UnexpectedEndOfInput,
     InvalidValue,
     ExpectedClosingBrace,
+    UnknownField(String),
     Custom(String),
 }
 
@@ -54,6 +55,9 @@ impl std::fmt::Display for JsonParseError {
             JsonParseErrorKind::UnexpectedEndOfInput => "Unexpected end of input",
             JsonParseErrorKind::InvalidValue => "Invalid value",
             JsonParseErrorKind::ExpectedClosingBrace => "Expected closing brace for object",
+            JsonParseErrorKind::UnknownField(field) => {
+                return write!(f, "Unknown field: {}", field)
+            }
             JsonParseErrorKind::Custom(msg) => msg,
         };
 
