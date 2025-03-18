@@ -1,39 +1,53 @@
-check:
-  just install-nightly
-  just clippy
-  just nextest
-  just doc-tests
-  just absolve
+nightly_version := "nightly-2025-02-17"
 
-install-nightly:
-  echo -e "\033[1;32m🔧 Installing nightly Rust toolchain...\033[0m"
-  rustup toolchain install nightly || true
+quickcheck:
+    just install-toolchains
+    just rustfmt
+    just clippy
+    just nextest
+    just doc-tests
+    just absolve
+
+ci:
+    just quickcheck
+    just miri
+
+install-toolchains:
+    echo -e "\033[1;32m🔧 Installing Rust toolchain specified in rust-toolchain.toml...\033[0m"
+    rustup show
+    rustup toolchain install {{nightly_version}} --profile default || true
+    rustup component add miri rust-src --toolchain {{nightly_version}} || true
 
 absolve:
-  #!/bin/bash
-  if ! cargo +nightly tree -i syn 2>/dev/null | grep -q .; then
-  echo -e "\033[38;2;255;255;255;48;2;0;0;0m free of \033[38;2;255;255;255;48;2;255;105;180m syn \033[38;2;255;255;255;48;2;0;0;0m\033[0m"
-  else
+    #!/bin/bash
+    if ! cargo tree -i syn 2>/dev/null | grep -q .; then
+    echo -e "\033[38;2;255;255;255;48;2;0;0;0m free of \033[38;2;255;255;255;48;2;255;105;180m syn \033[38;2;255;255;255;48;2;0;0;0m\033[0m"
+    else
     echo -e "\033[1;31m❌ 'syn' found in dependency tree. Here's what's using 'syn':\033[0m"
-    cargo +nightly tree -i syn -e features
+    cargo tree -i syn -e features
     exit 1
-  fi
+    fi
+
+rustfmt:
+    echo -e "\033[1;34m📝 Checking code formatting...\033[0m"
+    cargo fmt --all -- --check
+
+rustfmt-fix:
+    echo -e "\033[1;34m📝 Fixing code formatting...\033[0m"
+    cargo fmt --all
 
 clippy:
-  echo -e "\033[1;35m🔍 Running Clippy on all targets...\033[0m"
-  cargo +nightly clippy --all-targets -- -D warnings
+    echo -e "\033[1;35m🔍 Running Clippy on all targets...\033[0m"
+    cargo clippy --all-targets -- -D warnings
 
 nextest:
-  echo -e "\033[1;33m🏃 Running all but doc-tests with nextest...\033[0m"
-  cargo +nightly nextest run
+    echo -e "\033[1;33m🏃 Running all but doc-tests with nextest...\033[0m"
+    cargo nextest run
 
 doc-tests:
-  echo -e "\033[1;36m📚 Running documentation tests...\033[0m"
-  RUSTDOCFLAGS="-D warnings" cargo +nightly test --doc
+    echo -e "\033[1;36m📚 Running documentation tests...\033[0m"
+    RUSTDOCFLAGS="-D warnings" cargo test --doc
 
 miri:
-  echo -e "\033[1;31m🧪 Running tests under Miri...\033[0m"
-  cargo +nightly miri nextest run
-
-publish:
-  cargo +nightly publish --workspace -Zpackage-workspace
+    echo -e "\033[1;31m🧪 Running tests under Miri in a separate target directory...\033[0m"
+    cargo +{{nightly_version}} miri nextest run --target-dir=target/miri

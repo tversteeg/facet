@@ -1,4 +1,4 @@
-use crate::{trace, FieldError, ShapeDesc, Shapely, Slot};
+use crate::{FieldError, ShapeDesc, Shapely, Slot, trace};
 use std::{alloc, ptr::NonNull};
 
 /// Origin of the partial — did we allocate it? Or is it borrowed?
@@ -242,8 +242,7 @@ impl Partial<'_> {
 
             panic!(
                 "This is a partial \x1b[1;34m{}\x1b[0m, you can't build a \x1b[1;32m{}\x1b[0m out of it",
-                partial_shape,
-                target_shape,
+                partial_shape, target_shape,
             );
         }
     }

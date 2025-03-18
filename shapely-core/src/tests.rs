@@ -1,4 +1,4 @@
-use crate::{mini_typeid, Shape, Shapely};
+use crate::{Shape, Shapely, mini_typeid};
 
 #[derive(Debug, PartialEq, Eq)]
 struct FooBar {

@@ -1,28 +1,26 @@
 name: Tests
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  merge_group:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+    merge_group:
 
 jobs:
-  test:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+    test:
+        strategy:
+            matrix:
+                os: [ubuntu-latest, macos-latest]
+        runs-on: ${{ matrix.os }}
 
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install tools
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-hack,just,cargo-nextest
-      - name: Run tests
-        shell: bash
-        run: |
-          rustup toolchain install nightly --component miri,clippy
-          just
-          just miri
+        steps:
+            - uses: actions/checkout@v4
+            - name: Install tools
+              uses: taiki-e/install-action@v2
+              with:
+                  tool: cargo-hack,just,cargo-nextest
+            - name: Run tests
+              shell: bash
+              run: |
+                  just ci
