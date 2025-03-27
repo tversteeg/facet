@@ -1,7 +1,6 @@
 nightly_version := "nightly-2025-02-17"
 
 quickcheck:
-    just install-toolchains
     just rustfmt
     just clippy
     just nextest
@@ -13,12 +12,6 @@ ci:
     just miri
     echo -e "\033[1;34m📝 Running cargo fmt in check mode...\033[0m"
     cargo fmt --all -- --check
-
-install-toolchains:
-    echo -e "\033[1;32m🔧 Installing Rust toolchain specified in rust-toolchain.toml...\033[0m"
-    rustup show
-    rustup toolchain install {{nightly_version}} --profile default || true
-    rustup component add miri rust-src --toolchain {{nightly_version}} || true
 
 absolve:
     #!/bin/bash

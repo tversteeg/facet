@@ -30,10 +30,27 @@ jobs:
                 restore-keys: |
                   ${{ runner.os }}-cargo-
 
-            - name: Install tools
+            # Install the toolchain specified in rust-toolchain.toml
+            # and components needed for default checks/formatting.
+            - name: Install default toolchain
+              uses: dtolnay/rust-toolchain@stable
+              with:
+                # Use the toolchain specified in rust-toolchain.toml
+                # Components specified here are added to the ones in the file
+                components: rustfmt, clippy
+
+            # Install the specific nightly toolchain needed for Miri
+            - name: Install nightly toolchain for Miri
+              uses: dtolnay/rust-toolchain@stable
+              with:
+                toolchain: nightly-2025-02-17
+                components: miri, rust-src
+
+            - name: Install just and cargo-nextest
               uses: taiki-e/install-action@v2
               with:
-                  tool: cargo-hack,just,cargo-nextest
+                  tool: just,cargo-nextest
+
             - name: Run tests
               shell: bash
               run: |
