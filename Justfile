@@ -1,5 +1,3 @@
-nightly_version := "nightly-2025-03-26"
-
 quickcheck:
     just rustfmt
     just clippy
@@ -45,4 +43,4 @@ doc-tests:
 
 miri:
     echo -e "\033[1;31m🧪 Running tests under Miri in a separate target directory...\033[0m"
-    cargo +{{nightly_version}} miri nextest run --target-dir=target/miri
+    cargo miri nextest run --target-dir=target/miri
