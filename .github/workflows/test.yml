@@ -17,25 +17,7 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - name: Cache cargo registry, index, and build artifacts
-              uses: actions/cache@v4
-              with:
-                  path: |
-                      ~/.cargo/bin/
-                      ~/.cargo/registry/index/
-                      ~/.cargo/registry/cache/
-                      ~/.cargo/git/db/
-                      target/
-                  key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-                  restore-keys: |
-                      ${{ runner.os }}-cargo-
-
-            # Install the nightly toolchain specified in rust-toolchain.toml
-            # including all necessary components.
-            - name: Install nightly toolchain
-              uses: dtolnay/rust-toolchain@master
-              # The action reads rust-toolchain.toml by default for channel and components.
-              # We list components here again just to be explicit, though it might be redundant.
+            - uses: actions-rust-lang/setup-rust-toolchain@v1
               with:
                   components: miri, rust-src, rustfmt, clippy
 
