@@ -11,7 +11,7 @@ pub struct Shape {
     /// The typeid of the underlying type
     pub typeid: TypeId,
 
-    /// Size & alignment
+    /// Size, alignment
     pub layout: Layout,
 
     /// Details/contents of the value
