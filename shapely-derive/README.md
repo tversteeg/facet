@@ -23,6 +23,12 @@ This crate implements the `#[derive(Shapely)]` macro which automatically generat
 
 The implementation uses [unsynn](https://crates.io/crates/unsynn) for efficient and fast compilation.
 
+### Funding
+
+Thanks to Namespace for providing fast GitHub Actions workers:
+
+<a href="https://namespace.so"><img src="./static/namespace-d.svg" height="40"></a>
+
 ## License
 
 Licensed under either of:

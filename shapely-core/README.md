@@ -29,3 +29,18 @@ functionality, you should depend directly on `shapely-core` rather than the main
 `shapely` crate.
 
 For more detailed information and usage examples, please refer to the [shapely crate documentation](https://docs.rs/shapely).
+
+### Funding
+
+Thanks to Namespace for providing fast GitHub Actions workers:
+
+<a href="https://namespace.so"><img src="./static/namespace-d.svg" height="40"></a>
+
+## License
+
+Licensed under either of:
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.

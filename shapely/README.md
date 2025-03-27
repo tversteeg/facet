@@ -79,7 +79,7 @@ impl From<FieldError> for MyFormatError {
 pub fn from_my_format(partial: &mut Partial, input: &[u8]) -> Result<(), MyFormatError> {
     let shape_desc = partial.shape();
     let shape = shape_desc.get();
-    
+
     match &shape.innards {
         Innards::Scalar(scalar) => {
             let slot = partial.scalar_slot().expect("Scalar slot");
@@ -95,7 +95,7 @@ pub fn from_my_format(partial: &mut Partial, input: &[u8]) -> Result<(), MyForma
             // Parse struct fields from input
             for (field_name, field_value) in [("field1", "value1"), ("field2", "value2")].iter() {
                 let slot = partial.slot_by_name(field_name)?;
-                
+
                 // Create a partial for the field and fill it recursively
                 let mut partial_field = Partial::alloc(slot.shape());
                 // Recursively deserialize field_value into partial_field
@@ -106,12 +106,18 @@ pub fn from_my_format(partial: &mut Partial, input: &[u8]) -> Result<(), MyForma
         // Handle other shapes as needed
         _ => return Err(MyFormatError::UnsupportedShape),
     }
-    
+
     Ok(())
 }
 ```
 
 For more detailed examples, examine the implementation of existing deserializers like [shapely-json](../shapely-json/src/lib.rs) or [shapely-msgpack](../shapely-msgpack/src/lib.rs).
+
+### Funding
+
+Thanks to Namespace for providing fast GitHub Actions workers:
+
+<a href="https://namespace.so"><img src="./static/namespace-d.svg" height="40"></a>
 
 ## License
 

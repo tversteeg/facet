@@ -41,6 +41,12 @@ let user = partial.build::<User>();
 assert_eq!(user, User { id: 42, username: "user123".to_string() });
 ```
 
+### Funding
+
+Thanks to Namespace for providing fast GitHub Actions workers:
+
+<a href="https://namespace.so"><img src="./static/namespace-d.svg" height="40"></a>
+
 ## License
 
 Licensed under either of:

@@ -39,6 +39,12 @@ let config = partial.build::<Config>();
 assert_eq!(config, Config { name: "MyApp".to_string(), version: 1 });
 ```
 
+### Funding
+
+Thanks to Namespace for providing fast GitHub Actions workers:
+
+<a href="https://namespace.so"><img src="./static/namespace-d.svg" height="40"></a>
+
 ## License
 
 Licensed under either of:

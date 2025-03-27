@@ -31,6 +31,12 @@ shapely's approach is halfway between [serde](https://crates.io/crates/serde) an
 
 See the [shapely README](./shapely/README.md) for more info.
 
+### Funding
+
+Thanks to Namespace for providing fast GitHub Actions workers:
+
+<a href="https://namespace.so"><img src="./static/namespace-d.svg" height="40"></a>
+
 ## License
 
 Licensed under either of:
