@@ -9,6 +9,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d902e3d592a523def97af8f317b08ce16b7ab854c1985a0c671e6f15cebc236"
 
 [[package]]
+name = "cargo-husky"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b02b629252fe8ef6460461409564e2c21d0c8e77e0944f3d189ff06c4e932ad"
+
+[[package]]
 name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -87,6 +93,7 @@ checksum = "b985e394ee53f8e4c547d5c6fa75b83b243ab6f51563a0323f1475fc8abc8e7f"
 name = "shapely"
 version = "3.0.0"
 dependencies = [
+ "cargo-husky",
  "shapely-core",
  "shapely-derive",
 ]
