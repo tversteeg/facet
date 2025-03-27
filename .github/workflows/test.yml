@@ -11,7 +11,7 @@ jobs:
     test:
         strategy:
             matrix:
-                os: [ubuntu-latest, macos-latest]
+                os: [namespace-profile-macos-arm64, namespace-profile-linux-amd64]
         runs-on: ${{ matrix.os }}
 
         steps:
