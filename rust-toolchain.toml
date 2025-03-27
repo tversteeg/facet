@@ -1,2 +1,8 @@
 [toolchain]
-channel = "1.85.0"
+# Use the specific nightly required for Miri
+channel = "nightly-2025-02-17"
+# Specify components needed, especially for Miri
+components = ["miri", "rust-src"]
+# Keep the stable toolchain profile for general development if desired,
+# but the nightly channel takes precedence for commands run within this project.
+# profile = "default" # You might want to keep or remove this depending on preference
