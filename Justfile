@@ -1,4 +1,4 @@
-nightly_version := "nightly-2025-02-17"
+nightly_version := "nightly-2025-03-26"
 
 quickcheck:
     just rustfmt
