@@ -38,48 +38,53 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
 
     // Generate implementations for tuples of size 1 to 12
     for n in 1..=12 {
-        let type_params = (1..=n)
+        let type_params = (0..n)
             .map(|i| format!("T{}", i))
             .collect::<Vec<_>>()
             .join(", ");
 
-        let fields = (0..n)
-            .map(|i| {
-                format!(
-                    "Field {{
-                name: \"{}\",
-                shape: ShapeDesc(T{}::shape),
-                offset: std::mem::offset_of!(({},), {}),
-                flags: FieldFlags::EMPTY,
-            }}",
-                    i,
-                    i + 1,
-                    type_params,
-                    i
-                )
-            })
-            .collect::<Vec<_>>()
-            .join(", ");
-
         let mut name_format = "write!(f, \"(\")?;".to_string();
-        for i in 1..=n {
+        for i in 0..n {
             name_format += &format!("\n                (T{}::shape().name)(f)?;", i);
-            if i < n {
+            if i < n - 1 {
                 name_format += "\n                write!(f, \",\")?;";
             }
         }
         name_format += "\n                write!(f, \",)\")";
 
-        let where_clause = (1..=n)
+        let where_clause = (0..n)
             .map(|i| format!("T{}: Shapely", i))
             .collect::<Vec<_>>()
             .join(", ");
 
         let tuple = if n == 1 {
-            "(T1,)".to_string()
+            "(T0,)".to_string()
         } else {
             format!("({})", type_params)
         };
+
+        let field_macro = format!(
+            r#"
+        macro_rules! field {{
+            ($idx:tt, $ty:ty) => {{
+                Field {{
+                    name: stringify!($idx),
+                    shape: ShapeDesc(<$ty>::shape),
+                    offset: std::mem::offset_of!({tuple}, $idx),
+                    flags: FieldFlags::EMPTY,
+                }}
+            }}
+        }}
+        "#
+        );
+
+        let fields = format!(
+            "&const {{ [ {} ] }}",
+            (0..n)
+                .map(|i| format!("field!({}, T{})", i, i))
+                .collect::<Vec<_>>()
+                .join(",")
+        );
 
         writeln!(
             w,
@@ -87,15 +92,7 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
             impl<{type_params}> Shapely for {tuple} where {where_clause}
             {{
                 fn shape() -> Shape {{
-                    struct FieldsMaker<{type_params}> {{
-                        #[allow(clippy::type_complexity)]
-                        _phantom: std::marker::PhantomData<{tuple}>,
-                    }}
-
-                    impl<{type_params}> FieldsMaker<{type_params}> where {where_clause}
-                    {{
-                        const FIELDS: [Field; {n}] = [{fields}];
-                    }}
+                    {field_macro}
 
                     Shape {{
                         name: |f| {{
@@ -104,7 +101,7 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
                         typeid: mini_typeid::of::<Self>(),
                         layout: Layout::new::<{tuple}>(),
                         innards: Innards::Tuple {{
-                            fields: &FieldsMaker::<{type_params}>::FIELDS,
+                            fields: {fields}
                         }},
                         set_to_default: None,
                         drop_in_place: Some(|addr: *mut u8| unsafe {{
