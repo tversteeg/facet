@@ -1,3 +1,5 @@
+use super::*;
+
 use crate::{Bytes, ScalarContents, Shapely};
 use std::f32::consts::PI as PI_F32;
 use std::f64::consts::E as E_F64;
@@ -125,4 +127,15 @@ fn test_bytes_scalar_contents() {
         ScalarContents::Bytes(b) => assert_eq!(b.as_ref(), &[72, 101, 108, 108, 111]),
         _ => panic!("Expected Bytes contents"),
     }
+}
+
+#[test]
+fn test_scalar_contents_display() {
+    assert_eq!(
+        format!("{}", ScalarContents::String(Cow::Borrowed("hello"))),
+        "\"hello\""
+    );
+    assert_eq!(format!("{}", ScalarContents::I32(42)), "42");
+    assert_eq!(format!("{}", ScalarContents::Boolean(true)), "true");
+    assert_eq!(format!("{}", ScalarContents::Nothing), "()");
 }

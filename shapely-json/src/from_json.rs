@@ -1,6 +1,7 @@
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
 use shapely::{Partial, Shapely as _, error, trace, warn};
 
+/// Deserialize a `Partial` object from a JSON string.
 pub fn from_json<'input>(
     partial: &mut Partial,
     json: &'input str,
@@ -133,7 +134,7 @@ pub fn from_json<'input>(
 
                 trace!("Finished deserializing \x1b[1;36mtuple struct\x1b[0m");
             }
-            Innards::Vec { item_shape, .. } => {
+            Innards::List { item_shape, .. } => {
                 trace!("Deserializing \x1b[1;36marray\x1b[0m");
 
                 // Parse array start
@@ -167,7 +168,7 @@ pub fn from_json<'input>(
                     index
                 );
             }
-            Innards::HashMap { value_shape, .. } => {
+            Innards::Map { value_shape, .. } => {
                 trace!("Deserializing \x1b[1;36mhashmap\x1b[0m");
 
                 // Parse object start and get first key if it exists

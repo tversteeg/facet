@@ -13,18 +13,26 @@ pub struct Variant {
     pub kind: VariantKind,
 }
 
+/// Represents the different kinds of variants that can exist in a Rust enum
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum VariantKind {
     /// Unit variant (e.g., `None` in Option)
     Unit,
 
     /// Tuple variant with unnamed fields (e.g., `Some(T)` in Option)
-    Tuple { fields: &'static [Field] },
+    Tuple {
+        /// List of fields contained in the tuple variant
+        fields: &'static [Field],
+    },
 
     /// Struct variant with named fields (e.g., `Struct { field: T }`)
-    Struct { fields: &'static [Field] },
+    Struct {
+        /// List of fields contained in the struct variant
+        fields: &'static [Field],
+    },
 }
 
+/// All possible representations for Rust enums
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EnumRepr {
     /// Default representation (compiler-dependent)
@@ -57,6 +65,7 @@ impl Default for EnumRepr {
     }
 }
 
+/// All possible errors when getting a variant by index or by name
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum VariantError {
     /// `variant_by_index` was called with an index that is out of bounds.

@@ -58,7 +58,7 @@ impl Shape {
                     }
                 }
             }
-            Innards::HashMap { value_shape, .. } => {
+            Innards::Map { value_shape, .. } => {
                 writeln!(
                     f,
                     "{:indent$}\x1b[1;36mHashMap with arbitrary keys and value shape:\x1b[0m",
@@ -71,7 +71,7 @@ impl Shape {
                     indent + Self::INDENT * 2,
                 )?;
             }
-            Innards::Vec { item_shape, .. } => {
+            Innards::List { item_shape, .. } => {
                 write!(
                     f,
                     "{:indent$}\x1b[1;36mArray of:\x1b[0m ",

@@ -1,3 +1,6 @@
+#![warn(missing_docs)]
+#![doc = include_str!("../README.md")]
+
 use unsynn::*;
 
 keyword! {
@@ -151,6 +154,10 @@ unsynn! {
     }
 }
 
+/// Derive the [`shapely_core::Shapely`] trait for structs, tuple structs, and enums.
+///
+/// This uses unsynn, so it's light, but it _will_ choke on some Rust syntax because...
+/// there's a lot of Rust syntax.
 #[proc_macro_derive(Shapely)]
 pub fn shapely_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = TokenStream::from(input);

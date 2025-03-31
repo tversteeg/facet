@@ -2,6 +2,9 @@ use crate::Scalar;
 use std::borrow::Cow;
 use std::fmt::{self, Display, Formatter};
 
+#[cfg(test)]
+mod tests;
+
 /// Represents the contents of a scalar value with a lifetime.
 /// This allows safe access to the actual values stored in memory.
 #[derive(Debug, PartialEq)]
@@ -133,21 +136,5 @@ impl Scalar {
                 Scalar::Nothing => ScalarContents::Nothing,
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_scalar_contents_display() {
-        assert_eq!(
-            format!("{}", ScalarContents::String(Cow::Borrowed("hello"))),
-            "\"hello\""
-        );
-        assert_eq!(format!("{}", ScalarContents::I32(42)), "42");
-        assert_eq!(format!("{}", ScalarContents::Boolean(true)), "true");
-        assert_eq!(format!("{}", ScalarContents::Nothing), "()");
     }
 }

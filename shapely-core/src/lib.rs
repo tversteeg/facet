@@ -1,3 +1,6 @@
+#![warn(missing_docs)]
+#![doc = include_str!("../README.md")]
+
 use std::mem::MaybeUninit;
 
 mod impls;
@@ -25,9 +28,6 @@ pub use log::*;
 
 #[cfg(test)]
 mod tests;
-
-#[cfg(test)]
-mod scalar_contents_tests;
 
 /// A wrapper around `Vec<u8>` for binary data
 #[derive(Debug, Clone, PartialEq, Eq)]
