@@ -13,13 +13,14 @@ fn main() {
 
     let mut output = String::new();
     let _ = codegen_tuple_impls(&mut output);
-    std::fs::write("shapely-core/src/tuples_impls.rs", output).expect("Failed to write file");
+    let path = "shapely-core/src/impls/tuples_impls.rs";
+    std::fs::write(path, output).expect("Failed to write file");
 
     // Run rustfmt on the generated file
     let status = std::process::Command::new("rustfmt")
         .arg("--edition")
         .arg("2024")
-        .arg("shapely-core/src/tuples_impls.rs")
+        .arg(path)
         .status()
         .expect("Failed to execute rustfmt");
 
@@ -43,14 +44,19 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
             .collect::<Vec<_>>()
             .join(", ");
 
-        let mut name_format = "write!(f, \"(\")?;".to_string();
+        let mut name_format =
+            r#"if let Some(opts) = opts.for_children() { write!(f, "(")?;"#.to_string();
         for i in 0..n {
-            name_format += &format!("\n                (T{}::shape().name)(f)?;", i);
+            name_format += &format!(r#"(T{i}::shape().name)(f, opts)?;"#,);
             if i < n - 1 {
-                name_format += "\n                write!(f, \",\")?;";
+                name_format += r#"write!(f, ",")?;"#;
             }
         }
-        name_format += "\n                write!(f, \",)\")";
+        name_format += r#"
+            write!(f, ")")
+        } else {
+            write!(f, "()")
+        }"#;
 
         let where_clause = (0..n)
             .map(|i| format!("T{}: Shapely", i))
@@ -95,7 +101,7 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
                     {field_macro}
 
                     Shape {{
-                        name: |f| {{
+                        name: |f, opts| {{
                             {name_format}
                         }},
                         typeid: mini_typeid::of::<Self>(),

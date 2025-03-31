@@ -11,7 +11,7 @@ struct FooBar {
 impl Shapely for FooBar {
     fn shape() -> crate::Shape {
         Shape {
-            name: |f| write!(f, "FooBar"),
+            name: |f, _nameopts| write!(f, "FooBar"),
             typeid: mini_typeid::of::<Self>(),
             layout: std::alloc::Layout::new::<Self>(),
             innards: crate::Innards::Struct {
@@ -126,7 +126,7 @@ fn build_struct_with_drop_field() {
     impl Shapely for DropCounter {
         fn shape() -> crate::Shape {
             Shape {
-                name: |f| write!(f, "DropCounter"),
+                name: |f, _nameopts| write!(f, "DropCounter"),
                 typeid: mini_typeid::of::<DropCounter>(),
                 layout: std::alloc::Layout::new::<DropCounter>(),
                 innards: crate::Innards::Struct { fields: &[] },
@@ -152,7 +152,7 @@ fn build_struct_with_drop_field() {
     impl Shapely for StructWithDrop {
         fn shape() -> crate::Shape {
             Shape {
-                name: |f| write!(f, "StructWithDrop"),
+                name: |f, _nameopts| write!(f, "StructWithDrop"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Struct {
@@ -209,7 +209,7 @@ fn build_scalar_with_drop() {
     impl Shapely for DropScalar {
         fn shape() -> crate::Shape {
             Shape {
-                name: |f| write!(f, "DropScalar"),
+                name: |f, _nameopts| write!(f, "DropScalar"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
@@ -276,7 +276,7 @@ fn build_truck_with_drop_fields() {
     impl Shapely for Engine {
         fn shape() -> crate::Shape {
             Shape {
-                name: |f| write!(f, "Engine"),
+                name: |f, _nameopts| write!(f, "Engine"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
@@ -291,7 +291,7 @@ fn build_truck_with_drop_fields() {
     impl Shapely for Wheels {
         fn shape() -> crate::Shape {
             Shape {
-                name: |f| write!(f, "Wheels"),
+                name: |f, _nameopts| write!(f, "Wheels"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
@@ -309,7 +309,7 @@ fn build_truck_with_drop_fields() {
     impl Shapely for Truck {
         fn shape() -> crate::Shape {
             Shape {
-                name: |f| write!(f, "Truck"),
+                name: |f, _nameopts| write!(f, "Truck"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Struct {
@@ -414,7 +414,7 @@ fn test_partial_build_in_place() {
     impl Shapely for DropCounter {
         fn shape() -> crate::Shape {
             Shape {
-                name: |f| write!(f, "DropCounter"),
+                name: |f, _nameopts| write!(f, "DropCounter"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Struct { fields: &[] },
@@ -438,7 +438,7 @@ fn test_partial_build_in_place() {
     impl Shapely for TestShape {
         fn shape() -> crate::Shape {
             Shape {
-                name: |f| write!(f, "TestShape"),
+                name: |f, _nameopts| write!(f, "TestShape"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Struct {
@@ -477,7 +477,7 @@ fn test_partial_build_transparent() {
     impl Shapely for InnerType {
         fn shape() -> crate::Shape {
             Shape {
-                name: |f| write!(f, "InnerType"),
+                name: |f, _nameopts| write!(f, "InnerType"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Scalar(crate::Scalar::U32),
@@ -493,7 +493,7 @@ fn test_partial_build_transparent() {
     impl Shapely for TransparentWrapper {
         fn shape() -> crate::Shape {
             Shape {
-                name: |f| write!(f, "TransparentWrapper"),
+                name: |f, _nameopts| write!(f, "TransparentWrapper"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Transparent(InnerType::shape_desc()),
@@ -554,7 +554,7 @@ impl Shapely for UserStatus {
         }
 
         Shape {
-            name: |f| write!(f, "UserStatus"),
+            name: |f, _nameopts| write!(f, "UserStatus"),
             typeid: mini_typeid::of::<Self>(),
             layout: std::alloc::Layout::new::<Self>(),
             innards: crate::Innards::Enum {
@@ -669,7 +669,7 @@ impl Shapely for SimpleEnum {
         }
 
         Shape {
-            name: |f| write!(f, "SimpleEnum"),
+            name: |f, _nameopts| write!(f, "SimpleEnum"),
             typeid: mini_typeid::of::<Self>(),
             layout: std::alloc::Layout::new::<Self>(),
             innards: crate::Innards::Enum {
@@ -800,7 +800,7 @@ fn test_build_simple_enum_with_explicit_repr() {
             }
 
             Shape {
-                name: |f| write!(f, "ExplicitReprEnum"),
+                name: |f, _nameopts| write!(f, "ExplicitReprEnum"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Enum {
@@ -903,7 +903,7 @@ fn test_build_enum_with_custom_discriminants() {
             }
 
             Shape {
-                name: |f| write!(f, "CustomDiscEnum"),
+                name: |f, _nameopts| write!(f, "CustomDiscEnum"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Enum {
@@ -977,7 +977,7 @@ fn test_build_enum_with_simple_variant() {
             }
 
             Shape {
-                name: |f| write!(f, "SimpleVariantEnum"),
+                name: |f, _nameopts| write!(f, "SimpleVariantEnum"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Enum {
@@ -1071,7 +1071,7 @@ fn test_build_enum_with_struct_variant() {
             }
 
             Shape {
-                name: |f| write!(f, "StructEnum"),
+                name: |f, _nameopts| write!(f, "StructEnum"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Enum {
@@ -1178,7 +1178,7 @@ fn test_enum_without_repr() {
             }
 
             Shape {
-                name: |f| write!(f, "NoReprEnum"),
+                name: |f, _nameopts| write!(f, "NoReprEnum"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Enum {
@@ -1268,7 +1268,7 @@ fn test_complex_nested_recursive_enums() {
             }
 
             Shape {
-                name: |f| write!(f, "NestedData"),
+                name: |f, _nameopts| write!(f, "NestedData"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Enum {
@@ -1389,7 +1389,7 @@ fn test_complex_nested_recursive_enums() {
             }
 
             Shape {
-                name: |f| write!(f, "ComplexEnum"),
+                name: |f, _nameopts| write!(f, "ComplexEnum"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Enum {
@@ -1406,7 +1406,7 @@ fn test_complex_nested_recursive_enums() {
     impl Shapely for Box<ComplexEnum> {
         fn shape() -> crate::Shape {
             Shape {
-                name: |f| write!(f, "Box<ComplexEnum>"),
+                name: |f, _nameopts| write!(f, "Box<ComplexEnum>"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Transparent(crate::ShapeDesc(ComplexEnum::shape)),
@@ -1555,7 +1555,7 @@ fn test_nightmare_reflection() {
             }
 
             Shape {
-                name: |f| write!(f, "InnerData"),
+                name: |f, _nameopts| write!(f, "InnerData"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Enum {
@@ -1638,7 +1638,7 @@ fn test_nightmare_reflection() {
             }
 
             Shape {
-                name: |f| write!(f, "OuterData"),
+                name: |f, _nameopts| write!(f, "OuterData"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Enum {
@@ -1655,7 +1655,7 @@ fn test_nightmare_reflection() {
     impl Shapely for Box<InnerData> {
         fn shape() -> crate::Shape {
             Shape {
-                name: |f| write!(f, "Box<InnerData>"),
+                name: |f, _nameopts| write!(f, "Box<InnerData>"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Transparent(crate::ShapeDesc(InnerData::shape)),
@@ -1760,7 +1760,7 @@ fn test_struct_with_enum_field() {
             }
 
             Shape {
-                name: |f| write!(f, "Status"),
+                name: |f, _nameopts| write!(f, "Status"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Enum {
@@ -1776,7 +1776,7 @@ fn test_struct_with_enum_field() {
     impl Shapely for User {
         fn shape() -> crate::Shape {
             Shape {
-                name: |f| write!(f, "User"),
+                name: |f, _nameopts| write!(f, "User"),
                 typeid: mini_typeid::of::<Self>(),
                 layout: std::alloc::Layout::new::<Self>(),
                 innards: crate::Innards::Struct {

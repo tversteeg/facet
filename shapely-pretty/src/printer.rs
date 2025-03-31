@@ -7,7 +7,7 @@ use std::{
     str,
 };
 
-use shapely_core::{Innards, Scalar, ScalarContents, Shape, ShapeDesc, Shapely};
+use shapely_core::{FieldFlags, Innards, Scalar, ScalarContents, Shape, ShapeDesc, Shapely};
 
 use crate::{
     ansi,
@@ -134,7 +134,7 @@ impl PrettyPrinter {
                 vtable: _,
                 value_shape,
             } => self.format_hashmap(ptr, shape, *value_shape, f, depth, visited),
-            Innards::Array {
+            Innards::Vec {
                 vtable: _,
                 item_shape,
             } => self.format_array(ptr, shape, *item_shape, f, depth, visited),
@@ -249,7 +249,7 @@ impl PrettyPrinter {
             write!(f, "{}: ", self.style_field_name(field.name))?;
 
             // Check if field is sensitive
-            if field.flags.is_sensitive() {
+            if field.flags.contains(FieldFlags::SENSITIVE) {
                 // For sensitive fields, display [REDACTED] instead of the actual value
                 write!(f, "{}", self.style_redacted("[REDACTED]"))?;
             } else {

@@ -6,13 +6,6 @@
 [![documentation](https://docs.rs/shapely-pretty/badge.svg)](https://docs.rs/shapely-pretty)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/shapely-pretty.svg)](./LICENSE)
 
-> [!IMPORTANT]
->
-> There is no stable shapely API as of now (even though it's >1.0.0). The design
-> is very much still being explored.
->
-> Expect multiple major versions in the near future — (note left 2025-03-11)
-
 A pretty-printing library for types implementing the `Shapely` trait, providing colorful and well-formatted output.
 
 ## Features

@@ -6,13 +6,6 @@
 [![documentation](https://docs.rs/shapely-core/badge.svg)](https://docs.rs/shapely-core)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/shapely-core.svg)](./LICENSE)
 
-> [!IMPORTANT]
->
-> There is no stable shapely API as of now (even though it's >1.0.0). The design
-> is very much still being explored.
->
-> Expect multiple major versions in the near future — (note left 2025-03-11)
-
 This is the core crate for the shapely ecosystem. It provides the fundamental
 types and traits used by other crates in the shapely family.
 

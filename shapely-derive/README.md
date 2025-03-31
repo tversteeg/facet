@@ -6,13 +6,6 @@
 [![documentation](https://docs.rs/shapely-derive/badge.svg)](https://docs.rs/shapely-derive)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/shapely-derive.svg)](./LICENSE)
 
-> [!IMPORTANT]
->
-> There is no stable shapely API as of now (even though it's >1.0.0). The design
-> is very much still being explored.
->
-> Expect multiple major versions in the near future — (note left 2025-03-11)
-
 shapely-derive provides procedural macros to derive the `Shapely` trait from shapely.
 
 This crate implements the `#[derive(Shapely)]` macro which automatically generates runtime reflection code for Rust structs, providing:

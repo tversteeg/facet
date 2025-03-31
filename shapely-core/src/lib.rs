@@ -1,9 +1,6 @@
 use std::mem::MaybeUninit;
 
-mod hashmap_impl;
-mod scalar_impls;
-mod tuples_impls;
-mod vec_impl;
+mod impls;
 
 mod scalar_contents;
 pub use scalar_contents::ScalarContents;
@@ -32,14 +29,14 @@ mod tests;
 #[cfg(test)]
 mod scalar_contents_tests;
 
-/// A wrapper around Vec<u8> for binary data
+/// A wrapper around `Vec<u8>` for binary data
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Bytes(pub Vec<u8>);
 
 impl Shapely for Bytes {
     fn shape() -> Shape {
         Shape {
-            name: |f| write!(f, "Bytes"),
+            name: |f, _opts| write!(f, "Bytes"),
             typeid: mini_typeid::of::<Self>(),
             layout: std::alloc::Layout::new::<Self>(),
             innards: Innards::Scalar(Scalar::Bytes),

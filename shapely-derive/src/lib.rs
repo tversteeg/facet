@@ -247,7 +247,7 @@ fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
             impl shapely::Shapely for {struct_name} {{
                 fn shape() -> shapely::Shape {{
                     shapely::Shape {{
-                        name: |f| std::fmt::Write::write_str(f, "{struct_name}"),
+                        name: |f, _opts| std::fmt::Write::write_str(f, "{struct_name}"),
                         typeid: shapely::mini_typeid::of::<Self>(),
                         layout: std::alloc::Layout::new::<Self>(),
                         innards: shapely::Innards::Struct {{
@@ -291,7 +291,7 @@ fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStream {
             impl shapely::Shapely for {struct_name} {{
                 fn shape() -> shapely::Shape {{
                     shapely::Shape {{
-                        name: |f| std::fmt::Write::write_str(f, "{struct_name}"),
+                        name: |f, _opts| std::fmt::Write::write_str(f, "{struct_name}"),
                         typeid: shapely::mini_typeid::of::<Self>(),
                         layout: std::alloc::Layout::new::<Self>(),
                         innards: shapely::Innards::TupleStruct {{
@@ -408,7 +408,7 @@ fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
             impl shapely::Shapely for {enum_name} {{
                 fn shape() -> shapely::Shape {{
                     shapely::Shape {{
-                        name: |f| std::fmt::Write::write_str(f, "{enum_name}"),
+                        name: |f, _opts| std::fmt::Write::write_str(f, "{enum_name}"),
                         typeid: shapely::mini_typeid::of::<Self>(),
                         layout: std::alloc::Layout::new::<Self>(),
                         innards: shapely::Innards::Enum {{

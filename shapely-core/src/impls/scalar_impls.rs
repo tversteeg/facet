@@ -7,7 +7,7 @@ macro_rules! impl_shapely_for_integer {
         impl Shapely for $type {
             fn shape() -> Shape {
                 Shape {
-                    name: |f| write!(f, stringify!($type)),
+                    name: |f, _nameopts| write!(f, stringify!($type)),
                     typeid: mini_typeid::of::<Self>(),
                     layout: Layout::new::<$type>(),
                     innards: Innards::Scalar($scalar),
@@ -38,7 +38,7 @@ macro_rules! impl_shapely_for_float {
         impl Shapely for $type {
             fn shape() -> Shape {
                 Shape {
-                    name: |f| write!(f, stringify!($type)),
+                    name: |f, _nameopts| write!(f, stringify!($type)),
                     typeid: mini_typeid::of::<Self>(),
                     layout: Layout::new::<$type>(),
                     innards: Innards::Scalar($scalar),
@@ -59,7 +59,7 @@ impl_shapely_for_float!(f64, Scalar::F64);
 impl Shapely for String {
     fn shape() -> Shape {
         Shape {
-            name: |f| write!(f, "String"),
+            name: |f, _nameopts| write!(f, "String"),
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<String>(),
             innards: Innards::Scalar(Scalar::String),
@@ -76,7 +76,7 @@ impl Shapely for String {
 impl Shapely for bool {
     fn shape() -> Shape {
         Shape {
-            name: |f| write!(f, "bool"),
+            name: |f, _nameopts| write!(f, "bool"),
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<bool>(),
             innards: Innards::Scalar(Scalar::Boolean),
@@ -92,7 +92,7 @@ impl Shapely for bool {
 impl Shapely for () {
     fn shape() -> Shape {
         Shape {
-            name: |f| write!(f, "()"),
+            name: |f, _nameopts| write!(f, "()"),
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<()>(),
             innards: Innards::Scalar(Scalar::Nothing),

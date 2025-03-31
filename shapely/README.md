@@ -6,13 +6,6 @@
 [![documentation](https://docs.rs/shapely/badge.svg)](https://docs.rs/shapely)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/shapely.svg)](./LICENSE)
 
-> [!IMPORTANT]
->
-> There is no stable shapely API as of now (even though it's >1.0.0). The design
-> is very much still being explored.
->
-> Expect multiple major versions in the near future — (note left 2025-03-11)
-
 shapely provides runtime reflection for Rust.
 
 Any type that implements `Shapely` trait returns a `Shape`, which describes:
@@ -28,7 +21,12 @@ value is moved out of the partial.
 It comes with a derive macro that uses [unsynn](https://crates.io/crates/unsynn)
 for speed of compilation.
 
-## Supported Formats
+## Ecosystem
+
+The main `shapely` crate re-exports symbols from:
+
+- [shapely-core](../shapely-core), which defines the main `Shapely` trait and the `Shape` struct
+- [shapely-derive](../shapely-derive), which implements the `Shapely` derive attribute as a fast/light proc macro powered by [unsynn](https://docs.rs/unsynn)
 
 shapely supports deserialization from multiple data formats through dedicated crates:
 
@@ -37,25 +35,33 @@ shapely supports deserialization from multiple data formats through dedicated cr
 - [shapely-msgpack](../shapely-msgpack): MessagePack deserialization
 - [shapely-urlencoded](../shapely-urlencoded): URL-encoded form data deserialization
 
+Additionally:
+
+- [shapely-pretty](../shapely-pretty) is able to pretty-print Shapely types.
+- [shapely-codegen](../shapely-codegen) is internal and generates some of the code of `shapely-core`
+
 ## Implementing Your Own Deserializer
 
 To implement a custom deserializer for a new format, you'll need to work with the following key components from shapely:
 
 ### Key Types
 
-- `Partial`: The central type for building shapely values incrementally
-- `Shape`: Describes the memory layout and structure of a type
-- `Innards`: Represents the internal structure (Scalar, Struct, etc.)
-- `Scalar`: Represents primitive types like String, u64, etc.
+- [`Partial`]: The central type for building shapely values incrementally
+- [`Shape`]: Describes the memory layout and structure of a type
+- [`Innards`]: Represents the internal structure (Scalar, Struct, etc.)
+- [`Scalar`]: Represents primitive types like String, u64, etc.
 
 ### Implementation Pattern
 
-1. Create a function that takes a `&mut Partial` and your format's input (string, bytes, etc.)
-2. Examine the shape of the partial using `partial.shape()`
-3. Handle different shapes based on `shape.innards`:
-   - For `Innards::Scalar`, use `partial.scalar_slot()` to get and fill the slot
-   - For `Innards::Struct`, iterate through fields, using `partial.slot_by_name(field_name)` to access each field
-   - Create nested `Partial` instances for complex fields and fill them recursively
+1. Create a function that takes a `&mut` [`Partial`] and your format's input (string, bytes, etc.)
+2. Examine the shape of the partial using [`Partial::shape`]
+3. Handle different shapes based on [`Shape::innards`]:
+   - For [`Innards::Scalar`], use [`Partial::scalar_slot`] to get and fill the slot
+   - For [`Innards::Struct`], iterate through fields, using [`Partial::slot_by_name`] to access each field
+   - [`Innards::HashMap`] and [`Innards::Array`] come with a vtable, they have helper slots as well
+   - Create nested [`Partial`] instances for complex fields and fill them recursively
+
+When in doubt, refer to the `shapely-json` implementation — it's the most featureful.
 
 ### Example Implementation Skeleton
 
@@ -123,7 +129,7 @@ Thanks to Namespace for providing fast GitHub Actions workers:
 
 Licensed under either of:
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.

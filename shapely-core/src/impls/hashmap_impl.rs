@@ -1,6 +1,6 @@
 use std::{alloc::Layout, collections::HashMap, fmt};
 
-use crate::{Innards, Shape, Shapely, mini_typeid};
+use crate::{Innards, NameOpts, Shape, Shapely, mini_typeid};
 
 impl<V> Shapely for HashMap<String, V>
 where
@@ -8,11 +8,14 @@ where
 {
     fn shape() -> Shape {
         // This name function doesn't need the type parameter
-        fn name<V: Shapely>(f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f, "HashMap<String, ")?;
-            let shape = V::shape();
-            (shape.name)(f)?;
-            write!(f, ">")
+        fn name<V: Shapely>(f: &mut fmt::Formatter, opts: NameOpts) -> fmt::Result {
+            if let Some(opts) = opts.for_children() {
+                write!(f, "HashMap<String, ")?;
+                (V::shape().name)(f, opts)?;
+                write!(f, ">")
+            } else {
+                write!(f, "HashMap<…>")
+            }
         }
 
         Shape {
@@ -21,7 +24,7 @@ where
             layout: Layout::new::<HashMap<String, V>>(),
             innards: Innards::HashMap {
                 value_shape: V::shape_desc(),
-                vtable: crate::HashMapVtable {
+                vtable: crate::HashMapVTable {
                     init: |ptr, size_hint| unsafe {
                         let map = if let Some(capacity) = size_hint {
                             HashMap::with_capacity(capacity)
