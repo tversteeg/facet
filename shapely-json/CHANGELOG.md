@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0](https://github.com/bearcove/shapely/compare/shapely-json-v3.0.0...shapely-json-v3.1.0) - 2025-03-31
+
+### Added
+
+- introduce NameOpts
+- add support for numeric scalar types in from_json
+- Implement parsing for various numeric scalars in JSON
+
+### Other
+
+- full docs baybee
+- Fill in missing docs
+- Improve naming
+- errors--
+- Fix all markdown links
+- unfuck docs
+- Yay for miri
+- woops, edition 2024
+- json roundtrip
+- arrays.. work?
+- commented out test with vec
+- support tuples, booleans etc.
+- Distinguish structs, tuples, and tuple structs
+- clippy fixes
+- pre-commit hook with cargo-fmt
+- shill for namespace, closes #36
+- specific toolchains, reformat code
+- Improve debug output
+- woo
+
 ## [2.0.0](https://github.com/bearcove/shapely/compare/shapely-json-v1.0.0...shapely-json-v2.0.0) - 2025-03-11
 
 ### Other
