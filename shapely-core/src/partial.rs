@@ -1,4 +1,4 @@
-use crate::{trace, FieldError, Innards, ShapeDesc, Shapely, Slot};
+use crate::{trace, ArrayVtable, FieldError, Innards, ShapeDesc, Shapely, Slot};
 use std::{alloc, ptr::NonNull};
 
 /// Origin of the partial — did we allocate it? Or is it borrowed?
@@ -205,6 +205,24 @@ impl Partial<'_> {
         }
     }
 
+    pub fn array_slot(&mut self) -> Option<ArraySlot> {
+        match self.shape.get().innards {
+            crate::Innards::Array {
+                vtable,
+                item_shape: _,
+            } => {
+                // Initialize the array using the vtable's init function
+                (vtable.init)(self.addr.as_ptr(), None);
+
+                // Mark the array as initialized in our init_set
+                self.init_set.set(0);
+
+                Some(ArraySlot::new(self.addr, vtable))
+            }
+            _ => None,
+        }
+    }
+
     /// Returns a slot for assigning this whole shape as a scalar
     pub fn scalar_slot(&mut self) -> Option<Slot<'_>> {
         match self.shape.get().innards {
@@ -266,7 +284,7 @@ impl Partial<'_> {
             }
             Innards::Transparent(_) => Err(FieldError::NoStaticFields),
             Innards::Scalar(_) => Err(FieldError::NoStaticFields),
-            Innards::Array(_) => Err(FieldError::NoStaticFields),
+            Innards::Array { .. } => Err(FieldError::NoStaticFields),
             Innards::Enum {
                 variants: _,
                 repr: _,
@@ -947,5 +965,29 @@ impl InitMark<'_> {
             Self::Struct { index, set } => set.is_set(*index),
             Self::Ignored => true,
         }
+    }
+}
+
+pub struct ArraySlot {
+    pub(crate) addr: NonNull<u8>,
+    pub(crate) vtable: ArrayVtable,
+}
+
+impl ArraySlot {
+    /// Create a new ArraySlot with the given address and vtable
+    pub fn new(addr: NonNull<u8>, vtable: ArrayVtable) -> Self {
+        Self { addr, vtable }
+    }
+
+    /// Push a partial value onto the array
+    ///
+    /// # Safety
+    ///
+    /// This function uses unsafe code to push a value into the array.
+    /// It's safe to use because the vtable's push function handles
+    /// proper memory management and initialization.
+    pub fn push(&mut self, partial: crate::Partial) {
+        // Call the vtable's push function to add the item to the array
+        (self.vtable.push)(self.addr.as_ptr(), partial);
     }
 }

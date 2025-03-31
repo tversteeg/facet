@@ -1,5 +1,5 @@
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
-use shapely::{Partial, error, trace, warn};
+use shapely::{error, trace, warn, Partial};
 
 pub fn from_json<'input>(
     partial: &mut Partial,
@@ -132,6 +132,40 @@ pub fn from_json<'input>(
                 }
 
                 trace!("Finished deserializing \x1b[1;36mtuple struct\x1b[0m");
+            }
+            Innards::Array { item_shape, .. } => {
+                trace!("Deserializing \x1b[1;36marray\x1b[0m");
+
+                // Parse array start
+                parser.expect_array_start()?;
+
+                // Get the array slot to push items into
+                let mut array_slot = partial.array_slot().expect("Array slot");
+
+                let mut index = 0;
+                while let Some(has_element) = parser.parse_array_element()? {
+                    if !has_element {
+                        break;
+                    }
+
+                    trace!("Processing array item at index: \x1b[1;33m{}\x1b[0m", index);
+
+                    // Create a partial for the item
+                    let mut item_partial = Partial::alloc(*item_shape);
+
+                    // Deserialize the item
+                    deserialize_value(parser, &mut item_partial)?;
+
+                    // Add the item to the array
+                    array_slot.push(item_partial);
+
+                    index += 1;
+                }
+
+                trace!(
+                    "Finished deserializing \x1b[1;36marray\x1b[0m with {} items",
+                    index
+                );
             }
             // Add support for other shapes (Array, Transparent) as needed
             _ => {
