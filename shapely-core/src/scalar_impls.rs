@@ -88,3 +88,16 @@ impl Shapely for bool {
         }
     }
 }
+
+impl Shapely for () {
+    fn shape() -> Shape {
+        Shape {
+            name: |f| write!(f, "()"),
+            typeid: mini_typeid::of::<Self>(),
+            layout: Layout::new::<()>(),
+            innards: Innards::Scalar(Scalar::Nothing),
+            set_to_default: None,
+            drop_in_place: None,
+        }
+    }
+}

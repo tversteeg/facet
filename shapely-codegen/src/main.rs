@@ -29,69 +29,15 @@ fn main() {
 }
 
 fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
+    writeln!(w, "use std::alloc::Layout;")?;
+    writeln!(w)?;
     writeln!(
         w,
-        "use std::alloc::Layout;
-
-use crate::{{Field, FieldFlags, Innards, Scalar, Shape, ShapeDesc, Shapely, mini_typeid}};
-
-impl Shapely for () {{
-    fn shape() -> Shape {{
-        Shape {{
-            name: |f| write!(f, \"()\"),
-            typeid: mini_typeid::of::<Self>(),
-            layout: Layout::new::<()>(),
-            innards: Innards::Scalar(Scalar::Nothing),
-            set_to_default: Some(|_addr: *mut u8| {{}}),
-            drop_in_place: None,
-        }}
-    }}
-}}
-
-impl<T1: Shapely> Shapely for (T1,)
-where
-    T1: Shapely,
-{{
-    fn shape() -> Shape {{
-        struct FieldsMaker<T1> {{
-            #[allow(clippy::type_complexity)]
-            _phantom: std::marker::PhantomData<T1>,
-        }}
-
-        impl<T1> FieldsMaker<T1>
-        where
-            T1: Shapely,
-        {{
-            const FIELDS: [Field; 1] = [Field {{
-                name: \"0\",
-                shape: ShapeDesc(T1::shape),
-                offset: 0,
-                flags: FieldFlags::EMPTY,
-            }}];
-        }}
-
-        Shape {{
-            name: |f| {{
-                write!(f, \"(\")?;
-                (T1::shape().name)(f)?;
-                write!(f, \",)\")
-            }},
-            typeid: mini_typeid::of::<Self>(),
-            layout: Layout::new::<(T1,)>(),
-            innards: Innards::Tuple {{
-                fields: &FieldsMaker::<T1>::FIELDS,
-            }},
-            set_to_default: None,
-            drop_in_place: Some(|addr: *mut u8| unsafe {{
-                std::ptr::drop_in_place(addr as *mut (T1,));
-            }}),
-        }}
-    }}
-}}"
+        "use crate::{{Field, FieldFlags, Innards, Shape, ShapeDesc, Shapely, mini_typeid}};"
     )?;
 
-    // Generate implementations for tuples of size 2 to 12
-    for n in 2..=12 {
+    // Generate implementations for tuples of size 1 to 12
+    for n in 1..=12 {
         let type_params = (1..=n)
             .map(|i| format!("T{}", i))
             .collect::<Vec<_>>()
@@ -129,42 +75,44 @@ where
             .collect::<Vec<_>>()
             .join(", ");
 
+        let tuple = if n == 1 {
+            "(T1,)".to_string()
+        } else {
+            format!("({})", type_params)
+        };
+
         writeln!(
             w,
             "
-impl<{type_params}> Shapely for ({type_params},)
-where
-    {where_clause},
-{{
-    fn shape() -> Shape {{
-        struct FieldsMaker<{type_params}> {{
-            #[allow(clippy::type_complexity)]
-            _phantom: std::marker::PhantomData<({type_params},)>,
-        }}
+            impl<{type_params}> Shapely for {tuple} where {where_clause}
+            {{
+                fn shape() -> Shape {{
+                    struct FieldsMaker<{type_params}> {{
+                        #[allow(clippy::type_complexity)]
+                        _phantom: std::marker::PhantomData<{tuple}>,
+                    }}
 
-        impl<{type_params}> FieldsMaker<{type_params}>
-        where
-            {where_clause},
-        {{
-            const FIELDS: [Field; {n}] = [{fields}];
-        }}
+                    impl<{type_params}> FieldsMaker<{type_params}> where {where_clause}
+                    {{
+                        const FIELDS: [Field; {n}] = [{fields}];
+                    }}
 
-        Shape {{
-            name: |f| {{
-                {name_format}
-            }},
-            typeid: mini_typeid::of::<Self>(),
-            layout: Layout::new::<({type_params},)>(),
-            innards: Innards::Tuple {{
-                fields: &FieldsMaker::<{type_params}>::FIELDS,
-            }},
-            set_to_default: None,
-            drop_in_place: Some(|addr: *mut u8| unsafe {{
-                std::ptr::drop_in_place(addr as *mut ({type_params},));
-            }}),
-        }}
-    }}
-}}"
+                    Shape {{
+                        name: |f| {{
+                            {name_format}
+                        }},
+                        typeid: mini_typeid::of::<Self>(),
+                        layout: Layout::new::<{tuple}>(),
+                        innards: Innards::Tuple {{
+                            fields: &FieldsMaker::<{type_params}>::FIELDS,
+                        }},
+                        set_to_default: None,
+                        drop_in_place: Some(|addr: *mut u8| unsafe {{
+                            std::ptr::drop_in_place(addr as *mut {tuple});
+                        }}),
+                    }}
+                }}
+            }}"
         )?;
     }
     Ok(())
