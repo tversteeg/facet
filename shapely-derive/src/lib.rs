@@ -51,43 +51,27 @@ unsynn! {
         body: BraceGroupContaining<CommaDelimitedVec<StructField>>,
     }
 
-    enum TypeLike {
-        Namespaced(Cons<Ident, DoubleSemicolon, Box<TypeLike>>),
-        Tuple(ParenthesisGroupContaining<CommaDelimitedVec<TypeLike>>),
-        Ident(Ident),
+    enum Type {
+        Path(Cons<Ident, DoubleSemicolon, Box<Type>>),
+        Tuple(ParenthesisGroupContaining<CommaDelimitedVec<Type>>),
+        Slice(BracketGroupContaining<Type>),
+        Array(Cons<BracketGroupContaining<Type>, Semi, Box<Expr>>),
+        Ptr(Cons<Star, Option<ConstOrMut>, Box<Type>>),
+        Ref(Cons<And, Option<Lifetime>, Option<ConstOrMut>, Box<Type>>),
+        Bare(Ident),
+    }
+
+    enum ConstOrMut {
+        Const(KConst),
+        Mut(KMut),
     }
 
     struct StructField {
-        // Skip any doc comments on fields
         attributes: Vec<Attribute>,
         _vis: Option<Vis>,
         name: Ident,
         _colon: Colon,
-        typ: TypeLike,
-    }
-
-    // Helper to parse field types including tuples
-    fn parse_field_type(i: &mut TokenIter) -> Result<TypeLike, ParseError> {
-        if let Ok(ident) = i.parse::<Ident>() {
-            if let Ok(ds) = i.parse::<DoubleSemicolon>() {
-                let inner = parse_field_type(i)?;
-                return Ok(TypeLike::Namespaced(Cons {
-                    first: ident,
-                    second: ds,
-                    third: Box::new(inner),
-                }));
-            }
-            return Ok(TypeLike::Ident(ident));
-        }
-        if let Ok(paren) = i.parse::<ParenthesisGroup>() {
-            let mut inner_iter = paren.content.to_token_iter();
-            let types = inner_iter.parse::<CommaDelimitedVec<TypeLike>>()?;
-            return Ok(TypeLike::Tuple(ParenthesisGroupContaining {
-                content: types,
-                paren,
-            }));
-        }
-        Err(ParseError::UnexpectedToken)
+        typ: Type,
     }
 
     struct TupleStruct {
@@ -225,11 +209,7 @@ fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
         .content
         .0
         .iter()
-        .map(|field| {
-            let name = field.value.name.to_string();
-            let typ = field.value.typ.to_string();
-            format!("{name}: {typ}")
-        })
+        .map(|field| field.value.name.to_string())
         .collect::<Vec<String>>()
         .join(", ");
 
