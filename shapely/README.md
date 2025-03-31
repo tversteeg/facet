@@ -28,7 +28,12 @@ value is moved out of the partial.
 It comes with a derive macro that uses [unsynn](https://crates.io/crates/unsynn)
 for speed of compilation.
 
-## Supported Formats
+## Ecosystem
+
+The main `shapely` crate re-exports symbols from:
+
+- [shapely-core](../shapely-core), which defines the main `Shapely` trait and the `Shape` struct
+- [shapely-derive](../shapely-derive), which implements the `Shapely` derive attribute as a fast/light proc macro powered by [unsynn](https://docs.rs/unsynn)
 
 shapely supports deserialization from multiple data formats through dedicated crates:
 
@@ -36,6 +41,11 @@ shapely supports deserialization from multiple data formats through dedicated cr
 - [shapely-yaml](../shapely-yaml): YAML deserialization
 - [shapely-msgpack](../shapely-msgpack): MessagePack deserialization
 - [shapely-urlencoded](../shapely-urlencoded): URL-encoded form data deserialization
+
+Additionally:
+
+- [shapely-pretty](../shapely-pretty) is able to pretty-print Shapely types.
+- [shapely-codegen](../shapely-codegen) is internal and generates some of the code of `shapely-core`
 
 ## Implementing Your Own Deserializer
 
