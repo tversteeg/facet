@@ -1,6 +1,7 @@
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
 use shapely::{Partial, Shapely as _, error, trace, warn};
 
+/// Deserialize a `Partial` object from a JSON string.
 pub fn from_json<'input>(
     partial: &mut Partial,
     json: &'input str,

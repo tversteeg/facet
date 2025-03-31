@@ -68,6 +68,10 @@ impl<'s> Slot<'s> {
         self.init_mark.set();
     }
 
+    /// Fill this slot from the given partial.
+    ///
+    /// This is a code smell: if you have a slot, why are you filling it from a heap-allocated
+    /// partial? That's too many allocations.
     pub fn fill_from_partial(mut self, partial: crate::Partial<'_>) {
         if self.shape != partial.shape() {
             panic!(
@@ -91,6 +95,7 @@ impl<'s> Slot<'s> {
         }
     }
 
+    /// Shape getter
     pub fn shape(&self) -> ShapeDesc {
         self.shape
     }

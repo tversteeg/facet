@@ -1,6 +1,7 @@
 use shapely::{Shape, ShapeDesc};
 use std::io::{self, Write};
 
+/// Serializes any Shapely type to JSON
 pub fn to_json<W: Write>(
     data: *mut u8,
     shape_desc: ShapeDesc,
@@ -205,6 +206,7 @@ pub fn to_json<W: Write>(
     serialize_value(data, shape_desc.get(), writer, indent, 0)
 }
 
+/// Serializes any Shapely type to JSON and returns it as a String
 pub fn to_json_string(data: *mut u8, shape_desc: ShapeDesc, indent: bool) -> String {
     let mut buffer = Vec::new();
     to_json(data, shape_desc, &mut buffer, indent).unwrap();
