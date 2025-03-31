@@ -18,8 +18,7 @@ shapely-derive.workspace = true
 
 [dev-dependencies]
 cargo-husky = { version = "1", default-features = false, features = [
-    "precommit-hook",
-    "run-cargo-fmt",
+    "user-hooks",
 ] }
 
 [features]
