@@ -36,7 +36,7 @@ pub struct Bytes(pub Vec<u8>);
 impl Shapely for Bytes {
     fn shape() -> Shape {
         Shape {
-            name: |f| write!(f, "Bytes"),
+            name: |f, _opts| write!(f, "Bytes"),
             typeid: mini_typeid::of::<Self>(),
             layout: std::alloc::Layout::new::<Self>(),
             innards: Innards::Scalar(Scalar::Bytes),

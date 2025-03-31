@@ -42,7 +42,7 @@ impl FieldFlags {
 
     /// Returns true if the given flag is set
     #[inline]
-    pub fn has_flag(&self, flag: FieldFlags) -> bool {
+    pub fn contains(&self, flag: FieldFlags) -> bool {
         self.0 & flag.0 != 0
     }
 
