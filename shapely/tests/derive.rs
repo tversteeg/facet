@@ -49,6 +49,31 @@ fn struct_repr_c() {
 }
 
 #[test]
+fn struct_doc_comment() {
+    #[derive(Clone, Hash, PartialEq, Eq, ::shapely::Shapely)]
+    /// yes
+    struct Foo {}
+}
+
+#[test]
+fn struct_field_doc_comment() {
+    #[derive(Clone, Hash, PartialEq, Eq, ::shapely::Shapely)]
+    struct Foo {
+        /// This field has a doc comment
+        bar: u32,
+    }
+}
+
+#[test]
+fn struct_with_pub_field() {
+    #[derive(Clone, Hash, PartialEq, Eq, ::shapely::Shapely)]
+    struct Foo {
+        /// This is a public field
+        pub bar: u32,
+    }
+}
+
+#[test]
 fn tuple_struct_repr_transparent() {
     #[derive(Clone, Hash, PartialEq, Eq, ::shapely::Shapely)]
     #[repr(transparent)]
