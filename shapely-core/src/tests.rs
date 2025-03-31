@@ -1,4 +1,4 @@
-use crate::{Shape, Shapely, mini_typeid};
+use crate::{mini_typeid, Shape, Shapely};
 
 // Allow dead code in test modules since we're not constructing all enum variants
 #[allow(dead_code)]

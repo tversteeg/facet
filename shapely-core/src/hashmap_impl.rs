@@ -1,6 +1,6 @@
 use std::{alloc::Layout, collections::HashMap, fmt};
 
-use crate::{Innards, Shape, Shapely, mini_typeid};
+use crate::{mini_typeid, Innards, Shape, Shapely};
 
 impl<V> Shapely for HashMap<String, V>
 where

@@ -1,4 +1,4 @@
-use crate::{FieldError, Innards, ShapeDesc, Shapely, Slot, trace};
+use crate::{trace, FieldError, Innards, ShapeDesc, Shapely, Slot};
 use std::{alloc, ptr::NonNull};
 
 /// Origin of the partial — did we allocate it? Or is it borrowed?

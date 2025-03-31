@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::ptr::NonNull;
 
-use crate::{InitMark, ShapeDesc, Shapely, trace};
+use crate::{trace, InitMark, ShapeDesc, Shapely};
 
 /// Where to write the value
 enum Destination<'s> {

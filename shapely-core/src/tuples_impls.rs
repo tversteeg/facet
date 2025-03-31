@@ -1,6 +1,6 @@
 use std::alloc::Layout;
 
-use crate::{Field, FieldFlags, Innards, Shape, ShapeDesc, Shapely, mini_typeid};
+use crate::{mini_typeid, Field, FieldFlags, Innards, Shape, ShapeDesc, Shapely};
 
 impl<T0> Shapely for (T0,)
 where
