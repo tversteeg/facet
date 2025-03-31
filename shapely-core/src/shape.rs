@@ -71,6 +71,13 @@ impl NameOpts {
         Self { recurse_ttl: 1 }
     }
 
+    /// Decrease the `recurse_ttl` — if it's != 0, returns options to pass when
+    /// formatting children type parameters.
+    ///
+    /// If this returns `None` and you have type parameters, you should render a
+    /// `…` (unicode ellipsis) character instead of your list of types.
+    ///
+    /// See the implementation for `Vec` for examples.
     pub fn for_children(&self) -> Option<Self> {
         if self.recurse_ttl > 0 {
             Some(Self {
@@ -247,23 +254,35 @@ pub enum Innards {
     /// Struct with statically-known, named fields
     ///
     /// e.g. `struct Struct { field: u32 }`
-    Struct { fields: &'static [Field] },
+    Struct {
+        /// all fields, in declaration order (not necessarily in memory order)
+        fields: &'static [Field],
+    },
 
     /// Tuple-struct, with numbered fields
     ///
     /// e.g. `struct TupleStruct(u32, u32);`
-    TupleStruct { fields: &'static [Field] },
+    TupleStruct {
+        /// all fields, in declaration order (not necessarily in memory order)
+        fields: &'static [Field],
+    },
 
     /// Tuple, with numbered fields
     ///
     /// e.g. `(u32, u32);`
-    Tuple { fields: &'static [Field] },
+    Tuple {
+        /// all fields, in declaration order (not necessarily in memory order)
+        fields: &'static [Field],
+    },
 
     /// Map — keys are dynamic (and strings, sorry), values are homogeneous
     ///
     /// e.g. `Map<String, T>`
     Map {
+        /// vtable for interacting with the map
         vtable: MapVTable,
+
+        /// shape of the values in the map (keys must be String, sorry)
         value_shape: ShapeDesc,
     },
 
@@ -271,7 +290,10 @@ pub enum Innards {
     ///
     /// e.g. `Vec<T>`
     List {
+        /// vtable for interacting with the list
         vtable: ListVTable,
+
+        /// shape of the items in the list
         item_shape: ShapeDesc,
     },
 
@@ -289,7 +311,10 @@ pub enum Innards {
     ///
     /// e.g. `enum Enum { Variant1, Variant2 }`
     Enum {
+        /// all variants for this enum
         variants: &'static [Variant],
+
+        /// representation of the enum
         repr: EnumRepr,
     },
 }

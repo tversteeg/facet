@@ -1,3 +1,5 @@
+#![warn(missing_docs)]
+
 use unsynn::*;
 
 keyword! {

@@ -1,11 +1,12 @@
-// vendored straight from https://github.com/dtolnay/typeid — which is dual-licensed under
-// MIT and Apache-2.0.
-//
-// We don't really need const type_id construction or older rustc support, so this is a minimal
-// take on it.
+//! vendored straight from https://github.com/dtolnay/typeid — which is dual-licensed under
+//! MIT and Apache-2.0.
+//!
+//! We don't really need const type_id construction or older rustc support, so this is a minimal
+//! take on it.
 
 use std::{any::TypeId, marker::PhantomData};
 
+/// Returns the `TypeId` of a type `T` without requiring a static reference.
 #[must_use]
 #[inline(always)]
 pub fn of<T>() -> TypeId

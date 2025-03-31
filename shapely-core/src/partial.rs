@@ -10,7 +10,11 @@ pub enum Origin<'s> {
     /// It was generously lent to us by some outside code, and we are NOT
     /// to free it (although we should still uninitialize any fields that we initialized).
     Borrowed {
+        /// The parent `Partial` that we borrowed from.
         parent: Option<&'s Partial<'s>>,
+
+        /// Some mark that indicates whether this field is initialized or not — we should
+        /// set it after initializing the memory we got.
         init_mark: InitMark<'s>,
     },
 }
