@@ -7,10 +7,14 @@ keyword! {
     KDoc = "doc";
     KRepr = "repr";
     KCrate = "crate";
+    KConst = "const";
+    KMut = "mut";
 }
 
 operator! {
     Eq = "=";
+    Semi = ";";
+    Apostrophe = "'";
     DoubleSemicolon = "::";
 }
 
@@ -51,11 +55,20 @@ unsynn! {
         body: BraceGroupContaining<CommaDelimitedVec<StructField>>,
     }
 
+    struct Lifetime {
+        _apostrophe: Apostrophe,
+        name: Ident,
+    }
+
+    enum Expr {
+        Integer(LiteralInteger),
+    }
+
     enum Type {
         Path(Cons<Ident, DoubleSemicolon, Box<Type>>),
-        Tuple(ParenthesisGroupContaining<CommaDelimitedVec<Type>>),
-        Slice(BracketGroupContaining<Type>),
-        Array(Cons<BracketGroupContaining<Type>, Semi, Box<Expr>>),
+        Tuple(ParenthesisGroupContaining<CommaDelimitedVec<Box<Type>>>),
+        Slice(BracketGroupContaining<Box<Type>>),
+        Array(Cons<BracketGroupContaining<Box<Type>>, Semi, Box<Expr>>),
         Ptr(Cons<Star, Option<ConstOrMut>, Box<Type>>),
         Ref(Cons<And, Option<Lifetime>, Option<ConstOrMut>, Box<Type>>),
         Bare(Ident),
@@ -86,7 +99,7 @@ unsynn! {
     struct TupleField {
         attributes: Vec<Attribute>,
         vis: Option<Vis>,
-        typ: TypeLike,
+        typ: Type,
     }
 
     struct Enum {
@@ -223,7 +236,7 @@ fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
                         typeid: shapely::mini_typeid::of::<Self>(),
                         layout: std::alloc::Layout::new::<Self>(),
                         innards: shapely::Innards::Struct {{
-                            fields: shapely::struct_fields!({struct_name}, ({fields_str})),
+                            fields: shapely::struct_fields!({struct_name}, ({fields})),
                         }},
                         set_to_default: None,
                         drop_in_place: Some(|ptr| unsafe {{ std::ptr::drop_in_place(ptr as *mut Self) }}),
@@ -397,13 +410,13 @@ fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
     output.into_token_stream().into()
 }
 
-impl std::fmt::Display for TypeLike {
+impl std::fmt::Display for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            TypeLike::Namespaced(path) => {
+            Type::Path(path) => {
                 write!(f, "{}::{}", path.first, path.third)
             }
-            TypeLike::Tuple(tuple) => {
+            Type::Tuple(tuple) => {
                 write!(f, "(")?;
                 for (i, typ) in tuple.content.0.iter().enumerate() {
                     if i > 0 {
@@ -413,9 +426,55 @@ impl std::fmt::Display for TypeLike {
                 }
                 write!(f, ")")
             }
-            TypeLike::Ident(ident) => {
+            Type::Slice(slice) => {
+                write!(f, "[{}]", slice.content)
+            }
+            Type::Array(array) => {
+                write!(f, "[{}; {}]", array.first.content, array.third)
+            }
+            Type::Ptr(ptr) => {
+                write!(f, "*")?;
+                if let Some(mutability) = &ptr.second {
+                    write!(f, "{} ", mutability)?;
+                }
+                write!(f, "{}", ptr.third)
+            }
+            Type::Ref(reference) => {
+                write!(f, "&")?;
+                if let Some(lifetime) = &reference.second {
+                    write!(f, "{} ", lifetime)?;
+                }
+                if let Some(mutability) = &reference.third {
+                    write!(f, "{} ", mutability)?;
+                }
+                write!(f, "{}", reference.fourth)
+            }
+            Type::Bare(ident) => {
                 write!(f, "{}", ident)
             }
+        }
+    }
+}
+
+impl std::fmt::Display for ConstOrMut {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ConstOrMut::Const(_) => write!(f, "const"),
+            ConstOrMut::Mut(_) => write!(f, "mut"),
+        }
+    }
+}
+
+impl std::fmt::Display for Lifetime {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "'{}", self.name)
+    }
+}
+
+impl std::fmt::Display for Expr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Expr::Integer(int) => write!(f, "{}", int.value()),
         }
     }
 }

@@ -173,6 +173,32 @@ fn derive_real_life_cub_config() {
     }
 }
 
+#[test]
+fn struct_with_tuple() {
+    #[derive(Debug, ::shapely::Shapely)]
+    struct TupleContainer {
+        data: (u32, String, bool),
+    }
+
+    if !cfg!(miri) {
+        let shape = TupleContainer::shape();
+
+        assert_eq!(format!("{}", shape), "TupleContainer");
+
+        if let shapely::Innards::Struct { fields } = shape.innards {
+            assert_eq!(fields.len(), 1);
+
+            let data_field = &fields[0];
+            assert_eq!(data_field.name, "data");
+            assert_eq!(data_field.shape.get().layout.size(), 40);
+            assert_eq!(data_field.shape.get().layout.align(), 8);
+            assert_eq!(data_field.offset, offset_of!(TupleContainer, data));
+        } else {
+            panic!("Expected Struct innards");
+        }
+    }
+}
+
 // #[test]
 // fn struct_with_generic() {
 //     #[derive(Debug, ::shapely::Shapely)]
