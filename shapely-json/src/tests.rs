@@ -107,7 +107,7 @@ fn test_from_json_with_more_types() {
         "i32_val": -2147483648,
         "u64_val": 18446744073709551615,
         "i64_val": -9223372036854775808,
-        "f32_val": 3.14,
+        "f32_val": 3.141592653589793,
         "f64_val": 3.141592653589793
     }"#;
 
@@ -123,8 +123,8 @@ fn test_from_json_with_more_types() {
     assert_eq!(built_struct.i32_val, -2147483648);
     assert_eq!(built_struct.u64_val, 18446744073709551615);
     assert_eq!(built_struct.i64_val, -9223372036854775808);
-    assert!((built_struct.f32_val - 3.14).abs() < f32::EPSILON);
-    assert!((built_struct.f64_val - 3.141592653589793).abs() < f64::EPSILON);
+    assert!((built_struct.f32_val - std::f32::consts::PI).abs() < f32::EPSILON);
+    assert!((built_struct.f64_val - std::f64::consts::PI).abs() < f64::EPSILON);
 }
 
 #[test]
