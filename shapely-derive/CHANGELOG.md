@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0](https://github.com/bearcove/shapely/compare/shapely-derive-v3.0.0...shapely-derive-v3.1.0) - 2025-03-31
+
+### Added
+
+- add support for tuple fields in Shapely derive macro
+
+### Fixed
+
+- Correct unsynn parser definitions and field handling
+
+### Other
+
+- full docs baybee
+- Fill in missing docs
+- errors--
+- Fix all markdown links
+- Mhh it derives _something_
+- Distinguish structs, tuples, and tuple structs
+- allow type complexity (no choice..)
+- more tuple support
+- More complex derives work
+- Support more attribute
+- more derive
+- Add preliminary enum support
+- shill for namespace, closes #36
+
 ## [2.0.0](https://github.com/bearcove/shapely/compare/shapely-derive-v1.0.0...shapely-derive-v2.0.0) - 2025-03-11
 
 ### Other

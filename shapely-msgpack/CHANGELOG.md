@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0](https://github.com/bearcove/shapely/compare/shapely-msgpack-v3.0.0...shapely-msgpack-v3.1.0) - 2025-03-31
+
+### Other
+
+- Fix all markdown links
+- shill for namespace, closes #36
+- specific toolchains, reformat code
+
 ## [2.0.1](https://github.com/bearcove/shapely/compare/shapely-msgpack-v2.0.0...shapely-msgpack-v2.0.1) - 2025-03-11
 
 ### Other

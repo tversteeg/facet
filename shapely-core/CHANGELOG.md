@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0](https://github.com/bearcove/shapely/compare/shapely-core-v3.0.0...shapely-core-v3.1.0) - 2025-03-31
+
+### Added
+
+- introduce NameOpts
+
+### Fixed
+
+- fix doctests
+
+### Other
+
+- full docs baybee
+- Fill in missing docs
+- Document more stuff
+- Move things around
+- Improve naming
+- errors--
+- Mark some methods as unsafe, document some more
+- Fix all markdown links
+- Well, I guess Slot::for_hash_map wasn't working
+- Yay for miri
+- woops, edition 2024
+- json roundtrip
+- arrays.. work?
+- vec is okay
+- Use trick by @veykril to reduce codegen size
+- codegen cleanups
+- format after codegen
+- Distinguish structs, tuples, and tuple structs
+- allow type complexity (no choice..)
+- Tuple layouts
+- wip tuple impls
+- more derive
+- Add preliminary enum support
+- shill for namespace, closes #36
+- Dummy change to test CI speed
+- specific toolchains, reformat code
+- extract shape pretty printing into its own module
+- Improve debug output
+
 ## [3.0.0](https://github.com/bearcove/shapely/compare/shapely-core-v2.0.1...shapely-core-v3.0.0) - 2025-03-11
 
 ### Added
