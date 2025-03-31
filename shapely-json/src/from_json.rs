@@ -35,7 +35,7 @@ pub fn from_json<'input>(
                     Scalar::I64 => slot.fill(parser.parse_i64()?),
                     Scalar::F32 => slot.fill(parser.parse_f32()?),
                     Scalar::F64 => slot.fill(parser.parse_f64()?),
-                    // TODO: Add support for Bytes, Bool, etc.
+                    Scalar::Boolean => slot.fill(parser.parse_bool()?),
                     _ => {
                         warn!("Unsupported scalar type: {:?}", scalar);
                         return Err(parser.make_error(JsonParseErrorKind::Custom(format!(
@@ -67,6 +67,71 @@ pub fn from_json<'input>(
 
                 // TODO: this would be a good place to decide what to do about unset fields? Is this
                 // where we finally get to use `set_default`?
+            }
+            Innards::Tuple { .. } => {
+                trace!("Deserializing \x1b[1;36mtuple\x1b[0m");
+
+                // Parse array start
+                parser.expect_array_start()?;
+
+                let mut index = 0;
+                while let Some(has_element) = parser.parse_array_element()? {
+                    if !has_element {
+                        break;
+                    }
+
+                    let field_name = index.to_string();
+                    trace!("Processing tuple index: \x1b[1;33m{}\x1b[0m", field_name);
+
+                    let slot = partial.slot_by_name(&field_name).map_err(|_| {
+                        parser.make_error(JsonParseErrorKind::Custom(format!(
+                            "Tuple index out of bounds: {}",
+                            index
+                        )))
+                    })?;
+
+                    let mut partial_field = Partial::alloc(slot.shape());
+                    deserialize_value(parser, &mut partial_field)?;
+                    slot.fill_from_partial(partial_field);
+
+                    index += 1;
+                }
+
+                trace!("Finished deserializing \x1b[1;36mtuple\x1b[0m");
+            }
+            Innards::TupleStruct { .. } => {
+                trace!("Deserializing \x1b[1;36mtuple struct\x1b[0m");
+
+                // Parse array start
+                parser.expect_array_start()?;
+
+                let mut index = 0;
+                while let Some(has_element) = parser.parse_array_element()? {
+                    if !has_element {
+                        break;
+                    }
+
+                    let field_name = index.to_string();
+                    trace!(
+                        "Processing tuple struct index: \x1b[1;33m{}\x1b[0m",
+                        field_name
+                    );
+
+                    let slot = partial.slot_by_name(&field_name).map_err(|_| {
+                        parser.make_error(JsonParseErrorKind::Custom(format!(
+                            "Tuple struct index out of bounds: {}",
+                            index
+                        )))
+                    })?;
+
+                    let mut partial_field = Partial::alloc(slot.shape());
+                    deserialize_value(parser, &mut partial_field)?;
+                    slot.fill_from_partial(partial_field);
+
+                    index += 1;
+                }
+
+                trace!("Finished deserializing \x1b[1;36mtuple struct\x1b[0m");
             }
             // Add support for other shapes (Array, Transparent) as needed
             _ => {

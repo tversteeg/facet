@@ -19,10 +19,12 @@ pub enum JsonParseErrorKind {
     ExpectedNumber,
     InvalidNumberFormat,
     ExpectedOpeningBrace,
+    ExpectedOpeningBracket,
     ExpectedColon,
     UnexpectedEndOfInput,
     InvalidValue,
     ExpectedClosingBrace,
+    ExpectedClosingBracket,
     UnknownField(String),
     Custom(String),
 }
@@ -58,10 +60,12 @@ impl std::fmt::Display for JsonParseError {
             JsonParseErrorKind::ExpectedNumber => "Expected a number",
             JsonParseErrorKind::InvalidNumberFormat => "Invalid number format",
             JsonParseErrorKind::ExpectedOpeningBrace => "Expected opening brace for object",
+            JsonParseErrorKind::ExpectedOpeningBracket => "Expected opening bracket for array",
             JsonParseErrorKind::ExpectedColon => "Expected ':' after object key",
             JsonParseErrorKind::UnexpectedEndOfInput => "Unexpected end of input",
             JsonParseErrorKind::InvalidValue => "Invalid value",
             JsonParseErrorKind::ExpectedClosingBrace => "Expected closing brace for object",
+            JsonParseErrorKind::ExpectedClosingBracket => "Expected closing bracket for array",
             JsonParseErrorKind::UnknownField(field) => {
                 return write!(f, "Unknown field: {}", field);
             }
@@ -247,11 +251,73 @@ impl<'a> JsonParser<'a> {
         self.parse_number()
     }
 
+    pub fn parse_bool(&mut self) -> Result<bool, JsonParseErrorWithContext<'a>> {
+        self.skip_whitespace();
+        if self.position + 4 <= self.input.len()
+            && &self.input[self.position..self.position + 4] == "true"
+        {
+            self.position += 4;
+            return Ok(true);
+        }
+        if self.position + 5 <= self.input.len()
+            && &self.input[self.position..self.position + 5] == "false"
+        {
+            self.position += 5;
+            return Ok(false);
+        }
+        Err(self.make_error(JsonParseErrorKind::InvalidValue))
+    }
+
     pub fn skip_whitespace(&mut self) {
         while self.position < self.input.len() {
             match self.input.as_bytes()[self.position] {
                 b' ' | b'\t' | b'\n' | b'\r' => self.position += 1,
                 _ => break,
+            }
+        }
+    }
+
+    /// Expects the start of an array and returns whether there's a first element.
+    /// Returns true if the array has an element, false if the array is empty.
+    pub fn expect_array_start(&mut self) -> Result<bool, JsonParseErrorWithContext<'a>> {
+        self.skip_whitespace();
+        if self.position >= self.input.len() || self.input.as_bytes()[self.position] != b'[' {
+            return Err(self.make_error(JsonParseErrorKind::ExpectedOpeningBracket));
+        }
+        self.position += 1;
+        self.skip_whitespace();
+
+        // Check if array is immediately closed
+        if self.position < self.input.len() && self.input.as_bytes()[self.position] == b']' {
+            self.position += 1;
+            return Ok(false); // Empty array
+        }
+
+        Ok(true) // Array has at least one element
+    }
+
+    /// Expects the end of an array or a comma followed by the next element.
+    /// Returns Some(true) if there's another element, Some(false) if the array has ended,
+    /// or an error if the JSON is malformed.
+    pub fn parse_array_element(&mut self) -> Result<Option<bool>, JsonParseErrorWithContext<'a>> {
+        self.skip_whitespace();
+        if self.position >= self.input.len() {
+            return Err(self.make_error(JsonParseErrorKind::UnexpectedEndOfInput));
+        }
+
+        match self.input.as_bytes()[self.position] {
+            b',' => {
+                self.position += 1;
+                self.skip_whitespace();
+                Ok(Some(true)) // There's another element
+            }
+            b']' => {
+                self.position += 1;
+                Ok(Some(false)) // End of array
+            }
+            _ => {
+                // First element doesn't need a comma
+                Ok(Some(true))
             }
         }
     }
