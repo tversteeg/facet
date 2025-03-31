@@ -52,7 +52,7 @@ pub enum ScalarContents<'a> {
     /// A boolean value
     Boolean(bool),
 
-    /// Nothing (unit type)
+    /// Nothing (empty tuple)
     Nothing,
 
     /// Unknown scalar type

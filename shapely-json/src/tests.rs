@@ -155,19 +155,40 @@ fn test_from_json_with_nested_structs() {
     assert_eq!(built_struct.inner.value, 42);
 }
 
+#[test]
+fn test_from_json_with_tuples() {
+    #[derive(Shapely)]
+    struct TupleStruct(i32, String, (f64, bool));
+
+    let json = r#"[123, "Hello", [3.69, true]]"#;
+
+    let mut test_struct = TupleStruct::partial();
+    from_json(&mut test_struct, json).unwrap();
+
+    let built_struct = test_struct.build::<TupleStruct>();
+    assert_eq!(built_struct.0, 123);
+    assert_eq!(built_struct.1, "Hello");
+    assert!((built_struct.2.0 - 3.69).abs() < f64::EPSILON);
+    assert!(built_struct.2.1);
+}
+
 // #[test]
-// fn test_from_json_with_tuples() {
+// fn test_from_json_with_vec() {
 //     #[derive(Shapely)]
-//     struct TupleStruct(i32, String, (f64, bool));
+//     struct VecStruct {
+//         numbers: Vec<i32>,
+//         names: Vec<String>,
+//     }
 
-//     let json = r#"[123, "Hello", [3.14, true]]"#;
+//     let json = r#"{
+//         "numbers": [1, 2, 3, 4, 5],
+//         "names": ["Alice", "Bob", "Charlie"]
+//     }"#;
 
-//     let mut test_struct = TupleStruct::partial();
+//     let mut test_struct = VecStruct::partial();
 //     from_json(&mut test_struct, json).unwrap();
 
-//     let built_struct = test_struct.build::<TupleStruct>();
-//     assert_eq!(built_struct.0, 123);
-//     assert_eq!(built_struct.1, "Hello");
-//     assert!((built_struct.2.0 - 3.14).abs() < f64::EPSILON);
-//     assert_eq!(built_struct.2.1, true);
+//     let built_struct = test_struct.build::<VecStruct>();
+//     assert_eq!(built_struct.numbers, vec![1, 2, 3, 4, 5]);
+//     assert_eq!(built_struct.names, vec!["Alice", "Bob", "Charlie"]);
 // }

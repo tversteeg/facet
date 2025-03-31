@@ -96,7 +96,7 @@ impl Shapely for () {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<()>(),
             innards: Innards::Scalar(Scalar::Nothing),
-            set_to_default: Some(|_addr: *mut u8| {}),
+            set_to_default: None,
             drop_in_place: None,
         }
     }
