@@ -1,9 +1,6 @@
 use std::mem::MaybeUninit;
 
-mod hashmap_impl;
-mod scalar_impls;
-mod tuples_impls;
-mod vec_impl;
+mod impls;
 
 mod scalar_contents;
 pub use scalar_contents::ScalarContents;

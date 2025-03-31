@@ -2,6 +2,21 @@ use std::{alloc::Layout, any::TypeId, ptr::NonNull};
 
 mod pretty_print;
 
+mod struct_shape;
+pub use struct_shape::*;
+
+mod enum_shape;
+pub use enum_shape::*;
+
+mod scalar_shape;
+pub use scalar_shape::*;
+
+mod vec_shape;
+pub use vec_shape::*;
+
+mod hashmap_shape;
+pub use hashmap_shape::*;
+
 /// Schema for reflection of a type
 #[derive(Clone, Copy)]
 pub struct Shape {
@@ -29,12 +44,49 @@ pub struct Shape {
     pub drop_in_place: Option<DropFn>,
 }
 
-pub type NameFn = fn(f: &mut std::fmt::Formatter) -> std::fmt::Result;
+#[non_exhaustive]
+#[derive(Clone, Copy)]
+pub struct NameOpts {
+    /// as long as this is > 0, keep formatting the type parameters
+    /// when it reaches 0, format type parameters as `...`
+    /// if negative, all type parameters are formatted
+    recurse_ttl: isize,
+}
+
+impl Default for NameOpts {
+    fn default() -> Self {
+        Self { recurse_ttl: -1 }
+    }
+}
+
+impl NameOpts {
+    /// Create a new `NameOpts` for which none of the type parameters are formatted
+    pub fn none() -> Self {
+        Self { recurse_ttl: 0 }
+    }
+
+    /// Create a new `NameOpts` for which only the direct children are formatted
+    pub fn one() -> Self {
+        Self { recurse_ttl: 1 }
+    }
+
+    pub fn for_children(&self) -> Option<Self> {
+        if self.recurse_ttl > 0 {
+            Some(Self {
+                recurse_ttl: self.recurse_ttl - 1,
+            })
+        } else {
+            None
+        }
+    }
+}
+
+pub type NameFn = fn(f: &mut std::fmt::Formatter, opts: NameOpts) -> std::fmt::Result;
 
 // Helper struct to format the name for display
 impl std::fmt::Display for Shape {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        (self.name)(f)
+        (self.name)(f, NameOpts::default())
     }
 }
 
@@ -87,6 +139,7 @@ impl Shape {
 
     /// Returns a reference to a field with the given name, if it exists
     pub fn field_by_name(&self, name: &str) -> Option<&Field> {
+        // this is O(n), but shrug. maybe phf in the future? who knows.
         self.known_fields().iter().find(|field| field.name == name)
     }
 
@@ -188,147 +241,53 @@ impl std::fmt::Debug for Shape {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Innards {
     /// Struct with statically-known, named fields
+    ///
+    /// e.g. `struct Struct { field: u32 }`
     Struct { fields: &'static [Field] },
 
     /// Tuple-struct, with numbered fields
+    ///
+    /// e.g. `struct TupleStruct(u32, u32);`
     TupleStruct { fields: &'static [Field] },
 
     /// Tuple, with numbered fields
+    ///
+    /// e.g. `(u32, u32);`
     Tuple { fields: &'static [Field] },
 
     /// HashMap — keys are dynamic (and strings, sorry), values are homogeneous
+    ///
+    /// e.g. `HashMap<String, T>`
     HashMap {
-        vtable: HashMapVtable,
+        vtable: HashMapVTable,
         value_shape: ShapeDesc,
     },
 
     /// Ordered list of heterogenous values, variable size
-    Array {
-        vtable: ArrayVtable,
+    ///
+    /// e.g. `Vec<T>`
+    Vec {
+        vtable: VecVTable,
         item_shape: ShapeDesc,
     },
 
     /// Transparent — forwards to another known schema
+    ///
+    /// e.g. `#[repr(transparent)] struct Transparent<T>(T);`
     Transparent(ShapeDesc),
 
     /// Scalar — known based type
+    ///
+    /// e.g. `u32`, `String`, `bool`
     Scalar(Scalar),
 
     /// Enum with variants
+    ///
+    /// e.g. `enum Enum { Variant1, Variant2 }`
     Enum {
         variants: &'static [Variant],
         repr: EnumRepr,
     },
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Field {
-    /// key for the map field
-    pub name: &'static str,
-
-    /// schema of the inner type
-    pub shape: ShapeDesc,
-
-    /// offset of the field in the map, if known.
-    ///
-    /// For example, when deserializing a self-descriptive format like JSON, we're going to get
-    /// some map fields with dynamically discovered field names, and they're not going to have
-    /// an offset.
-    ///
-    /// However, when deserializing formats that are non-self descriptive and working from an
-    /// existing shape, then their map fields are probably going to have offsets, especially if
-    /// they're using derived macros.
-    pub offset: usize,
-
-    /// Flags for the field (e.g. sensitive)
-    pub flags: FieldFlags,
-}
-
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
-pub struct ArrayVtable {
-    // init given pointer to be an empty vec (with capacity)
-    pub init: unsafe fn(ptr: *mut u8, size_hint: Option<usize>),
-
-    // push an item
-    pub push: unsafe fn(*mut u8, crate::Partial),
-
-    // get length of the collection
-    pub len: unsafe fn(ptr: *const u8) -> usize,
-
-    // get address of the item at the given index. panics if out of bound.
-    pub get_item_ptr: unsafe fn(ptr: *const u8, index: usize) -> *const u8,
-}
-
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
-pub struct HashMapVtable {
-    // Initialize an empty HashMap at the given pointer
-    pub init: unsafe fn(ptr: *mut u8, size_hint: Option<usize>),
-
-    // Insert a key-value pair into the HashMap
-    pub insert: unsafe fn(*mut u8, key: crate::Partial, value: crate::Partial),
-
-    // Get the number of entries in the HashMap
-    pub len: unsafe fn(ptr: *const u8) -> usize,
-
-    // Check if the HashMap contains a key
-    pub contains_key: unsafe fn(ptr: *const u8, key: &str) -> bool,
-
-    // Get pointer to a value for a given key, returns null if not found
-    pub get_value_ptr: unsafe fn(ptr: *const u8, key: &str) -> *const u8,
-
-    // Get an iterator over the hashmap
-    pub iter: unsafe fn(ptr: *const u8) -> *const u8,
-
-    pub iter_vtable: HashMapIterVtable,
-}
-
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
-pub struct HashMapIterVtable {
-    // Get the next key-value pair from the iterator
-    pub next: unsafe fn(*const u8) -> Option<(*const String, *const u8)>,
-
-    // Deallocate the iterator
-    pub dealloc: unsafe fn(*const u8),
-}
-
-/// The outcome of trying to set a field on a map
-#[derive(Debug, Clone, Copy)]
-pub enum SetFieldOutcome {
-    /// The field was successfully set
-    Accepted,
-
-    /// The field was rejected (unknown field set in a struct, for example)
-    Rejected,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[non_exhaustive]
-pub enum Scalar {
-    // Valid utf-8
-    String,
-
-    // Not valid utf-8 🤷
-    Bytes,
-
-    I8,
-    I16,
-    I32,
-    I64,
-    I128,
-
-    U8,
-    U16,
-    U32,
-    U64,
-    U128,
-
-    F32,
-    F64,
-
-    Boolean,
-
-    /// An empty tuple, null, undefined, whatever you wish
-    Nothing,
 }
 
 /// A function that returns a shape. There should only be one of these per concrete type in a
@@ -373,187 +332,5 @@ impl std::hash::Hash for ShapeDesc {
 impl std::fmt::Debug for ShapeDesc {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.get().fmt(f)
-    }
-}
-
-/// Flags that can be applied to fields to modify their behavior
-///
-/// # Examples
-///
-/// ```rust
-/// use shapely_core::FieldFlags;
-///
-/// // Create flags with the sensitive bit set
-/// let flags = FieldFlags::SENSITIVE;
-/// assert!(flags.is_sensitive());
-///
-/// // Combine multiple flags using bitwise OR
-/// let flags = FieldFlags::SENSITIVE | FieldFlags::EMPTY;
-/// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FieldFlags(u64);
-
-impl FieldFlags {
-    /// An empty set of flags
-    pub const EMPTY: Self = Self(0);
-
-    /// Flag indicating this field contains sensitive data that should not be displayed
-    pub const SENSITIVE: Self = Self(1 << 0);
-
-    /// Returns true if the sensitive flag is set
-    #[inline]
-    pub fn is_sensitive(&self) -> bool {
-        self.0 & Self::SENSITIVE.0 != 0
-    }
-
-    /// Sets the sensitive flag and returns self for chaining
-    #[inline]
-    pub fn set_sensitive(&mut self) -> &mut Self {
-        self.0 |= Self::SENSITIVE.0;
-        self
-    }
-
-    /// Unsets the sensitive flag and returns self for chaining
-    #[inline]
-    pub fn unset_sensitive(&mut self) -> &mut Self {
-        self.0 &= !Self::SENSITIVE.0;
-        self
-    }
-
-    /// Creates a new FieldFlags with the sensitive flag set
-    #[inline]
-    pub const fn sensitive() -> Self {
-        Self::SENSITIVE
-    }
-}
-
-impl std::ops::BitOr for FieldFlags {
-    type Output = Self;
-
-    fn bitor(self, rhs: Self) -> Self {
-        Self(self.0 | rhs.0)
-    }
-}
-
-impl std::ops::BitOrAssign for FieldFlags {
-    fn bitor_assign(&mut self, rhs: Self) {
-        self.0 |= rhs.0;
-    }
-}
-
-impl Default for FieldFlags {
-    #[inline(always)]
-    fn default() -> Self {
-        Self::EMPTY
-    }
-}
-
-impl std::fmt::Display for FieldFlags {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.0 == 0 {
-            return write!(f, "none");
-        }
-
-        // Define a vector of flag entries: (flag bit, name)
-        let flags = [
-            (Self::SENSITIVE.0, "sensitive"),
-            // Future flags can be easily added here:
-            // (Self::SOME_FLAG.0, "some_flag"),
-            // (Self::ANOTHER_FLAG.0, "another_flag"),
-        ];
-
-        // Write all active flags with proper separators
-        let mut is_first = true;
-        for (bit, name) in flags {
-            if self.0 & bit != 0 {
-                if !is_first {
-                    write!(f, ", ")?;
-                }
-                is_first = false;
-                write!(f, "{}", name)?;
-            }
-        }
-
-        Ok(())
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum VariantKind {
-    /// Unit variant (e.g., `None` in Option)
-    Unit,
-
-    /// Tuple variant with unnamed fields (e.g., `Some(T)` in Option)
-    Tuple { fields: &'static [Field] },
-
-    /// Struct variant with named fields (e.g., `Struct { field: T }`)
-    Struct { fields: &'static [Field] },
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum EnumRepr {
-    /// Default representation (compiler-dependent)
-    Default,
-    /// u8 representation (#[repr(u8)])
-    U8,
-    /// u16 representation (#[repr(u16)])
-    U16,
-    /// u32 representation (#[repr(u32)])
-    U32,
-    /// u64 representation (#[repr(u64)])
-    U64,
-    /// usize representation (#[repr(usize)])
-    USize,
-    /// i8 representation (#[repr(i8)])
-    I8,
-    /// i16 representation (#[repr(i16)])
-    I16,
-    /// i32 representation (#[repr(i32)])
-    I32,
-    /// i64 representation (#[repr(i64)])
-    I64,
-    /// isize representation (#[repr(isize)])
-    ISize,
-}
-
-impl Default for EnumRepr {
-    fn default() -> Self {
-        Self::Default
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Variant {
-    /// Name of the variant
-    pub name: &'static str,
-
-    /// Discriminant value (if available)
-    pub discriminant: Option<i64>,
-
-    /// Kind of variant (unit, tuple, or struct)
-    pub kind: VariantKind,
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum VariantError {
-    /// `variant_by_index` was called with an index that is out of bounds.
-    IndexOutOfBounds,
-
-    /// `variant_by_name` or `variant_by_index` was called on a non-enum type.
-    NotAnEnum,
-
-    /// `variant_by_name` was called with a name that doesn't match any variant.
-    NoSuchVariant,
-}
-
-impl std::error::Error for VariantError {}
-
-impl std::fmt::Display for VariantError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            VariantError::IndexOutOfBounds => write!(f, "Variant index out of bounds"),
-            VariantError::NotAnEnum => write!(f, "Not an enum"),
-            VariantError::NoSuchVariant => write!(f, "No such variant"),
-        }
     }
 }

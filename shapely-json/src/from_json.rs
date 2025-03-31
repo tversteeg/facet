@@ -133,7 +133,7 @@ pub fn from_json<'input>(
 
                 trace!("Finished deserializing \x1b[1;36mtuple struct\x1b[0m");
             }
-            Innards::Array { item_shape, .. } => {
+            Innards::Vec { item_shape, .. } => {
                 trace!("Deserializing \x1b[1;36marray\x1b[0m");
 
                 // Parse array start

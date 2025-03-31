@@ -1,4 +1,4 @@
-use super::{Innards, Shape, VariantKind};
+use super::{Innards, NameOpts, Shape, VariantKind};
 use std::{collections::HashSet, fmt::Formatter};
 
 impl Shape {
@@ -15,13 +15,13 @@ impl Shape {
     ) -> std::fmt::Result {
         if !printed_schemas.insert(*self) {
             write!(f, "{:indent$}\x1b[1;33m", "", indent = indent)?;
-            (self.name)(f)?;
+            (self.name)(f, NameOpts::one())?;
             writeln!(f, "\x1b[0m (\x1b[1;31malready printed\x1b[0m)")?;
             return Ok(());
         }
 
         write!(f, "{:indent$}\x1b[1;33m", "", indent = indent)?;
-        (self.name)(f)?;
+        (self.name)(f, NameOpts::default())?;
         writeln!(f, "\x1b[0m (\x1b[1;34m{}\x1b[0m bytes)", self.layout.size())?;
 
         match &self.innards {
@@ -39,7 +39,7 @@ impl Shape {
                         indent = indent + Self::INDENT,
                         width = max_name_length
                     )?;
-                    if field.flags.is_sensitive() {
+                    if field.flags.contains(FieldFlags::SENSITIVE) {
                         write!(f, "(sensitive) ")?;
                     }
                     if let Innards::Scalar(_) = field.shape.get().innards {
@@ -71,7 +71,7 @@ impl Shape {
                     indent + Self::INDENT * 2,
                 )?;
             }
-            Innards::Array { item_shape, .. } => {
+            Innards::Vec { item_shape, .. } => {
                 write!(
                     f,
                     "{:indent$}\x1b[1;36mArray of:\x1b[0m ",
@@ -149,7 +149,7 @@ impl Shape {
                                     field.name,
                                     indent = indent + Self::INDENT * 3
                                 )?;
-                                if field.flags.is_sensitive() {
+                                if field.flags.contains(FieldFlags::SENSITIVE) {
                                     write!(f, "(sensitive) ")?;
                                 }
                                 if let Innards::Scalar(_) = field.shape.get().innards {
@@ -188,7 +188,7 @@ impl Shape {
                                     field.name,
                                     indent = indent + Self::INDENT * 3
                                 )?;
-                                if field.flags.is_sensitive() {
+                                if field.flags.contains(FieldFlags::SENSITIVE) {
                                     write!(f, "(sensitive) ")?;
                                 }
                                 if let Innards::Scalar(_) = field.shape.get().innards {

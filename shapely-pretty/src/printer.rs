@@ -134,7 +134,7 @@ impl PrettyPrinter {
                 vtable: _,
                 value_shape,
             } => self.format_hashmap(ptr, shape, *value_shape, f, depth, visited),
-            Innards::Array {
+            Innards::Vec {
                 vtable: _,
                 item_shape,
             } => self.format_array(ptr, shape, *item_shape, f, depth, visited),

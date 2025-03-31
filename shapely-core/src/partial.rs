@@ -1,4 +1,4 @@
-use crate::{ArrayVtable, FieldError, Innards, ShapeDesc, Shapely, Slot, trace};
+use crate::{FieldError, Innards, ShapeDesc, Shapely, Slot, VecVTable, trace};
 use std::{alloc, ptr::NonNull};
 
 /// Origin of the partial — did we allocate it? Or is it borrowed?
@@ -208,7 +208,7 @@ impl Partial<'_> {
     /// Returns a slot for treating this partial as an array (onto which you can push new items)
     pub fn array_slot(&mut self, size_hint: Option<usize>) -> Option<ArraySlot> {
         match self.shape.get().innards {
-            crate::Innards::Array {
+            crate::Innards::Vec {
                 vtable,
                 item_shape: _,
             } => {
@@ -336,7 +336,7 @@ impl Partial<'_> {
             Innards::HashMap { .. } => Err(FieldError::NoStaticFields),
             Innards::Transparent(_) => Err(FieldError::NoStaticFields),
             Innards::Scalar(_) => Err(FieldError::NoStaticFields),
-            Innards::Array { .. } => Err(FieldError::NoStaticFields),
+            Innards::Vec { .. } => Err(FieldError::NoStaticFields),
             Innards::Enum {
                 variants: _,
                 repr: _,
@@ -1024,12 +1024,12 @@ impl InitMark<'_> {
 /// rather than fixed-size arrays or slices, so it's a bit of a misnomer at the moment.
 pub struct ArraySlot {
     pub(crate) addr: NonNull<u8>,
-    pub(crate) vtable: ArrayVtable,
+    pub(crate) vtable: VecVTable,
 }
 
 impl ArraySlot {
     /// Create a new ArraySlot with the given address and vtable
-    pub(crate) unsafe fn new(addr: NonNull<u8>, vtable: ArrayVtable) -> Self {
+    pub(crate) unsafe fn new(addr: NonNull<u8>, vtable: VecVTable) -> Self {
         Self { addr, vtable }
     }
 
@@ -1051,12 +1051,12 @@ impl ArraySlot {
 /// Provides insert, length check, and iteration over a type-erased hashmap
 pub struct HashMapSlot {
     pub(crate) addr: NonNull<u8>,
-    pub(crate) vtable: crate::HashMapVtable,
+    pub(crate) vtable: crate::HashMapVTable,
 }
 
 impl HashMapSlot {
     /// Create a new HashMapSlot with the given address and vtable
-    pub(crate) unsafe fn new(addr: NonNull<u8>, vtable: crate::HashMapVtable) -> Self {
+    pub(crate) unsafe fn new(addr: NonNull<u8>, vtable: crate::HashMapVTable) -> Self {
         Self { addr, vtable }
     }
 
