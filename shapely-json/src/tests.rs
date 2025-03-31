@@ -171,3 +171,24 @@ fn test_from_json_with_tuples() {
     assert!((built_struct.2.0 - 3.69).abs() < f64::EPSILON);
     assert!(built_struct.2.1);
 }
+
+// #[test]
+// fn test_from_json_with_vec() {
+//     #[derive(Shapely)]
+//     struct VecStruct {
+//         numbers: Vec<i32>,
+//         names: Vec<String>,
+//     }
+
+//     let json = r#"{
+//         "numbers": [1, 2, 3, 4, 5],
+//         "names": ["Alice", "Bob", "Charlie"]
+//     }"#;
+
+//     let mut test_struct = VecStruct::partial();
+//     from_json(&mut test_struct, json).unwrap();
+
+//     let built_struct = test_struct.build::<VecStruct>();
+//     assert_eq!(built_struct.numbers, vec![1, 2, 3, 4, 5]);
+//     assert_eq!(built_struct.names, vec!["Alice", "Bob", "Charlie"]);
+// }
