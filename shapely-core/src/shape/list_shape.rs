@@ -1,3 +1,5 @@
+/// Virtual table for a list-like type (like `Vec<T>`,
+/// but also `HashSet<T>`, etc.)
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub struct ListVTable {
     /// init given pointer to be an empty vec (with capacity)

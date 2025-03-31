@@ -26,9 +26,6 @@ pub use log::*;
 #[cfg(test)]
 mod tests;
 
-#[cfg(test)]
-mod scalar_contents_tests;
-
 /// A wrapper around `Vec<u8>` for binary data
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Bytes(pub Vec<u8>);
