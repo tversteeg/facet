@@ -203,6 +203,14 @@ fn struct_with_tuple() {
     }
 }
 
+#[test]
+fn struct_with_vec() {
+    #[derive(Debug, ::shapely::Shapely)]
+    struct VecContainer {
+        data: Vec<u32>,
+    }
+}
+
 // #[test]
 // fn struct_with_generic() {
 //     #[derive(Debug, ::shapely::Shapely)]
