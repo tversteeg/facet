@@ -25,8 +25,17 @@ pub fn from_json<'input>(
 
                 match scalar {
                     Scalar::String => slot.fill(parser.parse_string()?),
+                    Scalar::U8 => slot.fill(parser.parse_u8()?),
+                    Scalar::U16 => slot.fill(parser.parse_u16()?),
+                    Scalar::U32 => slot.fill(parser.parse_u32()?),
                     Scalar::U64 => slot.fill(parser.parse_u64()?),
-                    // Add other scalar types as needed
+                    Scalar::I8 => slot.fill(parser.parse_i8()?),
+                    Scalar::I16 => slot.fill(parser.parse_i16()?),
+                    Scalar::I32 => slot.fill(parser.parse_i32()?),
+                    Scalar::I64 => slot.fill(parser.parse_i64()?),
+                    Scalar::F32 => slot.fill(parser.parse_f32()?),
+                    Scalar::F64 => slot.fill(parser.parse_f64()?),
+                    // TODO: Add support for Bytes, Bool, etc.
                     _ => {
                         warn!("Unsupported scalar type: {:?}", scalar);
                         return Err(parser.make_error(JsonParseErrorKind::Custom(format!(
