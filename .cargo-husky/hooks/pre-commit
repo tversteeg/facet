@@ -1,0 +1,3 @@
+#!/bin/bash
+
+pnpx lint-staged --shell "rustfmt {} && git add {}"

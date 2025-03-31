@@ -199,9 +199,11 @@ impl<'a> JsonParser<'a> {
             }
         }
 
-        if start == self.position || (self.position == start + 1 && self.input.as_bytes()[start] == b'-') {
+        if start == self.position
+            || (self.position == start + 1 && self.input.as_bytes()[start] == b'-')
+        {
             // Handle case where only '-' was found or nothing was parsed
-             return Err(self.make_error(JsonParseErrorKind::ExpectedNumber));
+            return Err(self.make_error(JsonParseErrorKind::ExpectedNumber));
         }
 
         let num_str = &self.input[start..self.position];
@@ -244,7 +246,6 @@ impl<'a> JsonParser<'a> {
     pub fn parse_f64(&mut self) -> Result<f64, JsonParseErrorWithContext<'a>> {
         self.parse_number()
     }
-
 
     pub fn skip_whitespace(&mut self) {
         while self.position < self.input.len() {
