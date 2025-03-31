@@ -44,13 +44,14 @@ pub struct Shape {
     pub drop_in_place: Option<DropFn>,
 }
 
+/// Options for formatting the name of a type
 #[non_exhaustive]
 #[derive(Clone, Copy)]
 pub struct NameOpts {
     /// as long as this is > 0, keep formatting the type parameters
     /// when it reaches 0, format type parameters as `...`
     /// if negative, all type parameters are formatted
-    recurse_ttl: isize,
+    pub recurse_ttl: isize,
 }
 
 impl Default for NameOpts {
@@ -81,6 +82,9 @@ impl NameOpts {
     }
 }
 
+/// A function that formats the name of a type.
+///
+/// This helps avoid allocations, and it takes options.
 pub type NameFn = fn(f: &mut std::fmt::Formatter, opts: NameOpts) -> std::fmt::Result;
 
 // Helper struct to format the name for display

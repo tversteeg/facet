@@ -25,6 +25,7 @@ pub enum VariantKind {
     Struct { fields: &'static [Field] },
 }
 
+/// All possible representations for Rust enums
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EnumRepr {
     /// Default representation (compiler-dependent)
