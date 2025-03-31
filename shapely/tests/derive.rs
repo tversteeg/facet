@@ -190,8 +190,12 @@ fn struct_with_tuple() {
 
             let data_field = &fields[0];
             assert_eq!(data_field.name, "data");
-            assert_eq!(data_field.shape.get().layout.size(), 40);
-            assert_eq!(data_field.shape.get().layout.align(), 8);
+
+            // Get the layout from the tuple type itself
+            let tuple_layout = std::alloc::Layout::new::<(u32, String, bool)>();
+
+            assert_eq!(data_field.shape.get().layout.size(), tuple_layout.size());
+            assert_eq!(data_field.shape.get().layout.align(), tuple_layout.align());
             assert_eq!(data_field.offset, offset_of!(TupleContainer, data));
         } else {
             panic!("Expected Struct innards");
