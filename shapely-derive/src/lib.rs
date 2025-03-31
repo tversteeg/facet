@@ -1,37 +1,23 @@
 use unsynn::*;
 
 keyword! {
-    Pub = "pub";
-    Struct = "struct";
-    Enum = "enum";
-    Doc = "doc";
-    Repr = "repr";
+    KPub = "pub";
+    KStruct = "struct";
+    KEnum = "enum";
+    KDoc = "doc";
+    KRepr = "repr";
+    KCrate = "crate";
 }
 
 operator! {
     Eq = "=";
+    DoubleSemicolon = "::";
 }
 
 unsynn! {
-    struct DocAttributeInner {
-        doc: Doc,
-        _eq: Eq,
-        value: LiteralString,
-    }
-
-    struct DocAttribute {
-        _pound: Pound,
-        body: BracketGroupContaining<DocAttributeInner>,
-    }
-
-    struct AttributeInnerRepr {
-        _kw_repr: Repr,
-        attr: ParenthesisGroupContaining<Ident>,
-    }
-
-    enum AttributeInner {
-        Repr(AttributeInnerRepr),
-        Any(Vec<TokenTree>)
+    enum Vis {
+        Pub(KPub),
+        PubCrate(Cons<KPub, ParenthesisGroupContaining<KCrate>>),
     }
 
     struct Attribute {
@@ -39,41 +25,66 @@ unsynn! {
         body: BracketGroupContaining<AttributeInner>,
     }
 
-    struct StructLike {
+    enum AttributeInner {
+        Doc(DocInner),
+        Repr(ReprInner),
+        Any(Vec<TokenTree>)
+    }
+
+    struct DocInner {
+        _kw_doc: KDoc,
+        _eq: Eq,
+        value: LiteralString,
+    }
+
+    struct ReprInner {
+        _kw_repr: KRepr,
+        attr: ParenthesisGroupContaining<Ident>,
+    }
+
+    struct Struct {
         // Skip any doc attributes by consuming them
-        _doc_attributes: Vec<Skip<DocAttribute>>,
         attributes: Vec<Attribute>,
-        _pub: Option<Pub>,
-        _kw_struct: Struct,
+        _vis: Option<Vis>,
+        _kw_struct: KStruct,
         name: Ident,
-        body: BraceGroupContaining<CommaDelimitedVec<FieldLike>>,
+        body: BraceGroupContaining<CommaDelimitedVec<StructField>>,
+    }
+
+    enum TypeLike {
+        Namespaced(Cons<Ident, DoubleSemicolon, Box<TypeLike>>),
+        Ident(Ident),
+    }
+
+    struct StructField {
+        // Skip any doc comments on fields
+        attributes: Vec<Attribute>,
+        _vis: Option<Vis>,
+        name: Ident,
+        _colon: Colon,
+        typ: TypeLike,
     }
 
     struct TupleStruct {
         // Skip any doc attributes by consuming them
-        _doc_attributes: Vec<Skip<DocAttribute>>,
         attributes: Vec<Attribute>,
-        _pub: Option<Pub>,
-        _kw_struct: Struct,
+        _vis: Option<Vis>,
+        _kw_struct: KStruct,
         name: Ident,
-        body: ParenthesisGroupContaining<CommaDelimitedVec<FieldLike>>,
+        body: ParenthesisGroupContaining<CommaDelimitedVec<TupleField>>,
     }
 
-    struct FieldLike {
-        // Skip any doc comments on fields
-        _doc_attributes: Vec<Skip<DocAttribute>>,
-        _pub: Option<Pub>,
-        name: Ident,
-        _colon: Option<Colon>,
-        typ: Option<Ident>,
+    struct TupleField {
+        attributes: Vec<Attribute>,
+        vis: Option<Vis>,
+        typ: TypeLike,
     }
 
-    struct EnumLike {
+    struct Enum {
         // Skip any doc attributes by consuming them
-        _doc_attributes: Vec<Skip<DocAttribute>>,
         attributes: Vec<Attribute>,
-        _pub: Option<Pub>,
-        _kw_enum: Enum,
+        _pub: Option<KPub>,
+        _kw_enum: KEnum,
         name: Ident,
         body: BraceGroupContaining<CommaDelimitedVec<EnumVariantLike>>,
     }
@@ -85,23 +96,22 @@ unsynn! {
     }
 
     struct UnitVariant {
-        // Skip any doc comments on variants
-        _doc_attributes: Vec<Skip<DocAttribute>>,
+        attributes: Vec<Attribute>,
         name: Ident,
     }
 
     struct TupleVariant {
         // Skip any doc comments on variants
-        _doc_attributes: Vec<Skip<DocAttribute>>,
+        attributes: Vec<Attribute>,
         name: Ident,
-        _paren: ParenthesisGroupContaining<CommaDelimitedVec<FieldLike>>,
+        _paren: ParenthesisGroupContaining<CommaDelimitedVec<TupleField>>,
     }
 
     struct StructVariant {
         // Skip any doc comments on variants
-        _doc_attributes: Vec<Skip<DocAttribute>>,
+        _doc_attributes: Vec<Attribute>,
         name: Ident,
-        _brace: BraceGroupContaining<CommaDelimitedVec<FieldLike>>,
+        _brace: BraceGroupContaining<CommaDelimitedVec<StructField>>,
     }
 }
 
@@ -111,24 +121,24 @@ pub fn shapely_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream
     let mut i = input.to_token_iter();
 
     // Try to parse as struct first
-    if let Ok(parsed) = i.parse::<StructLike>() {
+    if let Ok(parsed) = i.parse::<Struct>() {
         return process_struct(parsed);
     }
-    let struct_like_tokens_left = i.count();
+    let struct_tokens_left = i.count();
 
     // Try to parse as tuple struct
     i = input.to_token_iter(); // Reset iterator
     if let Ok(parsed) = i.parse::<TupleStruct>() {
         return process_tuple_struct(parsed);
     }
-    let tuple_struct_like_tokens_left = i.count();
+    let tuple_struct_tokens_left = i.count();
 
     // Try to parse as enum
     i = input.to_token_iter(); // Reset iterator
-    if let Ok(parsed) = i.parse::<EnumLike>() {
+    if let Ok(parsed) = i.parse::<Enum>() {
         return process_enum(parsed);
     }
-    let enum_like_tokens_left = i.count();
+    let enum_tokens_left = i.count();
 
     let mut msg = format!(
         "Could not parse input as struct, tuple struct, or enum: {}",
@@ -136,33 +146,36 @@ pub fn shapely_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream
     );
 
     // Find which parsing left the fewest tokens
-    let min_tokens_left = struct_like_tokens_left
-        .min(tuple_struct_like_tokens_left)
-        .min(enum_like_tokens_left);
+    let min_tokens_left = struct_tokens_left
+        .min(tuple_struct_tokens_left)
+        .min(enum_tokens_left);
 
     // Parse again for the one with fewest tokens left and show remaining tokens
-    if min_tokens_left == struct_like_tokens_left {
+    if min_tokens_left == struct_tokens_left {
         i = input.to_token_iter();
-        i.parse::<StructLike>().err();
+        let err = i.parse::<Struct>().err();
         msg = format!(
-            "{}\nRemaining tokens after struct parsing: {}",
+            "{}\n====> Error parsing struct: {:?}\n====> Remaining tokens after struct parsing: {}",
             msg,
+            err,
             i.collect::<TokenStream>()
         );
-    } else if min_tokens_left == tuple_struct_like_tokens_left {
+    } else if min_tokens_left == tuple_struct_tokens_left {
         i = input.to_token_iter();
-        i.parse::<TupleStruct>().err();
+        let err = i.parse::<TupleStruct>().err();
         msg = format!(
-            "{}\nRemaining tokens after tuple struct parsing: {}",
+            "{}\n====> Error parsing tuple struct: {:?}\n====> Remaining tokens after tuple struct parsing: {}",
             msg,
+            err,
             i.collect::<TokenStream>()
         );
     } else {
         i = input.to_token_iter();
-        i.parse::<EnumLike>().err();
+        let err = i.parse::<Enum>().err();
         msg = format!(
-            "{}\nRemaining tokens after enum parsing: {}",
+            "{}\n====> Error parsing enum: {:?}\n====> Remaining tokens after enum parsing: {}",
             msg,
+            err,
             i.collect::<TokenStream>()
         );
     }
@@ -180,7 +193,7 @@ pub fn shapely_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream
 ///     bar: String,
 /// }
 /// ```
-fn process_struct(parsed: StructLike) -> proc_macro::TokenStream {
+fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
     let struct_name = parsed.name.to_string();
     let fields = parsed
         .body
@@ -271,7 +284,7 @@ fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStream {
 ///     Custom { r: u8, g: u8, b: u8 }
 /// }
 /// ```
-fn process_enum(parsed: EnumLike) -> proc_macro::TokenStream {
+fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
     let enum_name = parsed.name.to_string();
 
     // Check for explicit repr attribute
@@ -304,13 +317,7 @@ fn process_enum(parsed: EnumLike) -> proc_macro::TokenStream {
                     .content
                     .0
                     .iter()
-                    .map(|field| {
-                        field
-                            .value
-                            .typ
-                            .as_ref()
-                            .map_or("".to_string(), |t| t.to_string())
-                    })
+                    .map(|field| field.value.typ.to_string())
                     .collect::<Vec<String>>()
                     .join(", ");
 
@@ -327,11 +334,7 @@ fn process_enum(parsed: EnumLike) -> proc_macro::TokenStream {
                     .iter()
                     .map(|field| {
                         let name = field.value.name.to_string();
-                        let typ = field
-                            .value
-                            .typ
-                            .as_ref()
-                            .map_or("".to_string(), |t| t.to_string());
+                        let typ = field.value.typ.to_string();
                         format!("{name}: {typ}")
                     })
                     .collect::<Vec<String>>()
@@ -385,4 +388,17 @@ fn process_enum(parsed: EnumLike) -> proc_macro::TokenStream {
         "#
     );
     output.into_token_stream().into()
+}
+
+impl std::fmt::Display for TypeLike {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TypeLike::Namespaced(path) => {
+                write!(f, "{}::{}", path.first, path.third)
+            }
+            TypeLike::Ident(ident) => {
+                write!(f, "{}", ident)
+            }
+        }
+    }
 }

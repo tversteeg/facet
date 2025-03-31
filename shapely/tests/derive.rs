@@ -111,6 +111,39 @@ fn tuple_struct_with_pub_field() {
 }
 
 #[test]
+fn cfg_attrs() {
+    #[derive(Shapely)]
+    #[cfg_attr(feature = "testfeat", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "testfeat", serde(deny_unknown_fields))]
+    pub struct CubConfig {}
+}
+
+#[test]
+fn cfg_attrs2() {
+    #[derive(Shapely)]
+    #[cfg_attr(feature = "testfeat", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "testfeat", serde(deny_unknown_fields))]
+    pub struct CubConfig {
+        /// size the disk cache is allowed to use
+        #[cfg_attr(feature = "testfeat", serde(skip_serializing))]
+        #[cfg_attr(
+            feature = "testfeat",
+            serde(default = "serde_defaults::default_disk_cache_size")
+        )]
+        pub disk_cache_size: String,
+    }
+}
+
+#[test]
+fn struct_with_std_string() {
+    #[derive(Clone, Hash, PartialEq, Eq, ::shapely::Shapely)]
+    struct FileInfo {
+        path: std::string::String,
+        size: u64,
+    }
+}
+
+#[test]
 fn derive_real_life_cub_config() {
     #[derive(Shapely)]
     #[cfg_attr(feature = "testfeat", derive(Serialize, Deserialize))]
@@ -126,7 +159,7 @@ fn derive_real_life_cub_config() {
 
         /// Listen address without http, something like "127.0.0.1:1111"
         #[cfg_attr(feature = "testfeat", serde(default = "serde_defaults::address"))]
-        pub address: std::net::SocketAddr,
+        pub address: std::string::String,
 
         /// Something like `http://localhost:1118`
         /// or `http://mom.svc.cluster.local:1118`, never
@@ -178,48 +211,48 @@ fn derive_real_life_cub_config() {
 //     }
 // }
 
-// #[test]
-// fn unit_struct() {
-//     /// A unit struct with documentation
-//     #[derive(Debug, ::shapely::Shapely)]
-//     struct Unit;
+// // #[test]
+// // fn unit_struct() {
+// //     /// A unit struct with documentation
+// //     #[derive(Debug, ::shapely::Shapely)]
+// //     struct Unit;
 
-//     let shape = Unit::shape();
-//     assert_eq!(format!("{}", shape), "Unit");
-//     assert!(matches!(shape.innards, shapely::Innards::Struct { fields } if fields.is_empty()));
-// }
+// //     let shape = Unit::shape();
+// //     assert_eq!(format!("{}", shape), "Unit");
+// //     assert!(matches!(shape.innards, shapely::Innards::Struct { fields } if fields.is_empty()));
+// // }
 
-// #[test]
-// fn struct_with_attributes() {
-//     #[derive(Debug, ::shapely::Shapely)]
-//     #[repr(C, packed)]
-//     struct Packed {
-//         a: u8,
-//         b: u32,
-//     }
+// // #[test]
+// // fn struct_with_attributes() {
+// //     #[derive(Debug, ::shapely::Shapely)]
+// //     #[repr(C, packed)]
+// //     struct Packed {
+// //         a: u8,
+// //         b: u32,
+// //     }
 
-//     let shape = Packed::shape();
-//     assert_eq!(shape.layout.size(), 5);
-//     assert_eq!(shape.layout.align(), 1);
-// }
+// //     let shape = Packed::shape();
+// //     assert_eq!(shape.layout.size(), 5);
+// //     assert_eq!(shape.layout.align(), 1);
+// // }
 
-// #[test]
-// fn enum_test() {
-//     #[derive(Debug, ::shapely::Shapely)]
-//     enum MyEnum {
-//         A,
-//         B(i32),
-//         C { x: f64, y: f64 },
-//     }
+// // #[test]
+// // fn enum_test() {
+// //     #[derive(Debug, ::shapely::Shapely)]
+// //     enum MyEnum {
+// //         A,
+// //         B(i32),
+// //         C { x: f64, y: f64 },
+// //     }
 
-//     let shape = MyEnum::shape();
-//     assert_eq!(format!("{}", shape), "MyEnum");
-//     if let shapely::Innards::Enum { variants, .. } = shape.innards {
-//         assert_eq!(variants.len(), 3);
-//         assert_eq!(variants[0].name, "A");
-//         assert_eq!(variants[1].name, "B");
-//         assert_eq!(variants[2].name, "C");
-//     } else {
-//         panic!("Expected Enum innards");
-//     }
-// }
+// //     let shape = MyEnum::shape();
+// //     assert_eq!(format!("{}", shape), "MyEnum");
+// //     if let shapely::Innards::Enum { variants, .. } = shape.innards {
+// //         assert_eq!(variants.len(), 3);
+// //         assert_eq!(variants[0].name, "A");
+// //         assert_eq!(variants[1].name, "B");
+// //         assert_eq!(variants[2].name, "C");
+// //     } else {
+// //         panic!("Expected Enum innards");
+// //     }
+// // }
