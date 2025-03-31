@@ -13,7 +13,7 @@ pub const fn shape_desc_of<TStruct, TField: Shapely>(_f: &dyn Fn(TStruct) -> TFi
 #[doc(hidden)]
 #[macro_export]
 macro_rules! struct_field {
-    ($struct:ty, $field:ident) => {
+    ($struct:ty, $field:tt) => {
         $crate::Field {
             name: stringify!($field),
             shape: $crate::shape_desc_of(&|s: $struct| s.$field),
@@ -26,7 +26,7 @@ macro_rules! struct_field {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! struct_fields {
-    ($struct:ty, ($($field:ident),*)) => {{
+    ($struct:ty, ($($field:tt),*)) => {{
         static FIELDS: &[$crate::Field] = &[ $($crate::struct_field!($struct, $field)),* ];
         FIELDS
     }};
