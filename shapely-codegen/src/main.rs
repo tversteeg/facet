@@ -23,6 +23,7 @@ where
 {{
     fn shape() -> Shape {{
         struct FieldsMaker<T1> {{
+            #[allow(clippy::type_complexity)]
             _phantom: std::marker::PhantomData<T1>,
         }}
 

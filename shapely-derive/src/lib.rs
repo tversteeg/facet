@@ -229,6 +229,7 @@ fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
     // Generate the impl
     let output = format!(
         r#"
+            #[automatically_derived]
             impl shapely::Shapely for {struct_name} {{
                 fn shape() -> shapely::Shape {{
                     shapely::Shape {{
