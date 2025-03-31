@@ -130,9 +130,10 @@ impl PrettyPrinter {
             | Innards::Tuple { fields } => {
                 self.format_struct(ptr, shape, fields, f, depth, visited)
             }
-            Innards::HashMap { value_shape } => {
-                self.format_hashmap(ptr, shape, *value_shape, f, depth, visited)
-            }
+            Innards::HashMap {
+                vtable: _,
+                value_shape,
+            } => self.format_hashmap(ptr, shape, *value_shape, f, depth, visited),
             Innards::Array {
                 vtable: _,
                 item_shape,

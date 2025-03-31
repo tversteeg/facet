@@ -216,3 +216,70 @@ fn test_from_json_with_vec() {
     // Verify round-trip
     assert_eq!(round_trip_built, built_struct);
 }
+
+#[test]
+fn test_from_json_with_hashmap() {
+    #[derive(Shapely, Debug, PartialEq)]
+    struct OtherStruct {
+        value: i32,
+        name: String,
+    }
+
+    #[derive(Shapely, Debug, PartialEq)]
+    struct HashmapStruct {
+        data: std::collections::HashMap<String, OtherStruct>,
+    }
+
+    let json = r#"{
+        "data": {
+            "first": {
+                "value": 42,
+                "name": "First Item"
+            },
+            "second": {
+                "value": 84,
+                "name": "Second Item"
+            },
+            "third": {
+                "value": 126,
+                "name": "Third Item"
+            }
+        }
+    }"#;
+
+    // Deserialize
+    let mut test_struct = HashmapStruct::partial();
+    from_json(&mut test_struct, json).unwrap();
+    let built_struct = test_struct.build::<HashmapStruct>();
+
+    // Verify deserialization
+    assert_eq!(built_struct.data.len(), 3);
+    assert_eq!(built_struct.data.get("first").unwrap().value, 42);
+    assert_eq!(built_struct.data.get("first").unwrap().name, "First Item");
+    assert_eq!(built_struct.data.get("second").unwrap().value, 84);
+    assert_eq!(built_struct.data.get("second").unwrap().name, "Second Item");
+    assert_eq!(built_struct.data.get("third").unwrap().value, 126);
+    assert_eq!(built_struct.data.get("third").unwrap().name, "Third Item");
+
+    // Serialize
+    let mut buffer = Vec::new();
+    to_json(
+        &built_struct as *const _ as *mut u8,
+        HashmapStruct::shape_desc(),
+        &mut buffer,
+        true,
+    )
+    .unwrap();
+    let serialized_json = String::from_utf8(buffer).unwrap();
+
+    // Print the serialized JSON
+    eprintln!("Serialized JSON:\n{}", serialized_json);
+
+    // Round-trip: deserialize the serialized JSON
+    let mut round_trip_struct = HashmapStruct::partial();
+    from_json(&mut round_trip_struct, &serialized_json).unwrap();
+    let round_trip_built = round_trip_struct.build::<HashmapStruct>();
+
+    // Verify round-trip
+    assert_eq!(round_trip_built, built_struct);
+}
