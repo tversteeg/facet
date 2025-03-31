@@ -17,6 +17,7 @@ pub enum JsonParseErrorKind {
     IncompleteUnicodeEscape,
     InvalidUnicodeEscape,
     ExpectedNumber,
+    InvalidNumberFormat,
     ExpectedOpeningBrace,
     ExpectedColon,
     UnexpectedEndOfInput,
@@ -55,6 +56,7 @@ impl std::fmt::Display for JsonParseError {
             JsonParseErrorKind::IncompleteUnicodeEscape => "Incomplete Unicode escape sequence",
             JsonParseErrorKind::InvalidUnicodeEscape => "Invalid Unicode escape sequence",
             JsonParseErrorKind::ExpectedNumber => "Expected a number",
+            JsonParseErrorKind::InvalidNumberFormat => "Invalid number format",
             JsonParseErrorKind::ExpectedOpeningBrace => "Expected opening brace for object",
             JsonParseErrorKind::ExpectedColon => "Expected ':' after object key",
             JsonParseErrorKind::UnexpectedEndOfInput => "Unexpected end of input",
@@ -172,8 +174,77 @@ impl<'a> JsonParser<'a> {
         let num_str = &self.input[start..self.position];
         num_str
             .parse::<u64>()
-            .map_err(|_| self.make_error(JsonParseErrorKind::ExpectedNumber))
+            .map_err(|_| self.make_error(JsonParseErrorKind::InvalidNumberFormat))
     }
+
+    // Generic number parsing helper
+    fn parse_number<T>(&mut self) -> Result<T, JsonParseErrorWithContext<'a>>
+    where
+        T: std::str::FromStr,
+        <T as std::str::FromStr>::Err: std::fmt::Debug, // Ensure the error type can be debug printed
+    {
+        self.skip_whitespace();
+        let start = self.position;
+        // Allow leading minus sign
+        if self.position < self.input.len() && self.input.as_bytes()[self.position] == b'-' {
+            self.position += 1;
+        }
+        // Allow digits and decimal point
+        while self.position < self.input.len() {
+            let byte = self.input.as_bytes()[self.position];
+            if byte.is_ascii_digit() || byte == b'.' {
+                self.position += 1;
+            } else {
+                break;
+            }
+        }
+
+        if start == self.position || (self.position == start + 1 && self.input.as_bytes()[start] == b'-') {
+            // Handle case where only '-' was found or nothing was parsed
+             return Err(self.make_error(JsonParseErrorKind::ExpectedNumber));
+        }
+
+        let num_str = &self.input[start..self.position];
+        num_str
+            .parse::<T>()
+            .map_err(|_| self.make_error(JsonParseErrorKind::InvalidNumberFormat))
+    }
+
+    // Implement specific number parsers using the helper
+    pub fn parse_u8(&mut self) -> Result<u8, JsonParseErrorWithContext<'a>> {
+        self.parse_number()
+    }
+    pub fn parse_u16(&mut self) -> Result<u16, JsonParseErrorWithContext<'a>> {
+        self.parse_number()
+    }
+    pub fn parse_u32(&mut self) -> Result<u32, JsonParseErrorWithContext<'a>> {
+        self.parse_number()
+    }
+    // u64 is already implemented, keep it as is or refactor to use parse_number
+    // pub fn parse_u64(&mut self) -> Result<u64, JsonParseErrorWithContext<'a>> {
+    //     self.parse_number()
+    // }
+
+    pub fn parse_i8(&mut self) -> Result<i8, JsonParseErrorWithContext<'a>> {
+        self.parse_number()
+    }
+    pub fn parse_i16(&mut self) -> Result<i16, JsonParseErrorWithContext<'a>> {
+        self.parse_number()
+    }
+    pub fn parse_i32(&mut self) -> Result<i32, JsonParseErrorWithContext<'a>> {
+        self.parse_number()
+    }
+    pub fn parse_i64(&mut self) -> Result<i64, JsonParseErrorWithContext<'a>> {
+        self.parse_number()
+    }
+
+    pub fn parse_f32(&mut self) -> Result<f32, JsonParseErrorWithContext<'a>> {
+        self.parse_number()
+    }
+    pub fn parse_f64(&mut self) -> Result<f64, JsonParseErrorWithContext<'a>> {
+        self.parse_number()
+    }
+
 
     pub fn skip_whitespace(&mut self) {
         while self.position < self.input.len() {
