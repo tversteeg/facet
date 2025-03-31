@@ -168,8 +168,8 @@ fn test_from_json_with_tuples() {
     let built_struct = test_struct.build::<TupleStruct>();
     assert_eq!(built_struct.0, 123);
     assert_eq!(built_struct.1, "Hello");
-    assert!((built_struct.2 .0 - 3.69).abs() < f64::EPSILON);
-    assert!(built_struct.2 .1);
+    assert!((built_struct.2.0 - 3.69).abs() < f64::EPSILON);
+    assert!(built_struct.2.1);
 }
 
 #[test]

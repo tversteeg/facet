@@ -1,6 +1,6 @@
 use std::{alloc::Layout, fmt};
 
-use crate::{mini_typeid, ArrayVtable, Innards, Shape, Shapely};
+use crate::{ArrayVtable, Innards, Shape, Shapely, mini_typeid};
 
 impl<T> Shapely for Vec<T>
 where
