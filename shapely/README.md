@@ -58,7 +58,7 @@ To implement a custom deserializer for a new format, you'll need to work with th
 3. Handle different shapes based on [`Shape::innards`]:
    - For [`Innards::Scalar`], use [`Partial::scalar_slot`] to get and fill the slot
    - For [`Innards::Struct`], iterate through fields, using [`Partial::slot_by_name`] to access each field
-   - [`Innards::HashMap`] and [`Innards::Array`] come with a vtable, they have helper slots as well
+   - [`Innards::HashMap`] and [`Innards::Vec`] come with vtables, they have helper slots as well
    - Create nested [`Partial`] instances for complex fields and fill them recursively
 
 When in doubt, refer to the `shapely-json` implementation — it's the most featureful.

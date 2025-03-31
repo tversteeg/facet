@@ -113,7 +113,7 @@ pub fn to_json<W: Write>(
                 }
                 write!(writer, "}}")
             }
-            Innards::Vec { vtable, item_shape } => {
+            Innards::List { vtable, item_shape } => {
                 write!(writer, "[")?;
                 if indent {
                     writeln!(writer)?;
@@ -144,7 +144,7 @@ pub fn to_json<W: Write>(
                 }
                 write!(writer, "]")
             }
-            Innards::HashMap {
+            Innards::Map {
                 vtable,
                 value_shape,
             } => {

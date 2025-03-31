@@ -1,5 +1,5 @@
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
-pub struct VecVTable {
+pub struct ListVTable {
     /// init given pointer to be an empty vec (with capacity)
     pub init: unsafe fn(ptr: *mut u8, size_hint: Option<usize>),
 

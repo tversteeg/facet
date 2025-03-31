@@ -22,9 +22,9 @@ where
             name: name::<V> as _,
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<HashMap<String, V>>(),
-            innards: Innards::HashMap {
+            innards: Innards::Map {
                 value_shape: V::shape_desc(),
-                vtable: crate::HashMapVTable {
+                vtable: crate::MapVTable {
                     init: |ptr, size_hint| unsafe {
                         let map = if let Some(capacity) = size_hint {
                             HashMap::with_capacity(capacity)
@@ -65,7 +65,7 @@ where
                         let iter_state = Box::new((entries, 0usize));
                         Box::into_raw(iter_state) as *const u8
                     },
-                    iter_vtable: crate::HashMapIterVtable {
+                    iter_vtable: crate::MapIterVTable {
                         next: |iter_ptr| unsafe {
                             let state = &mut *(iter_ptr as *mut (Vec<(String, *const V)>, usize));
                             let (entries, index) = state;

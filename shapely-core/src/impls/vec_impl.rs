@@ -1,6 +1,6 @@
 use std::{alloc::Layout, fmt};
 
-use crate::{Innards, NameOpts, Shape, Shapely, VecVTable, mini_typeid};
+use crate::{Innards, ListVTable, NameOpts, Shape, Shapely, mini_typeid};
 
 impl<T> Shapely for Vec<T>
 where
@@ -22,8 +22,8 @@ where
             name: name::<T> as _,
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<Vec<T>>(),
-            innards: Innards::Vec {
-                vtable: VecVTable {
+            innards: Innards::List {
+                vtable: ListVTable {
                     init: |ptr, size_hint| unsafe {
                         let vec = if let Some(capacity) = size_hint {
                             let layout = Layout::array::<T>(capacity).unwrap();

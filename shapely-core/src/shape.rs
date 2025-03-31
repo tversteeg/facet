@@ -11,11 +11,11 @@ pub use enum_shape::*;
 mod scalar_shape;
 pub use scalar_shape::*;
 
-mod vec_shape;
-pub use vec_shape::*;
+mod list_shape;
+pub use list_shape::*;
 
-mod hashmap_shape;
-pub use hashmap_shape::*;
+mod map_shape;
+pub use map_shape::*;
 
 /// Schema for reflection of a type
 #[derive(Clone, Copy)]
@@ -202,7 +202,7 @@ impl Shape {
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum FieldError {
     /// `field_by_index` was called on a dynamic collection, that has no
-    /// static fields. a HashMap doesn't have a "first field", it can only
+    /// static fields. a map doesn't have a "first field", it can only
     /// associate by keys.
     NoStaticFields,
 
@@ -255,19 +255,19 @@ pub enum Innards {
     /// e.g. `(u32, u32);`
     Tuple { fields: &'static [Field] },
 
-    /// HashMap — keys are dynamic (and strings, sorry), values are homogeneous
+    /// Map — keys are dynamic (and strings, sorry), values are homogeneous
     ///
-    /// e.g. `HashMap<String, T>`
-    HashMap {
-        vtable: HashMapVTable,
+    /// e.g. `Map<String, T>`
+    Map {
+        vtable: MapVTable,
         value_shape: ShapeDesc,
     },
 
     /// Ordered list of heterogenous values, variable size
     ///
     /// e.g. `Vec<T>`
-    Vec {
-        vtable: VecVTable,
+    List {
+        vtable: ListVTable,
         item_shape: ShapeDesc,
     },
 

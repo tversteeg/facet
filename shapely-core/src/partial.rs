@@ -1,4 +1,4 @@
-use crate::{FieldError, Innards, ShapeDesc, Shapely, Slot, VecVTable, trace};
+use crate::{FieldError, Innards, ListVTable, ShapeDesc, Shapely, Slot, trace};
 use std::{alloc, ptr::NonNull};
 
 /// Origin of the partial — did we allocate it? Or is it borrowed?
@@ -208,7 +208,7 @@ impl Partial<'_> {
     /// Returns a slot for treating this partial as an array (onto which you can push new items)
     pub fn array_slot(&mut self, size_hint: Option<usize>) -> Option<ArraySlot> {
         match self.shape.get().innards {
-            crate::Innards::Vec {
+            crate::Innards::List {
                 vtable,
                 item_shape: _,
             } => {
@@ -233,7 +233,7 @@ impl Partial<'_> {
     /// Returns a slot for a HashMap field in the shape.
     pub fn hashmap_slot(&mut self, size_hint: Option<usize>) -> Option<HashMapSlot> {
         match self.shape.get().innards {
-            crate::Innards::HashMap {
+            crate::Innards::Map {
                 vtable,
                 value_shape: _,
             } => {
@@ -258,7 +258,7 @@ impl Partial<'_> {
     /// Returns an iterator over the key-value pairs in a HashMap
     pub fn hashmap_iter(&self) -> Option<HashMapIter> {
         match self.shape.get().innards {
-            crate::Innards::HashMap {
+            crate::Innards::Map {
                 vtable,
                 value_shape: _,
             } => {
@@ -333,10 +333,10 @@ impl Partial<'_> {
                     self.init_set.field(index),
                 ))
             }
-            Innards::HashMap { .. } => Err(FieldError::NoStaticFields),
+            Innards::Map { .. } => Err(FieldError::NoStaticFields),
             Innards::Transparent(_) => Err(FieldError::NoStaticFields),
             Innards::Scalar(_) => Err(FieldError::NoStaticFields),
-            Innards::Vec { .. } => Err(FieldError::NoStaticFields),
+            Innards::List { .. } => Err(FieldError::NoStaticFields),
             Innards::Enum {
                 variants: _,
                 repr: _,
@@ -1024,12 +1024,12 @@ impl InitMark<'_> {
 /// rather than fixed-size arrays or slices, so it's a bit of a misnomer at the moment.
 pub struct ArraySlot {
     pub(crate) addr: NonNull<u8>,
-    pub(crate) vtable: VecVTable,
+    pub(crate) vtable: ListVTable,
 }
 
 impl ArraySlot {
     /// Create a new ArraySlot with the given address and vtable
-    pub(crate) unsafe fn new(addr: NonNull<u8>, vtable: VecVTable) -> Self {
+    pub(crate) unsafe fn new(addr: NonNull<u8>, vtable: ListVTable) -> Self {
         Self { addr, vtable }
     }
 
@@ -1051,12 +1051,12 @@ impl ArraySlot {
 /// Provides insert, length check, and iteration over a type-erased hashmap
 pub struct HashMapSlot {
     pub(crate) addr: NonNull<u8>,
-    pub(crate) vtable: crate::HashMapVTable,
+    pub(crate) vtable: crate::MapVTable,
 }
 
 impl HashMapSlot {
     /// Create a new HashMapSlot with the given address and vtable
-    pub(crate) unsafe fn new(addr: NonNull<u8>, vtable: crate::HashMapVTable) -> Self {
+    pub(crate) unsafe fn new(addr: NonNull<u8>, vtable: crate::MapVTable) -> Self {
         Self { addr, vtable }
     }
 
@@ -1093,7 +1093,7 @@ impl HashMapSlot {
 /// An iterator over key-value pairs in a HashMap
 pub struct HashMapIter {
     iter_ptr: *const u8,
-    vtable: crate::HashMapIterVtable,
+    vtable: crate::MapIterVTable,
 }
 
 impl HashMapIter {
