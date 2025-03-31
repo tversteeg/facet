@@ -1,5 +1,36 @@
+use std::fmt::Write;
+
 fn main() {
-    println!(
+    // Check if current directory has a Cargo.toml with [workspace]
+    let cargo_toml_path = std::env::current_dir().unwrap().join("Cargo.toml");
+    let cargo_toml_content =
+        std::fs::read_to_string(cargo_toml_path).expect("Failed to read Cargo.toml");
+    if !cargo_toml_content.contains("[workspace]") {
+        panic!(
+            "Cargo.toml does not contain [workspace] (you must run codegen from the workspace root)"
+        );
+    }
+
+    let mut output = String::new();
+    let _ = codegen_tuple_impls(&mut output);
+    std::fs::write("shapely-core/src/tuples_impls.rs", output).expect("Failed to write file");
+
+    // Run rustfmt on the generated file
+    let status = std::process::Command::new("rustfmt")
+        .arg("--edition")
+        .arg("2024")
+        .arg("shapely-core/src/tuples_impls.rs")
+        .status()
+        .expect("Failed to execute rustfmt");
+
+    if !status.success() {
+        eprintln!("rustfmt failed with exit code: {}", status);
+    }
+}
+
+fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
+    writeln!(
+        w,
         "use std::alloc::Layout;
 
 use crate::{{Field, FieldFlags, Innards, Scalar, Shape, ShapeDesc, Shapely, mini_typeid}};
@@ -57,7 +88,7 @@ where
         }}
     }}
 }}"
-    );
+    )?;
 
     // Generate implementations for tuples of size 2 to 12
     for n in 2..=12 {
@@ -98,7 +129,8 @@ where
             .collect::<Vec<_>>()
             .join(", ");
 
-        println!(
+        writeln!(
+            w,
             "
 impl<{type_params}> Shapely for ({type_params},)
 where
@@ -133,6 +165,7 @@ where
         }}
     }}
 }}"
-        );
+        )?;
     }
+    Ok(())
 }

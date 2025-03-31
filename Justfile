@@ -11,6 +11,9 @@ ci:
     echo -e "\033[1;34m📝 Running cargo fmt in check mode...\033[0m"
     cargo fmt --all -- --check
 
+codegen:
+    cargo run -p shapely-codegen
+
 absolve:
     #!/bin/bash
     if ! cargo tree -i syn 2>/dev/null | grep -q .; then
