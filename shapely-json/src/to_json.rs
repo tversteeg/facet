@@ -144,6 +144,59 @@ pub fn to_json<W: Write>(
                 }
                 write!(writer, "]")
             }
+            Innards::HashMap {
+                vtable,
+                value_shape,
+            } => {
+                write!(writer, "{{")?;
+                if indent {
+                    writeln!(writer)?;
+                }
+
+                unsafe {
+                    // Get an iterator over the HashMap
+                    let iter_ptr = (vtable.iter)(data);
+
+                    // Keep track of whether we need to write a comma
+                    let mut first = true;
+
+                    // Iterate over the key-value pairs
+                    while let Some((key_ptr, value_ptr)) = (vtable.iter_vtable.next)(iter_ptr) {
+                        if !first {
+                            write!(writer, ",")?;
+                            if indent {
+                                writeln!(writer)?;
+                            }
+                        }
+                        first = false;
+
+                        if indent {
+                            write!(writer, "{:indent$}", "", indent = (level + 1) * 2)?;
+                        }
+
+                        // Serialize the key as a string
+                        let key = &(*key_ptr);
+                        write!(writer, "\"{}\":", key.replace('"', "\\\""))?;
+
+                        if indent {
+                            write!(writer, " ")?;
+                        }
+
+                        // Serialize the value
+                        serialize_value(value_ptr, value_shape.get(), writer, indent, level + 1)?;
+                    }
+
+                    // Deallocate the iterator
+                    (vtable.iter_vtable.dealloc)(iter_ptr);
+
+                    if !first && indent {
+                        writeln!(writer)?;
+                        write!(writer, "{:indent$}", "", indent = level * 2)?;
+                    }
+                }
+
+                write!(writer, "}}")
+            }
             // Add support for other shapes (Array, Transparent) as needed
             _ => write!(writer, "null"),
         }

@@ -1,5 +1,5 @@
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
-use shapely::{Partial, error, trace, warn};
+use shapely::{Partial, Shapely as _, error, trace, warn};
 
 pub fn from_json<'input>(
     partial: &mut Partial,
@@ -167,11 +167,47 @@ pub fn from_json<'input>(
                     index
                 );
             }
+            Innards::HashMap { value_shape, .. } => {
+                trace!("Deserializing \x1b[1;36mhashmap\x1b[0m");
+
+                // Parse object start and get first key if it exists
+                let first_key = parser.expect_object_start()?;
+
+                // Get the hashmap slot to insert key-value pairs into
+                let mut hashmap_slot = partial.hashmap_slot(None).expect("HashMap slot");
+
+                // Process each key-value pair in the JSON object
+                let mut current_key = first_key;
+                while let Some(key) = current_key {
+                    trace!("Processing hashmap key: \x1b[1;33m{}\x1b[0m", key);
+
+                    // Create a partial for the key (string type)
+                    let mut key_partial = Partial::alloc(String::shape_desc());
+                    key_partial.scalar_slot().expect("String slot").fill(key);
+
+                    // Create a partial for the value
+                    let mut value_partial = Partial::alloc(*value_shape);
+
+                    // Deserialize the value
+                    deserialize_value(parser, &mut value_partial)?;
+
+                    // Insert the key-value pair into the hashmap
+                    hashmap_slot.insert(key_partial, value_partial);
+
+                    // Get the next key
+                    current_key = parser.parse_object_key()?;
+                }
+
+                trace!("Finished deserializing \x1b[1;36mhashmap\x1b[0m");
+            }
             // Add support for other shapes (Array, Transparent) as needed
             _ => {
-                error!("Unsupported shape: {:?}", shape.innards);
+                error!(
+                    "Don't know how to parse this shape as JSON: {:?}",
+                    shape.innards
+                );
                 return Err(parser.make_error(JsonParseErrorKind::Custom(format!(
-                    "Unsupported shape: {:?}",
+                    "Don't know how to parse this shape as JSON: {:?}",
                     shape.innards
                 ))));
             }

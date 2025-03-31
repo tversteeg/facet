@@ -225,6 +225,49 @@ impl Partial<'_> {
         }
     }
 
+    /// Returns a slot for a HashMap field in the shape.
+    pub fn hashmap_slot(&mut self, size_hint: Option<usize>) -> Option<HashMapSlot> {
+        match self.shape.get().innards {
+            crate::Innards::HashMap {
+                vtable,
+                value_shape: _,
+            } => {
+                // Initialize the HashMap using the vtable's init function
+                unsafe {
+                    (vtable.init)(self.addr.as_ptr(), size_hint);
+                }
+
+                // Mark the HashMap as initialized in our init_set
+                self.init_set.set(0);
+
+                Some(HashMapSlot::new(self.addr, vtable))
+            }
+            _ => None,
+        }
+    }
+
+    /// Returns an iterator over the key-value pairs in a HashMap
+    pub fn hashmap_iter(&self) -> Option<HashMapIter> {
+        match self.shape.get().innards {
+            crate::Innards::HashMap {
+                vtable,
+                value_shape: _,
+            } => {
+                // Get the iterator from the vtable
+                let iter_raw = unsafe { (vtable.iter)(self.addr.as_ptr()) };
+                if iter_raw.is_null() {
+                    return None;
+                }
+
+                Some(HashMapIter {
+                    iter_ptr: iter_raw,
+                    vtable: vtable.iter_vtable,
+                })
+            }
+            _ => None,
+        }
+    }
+
     /// Returns a slot for assigning this whole shape as a scalar
     pub fn scalar_slot(&mut self) -> Option<Slot<'_>> {
         match self.shape.get().innards {
@@ -281,9 +324,7 @@ impl Partial<'_> {
                     self.init_set.field(index),
                 ))
             }
-            Innards::HashMap { value_shape } => {
-                Ok(Slot::for_hash_map(self.addr, name.to_string(), value_shape))
-            }
+            Innards::HashMap { .. } => Err(FieldError::NoStaticFields),
             Innards::Transparent(_) => Err(FieldError::NoStaticFields),
             Innards::Scalar(_) => Err(FieldError::NoStaticFields),
             Innards::Array { .. } => Err(FieldError::NoStaticFields),
@@ -992,6 +1033,71 @@ impl ArraySlot {
         // Call the vtable's push function to add the item to the array
         unsafe {
             (self.vtable.push)(self.addr.as_ptr(), partial);
+        }
+    }
+}
+
+/// A helper struct for HashMap operations
+pub struct HashMapSlot {
+    pub(crate) addr: NonNull<u8>,
+    pub(crate) vtable: crate::HashMapVtable,
+}
+
+impl HashMapSlot {
+    /// Create a new HashMapSlot with the given address and vtable
+    pub fn new(addr: NonNull<u8>, vtable: crate::HashMapVtable) -> Self {
+        Self { addr, vtable }
+    }
+
+    /// Insert a key-value pair into the HashMap
+    ///
+    /// # Safety
+    ///
+    /// This function uses unsafe code to insert a key-value pair into the HashMap.
+    /// It's safe to use because the vtable's insert function handles
+    /// proper memory management and initialization.
+    pub fn insert(&mut self, key: crate::Partial, value: crate::Partial) {
+        // Call the vtable's insert function to add the key-value pair to the HashMap
+        unsafe {
+            (self.vtable.insert)(self.addr.as_ptr(), key, value);
+        }
+    }
+
+    /// Get the number of entries in the HashMap
+    pub fn len(&self) -> usize {
+        unsafe { (self.vtable.len)(self.addr.as_ptr()) }
+    }
+
+    /// Check if the HashMap is empty
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Check if the HashMap contains a key
+    pub fn contains_key(&self, key: &str) -> bool {
+        unsafe { (self.vtable.contains_key)(self.addr.as_ptr(), key) }
+    }
+}
+
+/// An iterator over key-value pairs in a HashMap
+pub struct HashMapIter {
+    iter_ptr: *const u8,
+    vtable: crate::HashMapIterVtable,
+}
+
+impl HashMapIter {
+    /// Get the next key-value pair from the iterator
+    pub fn next(&self) -> Option<(&str, *const u8)> {
+        let (k, v) = unsafe { (self.vtable.next)(self.iter_ptr)? };
+        let k = unsafe { (*k).as_str() };
+        Some((k, v))
+    }
+}
+
+impl Drop for HashMapIter {
+    fn drop(&mut self) {
+        unsafe {
+            (self.vtable.dealloc)(self.iter_ptr);
         }
     }
 }
