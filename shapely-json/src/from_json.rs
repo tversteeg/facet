@@ -139,8 +139,8 @@ pub fn from_json<'input>(
                 // Parse array start
                 parser.expect_array_start()?;
 
-                // Get the array slot to push items into
-                let mut array_slot = partial.array_slot().expect("Array slot");
+                // Get the array slot to push items into (no size hint in JSON unfortunately)
+                let mut array_slot = partial.array_slot(None).expect("Array slot");
 
                 let mut index = 0;
                 while let Some(has_element) = parser.parse_array_element()? {

@@ -33,6 +33,21 @@ where
                         let item = partial.build();
                         vec.push(item);
                     },
+                    len: |ptr| unsafe {
+                        let vec = &*(ptr as *const Vec<T>);
+                        vec.len()
+                    },
+                    get_item_ptr: |ptr, index| unsafe {
+                        let vec = &mut *(ptr as *mut Vec<T>);
+                        if index >= vec.len() {
+                            panic!(
+                                "Index out of bounds: the len is {} but the index is {}",
+                                vec.len(),
+                                index
+                            );
+                        }
+                        vec.get_unchecked_mut(index) as *mut T as *mut u8
+                    },
                 },
                 item_shape: T::shape_desc(),
             },

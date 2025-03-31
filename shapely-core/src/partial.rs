@@ -205,14 +205,16 @@ impl Partial<'_> {
         }
     }
 
-    pub fn array_slot(&mut self) -> Option<ArraySlot> {
+    pub fn array_slot(&mut self, size_hint: Option<usize>) -> Option<ArraySlot> {
         match self.shape.get().innards {
             crate::Innards::Array {
                 vtable,
                 item_shape: _,
             } => {
                 // Initialize the array using the vtable's init function
-                (vtable.init)(self.addr.as_ptr(), None);
+                unsafe {
+                    (vtable.init)(self.addr.as_ptr(), size_hint);
+                }
 
                 // Mark the array as initialized in our init_set
                 self.init_set.set(0);
@@ -988,6 +990,8 @@ impl ArraySlot {
     /// proper memory management and initialization.
     pub fn push(&mut self, partial: crate::Partial) {
         // Call the vtable's push function to add the item to the array
-        (self.vtable.push)(self.addr.as_ptr(), partial);
+        unsafe {
+            (self.vtable.push)(self.addr.as_ptr(), partial);
+        }
     }
 }

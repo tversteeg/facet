@@ -244,10 +244,16 @@ pub struct Field {
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub struct ArrayVtable {
     // init given pointer to be an empty vec (with capacity)
-    pub init: fn(ptr: *mut u8, size_hint: Option<usize>),
+    pub init: unsafe fn(ptr: *mut u8, size_hint: Option<usize>),
 
     // push an item
-    pub push: fn(*mut u8, crate::Partial),
+    pub push: unsafe fn(*mut u8, crate::Partial),
+
+    // get length of the collection
+    pub len: unsafe fn(ptr: *mut u8) -> usize,
+
+    // get address of the item at the given index. panics if out of bound.
+    pub get_item_ptr: unsafe fn(ptr: *mut u8, index: usize) -> *mut u8,
 }
 
 /// The outcome of trying to set a field on a map
