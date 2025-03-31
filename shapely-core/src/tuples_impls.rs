@@ -45,7 +45,7 @@ where
             },
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T1,)>(),
-            innards: Innards::Struct {
+            innards: Innards::Tuple {
                 fields: &FieldsMaker::<T1>::FIELDS,
             },
             set_to_default: None,
@@ -62,6 +62,7 @@ where
 {
     fn shape() -> Shape {
         struct FieldsMaker<T1, T2> {
+            #[allow(clippy::type_complexity)]
             _phantom: std::marker::PhantomData<(T1, T2,)>,
         }
 
@@ -92,7 +93,7 @@ where
             },
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T1, T2,)>(),
-            innards: Innards::Struct {
+            innards: Innards::Tuple {
                 fields: &FieldsMaker::<T1, T2>::FIELDS,
             },
             set_to_default: None,
@@ -109,6 +110,7 @@ where
 {
     fn shape() -> Shape {
         struct FieldsMaker<T1, T2, T3> {
+            #[allow(clippy::type_complexity)]
             _phantom: std::marker::PhantomData<(T1, T2, T3,)>,
         }
 
@@ -146,7 +148,7 @@ where
             },
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T1, T2, T3,)>(),
-            innards: Innards::Struct {
+            innards: Innards::Tuple {
                 fields: &FieldsMaker::<T1, T2, T3>::FIELDS,
             },
             set_to_default: None,
@@ -163,6 +165,7 @@ where
 {
     fn shape() -> Shape {
         struct FieldsMaker<T1, T2, T3, T4> {
+            #[allow(clippy::type_complexity)]
             _phantom: std::marker::PhantomData<(T1, T2, T3, T4,)>,
         }
 
@@ -207,7 +210,7 @@ where
             },
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T1, T2, T3, T4,)>(),
-            innards: Innards::Struct {
+            innards: Innards::Tuple {
                 fields: &FieldsMaker::<T1, T2, T3, T4>::FIELDS,
             },
             set_to_default: None,
@@ -224,6 +227,7 @@ where
 {
     fn shape() -> Shape {
         struct FieldsMaker<T1, T2, T3, T4, T5> {
+            #[allow(clippy::type_complexity)]
             _phantom: std::marker::PhantomData<(T1, T2, T3, T4, T5,)>,
         }
 
@@ -275,7 +279,7 @@ where
             },
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T1, T2, T3, T4, T5,)>(),
-            innards: Innards::Struct {
+            innards: Innards::Tuple {
                 fields: &FieldsMaker::<T1, T2, T3, T4, T5>::FIELDS,
             },
             set_to_default: None,
@@ -292,6 +296,7 @@ where
 {
     fn shape() -> Shape {
         struct FieldsMaker<T1, T2, T3, T4, T5, T6> {
+            #[allow(clippy::type_complexity)]
             _phantom: std::marker::PhantomData<(T1, T2, T3, T4, T5, T6,)>,
         }
 
@@ -350,7 +355,7 @@ where
             },
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T1, T2, T3, T4, T5, T6,)>(),
-            innards: Innards::Struct {
+            innards: Innards::Tuple {
                 fields: &FieldsMaker::<T1, T2, T3, T4, T5, T6>::FIELDS,
             },
             set_to_default: None,
@@ -367,6 +372,7 @@ where
 {
     fn shape() -> Shape {
         struct FieldsMaker<T1, T2, T3, T4, T5, T6, T7> {
+            #[allow(clippy::type_complexity)]
             _phantom: std::marker::PhantomData<(T1, T2, T3, T4, T5, T6, T7,)>,
         }
 
@@ -432,7 +438,7 @@ where
             },
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T1, T2, T3, T4, T5, T6, T7,)>(),
-            innards: Innards::Struct {
+            innards: Innards::Tuple {
                 fields: &FieldsMaker::<T1, T2, T3, T4, T5, T6, T7>::FIELDS,
             },
             set_to_default: None,
@@ -449,6 +455,7 @@ where
 {
     fn shape() -> Shape {
         struct FieldsMaker<T1, T2, T3, T4, T5, T6, T7, T8> {
+            #[allow(clippy::type_complexity)]
             _phantom: std::marker::PhantomData<(T1, T2, T3, T4, T5, T6, T7, T8,)>,
         }
 
@@ -521,7 +528,7 @@ where
             },
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T1, T2, T3, T4, T5, T6, T7, T8,)>(),
-            innards: Innards::Struct {
+            innards: Innards::Tuple {
                 fields: &FieldsMaker::<T1, T2, T3, T4, T5, T6, T7, T8>::FIELDS,
             },
             set_to_default: None,
@@ -538,6 +545,7 @@ where
 {
     fn shape() -> Shape {
         struct FieldsMaker<T1, T2, T3, T4, T5, T6, T7, T8, T9> {
+            #[allow(clippy::type_complexity)]
             _phantom: std::marker::PhantomData<(T1, T2, T3, T4, T5, T6, T7, T8, T9,)>,
         }
 
@@ -617,7 +625,7 @@ where
             },
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T1, T2, T3, T4, T5, T6, T7, T8, T9,)>(),
-            innards: Innards::Struct {
+            innards: Innards::Tuple {
                 fields: &FieldsMaker::<T1, T2, T3, T4, T5, T6, T7, T8, T9>::FIELDS,
             },
             set_to_default: None,
@@ -634,6 +642,7 @@ where
 {
     fn shape() -> Shape {
         struct FieldsMaker<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> {
+            #[allow(clippy::type_complexity)]
             _phantom: std::marker::PhantomData<(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,)>,
         }
 
@@ -720,7 +729,7 @@ where
             },
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,)>(),
-            innards: Innards::Struct {
+            innards: Innards::Tuple {
                 fields: &FieldsMaker::<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>::FIELDS,
             },
             set_to_default: None,
@@ -737,6 +746,7 @@ where
 {
     fn shape() -> Shape {
         struct FieldsMaker<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> {
+            #[allow(clippy::type_complexity)]
             _phantom: std::marker::PhantomData<(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,)>,
         }
 
@@ -830,7 +840,7 @@ where
             },
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,)>(),
-            innards: Innards::Struct {
+            innards: Innards::Tuple {
                 fields: &FieldsMaker::<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>::FIELDS,
             },
             set_to_default: None,
@@ -847,6 +857,7 @@ where
 {
     fn shape() -> Shape {
         struct FieldsMaker<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> {
+            #[allow(clippy::type_complexity)]
             _phantom: std::marker::PhantomData<(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12,)>,
         }
 
@@ -947,7 +958,7 @@ where
             },
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12,)>(),
-            innards: Innards::Struct {
+            innards: Innards::Tuple {
                 fields: &FieldsMaker::<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>::FIELDS,
             },
             set_to_default: None,

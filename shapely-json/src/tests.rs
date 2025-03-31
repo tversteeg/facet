@@ -155,19 +155,19 @@ fn test_from_json_with_nested_structs() {
     assert_eq!(built_struct.inner.value, 42);
 }
 
-// #[test]
-// fn test_from_json_with_tuples() {
-//     #[derive(Shapely)]
-//     struct TupleStruct(i32, String, (f64, bool));
+#[test]
+fn test_from_json_with_tuples() {
+    #[derive(Shapely)]
+    struct TupleStruct(i32, String, (f64, bool));
 
-//     let json = r#"[123, "Hello", [3.14, true]]"#;
+    let json = r#"[123, "Hello", [3.69, true]]"#;
 
-//     let mut test_struct = TupleStruct::partial();
-//     from_json(&mut test_struct, json).unwrap();
+    let mut test_struct = TupleStruct::partial();
+    from_json(&mut test_struct, json).unwrap();
 
-//     let built_struct = test_struct.build::<TupleStruct>();
-//     assert_eq!(built_struct.0, 123);
-//     assert_eq!(built_struct.1, "Hello");
-//     assert!((built_struct.2.0 - 3.14).abs() < f64::EPSILON);
-//     assert_eq!(built_struct.2.1, true);
-// }
+    let built_struct = test_struct.build::<TupleStruct>();
+    assert_eq!(built_struct.0, 123);
+    assert_eq!(built_struct.1, "Hello");
+    assert!((built_struct.2.0 - 3.69).abs() < f64::EPSILON);
+    assert!(built_struct.2.1);
+}

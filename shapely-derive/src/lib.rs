@@ -280,7 +280,7 @@ fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStream {
                         name: |f| std::fmt::Write::write_str(f, "{struct_name}"),
                         typeid: shapely::mini_typeid::of::<Self>(),
                         layout: std::alloc::Layout::new::<Self>(),
-                        innards: shapely::Innards::Struct {{
+                        innards: shapely::Innards::TupleStruct {{
                             fields: shapely::struct_fields!({struct_name}, ({fields_str})),
                         }},
                         set_to_default: None,

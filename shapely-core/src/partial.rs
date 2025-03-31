@@ -241,7 +241,9 @@ impl Partial<'_> {
     pub fn slot_by_name<'s>(&'s mut self, name: &str) -> Result<Slot<'s>, FieldError> {
         let shape = self.shape.get();
         match shape.innards {
-            Innards::Struct { fields } => {
+            Innards::Struct { fields }
+            | Innards::TupleStruct { fields }
+            | Innards::Tuple { fields } => {
                 let (index, field) = fields
                     .iter()
                     .enumerate()

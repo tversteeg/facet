@@ -47,7 +47,7 @@ where
             }},
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T1,)>(),
-            innards: Innards::Struct {{
+            innards: Innards::Tuple {{
                 fields: &FieldsMaker::<T1>::FIELDS,
             }},
             set_to_default: None,
@@ -106,6 +106,7 @@ where
 {{
     fn shape() -> Shape {{
         struct FieldsMaker<{type_params}> {{
+            #[allow(clippy::type_complexity)]
             _phantom: std::marker::PhantomData<({type_params},)>,
         }}
 
@@ -122,7 +123,7 @@ where
             }},
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<({type_params},)>(),
-            innards: Innards::Struct {{
+            innards: Innards::Tuple {{
                 fields: &FieldsMaker::<{type_params}>::FIELDS,
             }},
             set_to_default: None,

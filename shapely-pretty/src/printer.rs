@@ -125,7 +125,11 @@ impl PrettyPrinter {
         // Format based on the shape's innards
         match &shape.innards {
             Innards::Scalar(scalar) => self.format_scalar(ptr, *scalar, f, color),
-            Innards::Struct { fields } => self.format_struct(ptr, shape, fields, f, depth, visited),
+            Innards::Struct { fields }
+            | Innards::TupleStruct { fields }
+            | Innards::Tuple { fields } => {
+                self.format_struct(ptr, shape, fields, f, depth, visited)
+            }
             Innards::HashMap { value_shape } => {
                 self.format_hashmap(ptr, shape, *value_shape, f, depth, visited)
             }

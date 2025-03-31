@@ -187,8 +187,14 @@ impl std::fmt::Debug for Shape {
 /// The shape of a schema: is it more map-shaped, array-shaped, scalar-shaped?
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Innards {
-    /// Struct with statically-known fields
+    /// Struct with statically-known, named fields
     Struct { fields: &'static [Field] },
+
+    /// Tuple-struct, with numbered fields
+    TupleStruct { fields: &'static [Field] },
+
+    /// Tuple, with numbered fields
+    Tuple { fields: &'static [Field] },
 
     /// HashMap — keys are dynamic, values are homogeneous
     HashMap { value_shape: ShapeDesc },

@@ -25,7 +25,9 @@ impl Shape {
         writeln!(f, "\x1b[0m (\x1b[1;34m{}\x1b[0m bytes)", self.layout.size())?;
 
         match &self.innards {
-            Innards::Struct { fields } => {
+            Innards::Struct { fields }
+            | Innards::TupleStruct { fields }
+            | Innards::Tuple { fields } => {
                 let max_name_length = fields.iter().map(|f| f.name.len()).max().unwrap_or(0);
                 for field in *fields {
                     write!(
