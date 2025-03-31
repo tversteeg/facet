@@ -25,7 +25,7 @@ pub struct Field {
 ///
 /// // Create flags with the sensitive bit set
 /// let flags = FieldFlags::SENSITIVE;
-/// assert!(flags.has_flag(FieldFlags::SENSITIVE));
+/// assert!(flags.contains(FieldFlags::SENSITIVE));
 ///
 /// // Combine multiple flags using bitwise OR
 /// let flags = FieldFlags::SENSITIVE | FieldFlags::EMPTY;
