@@ -22,11 +22,16 @@ where
                 vtable: ArrayVtable {
                     init: |ptr, size_hint| unsafe {
                         let vec = if let Some(capacity) = size_hint {
-                            Vec::<T>::with_capacity(capacity)
+                            let layout = Layout::array::<T>(capacity).unwrap();
+                            let ptr = std::alloc::alloc(layout) as *mut T;
+                            if ptr.is_null() {
+                                std::alloc::handle_alloc_error(layout);
+                            }
+                            Vec::from_raw_parts(ptr, 0, capacity)
                         } else {
                             Vec::<T>::new()
                         };
-                        *(ptr as *mut Vec<T>) = vec;
+                        std::ptr::write(ptr as *mut Vec<T>, vec);
                     },
                     push: |ptr, partial| unsafe {
                         let vec = &mut *(ptr as *mut Vec<T>);
@@ -38,7 +43,7 @@ where
                         vec.len()
                     },
                     get_item_ptr: |ptr, index| unsafe {
-                        let vec = &mut *(ptr as *mut Vec<T>);
+                        let vec = &*(ptr as *const Vec<T>);
                         if index >= vec.len() {
                             panic!(
                                 "Index out of bounds: the len is {} but the index is {}",
@@ -46,7 +51,7 @@ where
                                 index
                             );
                         }
-                        vec.get_unchecked_mut(index) as *mut T as *mut u8
+                        vec.as_ptr().add(index) as *const u8
                     },
                 },
                 item_shape: T::shape_desc(),

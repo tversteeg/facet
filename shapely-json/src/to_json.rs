@@ -10,7 +10,7 @@ pub fn to_json<W: Write>(
     use shapely::{Innards, Scalar};
 
     fn serialize_value<W: Write>(
-        data: *mut u8,
+        data: *const u8,
         shape: Shape,
         writer: &mut W,
         indent: bool,
@@ -47,7 +47,7 @@ pub fn to_json<W: Write>(
                     write!(writer, "{value}")
                 }
                 Scalar::U8 => {
-                    let value = unsafe { *(data as *const u8) };
+                    let value = unsafe { *data };
                     write!(writer, "{value}")
                 }
                 Scalar::U16 => {

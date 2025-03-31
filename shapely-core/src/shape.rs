@@ -250,10 +250,10 @@ pub struct ArrayVtable {
     pub push: unsafe fn(*mut u8, crate::Partial),
 
     // get length of the collection
-    pub len: unsafe fn(ptr: *mut u8) -> usize,
+    pub len: unsafe fn(ptr: *const u8) -> usize,
 
     // get address of the item at the given index. panics if out of bound.
-    pub get_item_ptr: unsafe fn(ptr: *mut u8, index: usize) -> *mut u8,
+    pub get_item_ptr: unsafe fn(ptr: *const u8, index: usize) -> *const u8,
 }
 
 /// The outcome of trying to set a field on a map

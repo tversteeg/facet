@@ -44,6 +44,6 @@ doc-tests:
     echo -e "\033[1;36m📚 Running documentation tests...\033[0m"
     RUSTDOCFLAGS="-D warnings" cargo test --doc
 
-miri:
+miri *args:
     echo -e "\033[1;31m🧪 Running tests under Miri in a separate target directory...\033[0m"
-    cargo miri nextest run --target-dir=target/miri
+    cargo miri nextest run --target-dir=target/miri {{args}}
