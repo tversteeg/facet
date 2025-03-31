@@ -33,7 +33,7 @@ struct TestSecrets {
 impl Shapely for TestSecrets {
     fn shape() -> Shape {
         Shape {
-            name: |f| write!(f, "TestSecrets"),
+            name: |f, _opts| write!(f, "TestSecrets"),
             typeid: std::any::TypeId::of::<Self>(),
             layout: Layout::new::<Self>(),
             innards: Innards::Struct {
