@@ -205,12 +205,17 @@ impl Partial<'_> {
         }
     }
 
+    /// Returns a slot for treating this partial as an array (onto which you can push new items)
     pub fn array_slot(&mut self, size_hint: Option<usize>) -> Option<ArraySlot> {
         match self.shape.get().innards {
             crate::Innards::Array {
                 vtable,
                 item_shape: _,
             } => {
+                if self.init_set.is_set(0) {
+                    panic!("Array is already initialized");
+                }
+
                 // Initialize the array using the vtable's init function
                 unsafe {
                     (vtable.init)(self.addr.as_ptr(), size_hint);
@@ -219,7 +224,7 @@ impl Partial<'_> {
                 // Mark the array as initialized in our init_set
                 self.init_set.set(0);
 
-                Some(ArraySlot::new(self.addr, vtable))
+                Some(unsafe { ArraySlot::new(self.addr, vtable) })
             }
             _ => None,
         }
@@ -232,6 +237,10 @@ impl Partial<'_> {
                 vtable,
                 value_shape: _,
             } => {
+                if self.init_set.is_set(0) {
+                    panic!("HashMap is already initialized");
+                }
+
                 // Initialize the HashMap using the vtable's init function
                 unsafe {
                     (vtable.init)(self.addr.as_ptr(), size_hint);
@@ -240,7 +249,7 @@ impl Partial<'_> {
                 // Mark the HashMap as initialized in our init_set
                 self.init_set.set(0);
 
-                Some(HashMapSlot::new(self.addr, vtable))
+                Some(unsafe { HashMapSlot::new(self.addr, vtable) })
             }
             _ => None,
         }
@@ -1011,6 +1020,8 @@ impl InitMark<'_> {
     }
 }
 
+/// A helper struct to fill up arrays — note that it is designed for `Vec<T>`
+/// rather than fixed-size arrays or slices, so it's a bit of a misnomer at the moment.
 pub struct ArraySlot {
     pub(crate) addr: NonNull<u8>,
     pub(crate) vtable: ArrayVtable,
@@ -1018,7 +1029,7 @@ pub struct ArraySlot {
 
 impl ArraySlot {
     /// Create a new ArraySlot with the given address and vtable
-    pub fn new(addr: NonNull<u8>, vtable: ArrayVtable) -> Self {
+    pub(crate) unsafe fn new(addr: NonNull<u8>, vtable: ArrayVtable) -> Self {
         Self { addr, vtable }
     }
 
@@ -1037,7 +1048,7 @@ impl ArraySlot {
     }
 }
 
-/// A helper struct for HashMap operations
+/// Provides insert, length check, and iteration over a type-erased hashmap
 pub struct HashMapSlot {
     pub(crate) addr: NonNull<u8>,
     pub(crate) vtable: crate::HashMapVtable,
@@ -1045,7 +1056,7 @@ pub struct HashMapSlot {
 
 impl HashMapSlot {
     /// Create a new HashMapSlot with the given address and vtable
-    pub fn new(addr: NonNull<u8>, vtable: crate::HashMapVtable) -> Self {
+    pub(crate) unsafe fn new(addr: NonNull<u8>, vtable: crate::HashMapVtable) -> Self {
         Self { addr, vtable }
     }
 
