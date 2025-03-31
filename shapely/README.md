@@ -46,19 +46,22 @@ To implement a custom deserializer for a new format, you'll need to work with th
 
 ### Key Types
 
-- `Partial`: The central type for building shapely values incrementally
-- `Shape`: Describes the memory layout and structure of a type
-- `Innards`: Represents the internal structure (Scalar, Struct, etc.)
-- `Scalar`: Represents primitive types like String, u64, etc.
+- [`Partial`]: The central type for building shapely values incrementally
+- [`Shape`]: Describes the memory layout and structure of a type
+- [`Innards`]: Represents the internal structure (Scalar, Struct, etc.)
+- [`Scalar`]: Represents primitive types like String, u64, etc.
 
 ### Implementation Pattern
 
-1. Create a function that takes a `&mut Partial` and your format's input (string, bytes, etc.)
-2. Examine the shape of the partial using `partial.shape()`
-3. Handle different shapes based on `shape.innards`:
-   - For `Innards::Scalar`, use `partial.scalar_slot()` to get and fill the slot
-   - For `Innards::Struct`, iterate through fields, using `partial.slot_by_name(field_name)` to access each field
-   - Create nested `Partial` instances for complex fields and fill them recursively
+1. Create a function that takes a `&mut` [`Partial`] and your format's input (string, bytes, etc.)
+2. Examine the shape of the partial using [`Partial::shape`]
+3. Handle different shapes based on [`Shape::innards`]:
+   - For [`Innards::Scalar`], use [`Partial::scalar_slot`] to get and fill the slot
+   - For [`Innards::Struct`], iterate through fields, using [`Partial::slot_by_name`] to access each field
+   - [`Innards::HashMap`] and [`Innards::Array`] come with a vtable, they have helper slots as well
+   - Create nested [`Partial`] instances for complex fields and fill them recursively
+
+When in doubt, refer to the `shapely-json` implementation — it's the most featureful.
 
 ### Example Implementation Skeleton
 
