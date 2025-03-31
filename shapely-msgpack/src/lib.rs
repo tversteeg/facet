@@ -54,7 +54,7 @@ mod tests;
 ///
 /// # MessagePack Format
 /// This implementation follows the MessagePack specification:
-/// https://github.com/msgpack/msgpack/blob/master/spec.md
+/// <https://github.com/msgpack/msgpack/blob/master/spec.md>
 #[allow(clippy::needless_lifetimes)]
 pub fn from_msgpack(partial: &mut Partial, msgpack: &[u8]) -> Result<(), DecodeError> {
     let mut decoder = Decoder::new(msgpack);
@@ -160,7 +160,7 @@ impl<'input> Decoder<'input> {
     /// - uint32 (0xce): 32-bit unsigned integer (big-endian)
     /// - uint64 (0xcf): 64-bit unsigned integer (big-endian)
     ///
-    /// Ref: https://github.com/msgpack/msgpack/blob/master/spec.md#int-format-family
+    /// Ref: <https://github.com/msgpack/msgpack/blob/master/spec.md#int-format-family>
     fn decode_u64(&mut self) -> Result<u64, DecodeError> {
         match self.decode_u8()? {
             MSGPACK_UINT8 => Ok(self.decode_u8()? as u64),
@@ -188,7 +188,7 @@ impl<'input> Decoder<'input> {
     /// - str16 (0xda): string up to 65535 bytes
     /// - str32 (0xdb): string up to 4294967295 bytes
     ///
-    /// Ref: https://github.com/msgpack/msgpack/blob/master/spec.md#formats-str
+    /// Ref: <https://github.com/msgpack/msgpack/blob/master/spec.md#formats-str>
     fn decode_string(&mut self) -> Result<String, DecodeError> {
         let prefix = self.decode_u8()?;
 
@@ -216,7 +216,7 @@ impl<'input> Decoder<'input> {
     /// - map16 (0xde): map with up to 65535 elements
     /// - map32 (0xdf): map with up to 4294967295 elements
     ///
-    /// Ref: https://github.com/msgpack/msgpack/blob/master/spec.md#formats-map
+    /// Ref: <https://github.com/msgpack/msgpack/blob/master/spec.md#formats-map>
     fn decode_map_len(&mut self) -> Result<usize, DecodeError> {
         let prefix = self.decode_u8()?;
 

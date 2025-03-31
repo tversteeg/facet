@@ -6,13 +6,6 @@
 [![documentation](https://docs.rs/shapely/badge.svg)](https://docs.rs/shapely)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/shapely.svg)](./LICENSE)
 
-> [!IMPORTANT]
->
-> There is no stable shapely API as of now (even though it's >1.0.0). The design
-> is very much still being explored.
->
-> Expect multiple major versions in the near future — (note left 2025-03-11)
-
 A Rust reflection, introspection, serialization and deserialization framework with support for multiple formats including JSON, YAML, MessagePack, URL-encoded data, and more.
 
 A single, lightweight derive macro (thanks to [unsynn](https://crates.io/crates/unsynn))
