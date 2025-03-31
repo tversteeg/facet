@@ -172,23 +172,47 @@ fn test_from_json_with_tuples() {
     assert!(built_struct.2.1);
 }
 
-// #[test]
-// fn test_from_json_with_vec() {
-//     #[derive(Shapely)]
-//     struct VecStruct {
-//         numbers: Vec<i32>,
-//         names: Vec<String>,
-//     }
+#[test]
+fn test_from_json_with_vec() {
+    #[derive(Shapely, Debug, PartialEq)]
+    struct VecStruct {
+        numbers: Vec<i32>,
+        names: Vec<String>,
+    }
 
-//     let json = r#"{
-//         "numbers": [1, 2, 3, 4, 5],
-//         "names": ["Alice", "Bob", "Charlie"]
-//     }"#;
+    let json = r#"{
+        "numbers": [1, 2, 3, 4, 5],
+        "names": ["Alice", "Bob", "Charlie"]
+    }"#;
 
-//     let mut test_struct = VecStruct::partial();
-//     from_json(&mut test_struct, json).unwrap();
+    // Deserialize
+    let mut test_struct = VecStruct::partial();
+    from_json(&mut test_struct, json).unwrap();
+    let built_struct = test_struct.build::<VecStruct>();
 
-//     let built_struct = test_struct.build::<VecStruct>();
-//     assert_eq!(built_struct.numbers, vec![1, 2, 3, 4, 5]);
-//     assert_eq!(built_struct.names, vec!["Alice", "Bob", "Charlie"]);
-// }
+    // Verify deserialization
+    assert_eq!(built_struct.numbers, vec![1, 2, 3, 4, 5]);
+    assert_eq!(built_struct.names, vec!["Alice", "Bob", "Charlie"]);
+
+    // Serialize
+    let mut buffer = Vec::new();
+    to_json(
+        &built_struct as *const _ as *mut u8,
+        VecStruct::shape_desc(),
+        &mut buffer,
+        true,
+    )
+    .unwrap();
+    let serialized_json = String::from_utf8(buffer).unwrap();
+
+    // Print the serialized JSON
+    eprintln!("Serialized JSON:\n{}", serialized_json);
+
+    // Round-trip: deserialize the serialized JSON
+    let mut round_trip_struct = VecStruct::partial();
+    from_json(&mut round_trip_struct, &serialized_json).unwrap();
+    let round_trip_built = round_trip_struct.build::<VecStruct>();
+
+    // Verify round-trip
+    assert_eq!(round_trip_built, built_struct);
+}

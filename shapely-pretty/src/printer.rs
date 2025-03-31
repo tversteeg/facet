@@ -133,9 +133,10 @@ impl PrettyPrinter {
             Innards::HashMap { value_shape } => {
                 self.format_hashmap(ptr, shape, *value_shape, f, depth, visited)
             }
-            Innards::Array(elem_shape) => {
-                self.format_array(ptr, shape, *elem_shape, f, depth, visited)
-            }
+            Innards::Array {
+                vtable: _,
+                item_shape,
+            } => self.format_array(ptr, shape, *item_shape, f, depth, visited),
             Innards::Transparent(inner_shape) => {
                 self.format_transparent(ptr, shape, *inner_shape, f, depth, visited)
             }

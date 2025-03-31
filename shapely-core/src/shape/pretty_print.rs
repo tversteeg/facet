@@ -71,14 +71,14 @@ impl Shape {
                     indent + Self::INDENT * 2,
                 )?;
             }
-            Innards::Array(elem_schema) => {
+            Innards::Array { item_shape, .. } => {
                 write!(
                     f,
                     "{:indent$}\x1b[1;36mArray of:\x1b[0m ",
                     "",
                     indent = indent + Self::INDENT
                 )?;
-                elem_schema.get().pretty_print_recursive_internal(
+                item_shape.get().pretty_print_recursive_internal(
                     f,
                     printed_schemas,
                     indent + Self::INDENT * 2,

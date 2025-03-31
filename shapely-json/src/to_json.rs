@@ -10,7 +10,7 @@ pub fn to_json<W: Write>(
     use shapely::{Innards, Scalar};
 
     fn serialize_value<W: Write>(
-        data: *mut u8,
+        data: *const u8,
         shape: Shape,
         writer: &mut W,
         indent: bool,
@@ -22,12 +22,69 @@ pub fn to_json<W: Write>(
                     let s = unsafe { &*(data as *const String) };
                     write!(writer, "\"{}\"", s.replace('"', "\\\""))
                 }
+                Scalar::Bytes => Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "cowardly refusing to inject binary data straight into your JSON",
+                )),
+                Scalar::I8 => {
+                    let value = unsafe { *(data as *const i8) };
+                    write!(writer, "{value}")
+                }
+                Scalar::I16 => {
+                    let value = unsafe { *(data as *const i16) };
+                    write!(writer, "{value}")
+                }
+                Scalar::I32 => {
+                    let value = unsafe { *(data as *const i32) };
+                    write!(writer, "{value}")
+                }
+                Scalar::I64 => {
+                    let value = unsafe { *(data as *const i64) };
+                    write!(writer, "{value}")
+                }
+                Scalar::I128 => {
+                    let value = unsafe { *(data as *const i128) };
+                    write!(writer, "{value}")
+                }
+                Scalar::U8 => {
+                    let value = unsafe { *data };
+                    write!(writer, "{value}")
+                }
+                Scalar::U16 => {
+                    let value = unsafe { *(data as *const u16) };
+                    write!(writer, "{value}")
+                }
+                Scalar::U32 => {
+                    let value = unsafe { *(data as *const u32) };
+                    write!(writer, "{value}")
+                }
                 Scalar::U64 => {
                     let value = unsafe { *(data as *const u64) };
                     write!(writer, "{value}")
                 }
-                // Add other scalar types as needed
-                _ => write!(writer, "null"),
+                Scalar::U128 => {
+                    let value = unsafe { *(data as *const u128) };
+                    write!(writer, "{value}")
+                }
+                Scalar::F32 => {
+                    let value = unsafe { *(data as *const f32) };
+                    write!(writer, "{value}")
+                }
+                Scalar::F64 => {
+                    let value = unsafe { *(data as *const f64) };
+                    write!(writer, "{value}")
+                }
+                Scalar::Boolean => {
+                    let value = unsafe { *(data as *const bool) };
+                    write!(writer, "{}", if value { "true" } else { "false" })
+                }
+                Scalar::Nothing => {
+                    write!(writer, "null")
+                }
+                _ => Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "unsupported scalar type encountered",
+                )),
             },
             Innards::Struct { fields } => {
                 write!(writer, "{{")?;
@@ -55,6 +112,37 @@ pub fn to_json<W: Write>(
                     write!(writer, "{:indent$}", "", indent = level * 2)?;
                 }
                 write!(writer, "}}")
+            }
+            Innards::Array { vtable, item_shape } => {
+                write!(writer, "[")?;
+                if indent {
+                    writeln!(writer)?;
+                }
+
+                unsafe {
+                    let len = (vtable.len)(data);
+
+                    for i in 0..len {
+                        if indent {
+                            write!(writer, "{:indent$}", "", indent = (level + 1) * 2)?;
+                        }
+
+                        let item_ptr = (vtable.get_item_ptr)(data, i);
+                        serialize_value(item_ptr, item_shape.get(), writer, indent, level + 1)?;
+
+                        if i < len - 1 {
+                            write!(writer, ",")?;
+                        }
+                        if indent {
+                            writeln!(writer)?;
+                        }
+                    }
+
+                    if indent && len > 0 {
+                        write!(writer, "{:indent$}", "", indent = level * 2)?;
+                    }
+                }
+                write!(writer, "]")
             }
             // Add support for other shapes (Array, Transparent) as needed
             _ => write!(writer, "null"),

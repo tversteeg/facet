@@ -65,13 +65,27 @@ unsynn! {
     }
 
     enum Type {
-        Path(Cons<Ident, DoubleSemicolon, Box<Type>>),
+        Path(PathType),
         Tuple(ParenthesisGroupContaining<CommaDelimitedVec<Box<Type>>>),
         Slice(BracketGroupContaining<Box<Type>>),
-        Array(Cons<BracketGroupContaining<Box<Type>>, Semi, Box<Expr>>),
-        Ptr(Cons<Star, Option<ConstOrMut>, Box<Type>>),
-        Ref(Cons<And, Option<Lifetime>, Option<ConstOrMut>, Box<Type>>),
-        Bare(Ident),
+        Bare(BareType),
+    }
+
+    struct PathType {
+        prefix: Ident,
+        _doublesemi: DoubleSemicolon,
+        rest: Box<Type>,
+    }
+
+    struct BareType {
+        name: Ident,
+        generic_params: Option<GenericParams>,
+    }
+
+    struct GenericParams {
+        _lt: Lt,
+        params: CommaDelimitedVec<Type>,
+        _gt: Gt,
     }
 
     enum ConstOrMut {
@@ -415,7 +429,7 @@ impl std::fmt::Display for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Type::Path(path) => {
-                write!(f, "{}::{}", path.first, path.third)
+                write!(f, "{}::{}", path.prefix, path.rest)
             }
             Type::Tuple(tuple) => {
                 write!(f, "(")?;
@@ -430,28 +444,19 @@ impl std::fmt::Display for Type {
             Type::Slice(slice) => {
                 write!(f, "[{}]", slice.content)
             }
-            Type::Array(array) => {
-                write!(f, "[{}; {}]", array.first.content, array.third)
-            }
-            Type::Ptr(ptr) => {
-                write!(f, "*")?;
-                if let Some(mutability) = &ptr.second {
-                    write!(f, "{} ", mutability)?;
-                }
-                write!(f, "{}", ptr.third)
-            }
-            Type::Ref(reference) => {
-                write!(f, "&")?;
-                if let Some(lifetime) = &reference.second {
-                    write!(f, "{} ", lifetime)?;
-                }
-                if let Some(mutability) = &reference.third {
-                    write!(f, "{} ", mutability)?;
-                }
-                write!(f, "{}", reference.fourth)
-            }
             Type::Bare(ident) => {
-                write!(f, "{}", ident)
+                write!(f, "{}", ident.name)?;
+                if let Some(generic_params) = &ident.generic_params {
+                    write!(f, "<")?;
+                    for (i, param) in generic_params.params.0.iter().enumerate() {
+                        if i > 0 {
+                            write!(f, ", ")?;
+                        }
+                        write!(f, "{}", param.value)?;
+                    }
+                    write!(f, ">")?;
+                }
+                Ok(())
             }
         }
     }
