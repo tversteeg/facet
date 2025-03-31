@@ -53,6 +53,7 @@ unsynn! {
 
     enum TypeLike {
         Namespaced(Cons<Ident, DoubleSemicolon, Box<TypeLike>>),
+        Tuple(ParenthesisGroupContaining<CommaDelimitedVec<TypeLike>>),
         Ident(Ident),
     }
 
@@ -63,6 +64,30 @@ unsynn! {
         name: Ident,
         _colon: Colon,
         typ: TypeLike,
+    }
+
+    // Helper to parse field types including tuples
+    fn parse_field_type(i: &mut TokenIter) -> Result<TypeLike, ParseError> {
+        if let Ok(ident) = i.parse::<Ident>() {
+            if let Ok(ds) = i.parse::<DoubleSemicolon>() {
+                let inner = parse_field_type(i)?;
+                return Ok(TypeLike::Namespaced(Cons {
+                    first: ident,
+                    second: ds,
+                    third: Box::new(inner),
+                }));
+            }
+            return Ok(TypeLike::Ident(ident));
+        }
+        if let Ok(paren) = i.parse::<ParenthesisGroup>() {
+            let mut inner_iter = paren.content.to_token_iter();
+            let types = inner_iter.parse::<CommaDelimitedVec<TypeLike>>()?;
+            return Ok(TypeLike::Tuple(ParenthesisGroupContaining {
+                content: types,
+                paren,
+            }));
+        }
+        Err(ParseError::UnexpectedToken)
     }
 
     struct TupleStruct {
@@ -200,11 +225,13 @@ fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
         .content
         .0
         .iter()
-        .map(|field| field.value.name.to_string())
-        .collect::<Vec<String>>();
-
-    // Create the fields string for struct_fields! macro
-    let fields_str = fields.join(", ");
+        .map(|field| {
+            let name = field.value.name.to_string();
+            let typ = field.value.typ.to_string();
+            format!("{name}: {typ}")
+        })
+        .collect::<Vec<String>>()
+        .join(", ");
 
     // Generate the impl
     let output = format!(
@@ -395,6 +422,16 @@ impl std::fmt::Display for TypeLike {
         match self {
             TypeLike::Namespaced(path) => {
                 write!(f, "{}::{}", path.first, path.third)
+            }
+            TypeLike::Tuple(tuple) => {
+                write!(f, "(")?;
+                for (i, typ) in tuple.content.0.iter().enumerate() {
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "{}", typ.value)?;
+                }
+                write!(f, ")")
             }
             TypeLike::Ident(ident) => {
                 write!(f, "{}", ident)
