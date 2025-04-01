@@ -6,7 +6,7 @@ pub fn from_json<'input>(
     partial: &mut Partial,
     json: &'input str,
 ) -> Result<(), JsonParseErrorWithContext<'input>> {
-    use shapely::{Innards, Scalar};
+    use shapely::{Def, Scalar};
 
     trace!("Starting JSON deserialization");
     let mut parser = JsonParser::new(json);
@@ -20,7 +20,7 @@ pub fn from_json<'input>(
         trace!("Deserializing value with shape:\n{:?}", shape);
 
         match &shape.innards {
-            Innards::Scalar(scalar) => {
+            Def::Scalar(scalar) => {
                 let slot = partial.scalar_slot().expect("Scalar slot");
                 trace!("Deserializing \x1b[1;36mscalar\x1b[0m, \x1b[1;35m{scalar:?}\x1b[0m");
 
@@ -46,7 +46,7 @@ pub fn from_json<'input>(
                     }
                 }
             }
-            Innards::Struct { .. } => {
+            Def::Struct { .. } => {
                 trace!("Deserializing \x1b[1;36mstruct\x1b[0m");
 
                 let mut first = true;
@@ -69,7 +69,7 @@ pub fn from_json<'input>(
                 // TODO: this would be a good place to decide what to do about unset fields? Is this
                 // where we finally get to use `set_default`?
             }
-            Innards::Tuple { .. } => {
+            Def::Tuple { .. } => {
                 trace!("Deserializing \x1b[1;36mtuple\x1b[0m");
 
                 // Parse array start
@@ -100,7 +100,7 @@ pub fn from_json<'input>(
 
                 trace!("Finished deserializing \x1b[1;36mtuple\x1b[0m");
             }
-            Innards::TupleStruct { .. } => {
+            Def::TupleStruct { .. } => {
                 trace!("Deserializing \x1b[1;36mtuple struct\x1b[0m");
 
                 // Parse array start
@@ -134,7 +134,7 @@ pub fn from_json<'input>(
 
                 trace!("Finished deserializing \x1b[1;36mtuple struct\x1b[0m");
             }
-            Innards::List { item_shape, .. } => {
+            Def::List { item_shape, .. } => {
                 trace!("Deserializing \x1b[1;36marray\x1b[0m");
 
                 // Parse array start
@@ -168,7 +168,7 @@ pub fn from_json<'input>(
                     index
                 );
             }
-            Innards::Map { value_shape, .. } => {
+            Def::Map { value_shape, .. } => {
                 trace!("Deserializing \x1b[1;36mhashmap\x1b[0m");
 
                 // Parse object start and get first key if it exists

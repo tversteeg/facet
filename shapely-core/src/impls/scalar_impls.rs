@@ -7,7 +7,7 @@ impl Shapely for () {
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<Self>(),
-            innards: Innards::Scalar,
+            innards: Def::Scalar,
             vtable: || ValueVTable {
                 type_name: |f, _opts| write!(f, "()"),
                 display: Some(|_value, mut f| write!(f, "()")),
@@ -35,7 +35,7 @@ impl Shapely for String {
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<Self>(),
-            innards: Innards::Scalar,
+            innards: Def::Scalar,
             vtable: || ValueVTable {
                 type_name: |f, _opts| write!(f, "String"),
                 display: Some(|value, mut f| {
@@ -71,7 +71,7 @@ impl Shapely for bool {
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<Self>(),
-            innards: Innards::Scalar,
+            innards: Def::Scalar,
             vtable: || ValueVTable {
                 type_name: |f, _opts| write!(f, "bool"),
                 display: Some(|value, mut f| {

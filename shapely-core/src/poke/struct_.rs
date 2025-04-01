@@ -1,6 +1,4 @@
-use crate::{
-    Field, FieldError, Innards, OpaqueUninit, Shape, ShapeDesc, Shapely, ValueVTable, trace,
-};
+use crate::{Def, Field, FieldError, OpaqueUninit, Shape, ShapeDesc, Shapely, ValueVTable, trace};
 use std::ptr::NonNull;
 
 use super::ISet;
@@ -28,7 +26,7 @@ impl<'mem> PokeStruct<'mem> {
     /// The `data` and the `shape_desc` must match
     pub unsafe fn from_opaque_uninit(data: OpaqueUninit<'mem>, shape_desc: ShapeDesc) -> Self {
         let fields = match &shape_desc.get().innards {
-            Innards::Struct { fields } => *fields,
+            Def::Struct { fields } => *fields,
             _ => panic!("Expected a struct"),
         };
         unsafe { Self::from_opaque_uninit_and_fields(data, shape_desc, fields) }
@@ -58,7 +56,7 @@ impl<'mem> PokeStruct<'mem> {
     /// Panics if any field is not initialized, providing details about the uninitialized field.
     pub fn assert_all_fields_initialized(&self) {
         match self.shape.innards {
-            crate::Innards::Struct { fields } => {
+            crate::Def::Struct { fields } => {
                 for (i, field) in fields.iter().enumerate() {
                     if !self.iset.has(i) {
                         panic!(

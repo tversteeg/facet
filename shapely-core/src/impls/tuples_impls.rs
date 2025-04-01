@@ -1,7 +1,7 @@
 use std::alloc::Layout;
 
 use crate::{
-    Field, FieldFlags, Innards, Shape, ShapeDesc, Shapely, TypeNameOpts, ValueVTable, mini_typeid,
+    Def, Field, FieldFlags, Shape, ShapeDesc, Shapely, TypeNameOpts, ValueVTable, mini_typeid,
 };
 
 impl<T0> Shapely for (T0,)
@@ -52,7 +52,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple(StructInnards {
+            innards: Def::Tuple(StructInnards {
                 fields: &const { [field!(0, T0)] },
             }),
         }
@@ -111,7 +111,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple(StructInnards {
+            innards: Def::Tuple(StructInnards {
                 fields: &const { [field!(0, T0), field!(1, T1)] },
             }),
         }
@@ -174,7 +174,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple(StructInnards {
+            innards: Def::Tuple(StructInnards {
                 fields: &const { [field!(0, T0), field!(1, T1), field!(2, T2)] },
             }),
         }
@@ -241,7 +241,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple(StructInnards {
+            innards: Def::Tuple(StructInnards {
                 fields: &const { [field!(0, T0), field!(1, T1), field!(2, T2), field!(3, T3)] },
             }),
         }
@@ -312,7 +312,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple(StructInnards {
+            innards: Def::Tuple(StructInnards {
                 fields: &const {
                     [
                         field!(0, T0),
@@ -398,7 +398,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple(StructInnards {
+            innards: Def::Tuple(StructInnards {
                 fields: &const {
                     [
                         field!(0, T0),
@@ -489,7 +489,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple(StructInnards {
+            innards: Def::Tuple(StructInnards {
                 fields: &const {
                     [
                         field!(0, T0),
@@ -585,7 +585,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple(StructInnards {
+            innards: Def::Tuple(StructInnards {
                 fields: &const {
                     [
                         field!(0, T0),
@@ -688,7 +688,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple(StructInnards {
+            innards: Def::Tuple(StructInnards {
                 fields: &const {
                     [
                         field!(0, T0),
@@ -796,7 +796,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple(StructInnards {
+            innards: Def::Tuple(StructInnards {
                 fields: &const {
                     [
                         field!(0, T0),
@@ -913,7 +913,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple(StructInnards {
+            innards: Def::Tuple(StructInnards {
                 fields: &const {
                     [
                         field!(0, T0),
@@ -1046,7 +1046,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple(StructInnards {
+            innards: Def::Tuple(StructInnards {
                 fields: &const {
                     [
                         field!(0, T0),

@@ -41,18 +41,18 @@ impl<'mem> Peek<'mem> {
     pub unsafe fn unchecked_new(data: OpaqueConst<'mem>, shape_desc: ShapeDesc) -> Self {
         let shape = shape_desc.get();
         match shape.innards {
-            super::Innards::Struct { .. } => todo!(),
-            super::Innards::TupleStruct { .. } => todo!(),
-            super::Innards::Tuple { .. } => todo!(),
-            super::Innards::Map { .. } => todo!(),
-            super::Innards::List { .. } => todo!(),
-            super::Innards::Scalar => Peek::Scalar(PeekValue {
+            super::Def::Struct { .. } => todo!(),
+            super::Def::TupleStruct { .. } => todo!(),
+            super::Def::Tuple { .. } => todo!(),
+            super::Def::Map { .. } => todo!(),
+            super::Def::List { .. } => todo!(),
+            super::Def::Scalar => Peek::Scalar(PeekValue {
                 data,
                 shape,
                 // let's cache that
                 vtable: shape.vtable(),
             }),
-            super::Innards::Enum { .. } => todo!(),
+            super::Def::Enum { .. } => todo!(),
         }
     }
 }

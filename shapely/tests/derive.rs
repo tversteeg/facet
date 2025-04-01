@@ -18,7 +18,7 @@ fn simple_struct() {
         assert_eq!(shape.layout.size(), 32);
         assert_eq!(shape.layout.align(), 8);
 
-        if let shapely::Innards::Struct { fields } = shape.innards {
+        if let shapely::Def::Struct { fields } = shape.innards {
             assert_eq!(fields.len(), 2);
 
             let foo_field = &fields[0];
@@ -185,7 +185,7 @@ fn struct_with_tuple() {
 
         assert_eq!(format!("{}", shape), "TupleContainer");
 
-        if let shapely::Innards::Struct { fields } = shape.innards {
+        if let shapely::Def::Struct { fields } = shape.innards {
             assert_eq!(fields.len(), 1);
 
             let data_field = &fields[0];

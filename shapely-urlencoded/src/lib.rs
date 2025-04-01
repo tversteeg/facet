@@ -29,7 +29,7 @@ mod tests;
 /// assert_eq!(params, SearchParams { query: "rust programming".to_string(), page: 2 });
 /// ```
 pub fn from_urlencoded(partial: &mut Partial, input: &str) -> Result<(), UrlEncodedError> {
-    use shapely::{Innards, Scalar};
+    use shapely::{Def, Scalar};
 
     trace!("Starting URL encoded form data deserialization");
 
@@ -48,7 +48,7 @@ pub fn from_urlencoded(partial: &mut Partial, input: &str) -> Result<(), UrlEnco
     trace!("Deserializing value with shape:\n{:?}", shape);
 
     match &shape.innards {
-        Innards::Struct { .. } => {
+        Def::Struct { .. } => {
             trace!("Deserializing \x1b[1;36mstruct\x1b[0m");
 
             for (key, value) in pairs_map {
@@ -66,7 +66,7 @@ pub fn from_urlencoded(partial: &mut Partial, input: &str) -> Result<(), UrlEnco
                 let slot_shape_ref = slot_shape.get();
 
                 match &slot_shape_ref.innards {
-                    Innards::Scalar(scalar) => {
+                    Def::Scalar(scalar) => {
                         let mut partial_field = Partial::alloc(slot.shape());
                         let field_slot = partial_field.scalar_slot().expect("Scalar slot");
 

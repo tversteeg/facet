@@ -5,8 +5,7 @@ use std::{
 };
 
 use crate::{
-    Innards, MapInnards, MapVTable, OpaqueConst, Shape, Shapely, TypeNameOpts, ValueVTable,
-    mini_typeid,
+    Def, MapDef, MapVTable, OpaqueConst, Shape, Shapely, TypeNameOpts, ValueVTable, mini_typeid,
 };
 
 impl<K, V> Shapely for HashMap<K, V>
@@ -52,7 +51,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Map(MapInnards {
+            innards: Def::Map(MapDef {
                 k: K::shape_desc(),
                 v: V::shape_desc(),
                 vtable: MapVTable {

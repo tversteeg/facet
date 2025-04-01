@@ -1,9 +1,6 @@
-use std::{alloc::Layout, any::TypeId, ptr::NonNull};
+use std::{alloc::Layout, any::TypeId};
 
-use crate::{
-    EnumRepr, Field, ListVTable, MapVTable, OpaqueUninit, TypeNameOpts, ValueVTable, Variant,
-    VariantError,
-};
+use crate::{ListVTable, MapVTable, OpaqueUninit, TypeNameOpts, ValueVTable};
 
 mod pretty_print;
 
@@ -22,7 +19,7 @@ pub struct Shape {
     pub vtable: fn() -> ValueVTable,
 
     /// Details/contents of the value
-    pub innards: Innards,
+    pub innards: Def,
 }
 
 impl Shape {
@@ -50,78 +47,6 @@ impl Eq for Shape {}
 impl std::hash::Hash for Shape {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.typeid.hash(state);
-    }
-}
-
-impl Shape {
-    const INDENT: usize = 2;
-
-    /// Returns a slice of statically known fields. Fields that are not in there might still be inserted if it's a dynamic collection.
-    pub fn known_fields(&self) -> &'static [Field] {
-        match self.innards {
-            Innards::Struct { fields } => fields,
-            _ => &[],
-        }
-    }
-
-    /// Returns a reference to a field with the given name, if it exists
-    pub fn field_by_name(&self, name: &str) -> Option<&Field> {
-        // this is O(n), but shrug. maybe phf in the future? who knows.
-        self.known_fields().iter().find(|field| field.name == name)
-    }
-
-    /// Returns a reference to a field with the given index, if it exists
-    pub fn field_by_index(&self, index: usize) -> Result<&Field, FieldError> {
-        match self.innards {
-            Innards::Struct { fields } => fields.get(index).ok_or(FieldError::IndexOutOfBounds),
-            _ => Err(FieldError::NotAStruct),
-        }
-    }
-
-    /// Returns a dangling pointer for this shape.
-    ///
-    /// This is useful for zero-sized types (ZSTs) which don't need actual memory allocation,
-    /// but still need a properly aligned "some address".
-    ///
-    /// # Safety
-    ///
-    /// This function returns a dangling pointer. It should only be used in contexts where
-    /// a non-null pointer is required but no actual memory access will occur, such as for ZSTs.
-    pub fn dangling(&self) -> NonNull<u8> {
-        let dang = NonNull::dangling();
-        let offset = dang.align_offset(self.layout.align());
-        unsafe { dang.byte_add(offset) }
-    }
-
-    /// Returns a slice of enum variants, if this shape represents an enum
-    pub fn variants(&self) -> &'static [Variant] {
-        match self.innards {
-            Innards::Enum { variants, repr: _ } => variants,
-            _ => &[],
-        }
-    }
-
-    /// Returns a reference to a variant with the given name, if it exists
-    pub fn variant_by_name(&self, name: &str) -> Option<&Variant> {
-        self.variants().iter().find(|variant| variant.name == name)
-    }
-
-    /// Returns a reference to a variant with the given index, if it exists
-    pub fn variant_by_index(&self, index: usize) -> Result<&Variant, VariantError> {
-        match self.innards {
-            Innards::Enum { variants, repr: _ } => {
-                variants.get(index).ok_or(VariantError::IndexOutOfBounds)
-            }
-            _ => Err(VariantError::NotAnEnum),
-        }
-    }
-
-    /// Returns the enum representation, if this shape represents an enum
-    pub fn enum_repr(&self) -> Option<EnumRepr> {
-        match self.innards {
-            Innards::Enum { variants: _, repr } => Some(repr),
-            _ => None,
-        }
     }
 }
 
@@ -166,16 +91,134 @@ impl std::fmt::Debug for Shape {
 
 /// Common fields for struct-like types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StructInnards {
+pub struct StructDef {
     /// all fields, in declaration order (not necessarily in memory order)
     pub fields: &'static [Field],
 }
 
+/// Describes a field in a struct or tuple
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Field {
+    /// key for the struct field (for tuples and tuple-structs, this is the 0-based index)
+    pub name: &'static str,
+
+    /// schema of the inner type
+    pub shape: ShapeDesc,
+
+    /// offset of the field in the struct (obtained through `std::mem::offset_of`)
+    pub offset: usize,
+
+    /// flags for the field (e.g. sensitive, etc.)
+    pub flags: FieldFlags,
+}
+
+/// Flags that can be applied to fields to modify their behavior
+///
+/// # Examples
+///
+/// ```rust
+/// use shapely_core::FieldFlags;
+///
+/// // Create flags with the sensitive bit set
+/// let flags = FieldFlags::SENSITIVE;
+/// assert!(flags.contains(FieldFlags::SENSITIVE));
+///
+/// // Combine multiple flags using bitwise OR
+/// let flags = FieldFlags::SENSITIVE | FieldFlags::EMPTY;
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct FieldFlags(u64);
+
+impl FieldFlags {
+    /// An empty set of flags
+    pub const EMPTY: Self = Self(0);
+
+    /// Flag indicating this field contains sensitive data that should not be displayed
+    pub const SENSITIVE: Self = Self(1 << 0);
+
+    /// Returns true if the given flag is set
+    #[inline]
+    pub fn contains(&self, flag: FieldFlags) -> bool {
+        self.0 & flag.0 != 0
+    }
+
+    /// Sets the given flag and returns self for chaining
+    #[inline]
+    pub fn set_flag(&mut self, flag: FieldFlags) -> &mut Self {
+        self.0 |= flag.0;
+        self
+    }
+
+    /// Unsets the given flag and returns self for chaining
+    #[inline]
+    pub fn unset_flag(&mut self, flag: FieldFlags) -> &mut Self {
+        self.0 &= !flag.0;
+        self
+    }
+
+    /// Creates a new FieldFlags with the given flag set
+    #[inline]
+    pub const fn with_flag(flag: FieldFlags) -> Self {
+        Self(flag.0)
+    }
+}
+
+impl std::ops::BitOr for FieldFlags {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self {
+        Self(self.0 | rhs.0)
+    }
+}
+
+impl std::ops::BitOrAssign for FieldFlags {
+    fn bitor_assign(&mut self, rhs: Self) {
+        self.0 |= rhs.0;
+    }
+}
+
+impl Default for FieldFlags {
+    #[inline(always)]
+    fn default() -> Self {
+        Self::EMPTY
+    }
+}
+
+impl std::fmt::Display for FieldFlags {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.0 == 0 {
+            return write!(f, "none");
+        }
+
+        // Define a vector of flag entries: (flag bit, name)
+        let flags = [
+            (Self::SENSITIVE.0, "sensitive"),
+            // Future flags can be easily added here:
+            // (Self::SOME_FLAG.0, "some_flag"),
+            // (Self::ANOTHER_FLAG.0, "another_flag"),
+        ];
+
+        // Write all active flags with proper separators
+        let mut is_first = true;
+        for (bit, name) in flags {
+            if self.0 & bit != 0 {
+                if !is_first {
+                    write!(f, ", ")?;
+                }
+                is_first = false;
+                write!(f, "{}", name)?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
 /// Fields for map types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MapInnards {
+pub struct MapDef {
     /// vtable for interacting with the map
-    pub vtable: MapVTable,
+    pub vtable: fn() -> MapVTable,
     /// shape of the keys in the map
     pub k: ShapeDesc,
     /// shape of the values in the map
@@ -184,59 +227,125 @@ pub struct MapInnards {
 
 /// Fields for list types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ListInnards {
+pub struct ListDef {
     /// vtable for interacting with the list
-    pub vtable: ListVTable,
+    pub vtable: fn() -> ListVTable,
     /// shape of the items in the list
     pub t: ShapeDesc,
 }
 
 /// Fields for enum types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct EnumInnards {
+pub struct EnumDef {
+    /// representation of the enum (u8, u16, etc.)
+    pub repr: EnumRepr,
     /// all variants for this enum
     pub variants: &'static [Variant],
-    /// representation of the enum
-    pub repr: EnumRepr,
 }
 
-/// The shape of a schema: is it more map-shaped, array-shaped, scalar-shaped?
+/// Describes a variant of an enum
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Innards {
-    /// Struct with statically-known, named fields
-    ///
-    /// e.g. `struct Struct { field: u32 }`
-    Struct(StructInnards),
+pub struct Variant {
+    /// Name of the variant
+    pub name: &'static str,
 
-    /// Tuple-struct, with numbered fields
-    ///
-    /// e.g. `struct TupleStruct(u32, u32);`
-    TupleStruct(StructInnards),
+    /// Discriminant value (if available)
+    pub discriminant: Option<i64>,
 
-    /// Tuple, with numbered fields
-    ///
-    /// e.g. `(u32, u32);`
-    Tuple(StructInnards),
+    /// Kind of variant (unit, tuple, or struct)
+    pub kind: VariantKind,
+}
 
-    /// Map — keys are dynamic (and strings, sorry), values are homogeneous
-    ///
-    /// e.g. `Map<String, T>`
-    Map(MapInnards),
+/// Represents the different kinds of variants that can exist in a Rust enum
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum VariantKind {
+    /// Unit variant (e.g., `None` in Option)
+    Unit,
 
-    /// Ordered list of heterogenous values, variable size
-    ///
-    /// e.g. `Vec<T>`
-    List(ListInnards),
+    /// Tuple variant with unnamed fields (e.g., `Some(T)` in Option)
+    Tuple {
+        /// List of fields contained in the tuple variant
+        fields: &'static [Field],
+    },
 
-    /// Scalar — known base type
+    /// Struct variant with named fields (e.g., `Struct { field: T }`)
+    Struct {
+        /// List of fields contained in the struct variant
+        fields: &'static [Field],
+    },
+}
+
+/// All possible representations for Rust enums
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum EnumRepr {
+    /// Default representation (compiler-dependent)
+    Default,
+    /// u8 representation (#[repr(u8)])
+    U8,
+    /// u16 representation (#[repr(u16)])
+    U16,
+    /// u32 representation (#[repr(u32)])
+    U32,
+    /// u64 representation (#[repr(u64)])
+    U64,
+    /// usize representation (#[repr(usize)])
+    USize,
+    /// i8 representation (#[repr(i8)])
+    I8,
+    /// i16 representation (#[repr(i16)])
+    I16,
+    /// i32 representation (#[repr(i32)])
+    I32,
+    /// i64 representation (#[repr(i64)])
+    I64,
+    /// isize representation (#[repr(isize)])
+    ISize,
+}
+
+impl Default for EnumRepr {
+    fn default() -> Self {
+        Self::Default
+    }
+}
+
+/// The definition of a shape: is it more like a struct, a map, a list?
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Def {
+    /// Scalar — those don't have a def, they're not composed of other things.
+    /// You can interact with them through [`ValueVTable`].
     ///
     /// e.g. `u32`, `String`, `bool`, `SocketAddr`, etc.
     Scalar,
 
+    /// Struct with statically-known, named fields
+    ///
+    /// e.g. `struct Struct { field: u32 }`
+    Struct(StructDef),
+
+    /// Tuple-struct, with numbered fields
+    ///
+    /// e.g. `struct TupleStruct(u32, u32);`
+    TupleStruct(StructDef),
+
+    /// Tuple, with numbered fields
+    ///
+    /// e.g. `(u32, u32);`
+    Tuple(StructDef),
+
+    /// Map — keys are dynamic (and strings, sorry), values are homogeneous
+    ///
+    /// e.g. `Map<String, T>`
+    Map(MapDef),
+
+    /// Ordered list of heterogenous values, variable size
+    ///
+    /// e.g. `Vec<T>`
+    List(ListDef),
+
     /// Enum with variants
     ///
     /// e.g. `enum Enum { Variant1, Variant2 }`
-    Enum(EnumInnards),
+    Enum(EnumDef),
 }
 
 /// A function that returns a shape. There should only be one of these per concrete type in a

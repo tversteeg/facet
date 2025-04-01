@@ -64,7 +64,7 @@ pub fn from_msgpack(partial: &mut Partial, msgpack: &[u8]) -> Result<(), DecodeE
         let shape = shape_desc.get();
 
         match &shape.innards {
-            shapely_core::Innards::Scalar(scalar) => {
+            shapely_core::Def::Scalar(scalar) => {
                 let slot = partial.scalar_slot().expect("Scalar slot");
                 match scalar {
                     shapely_core::Scalar::String => {
@@ -81,7 +81,7 @@ pub fn from_msgpack(partial: &mut Partial, msgpack: &[u8]) -> Result<(), DecodeE
                     }
                 }
             }
-            shapely_core::Innards::Struct { .. } => {
+            shapely_core::Def::Struct { .. } => {
                 let map_len = decoder.decode_map_len()?;
 
                 for _ in 0..map_len {

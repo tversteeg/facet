@@ -1,5 +1,5 @@
 use shapely::Shapely;
-use shapely_core::{Field, FieldFlags, Innards, Shape, ShapeDesc};
+use shapely_core::{Def, Field, FieldFlags, Shape, ShapeDesc};
 use shapely_pretty::{PrettyPrinter, ShapelyPretty};
 use std::{alloc::Layout, fmt::Write};
 
@@ -36,7 +36,7 @@ impl Shapely for TestSecrets {
             name: |f, _opts| write!(f, "TestSecrets"),
             typeid: std::any::TypeId::of::<Self>(),
             layout: Layout::new::<Self>(),
-            innards: Innards::Struct {
+            innards: Def::Struct {
                 fields: &[
                     Field {
                         name: "normal_field",

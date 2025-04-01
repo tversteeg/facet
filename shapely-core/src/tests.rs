@@ -27,7 +27,7 @@ impl Shapely for FooBar {
                 parse: None,
                 try_from: None,
             },
-            innards: crate::Innards::Struct {
+            innards: crate::Def::Struct {
                 fields: crate::struct_fields!(FooBar, (foo, bar)),
             },
         }

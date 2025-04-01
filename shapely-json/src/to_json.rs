@@ -8,7 +8,7 @@ pub fn to_json<W: Write>(
     writer: &mut W,
     indent: bool,
 ) -> io::Result<()> {
-    use shapely::{Innards, Scalar};
+    use shapely::{Def, Scalar};
 
     fn serialize_value<W: Write>(
         data: *const u8,
@@ -18,7 +18,7 @@ pub fn to_json<W: Write>(
         level: usize,
     ) -> io::Result<()> {
         match &shape.innards {
-            Innards::Scalar(scalar) => match scalar {
+            Def::Scalar(scalar) => match scalar {
                 Scalar::String => {
                     let s = unsafe { &*(data as *const String) };
                     write!(writer, "\"{}\"", s.replace('"', "\\\""))
@@ -87,7 +87,7 @@ pub fn to_json<W: Write>(
                     "unsupported scalar type encountered",
                 )),
             },
-            Innards::Struct { fields } => {
+            Def::Struct { fields } => {
                 write!(writer, "{{")?;
                 if indent {
                     writeln!(writer)?;
@@ -114,7 +114,7 @@ pub fn to_json<W: Write>(
                 }
                 write!(writer, "}}")
             }
-            Innards::List { vtable, item_shape } => {
+            Def::List { vtable, item_shape } => {
                 write!(writer, "[")?;
                 if indent {
                     writeln!(writer)?;
@@ -145,7 +145,7 @@ pub fn to_json<W: Write>(
                 }
                 write!(writer, "]")
             }
-            Innards::Map {
+            Def::Map {
                 vtable,
                 value_shape,
             } => {

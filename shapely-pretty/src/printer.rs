@@ -7,7 +7,7 @@ use std::{
     str,
 };
 
-use shapely_core::{FieldFlags, Innards, Scalar, Shape, ShapeDesc, Shapely};
+use shapely_core::{Def, FieldFlags, Scalar, Shape, ShapeDesc, Shapely};
 
 use crate::{
     ansi,
@@ -124,24 +124,22 @@ impl PrettyPrinter {
 
         // Format based on the shape's innards
         match &shape.innards {
-            Innards::Scalar(scalar) => self.format_scalar(ptr, *scalar, f, color),
-            Innards::Struct { fields }
-            | Innards::TupleStruct { fields }
-            | Innards::Tuple { fields } => {
+            Def::Scalar(scalar) => self.format_scalar(ptr, *scalar, f, color),
+            Def::Struct { fields } | Def::TupleStruct { fields } | Def::Tuple { fields } => {
                 self.format_struct(ptr, shape, fields, f, depth, visited)
             }
-            Innards::Map {
+            Def::Map {
                 vtable: _,
                 value_shape,
             } => self.format_hashmap(ptr, shape, *value_shape, f, depth, visited),
-            Innards::List {
+            Def::List {
                 vtable: _,
                 item_shape,
             } => self.format_array(ptr, shape, *item_shape, f, depth, visited),
-            Innards::Transparent(inner_shape) => {
+            Def::Transparent(inner_shape) => {
                 self.format_transparent(ptr, shape, *inner_shape, f, depth, visited)
             }
-            Innards::Enum { variants, repr: _ } => {
+            Def::Enum { variants, repr: _ } => {
                 self.format_enum(ptr, shape, variants, f, depth, visited)
             }
         }
