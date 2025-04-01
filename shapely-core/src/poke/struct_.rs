@@ -1,4 +1,6 @@
-use crate::{Def, Field, FieldError, OpaqueUninit, Shape, ShapeDesc, Shapely, ValueVTable, trace};
+use crate::{
+    Def, FieldError, OpaqueUninit, Shape, ShapeDesc, Shapely, StructDef, ValueVTable, trace,
+};
 use std::ptr::NonNull;
 
 use super::ISet;
@@ -11,7 +13,7 @@ pub struct PokeStruct<'mem> {
     shape: Shape,
     #[allow(dead_code)]
     vtable: ValueVTable,
-    fields: &'static [Field],
+    def: StructDef,
 }
 
 impl<'mem> PokeStruct<'mem> {
@@ -25,20 +27,20 @@ impl<'mem> PokeStruct<'mem> {
     ///
     /// The `data` and the `shape_desc` must match
     pub unsafe fn from_opaque_uninit(data: OpaqueUninit<'mem>, shape_desc: ShapeDesc) -> Self {
-        let fields = match &shape_desc.get().def {
-            Def::Struct { fields } => *fields,
+        let def = match &shape_desc.get().def {
+            Def::Struct(def) => *def,
             _ => panic!("Expected a struct"),
         };
-        unsafe { Self::from_opaque_uninit_and_fields(data, shape_desc, fields) }
+        unsafe { Self::from_opaque_uninit_and_def(data, shape_desc, def) }
     }
 
     /// # Safety
     ///
-    /// The `data`, `shape_desc`, and `fields` must match
-    pub unsafe fn from_opaque_uninit_and_fields(
+    /// The `data`, `shape_desc`, and `def` must match
+    pub unsafe fn from_opaque_uninit_and_def(
         data: OpaqueUninit<'mem>,
         shape_desc: ShapeDesc,
-        fields: &'static [Field],
+        def: StructDef,
     ) -> Self {
         let shape = shape_desc.get();
         let vtable = shape.vtable();
@@ -48,7 +50,7 @@ impl<'mem> PokeStruct<'mem> {
             shape_desc,
             shape: shape_desc.get(),
             vtable,
-            fields,
+            def,
         }
     }
 
@@ -56,8 +58,8 @@ impl<'mem> PokeStruct<'mem> {
     /// Panics if any field is not initialized, providing details about the uninitialized field.
     pub fn assert_all_fields_initialized(&self) {
         match self.shape.def {
-            crate::Def::Struct { fields } => {
-                for (i, field) in fields.iter().enumerate() {
+            Def::Struct(def) => {
+                for (i, field) in def.fields.iter().enumerate() {
                     if !self.iset.has(i) {
                         panic!(
                             "Field '{}' was not initialized. Complete schema:\n{:?}",
@@ -160,6 +162,7 @@ impl<'mem> PokeStruct<'mem> {
     /// Gets a field, by name
     pub fn field_by_name<'s>(&'s mut self, name: &str) -> Result<crate::Poke<'s>, FieldError> {
         let index = self
+            .def
             .fields
             .iter()
             .position(|f| f.name == name)
@@ -175,11 +178,11 @@ impl<'mem> PokeStruct<'mem> {
     /// - The shape doesn't represent a struct.
     /// - The index is out of bounds.
     pub fn field<'s>(&'s mut self, index: usize) -> Result<crate::Poke<'s>, FieldError> {
-        if index >= self.fields.len() {
+        if index >= self.def.fields.len() {
             return Err(FieldError::IndexOutOfBounds);
         }
 
-        let field = &self.fields[index];
+        let field = &self.def.fields[index];
 
         // Get the field's address
         let field_addr = unsafe { self.data.field_uninit(field.offset) };
@@ -197,10 +200,10 @@ impl<'mem> PokeStruct<'mem> {
     /// - The index is out of bounds
     /// - The field shapes don't match
     pub fn set(&mut self, index: usize, value: crate::OpaqueConst) -> Result<(), FieldError> {
-        if index >= self.fields.len() {
+        if index >= self.def.fields.len() {
             return Err(FieldError::IndexOutOfBounds);
         }
-        let field = &self.fields[index];
+        let field = &self.def.fields[index];
         let field_shape = field.shape.get();
 
         unsafe {
@@ -224,6 +227,7 @@ impl<'mem> PokeStruct<'mem> {
     /// - The field shapes don't match
     pub fn set_by_name(&mut self, name: &str, value: crate::OpaqueConst) -> Result<(), FieldError> {
         let index = self
+            .def
             .fields
             .iter()
             .position(|f| f.name == name)
@@ -244,7 +248,8 @@ impl<'mem> PokeStruct<'mem> {
 
 impl Drop for PokeStruct<'_> {
     fn drop(&mut self) {
-        self.fields
+        self.def
+            .fields
             .iter()
             .enumerate()
             .filter_map(|(i, field)| {

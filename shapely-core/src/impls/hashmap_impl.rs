@@ -54,7 +54,7 @@ where
             def: Def::Map(MapDef {
                 k: K::shape_desc(),
                 v: V::shape_desc(),
-                vtable: MapVTable {
+                vtable: || MapVTable {
                     insert: |ptr, key, value| unsafe {
                         let map = ptr.as_mut_ptr::<HashMap<K, V>>();
                         let key = key.read::<K>();

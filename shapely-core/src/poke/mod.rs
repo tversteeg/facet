@@ -59,21 +59,37 @@ impl<'mem> Poke<'mem> {
     pub unsafe fn from_opaque_uninit(data: OpaqueUninit<'mem>, shape_desc: ShapeDesc) -> Self {
         let shape = shape_desc.get();
         match shape.def {
-            super::Def::Struct { fields } => Poke::Struct(unsafe {
-                PokeStruct::from_opaque_uninit_and_fields(data, shape_desc, fields)
+            super::Def::Struct(struct_def) => Poke::Struct(unsafe {
+                PokeStruct::from_opaque_uninit_and_def(data, shape_desc, struct_def)
             }),
-            super::Def::TupleStruct { fields } => Poke::Struct(unsafe {
-                PokeStruct::from_opaque_uninit_and_fields(data, shape_desc, fields)
+            super::Def::TupleStruct(struct_def) => Poke::Struct(unsafe {
+                PokeStruct::from_opaque_uninit_and_def(data, shape_desc, struct_def)
             }),
-            super::Def::Tuple { fields } => Poke::Struct(unsafe {
-                PokeStruct::from_opaque_uninit_and_fields(data, shape_desc, fields)
+            super::Def::Tuple(struct_def) => Poke::Struct(unsafe {
+                PokeStruct::from_opaque_uninit_and_def(data, shape_desc, struct_def)
             }),
-            super::Def::Map { .. } => todo!(),
-            super::Def::List { .. } => todo!(),
+            super::Def::Map(map_def) => {
+                let pv = unsafe { PokeValue::new(data, shape, shape.vtable()) };
+                let data = pv.default_in_place().unwrap_or_else(|_| {
+                    panic!("Failed to initialize map value. Shape is: {shape:?}")
+                });
+                let pm = unsafe { PokeMap::new(data, shape, shape.vtable(), map_def) };
+                Poke::Map(pm)
+            }
+            super::Def::List(list_def) => {
+                let pv = unsafe { PokeValue::new(data, shape, shape.vtable()) };
+                let data = pv.default_in_place().unwrap_or_else(|_| {
+                    panic!("Failed to initialize list value. Shape is: {shape:?}")
+                });
+                let pl = unsafe { PokeList::new(data, shape, shape.vtable(), list_def) };
+                Poke::List(pl)
+            }
             super::Def::Scalar => {
                 Poke::Scalar(unsafe { PokeValue::new(data, shape, shape.vtable()) })
             }
-            super::Def::Enum { .. } => todo!(),
+            super::Def::Enum(enum_def) => Poke::Enum(unsafe {
+                PokeEnum::from_opaque_uninit(data, shape_desc, shape.vtable(), enum_def)
+            }),
         }
     }
 

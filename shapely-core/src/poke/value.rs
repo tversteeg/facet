@@ -72,4 +72,19 @@ impl<'mem> PokeValue<'mem> {
             self.data.assume_init()
         }
     }
+
+    /// Attempts to set the value to its default
+    ///
+    /// Returns `Some(Opaque)` if setting to default was successful, `None` otherwise.
+    pub fn default_in_place(self) -> Result<Opaque<'mem>, Self> {
+        if let Some(default_val) = self
+            .vtable
+            .default_in_place
+            .and_then(|default_fn| unsafe { default_fn(self.data) })
+        {
+            Ok(default_val)
+        } else {
+            Err(self)
+        }
+    }
 }

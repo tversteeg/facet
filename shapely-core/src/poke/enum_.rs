@@ -1,6 +1,4 @@
-use crate::{
-    EnumRepr, FieldError, OpaqueUninit, Shape, ShapeDesc, Shapely, ValueVTable, Variant, trace,
-};
+use crate::{EnumDef, FieldError, OpaqueUninit, Shape, ShapeDesc, Shapely, ValueVTable, trace};
 use std::ptr::NonNull;
 
 use super::{ISet, Poke};
@@ -14,12 +12,7 @@ pub struct PokeEnum<'mem> {
     #[allow(dead_code)]
     vtable: ValueVTable,
     selected_variant: Option<usize>,
-
-    /// all variants for this enum
-    variants: &'static [Variant],
-
-    /// representation of the enum
-    repr: EnumRepr,
+    def: EnumDef,
 }
 
 impl<'mem> PokeEnum<'mem> {
@@ -28,15 +21,12 @@ impl<'mem> PokeEnum<'mem> {
         let shape_desc = T::shape_desc();
         let shape = shape_desc.get();
         let vtable = shape.vtable();
-
-        Self {
-            data: OpaqueUninit::from_maybe_uninit(uninit),
-            iset: Default::default(),
-            shape_desc,
-            shape,
-            vtable,
-            selected_variant: None,
-        }
+        let def = match shape.def {
+            crate::Def::Enum(def) => def,
+            _ => panic!("expected enum shape"),
+        };
+        let data = OpaqueUninit::from_maybe_uninit(uninit);
+        unsafe { Self::from_opaque_uninit(data, shape_desc, vtable, def) }
     }
 
     /// Creates a new PokeEnum from raw data
@@ -44,12 +34,11 @@ impl<'mem> PokeEnum<'mem> {
     /// # Safety
     ///
     /// The data buffer must match the size and alignment of the enum shape described by shape_desc
-    pub(crate) unsafe fn new(
+    pub(crate) unsafe fn from_opaque_uninit(
         data: OpaqueUninit<'mem>,
         shape_desc: ShapeDesc,
         vtable: ValueVTable,
-        variants: &'static [Variant],
-        repr: EnumRepr,
+        def: EnumDef,
     ) -> Self {
         let shape = shape_desc.get();
         Self {
@@ -59,25 +48,7 @@ impl<'mem> PokeEnum<'mem> {
             shape,
             vtable,
             selected_variant: None,
-            variants,
-            repr,
-        }
-    }
-
-    /// # Safety
-    ///
-    /// The `data` and the `shape_desc` must match
-    pub unsafe fn from_opaque_uninit(data: OpaqueUninit<'mem>, shape_desc: ShapeDesc) -> Self {
-        let shape = shape_desc.get();
-        let vtable = shape.vtable();
-
-        Self {
-            data,
-            iset: Default::default(),
-            shape_desc,
-            shape,
-            vtable,
-            selected_variant: None,
+            def,
         }
     }
 
@@ -91,8 +62,9 @@ impl<'mem> PokeEnum<'mem> {
     pub fn set_variant_by_name(&mut self, variant_name: &str) -> Result<(), FieldError> {
         let shape = self.shape;
 
-        if let crate::Def::Enum { variants, repr: _ } = &shape.def {
-            let variant_index = variants
+        if let crate::Def::Enum(def) = &shape.def {
+            let variant_index = def
+                .variants
                 .iter()
                 .enumerate()
                 .find(|(_, v)| v.name == variant_name)
@@ -115,13 +87,13 @@ impl<'mem> PokeEnum<'mem> {
     pub fn set_variant_by_index(&mut self, variant_index: usize) -> Result<(), FieldError> {
         let shape = self.shape;
 
-        if let crate::Def::Enum { variants, repr } = &shape.def {
-            if variant_index >= variants.len() {
+        if let crate::Def::Enum(def) = &shape.def {
+            if variant_index >= def.variants.len() {
                 return Err(FieldError::IndexOutOfBounds);
             }
 
             // Get the current variant info
-            let variant = &variants[variant_index];
+            let variant = &def.variants[variant_index];
 
             // Prepare memory for the enum
             unsafe {
@@ -138,7 +110,7 @@ impl<'mem> PokeEnum<'mem> {
                 };
 
                 // Write the discriminant value based on the representation
-                match repr {
+                match def.repr {
                     crate::EnumRepr::U8 => {
                         let tag_ptr = self.data.as_mut_ptr();
                         *tag_ptr = discriminant_value as u8;
@@ -181,11 +153,11 @@ impl<'mem> PokeEnum<'mem> {
                     }
                     crate::EnumRepr::Default => {
                         // Use a heuristic based on the number of variants
-                        if variants.len() <= 256 {
+                        if def.variants.len() <= 256 {
                             // Can fit in a u8
                             let tag_ptr = self.data.as_mut_ptr();
                             *tag_ptr = discriminant_value as u8;
-                        } else if variants.len() <= 65536 {
+                        } else if def.variants.len() <= 65536 {
                             // Can fit in a u16
                             let tag_ptr = self.data.as_mut_ptr() as *mut u16;
                             *tag_ptr = discriminant_value as u16;
@@ -240,8 +212,8 @@ impl<'mem> PokeEnum<'mem> {
             .ok_or(FieldError::NotAStruct)?; // Using NotAStruct as a stand-in for "no variant selected"
 
         let shape = self.shape;
-        if let crate::Def::Enum { variants, repr: _ } = &shape.def {
-            let variant = &variants[variant_index];
+        if let crate::Def::Enum(def) = &shape.def {
+            let variant = &def.variants[variant_index];
 
             // Find the field in the variant
             match &variant.kind {
@@ -309,8 +281,8 @@ impl<'mem> PokeEnum<'mem> {
         // Get the selected variant
         if let Some(variant_index) = self.selected_variant_index() {
             let shape = self.shape;
-            if let crate::Def::Enum { variants, repr: _ } = &shape.def {
-                let variant = &variants[variant_index];
+            if let crate::Def::Enum(def) = &shape.def {
+                let variant = &def.variants[variant_index];
 
                 // Check if all fields of the selected variant are initialized
                 match &variant.kind {
@@ -430,8 +402,8 @@ impl Drop for PokeEnum<'_> {
 
         if let Some(variant_index) = self.selected_variant_index() {
             let shape = self.shape;
-            if let crate::Def::Enum { variants, repr: _ } = &shape.def {
-                let variant = &variants[variant_index];
+            if let crate::Def::Enum(def) = &shape.def {
+                let variant = &def.variants[variant_index];
 
                 // Drop fields based on the variant kind
                 match &variant.kind {

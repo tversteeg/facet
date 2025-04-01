@@ -1,4 +1,4 @@
-use crate::{MapVTable, Opaque, OpaqueConst, Shape, ValueVTable};
+use crate::{MapDef, Opaque, OpaqueConst, Shape, ValueVTable};
 
 /// Allows poking a map (inserting, etc.)
 pub struct PokeMap<'mem> {
@@ -7,7 +7,7 @@ pub struct PokeMap<'mem> {
     shape: Shape,
     #[allow(dead_code)]
     vtable: ValueVTable,
-    map_vtable: MapVTable,
+    map_def: MapDef,
 }
 
 impl<'mem> PokeMap<'mem> {
@@ -20,13 +20,13 @@ impl<'mem> PokeMap<'mem> {
         data: Opaque<'mem>,
         shape: Shape,
         vtable: ValueVTable,
-        map_vtable: MapVTable,
+        map_def: MapDef,
     ) -> Self {
         Self {
             data,
             shape,
             vtable,
-            map_vtable,
+            map_def,
         }
     }
 
@@ -37,12 +37,12 @@ impl<'mem> PokeMap<'mem> {
     /// `key` and `value` are moved out of (with [`std::ptr::read`]) — they should be deallocated
     /// afterwards but NOT dropped.
     pub unsafe fn insert<'key, 'value>(&mut self, key: Opaque<'key>, value: Opaque<'value>) {
-        unsafe { (self.map_vtable.insert)(self.data, key, value) }
+        unsafe { (self.map_def.vtable.insert)(self.data, key, value) }
     }
 
     /// Gets the number of entries in the map
     pub fn len(&self) -> usize {
-        unsafe { (self.map_vtable.len)(self.data.as_const()) }
+        unsafe { (self.map_def.vtable.len)(self.data.as_const()) }
     }
 
     /// Checks if the map contains no entries
@@ -52,13 +52,13 @@ impl<'mem> PokeMap<'mem> {
 
     /// Checks if the map contains a key
     pub fn contains_key<'key>(&self, key: OpaqueConst<'key>) -> bool {
-        unsafe { (self.map_vtable.contains_key)(self.data.as_const(), key) }
+        unsafe { (self.map_def.vtable.contains_key)(self.data.as_const(), key) }
     }
 
     /// Gets a pointer to the value for a given key
     ///
     /// Returns `None` if the key is not found.
     pub fn get_value_ptr<'key>(&self, key: OpaqueConst<'key>) -> Option<OpaqueConst<'mem>> {
-        unsafe { (self.map_vtable.get_value_ptr)(self.data.as_const(), key) }
+        unsafe { (self.map_def.vtable.get_value_ptr)(self.data.as_const(), key) }
     }
 }

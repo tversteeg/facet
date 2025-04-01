@@ -44,7 +44,7 @@ where
                 try_from: None,
             },
             def: Def::List(ListDef {
-                vtable: ListVTable {
+                vtable: || ListVTable {
                     push: |ptr, item| unsafe {
                         let vec = ptr.as_mut_ptr::<Vec<T>>();
                         let item = item.read::<T>();
