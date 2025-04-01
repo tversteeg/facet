@@ -1,7 +1,7 @@
 use crate::Shapely;
 use std::cmp::Ordering;
 
-use super::{OpaqueConst, Shape, ShapeDesc};
+use super::{Opaque, OpaqueConst, Shape, ShapeDesc};
 
 /// Lets you peek at the innards of a value
 ///
@@ -158,10 +158,13 @@ impl<'mem> PeekValue<'mem> {
     ///
     /// `false` if hashing is not supported for this scalar type, `true` otherwise
     #[inline(always)]
-    pub fn hash(&self, hasher: &mut (dyn std::hash::Hasher + 'static)) -> bool {
+    pub fn hash<H: std::hash::Hasher>(&self, hasher: &mut H) -> bool {
         unsafe {
             if let Some(hash_fn) = self.shape.vtable.hash {
-                hash_fn(self.data, hasher as *mut dyn std::hash::Hasher);
+                let hasher_opaque = Opaque::from_ref(hasher);
+                hash_fn(self.data, hasher_opaque, |opaque, bytes| {
+                    opaque.as_mut_ptr::<H>().write(bytes)
+                });
                 true
             } else {
                 false
