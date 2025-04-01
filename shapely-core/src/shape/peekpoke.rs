@@ -1,4 +1,6 @@
-use super::{Opaque, ScalarVTable, ShapeDesc};
+use crate::Shapely;
+
+use super::{Opaque, OpaqueConst, ScalarVTable, ShapeDesc};
 
 /// Lets you peek at the innards of a value
 ///
@@ -10,18 +12,26 @@ pub enum Peek<'mem> {
 
 /// Lets you read from a scalar
 pub struct PeekScalar<'mem> {
-    data: Opaque,
+    data: Opaque<'mem>,
     vtable: ScalarVTable,
 }
 
-impl Peek {
+impl<'mem> Peek<'mem> {
+    /// Creates a new peek from a reference to some initialized value that implements `Shapely`
+    pub fn new<S: Shapely>(s: &'mem S) -> Self {
+        // This is safe because we're creating an Opaque pointer to read-only data
+        // The pointer will be valid for the lifetime 'mem
+        let data = OpaqueConst::from_ref(s);
+        unsafe { Self::unchecked_new(data, S::shape_desc()) }
+    }
+
     /// Creates a new peek, for easy manipulation of some opaque data.
     ///
     /// # Safety
     ///
     /// `data` must be initialized and well-aligned, and point to a value
     /// of the type described by `ShapeDesc`
-    pub unsafe fn new(data: Opaque, shape: ShapeDesc) -> Self {
+    pub unsafe fn unchecked_new(data: OpaqueConst, shape: ShapeDesc) -> Self {
         let sh = shape.get();
         match sh.innards {
             super::Innards::Struct { fields } => todo!(),
