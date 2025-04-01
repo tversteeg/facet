@@ -1,4 +1,5 @@
-use super::{OpaqueConst, OpaqueConstRef, OpaqueUninit, ShapeDesc};
+use super::{OpaqueConst, OpaqueUninit, ShapeDesc};
+use std::cmp::Ordering;
 
 /// Writes a `Display` format of the scalar to the given formatter. The assumption is that
 /// if there's a [`ScalarFromStrFn`] function, it should be able to parse the output
@@ -39,33 +40,12 @@ pub type ScalarFromStrFn = unsafe fn(target: OpaqueUninit, s: &str) -> Result<()
 /// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
 pub type ScalarEqFn = unsafe fn(left: OpaqueConst, right: OpaqueConst) -> bool;
 
-/// Function to check if first scalar value is greater than the second
+/// Function to compare two scalar values and return their ordering
 ///
 /// # Safety
 ///
 /// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
-pub type ScalarGtFn = unsafe fn(left: OpaqueConst, right: OpaqueConst) -> bool;
-
-/// Function to check if first scalar value is greater than or equal to the second
-///
-/// # Safety
-///
-/// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
-pub type ScalarGteFn = unsafe fn(left: OpaqueConst, right: OpaqueConst) -> bool;
-
-/// Function to check if first scalar value is less than the second
-///
-/// # Safety
-///
-/// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
-pub type ScalarLtFn = unsafe fn(left: OpaqueConst, right: OpaqueConst) -> bool;
-
-/// Function to check if first scalar value is less than or equal to the second
-///
-/// # Safety
-///
-/// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
-pub type ScalarLteFn = unsafe fn(left: OpaqueConst, right: OpaqueConst) -> bool;
+pub type ScalarCmpFn = unsafe fn(left: OpaqueConst, right: OpaqueConst) -> Ordering;
 
 /// Function to hash a scalar value
 ///
@@ -93,8 +73,8 @@ pub enum TryFromError {
     OutOfRange {
         src: ShapeDesc,
         dst: ShapeDesc,
-        min_value: OpaqueConstRef<'static>,
-        max_value: OpaqueConstRef<'static>,
+        min_value: OpaqueConst<'static>,
+        max_value: OpaqueConst<'static>,
     },
 }
 
@@ -116,17 +96,8 @@ pub struct ScalarVTable {
     /// cf. [`ScalarEqFn`]
     pub eq: Option<ScalarEqFn>,
 
-    /// cf. [`ScalarGtFn`]
-    pub gt: Option<ScalarGtFn>,
-
-    /// cf. [`ScalarGteFn`]
-    pub gte: Option<ScalarGteFn>,
-
-    /// cf. [`ScalarLtFn`]
-    pub lt: Option<ScalarLtFn>,
-
-    /// cf. [`ScalarLteFn`]
-    pub lte: Option<ScalarLteFn>,
+    /// cf. [`ScalarCmpFn`]
+    pub cmp: Option<ScalarCmpFn>,
 
     /// cf. [`ScalarHashFn`]
     pub hash: Option<ScalarHashFn>,

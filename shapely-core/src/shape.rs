@@ -287,11 +287,6 @@ pub enum Innards {
         item_shape: ShapeDesc,
     },
 
-    /// Transparent — forwards to another known schema
-    ///
-    /// e.g. `#[repr(transparent)] struct Transparent<T>(T);`
-    Transparent(ShapeDesc),
-
     /// Scalar — known base type
     ///
     /// e.g. `u32`, `String`, `bool`, `SocketAddr`, etc.

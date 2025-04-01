@@ -30,12 +30,13 @@ pub type MapLenFn = unsafe fn(map: OpaqueConst) -> usize;
 /// The `map` parameter must point to aligned, initialized memory of the correct type.
 pub type MapContainsKeyFn = unsafe fn(map: OpaqueConst, key: &str) -> bool;
 
-/// Get pointer to a value for a given key, returns null if not found
+/// Get pointer to a value for a given key, returns None if not found
 ///
 /// # Safety
 ///
 /// The `map` parameter must point to aligned, initialized memory of the correct type.
-pub type MapGetValuePtrFn = unsafe fn(map: OpaqueConst, key: &str) -> OpaqueConst;
+pub type MapGetValuePtrFn =
+    for<'a> unsafe fn(map: OpaqueConst<'a>, key: &str) -> Option<OpaqueConst<'a>>;
 
 /// Get an iterator over the map
 ///
