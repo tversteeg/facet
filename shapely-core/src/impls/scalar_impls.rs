@@ -2,6 +2,52 @@ use std::alloc::Layout;
 
 use crate::*;
 
+impl Shapely for u8 {
+    fn shape() -> Shape {
+        Shape {
+            name: |f, _nameopts| write!(f, stringify!($type)),
+            typeid: mini_typeid::of::<Self>(),
+            layout: Layout::new::<Self>(),
+            innards: Innards::Scalar {
+                vtable: ScalarVTable {
+                    display: Some(|this, _| {
+                        let value = unsafe { *this.as_ptr::<u8>() };
+                        format!("{}", value)
+                    }),
+                    debug: Some(|this, _| format!("{:?}", unsafe { this.as_ref::<Self>() })),
+                    default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
+                    from_str: Some(|target, s| match s.parse::<u8>() {
+                        Ok(value) => {
+                            unsafe { std::ptr::write(target.0 as *mut u8, value) };
+                            Ok(())
+                        }
+                        Err(e) => Err(e.to_string()),
+                    }),
+                    eq: Some(|left, right| {
+                        let left_val = unsafe { *left.as_ptr::<u8>() };
+                        let right_val = unsafe { *right.as_ptr::<u8>() };
+                        left_val == right_val
+                    }),
+                    cmp: Some(|left, right| {
+                        let left_val = unsafe { *left.as_ptr::<u8>() };
+                        let right_val = unsafe { *right.as_ptr::<u8>() };
+                        left_val.cmp(&right_val)
+                    }),
+                    hash: Some(|value, hasher| {
+                        let val = unsafe { *value.as_ptr::<u8>() };
+                        unsafe { &mut *hasher }.write_u8(val);
+                    }),
+                },
+            },
+            set_to_default: Some(|addr: *mut u8| unsafe {
+                *(addr as *mut Self) = 0;
+            }),
+            // integers don't need to drop
+            drop_in_place: None,
+        }
+    }
+}
+
 macro_rules! impl_shapely_for_integer {
     ($type:ty, $scalar:expr) => {
         impl Shapely for $type {

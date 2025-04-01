@@ -1,4 +1,4 @@
-use super::{FieldFlags, Innards, NameOpts, Shape, VariantKind};
+use super::{Innards, Shape, VariantKind};
 use std::{collections::HashSet, fmt::Formatter};
 
 impl Shape {
@@ -15,13 +15,13 @@ impl Shape {
     ) -> std::fmt::Result {
         if !printed_schemas.insert(*self) {
             write!(f, "{:indent$}\x1b[1;33m", "", indent = indent)?;
-            (self.name)(f, NameOpts::one())?;
+            (self.name)(f, TypeNameOpts::one())?;
             writeln!(f, "\x1b[0m (\x1b[1;31malready printed\x1b[0m)")?;
             return Ok(());
         }
 
         write!(f, "{:indent$}\x1b[1;33m", "", indent = indent)?;
-        (self.name)(f, NameOpts::default())?;
+        (self.name)(f, TypeNameOpts::default())?;
         writeln!(f, "\x1b[0m (\x1b[1;34m{}\x1b[0m bytes)", self.layout.size())?;
 
         match &self.innards {

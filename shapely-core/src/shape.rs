@@ -5,20 +5,20 @@ mod pretty_print;
 mod opaque;
 pub use opaque::*;
 
-mod struct_shape;
-pub use struct_shape::*;
+mod value;
+pub use value::*;
 
-mod enum_shape;
-pub use enum_shape::*;
+mod struct_;
+pub use struct_::*;
 
-mod scalar_shape;
-pub use scalar_shape::*;
+mod enum_;
+pub use enum_::*;
 
-mod list_shape;
-pub use list_shape::*;
+mod list;
+pub use list::*;
 
-mod map_shape;
-pub use map_shape::*;
+mod map;
+pub use map::*;
 
 mod peekpoke;
 pub use peekpoke::*;
@@ -26,92 +26,25 @@ pub use peekpoke::*;
 /// Schema for reflection of a type
 #[derive(Clone, Copy)]
 pub struct Shape {
-    /// A descriptive name for the type, e.g. `u64`, or `Person`
-    pub name: NameFn,
-
     /// The typeid of the underlying type
     pub typeid: TypeId,
 
     /// Size, alignment
     pub layout: Layout,
 
+    /// VTable for common operations
+    pub vtable: ValueVTable,
+
     /// Details/contents of the value
     pub innards: Innards,
-
-    /// Set the value at a given address to the default value for this type
-    pub set_to_default: Option<SetToDefaultFn>,
-
-    /// Drop the value at a given address
-    ///
-    /// # Safety
-    ///
-    /// This function should be called only for initialized values.
-    /// It's the caller's responsibility to ensure the address points to a valid value.
-    pub drop_in_place: Option<DropFn>,
 }
-
-/// Options for formatting the name of a type
-#[non_exhaustive]
-#[derive(Clone, Copy)]
-pub struct NameOpts {
-    /// as long as this is > 0, keep formatting the type parameters
-    /// when it reaches 0, format type parameters as `...`
-    /// if negative, all type parameters are formatted
-    pub recurse_ttl: isize,
-}
-
-impl Default for NameOpts {
-    fn default() -> Self {
-        Self { recurse_ttl: -1 }
-    }
-}
-
-impl NameOpts {
-    /// Create a new `NameOpts` for which none of the type parameters are formatted
-    pub fn none() -> Self {
-        Self { recurse_ttl: 0 }
-    }
-
-    /// Create a new `NameOpts` for which only the direct children are formatted
-    pub fn one() -> Self {
-        Self { recurse_ttl: 1 }
-    }
-
-    /// Decrease the `recurse_ttl` — if it's != 0, returns options to pass when
-    /// formatting children type parameters.
-    ///
-    /// If this returns `None` and you have type parameters, you should render a
-    /// `…` (unicode ellipsis) character instead of your list of types.
-    ///
-    /// See the implementation for `Vec` for examples.
-    pub fn for_children(&self) -> Option<Self> {
-        if self.recurse_ttl > 0 {
-            Some(Self {
-                recurse_ttl: self.recurse_ttl - 1,
-            })
-        } else {
-            None
-        }
-    }
-}
-
-/// A function that formats the name of a type.
-///
-/// This helps avoid allocations, and it takes options.
-pub type NameFn = fn(f: &mut std::fmt::Formatter, opts: NameOpts) -> std::fmt::Result;
 
 // Helper struct to format the name for display
 impl std::fmt::Display for Shape {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        (self.name)(f, NameOpts::default())
+        (self.vtable.type_name)(f, TypeNameOpts::default())
     }
 }
-
-/// A function that sets a value to its default at a specific memory address
-pub type SetToDefaultFn = unsafe fn(*mut u8);
-
-/// A function that drops a value at a specific memory address
-pub type DropFn = unsafe fn(*mut u8);
 
 impl PartialEq for Shape {
     fn eq(&self, other: &Self) -> bool {

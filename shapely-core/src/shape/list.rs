@@ -1,13 +1,4 @@
-use super::{Opaque, OpaqueConst, OpaqueUninit};
-
-/// Initialize an empty list at the given pointer
-///
-/// # Safety
-///
-/// The `target` parameter must have the correct layout and alignment, but points
-/// to uninitialized memory. After this returns, the memory is assumed
-/// initialized.
-pub type ListInitFn = unsafe fn(target: OpaqueUninit, size_hint: Option<usize>);
+use super::{Opaque, OpaqueConst};
 
 /// Push an item to the list
 ///
@@ -34,9 +25,6 @@ pub type ListGetItemPtrFn = unsafe fn(list: OpaqueConst, index: usize) -> Opaque
 /// but also `HashSet<T>`, etc.)
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub struct ListVTable {
-    /// cf. [`ListInitFn`]
-    pub init: ListInitFn,
-
     /// cf. [`ListPushFn`]
     pub push: ListPushFn,
 

@@ -115,7 +115,7 @@ impl<'mem> Opaque<'mem> {
     /// # Safety
     ///
     /// `T` must be the _actual_ iunderlying type. You're downcasting with no guardrails.
-    pub unsafe fn as_mut<'borrow: 'mem, T>(self) -> &'borrow mut T {
+    pub unsafe fn as_mut_ptr<'borrow: 'mem, T>(self) -> &'borrow mut T {
         unsafe { &mut *(self.0.as_ptr() as *mut T) }
     }
 

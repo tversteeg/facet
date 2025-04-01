@@ -1,13 +1,4 @@
-use super::{Opaque, OpaqueConst, OpaqueUninit};
-
-/// Initialize an empty map at the given pointer
-///
-/// # Safety
-///
-/// The `target` parameter must have the correct layout and alignment, but points
-/// to uninitialized memory. After this returns, the memory is assumed
-/// initialized.
-pub type MapInitFn = unsafe fn(target: OpaqueUninit, size_hint: Option<usize>);
+use super::{Opaque, OpaqueConst};
 
 /// Insert a key-value pair into the map
 ///
@@ -72,9 +63,6 @@ pub struct MapIterVTable {
 /// Virtual table for a Map<String, T>
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub struct MapVTable {
-    /// cf. [`MapInitFn`]
-    pub init: MapInitFn,
-
     /// cf. [`MapInsertFn`]
     pub insert: MapInsertFn,
 

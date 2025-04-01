@@ -1,13 +1,13 @@
 use std::{alloc::Layout, fmt};
 
-use crate::{Innards, ListVTable, NameOpts, Shape, Shapely, mini_typeid};
+use crate::{Innards, ListVTable, Shape, Shapely, TypeNameOpts, mini_typeid};
 
 impl<T> Shapely for Vec<T>
 where
     T: Shapely,
 {
     fn shape() -> Shape {
-        fn name<T: Shapely>(f: &mut fmt::Formatter, opts: NameOpts) -> fmt::Result {
+        fn name<T: Shapely>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result {
             if let Some(opts) = opts.for_children() {
                 write!(f, "Vec<")?;
                 let shape = T::shape();
