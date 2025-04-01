@@ -53,6 +53,8 @@ impl TypeNameOpts {
 
 /// Function to format a value for display
 ///
+/// If both [`DisplayFn`] and [`ParseFn`] are set, we should be able to round-trip the value.
+///
 /// # Safety
 ///
 /// The `value` parameter must point to aligned, initialized memory of the correct type.
@@ -76,15 +78,16 @@ pub type DebugFn =
 /// same pointer wrapped in an [`Opaque`].
 pub type DefaultInPlaceFn = for<'mem> unsafe fn(target: OpaqueUninit<'mem>) -> Option<Opaque<'mem>>;
 
-/// Function to create a value from a string
+/// Function to parse a value from a string.
+///
+/// If both [`DisplayFn`] and [`ParseFn`] are set, we should be able to round-trip the value.
 ///
 /// # Safety
 ///
 /// The `target` parameter has the correct layout and alignment, but points to
 /// uninitialized memory. If this function succeeds, it should return `Some` with the
 /// same pointer wrapped in an [`Opaque`].
-pub type FromStrFn =
-    for<'mem> unsafe fn(s: &str, target: OpaqueUninit<'mem>) -> Option<Opaque<'mem>>;
+pub type ParseFn = for<'mem> unsafe fn(s: &str, target: OpaqueUninit<'mem>) -> Option<Opaque<'mem>>;
 
 /// Function to try converting from another type
 ///
@@ -119,8 +122,55 @@ pub type CmpFn = for<'l, 'r> unsafe fn(left: OpaqueConst<'l>, right: OpaqueConst
 ///
 /// The `value` parameter must point to aligned, initialized memory of the correct type.
 /// The hasher pointer must be a valid pointer to a Hasher trait object.
-pub type HashFn =
-    for<'mem> unsafe fn(value: OpaqueConst<'mem>, hasher: *mut (dyn std::hash::Hasher + 'static));
+pub type HashFn = for<'mem> unsafe fn(
+    value: OpaqueConst<'mem>,
+    hasher_this: Opaque<'mem>,
+    hasher_write_fn: HasherWriteFn,
+);
+
+/// Provides an implementation of [`std::hash::Hasher`] for a given hasher pointer and write function
+///
+/// See [`HashFn`] for more details on the parameters.
+///
+/// Example usage (for a type that already implements `Hasher`)
+///
+/// ```rust,ignore
+/// hash: Some(|value, hasher_self, hasher_write_fn| unsafe {
+///     value
+///         .as_ref::<Self>()
+///         .hash(&mut HasherProxy::new(hasher_self, hasher_write_fn));
+/// }),
+/// ```
+pub struct HasherProxy<'a> {
+    hasher_this: Opaque<'a>,
+    hasher_write_fn: HasherWriteFn,
+}
+
+impl<'a> HasherProxy<'a> {
+    /// Create a new `HasherProxy` from a hasher pointer and a write function
+    ///
+    /// # Safety
+    ///
+    /// The `hasher_this` parameter must be a valid pointer to a Hasher trait object.
+    /// The `hasher_write_fn` parameter must be a valid function pointer.
+    pub unsafe fn new(hasher_this: Opaque<'a>, hasher_write_fn: HasherWriteFn) -> Self {
+        Self {
+            hasher_this,
+            hasher_write_fn,
+        }
+    }
+}
+
+impl<'a> std::hash::Hasher for HasherProxy<'a> {
+    fn finish(&self) -> u64 {
+        unimplemented!("finish is not needed for this implementation")
+    }
+    fn write(&mut self, bytes: &[u8]) {
+        unsafe { (self.hasher_write_fn)(self.hasher_this, bytes) }
+    }
+}
+
+pub type HasherWriteFn = for<'mem> unsafe fn(hasher_self: Opaque<'mem>, bytes: &[u8]);
 
 /// Function to drop a value
 ///
@@ -156,8 +206,8 @@ pub struct ValueVTable {
     /// cf. [`DropInPlaceFn`] — if None, drops without side-effects
     pub drop_in_place: Option<DropInPlaceFn>,
 
-    /// cf. [`FromStrFn`]
-    pub from_str: Option<FromStrFn>,
+    /// cf. [`ParseFn`]
+    pub parse: Option<ParseFn>,
 
     /// cf. [`TryFromFn`]
     pub try_from: Option<TryFromFn>,
