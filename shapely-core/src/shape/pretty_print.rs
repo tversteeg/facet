@@ -1,4 +1,4 @@
-use super::{Innards, Shape, TypeNameOpts, VariantKind};
+use super::{Innards, Shape};
 use std::{collections::HashSet, fmt::Formatter};
 
 impl Shape {

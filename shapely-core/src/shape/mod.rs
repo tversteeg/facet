@@ -1,30 +1,8 @@
 use std::{alloc::Layout, any::TypeId, ptr::NonNull};
 
+use crate::ValueVTable;
+
 mod pretty_print;
-
-mod opaque;
-pub use opaque::*;
-
-mod value;
-pub use value::*;
-
-mod struct_;
-pub use struct_::*;
-
-mod enum_;
-pub use enum_::*;
-
-mod list;
-pub use list::*;
-
-mod map;
-pub use map::*;
-
-mod peek;
-pub use peek::*;
-
-mod poke;
-pub use poke::*;
 
 /// Schema for reflection of a type
 #[derive(Clone, Copy)]
