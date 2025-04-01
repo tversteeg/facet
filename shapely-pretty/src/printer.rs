@@ -7,7 +7,7 @@ use std::{
     str,
 };
 
-use shapely_core::{FieldFlags, Innards, Scalar, ScalarContents, Shape, ShapeDesc, Shapely};
+use shapely_core::{FieldFlags, Innards, Scalar, Shape, ShapeDesc, Shapely};
 
 use crate::{
     ansi,

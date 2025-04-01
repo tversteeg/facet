@@ -1,34 +1,94 @@
-/// Virtual table for a Map<String, T>
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
-pub struct MapVTable {
-    /// Initialize an empty map at the given pointer
-    pub init: unsafe fn(ptr: *mut u8, size_hint: Option<usize>),
+use super::{Opaque, OpaqueConst, OpaqueUninit};
 
-    /// Insert a key-value pair into the map
-    pub insert: unsafe fn(*mut u8, key: crate::Partial, value: crate::Partial),
+/// Initialize an empty map at the given pointer
+///
+/// # Safety
+///
+/// The `target` parameter must have the correct layout and alignment, but points
+/// to uninitialized memory. After this returns, the memory is assumed
+/// initialized.
+pub type MapInitFn = unsafe fn(target: OpaqueUninit, size_hint: Option<usize>);
 
-    /// Get the number of entries in the map
-    pub len: unsafe fn(ptr: *const u8) -> usize,
+/// Insert a key-value pair into the map
+///
+/// # Safety
+///
+/// The `map` parameter must point to aligned, initialized memory of the correct type.
+pub type MapInsertFn = unsafe fn(map: Opaque, key: crate::Partial, value: crate::Partial);
 
-    /// Check if the map contains a key
-    pub contains_key: unsafe fn(ptr: *const u8, key: &str) -> bool,
+/// Get the number of entries in the map
+///
+/// # Safety
+///
+/// The `map` parameter must point to aligned, initialized memory of the correct type.
+pub type MapLenFn = unsafe fn(map: OpaqueConst) -> usize;
 
-    /// Get pointer to a value for a given key, returns null if not found
-    pub get_value_ptr: unsafe fn(ptr: *const u8, key: &str) -> *const u8,
+/// Check if the map contains a key
+///
+/// # Safety
+///
+/// The `map` parameter must point to aligned, initialized memory of the correct type.
+pub type MapContainsKeyFn = unsafe fn(map: OpaqueConst, key: &str) -> bool;
 
-    /// Get an iterator over the map
-    pub iter: unsafe fn(ptr: *const u8) -> *const u8,
+/// Get pointer to a value for a given key, returns null if not found
+///
+/// # Safety
+///
+/// The `map` parameter must point to aligned, initialized memory of the correct type.
+pub type MapGetValuePtrFn = unsafe fn(map: OpaqueConst, key: &str) -> OpaqueConst;
 
-    /// Virtual table for map iterator operations
-    pub iter_vtable: MapIterVTable,
-}
+/// Get an iterator over the map
+///
+/// # Safety
+///
+/// The `map` parameter must point to aligned, initialized memory of the correct type.
+pub type MapIterFn = unsafe fn(map: OpaqueConst) -> OpaqueConst;
+
+/// Get the next key-value pair from the iterator
+///
+/// # Safety
+///
+/// The `iter` parameter must point to aligned, initialized memory of the correct type.
+pub type MapIterNextFn = unsafe fn(iter: OpaqueConst) -> Option<(*const String, OpaqueConst)>;
+
+/// Deallocate the iterator
+///
+/// # Safety
+///
+/// The `iter` parameter must point to aligned, initialized memory of the correct type.
+pub type MapIterDeallocFn = unsafe fn(iter: OpaqueConst);
 
 /// VTable for an iterator over a map
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub struct MapIterVTable {
-    /// Get the next key-value pair from the iterator
-    pub next: unsafe fn(*const u8) -> Option<(*const String, *const u8)>,
+    /// cf. [`MapIterNextFn`]
+    pub next: MapIterNextFn,
 
-    /// Deallocate the iterator
-    pub dealloc: unsafe fn(*const u8),
+    /// cf. [`MapIterDeallocFn`]
+    pub dealloc: MapIterDeallocFn,
+}
+
+/// Virtual table for a Map<String, T>
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+pub struct MapVTable {
+    /// cf. [`MapInitFn`]
+    pub init: MapInitFn,
+
+    /// cf. [`MapInsertFn`]
+    pub insert: MapInsertFn,
+
+    /// cf. [`MapLenFn`]
+    pub len: MapLenFn,
+
+    /// cf. [`MapContainsKeyFn`]
+    pub contains_key: MapContainsKeyFn,
+
+    /// cf. [`MapGetValuePtrFn`]
+    pub get_value_ptr: MapGetValuePtrFn,
+
+    /// cf. [`MapIterFn`]
+    pub iter: MapIterFn,
+
+    /// Virtual table for map iterator operations
+    pub iter_vtable: MapIterVTable,
 }

@@ -1,43 +1,133 @@
-/// A scalar type in Rust, representing a single value.
+use super::{OpaqueConst, OpaqueConstRef, OpaqueUninit, ShapeDesc};
+
+/// Writes a `Display` format of the scalar to the given formatter. The assumption is that
+/// if there's a [`ScalarFromStrFn`] function, it should be able to parse the output
+/// of this function.
+///
+/// # Safety
+///
+/// The `this` parameter must point to aligned, initialized memory of the correct type.
+pub type ScalarDisplayFn = unsafe fn(this: OpaqueConst, f: std::fmt::Formatter) -> String;
+
+/// Writes a `Debug` format of the scalar to the given formatter
+///
+/// # Safety
+///
+/// The `this` parameter must point to aligned, initialized memory of the correct type.
+pub type ScalarDebugFn = unsafe fn(this: OpaqueConst, f: std::fmt::Formatter) -> String;
+
+/// Function to set a scalar to its default value in-place
+///
+/// # Safety
+///
+/// The `target` parameter has the correct layout and alignment, but points to
+/// uninitialized memory. After this function is called, the memory is assumed initialized.
+pub type ScalarDefaultInPlaceFn = unsafe fn(target: OpaqueUninit);
+
+/// Function to create a scalar from a string representation
+///
+/// # Safety
+///
+/// The `target` parameter has the correct layout and alignment, but points to
+/// uninitialized memory.
+pub type ScalarFromStrFn = unsafe fn(target: OpaqueUninit, s: &str) -> Result<(), String>;
+
+/// Function to check if two scalar values are equal
+///
+/// # Safety
+///
+/// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
+pub type ScalarEqFn = unsafe fn(left: OpaqueConst, right: OpaqueConst) -> bool;
+
+/// Function to check if first scalar value is greater than the second
+///
+/// # Safety
+///
+/// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
+pub type ScalarGtFn = unsafe fn(left: OpaqueConst, right: OpaqueConst) -> bool;
+
+/// Function to check if first scalar value is greater than or equal to the second
+///
+/// # Safety
+///
+/// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
+pub type ScalarGteFn = unsafe fn(left: OpaqueConst, right: OpaqueConst) -> bool;
+
+/// Function to check if first scalar value is less than the second
+///
+/// # Safety
+///
+/// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
+pub type ScalarLtFn = unsafe fn(left: OpaqueConst, right: OpaqueConst) -> bool;
+
+/// Function to check if first scalar value is less than or equal to the second
+///
+/// # Safety
+///
+/// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
+pub type ScalarLteFn = unsafe fn(left: OpaqueConst, right: OpaqueConst) -> bool;
+
+/// Function to hash a scalar value
+///
+/// # Safety
+///
+/// The `value` parameter must point to aligned, initialized memory of the correct type.
+/// The hasher pointer must be a valid pointer to a Hasher trait object.
+pub type ScalarHashFn = unsafe fn(value: OpaqueConst, hasher: *const dyn std::hash::Hasher);
+
+/// Function to try to convert a value from one scalar type to another
+///
+/// # Safety
+///
+/// The `src` parameter must point to aligned, initialized memory of the type described by `src_shape`.
+/// The `dst` parameter must point to aligned, uninitialized memory of the correct type.
+/// If this function returns `Ok(())`, the memory at `dst` is considered initialized.
+pub type ScalarTryFromFn =
+    unsafe fn(src_shape: ShapeDesc, src: OpaqueConst, dst: OpaqueUninit) -> Result<(), ()>;
+
+pub enum TryFromError {
+    /// Those two types have nothing in common
+    UnrelatedTypes { src: ShapeDesc, dst: ShapeDesc },
+
+    /// A similar conversion is possible, but the src was out of range
+    OutOfRange {
+        src: ShapeDesc,
+        dst: ShapeDesc,
+        min_value: OpaqueConstRef<'static>,
+        max_value: OpaqueConstRef<'static>,
+    },
+}
+
+/// VTable for a scalar: common operations we can do with a scalar
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[non_exhaustive]
-pub enum Scalar {
-    /// Valid utf-8
-    String,
+pub struct ScalarVTable {
+    /// cf. [`ScalarDisplayFn`]
+    display: Option<ScalarDisplayFn>,
 
-    /// Not valid utf-8 🤷
-    Bytes,
+    /// cf. [`ScalarDebugFn`]
+    debug: Option<ScalarDebugFn>,
 
-    /// Signed 8-bit integer
-    I8,
-    /// Signed 16-bit integer
-    I16,
-    /// Signed 32-bit integer
-    I32,
-    /// Signed 64-bit integer
-    I64,
-    /// Signed 128-bit integer
-    I128,
+    /// cf. [`ScalarDefaultInPlaceFn`]
+    default_in_place: Option<ScalarDefaultInPlaceFn>,
 
-    /// Unsigned 8-bit integer
-    U8,
-    /// Unsigned 16-bit integer
-    U16,
-    /// Unsigned 32-bit integer
-    U32,
-    /// Unsigned 64-bit integer
-    U64,
-    /// Unsigned 128-bit integer
-    U128,
+    /// cf. [`ScalarFromStrFn`]
+    from_str: Option<ScalarFromStrFn>,
 
-    /// 32-bit floating point
-    F32,
-    /// 64-bit floating point
-    F64,
+    /// cf. [`ScalarEqFn`]
+    eq: Option<ScalarEqFn>,
 
-    /// Boolean value (true/false)
-    Boolean,
+    /// cf. [`ScalarGtFn`]
+    gt: Option<ScalarGtFn>,
 
-    /// An empty tuple, null, undefined, whatever you wish
-    Nothing,
+    /// cf. [`ScalarGteFn`]
+    gte: Option<ScalarGteFn>,
+
+    /// cf. [`ScalarLtFn`]
+    lt: Option<ScalarLtFn>,
+
+    /// cf. [`ScalarLteFn`]
+    lte: Option<ScalarLteFn>,
+
+    /// cf. [`ScalarHashFn`]
+    hash: Option<ScalarHashFn>,
 }

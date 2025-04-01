@@ -2,6 +2,9 @@ use std::{alloc::Layout, any::TypeId, ptr::NonNull};
 
 mod pretty_print;
 
+mod opaque;
+pub use opaque::*;
+
 mod struct_shape;
 pub use struct_shape::*;
 
@@ -123,22 +126,6 @@ impl std::hash::Hash for Shape {
 
 impl Shape {
     const INDENT: usize = 2;
-
-    /// Extract the scalar contents from a shape and a pointer
-    ///
-    /// # Safety
-    ///
-    /// This function is unsafe because it reads from raw memory.
-    /// The caller must ensure that:
-    /// 1. The pointer points to a valid, initialized value of the correct type
-    /// 2. The memory is properly aligned for the type
-    /// 3. The memory is not mutated while the returned ScalarContents is in use
-    pub unsafe fn get_scalar_contents<'a>(&self, ptr: *const u8) -> crate::ScalarContents<'a> {
-        match self.innards {
-            Innards::Scalar(scalar) => unsafe { scalar.get_contents(ptr) },
-            _ => panic!("Expected a scalar shape"),
-        }
-    }
 
     /// Returns a slice of statically known fields. Fields that are not in there might still be inserted if it's a dynamic collection.
     pub fn known_fields(&self) -> &'static [Field] {
@@ -302,10 +289,10 @@ pub enum Innards {
     /// e.g. `#[repr(transparent)] struct Transparent<T>(T);`
     Transparent(ShapeDesc),
 
-    /// Scalar — known based type
+    /// Scalar — known base type
     ///
-    /// e.g. `u32`, `String`, `bool`
-    Scalar(Scalar),
+    /// e.g. `u32`, `String`, `bool`, `SocketAddr`, etc.
+    Scalar { vtable: ScalarVTable },
 
     /// Enum with variants
     ///

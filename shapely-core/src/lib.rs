@@ -5,9 +5,6 @@ use std::mem::MaybeUninit;
 
 mod impls;
 
-mod scalar_contents;
-pub use scalar_contents::ScalarContents;
-
 mod shape;
 pub use shape::*;
 

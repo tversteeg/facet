@@ -1,16 +1,48 @@
+use super::{Opaque, OpaqueConst, OpaqueUninit};
+
+/// Initialize an empty list at the given pointer
+///
+/// # Safety
+///
+/// The `target` parameter must have the correct layout and alignment, but points
+/// to uninitialized memory. After this returns, the memory is assumed
+/// initialized.
+pub type ListInitFn = unsafe fn(target: OpaqueUninit, size_hint: Option<usize>);
+
+/// Push an item to the list
+///
+/// # Safety
+///
+/// The `list` parameter must point to aligned, initialized memory of the correct type.
+pub type ListPushFn = unsafe fn(list: Opaque, item: crate::Partial);
+
+/// Get the number of items in the list
+///
+/// # Safety
+///
+/// The `list` parameter must point to aligned, initialized memory of the correct type.
+pub type ListLenFn = unsafe fn(list: OpaqueConst) -> usize;
+
+/// Get pointer to the item at the given index. Panics if out of bounds.
+///
+/// # Safety
+///
+/// The `list` parameter must point to aligned, initialized memory of the correct type.
+pub type ListGetItemPtrFn = unsafe fn(list: OpaqueConst, index: usize) -> OpaqueConst;
+
 /// Virtual table for a list-like type (like `Vec<T>`,
 /// but also `HashSet<T>`, etc.)
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub struct ListVTable {
-    /// init given pointer to be an empty vec (with capacity)
-    pub init: unsafe fn(ptr: *mut u8, size_hint: Option<usize>),
+    /// cf. [`ListInitFn`]
+    pub init: ListInitFn,
 
-    /// push an item
-    pub push: unsafe fn(*mut u8, crate::Partial),
+    /// cf. [`ListPushFn`]
+    pub push: ListPushFn,
 
-    /// get length of the collection
-    pub len: unsafe fn(ptr: *const u8) -> usize,
+    /// cf. [`ListLenFn`]
+    pub len: ListLenFn,
 
-    /// get address of the item at the given index. panics if out of bound.
-    pub get_item_ptr: unsafe fn(ptr: *const u8, index: usize) -> *const u8,
+    /// cf. [`ListGetItemPtrFn`]
+    pub get_item_ptr: ListGetItemPtrFn,
 }
