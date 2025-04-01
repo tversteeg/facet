@@ -34,7 +34,7 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
     writeln!(w)?;
     writeln!(
         w,
-        "use crate::{{Field, FieldFlags, Innards, Shape, ShapeDesc, Shapely, mini_typeid}};"
+        "use crate::{{Field, FieldFlags, Innards, Shape, ShapeDesc, Shapely, TypeNameOpts, ValueVTable, mini_typeid}};"
     )?;
 
     // Generate implementations for tuples of size 1 to 12
@@ -44,24 +44,31 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
             .collect::<Vec<_>>()
             .join(", ");
 
-        let mut name_format =
-            r#"if let Some(opts) = opts.for_children() { write!(f, "(")?;"#.to_string();
-        for i in 0..n {
-            name_format += &format!(r#"(T{i}::shape().name)(f, opts)?;"#,);
-            if i < n - 1 {
-                name_format += r#"write!(f, ",")?;"#;
-            }
-        }
-        name_format += r#"
-            write!(f, ")")
-        } else {
-            write!(f, "()")
-        }"#;
-
         let where_clause = (0..n)
             .map(|i| format!("T{}: Shapely", i))
             .collect::<Vec<_>>()
             .join(", ");
+
+        let type_name_fn = format!(
+            r#"fn type_name<{type_params}>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result
+            where {where_clause}
+            {{
+                if let Some(opts) = opts.for_children() {{
+                    write!(f, "(")?;
+                    {}
+                    write!(f, ")")
+                }} else {{
+                    write!(f, "(…)")
+                }}
+            }}"#,
+            (0..n)
+                .map(|i| {
+                    let prefix = if i > 0 { "write!(f, \", \")?; " } else { "" };
+                    format!("{}(T{}::shape().vtable.type_name)(f, opts)?;", prefix, i)
+                })
+                .collect::<Vec<_>>()
+                .join("\n                    ")
+        );
 
         let tuple = if n == 1 {
             "(T0,)".to_string()
@@ -94,28 +101,39 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
 
         writeln!(
             w,
-            "
+            r#"
             impl<{type_params}> Shapely for {tuple} where {where_clause}
             {{
                 fn shape() -> Shape {{
+                    use std::fmt;
+
+                    {type_name_fn}
+
                     {field_macro}
 
                     Shape {{
-                        name: |f, opts| {{
-                            {name_format}
-                        }},
                         typeid: mini_typeid::of::<Self>(),
                         layout: Layout::new::<{tuple}>(),
+                        vtable: ValueVTable {{
+                            type_name: type_name::<{type_params}> as _,
+                            display: None,
+                            debug: None,
+                            default_in_place: None,
+                            eq: None,
+                            cmp: None,
+                            hash: None,
+                            drop_in_place: Some(|value| unsafe {{
+                                std::ptr::drop_in_place(value.as_mut_ptr::<{tuple}>());
+                            }}),
+                            parse: None,
+                            try_from: None,
+                        }},
                         innards: Innards::Tuple {{
                             fields: {fields}
                         }},
-                        set_to_default: None,
-                        drop_in_place: Some(|addr: *mut u8| unsafe {{
-                            std::ptr::drop_in_place(addr as *mut {tuple});
-                        }}),
                     }}
                 }}
-            }}"
+            }}"#
         )?;
     }
     Ok(())
