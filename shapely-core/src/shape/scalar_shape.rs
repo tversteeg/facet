@@ -102,32 +102,32 @@ pub enum TryFromError {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ScalarVTable {
     /// cf. [`ScalarDisplayFn`]
-    display: Option<ScalarDisplayFn>,
+    pub display: Option<ScalarDisplayFn>,
 
     /// cf. [`ScalarDebugFn`]
-    debug: Option<ScalarDebugFn>,
+    pub debug: Option<ScalarDebugFn>,
 
     /// cf. [`ScalarDefaultInPlaceFn`]
-    default_in_place: Option<ScalarDefaultInPlaceFn>,
+    pub default_in_place: Option<ScalarDefaultInPlaceFn>,
 
     /// cf. [`ScalarFromStrFn`]
-    from_str: Option<ScalarFromStrFn>,
+    pub from_str: Option<ScalarFromStrFn>,
 
     /// cf. [`ScalarEqFn`]
-    eq: Option<ScalarEqFn>,
+    pub eq: Option<ScalarEqFn>,
 
     /// cf. [`ScalarGtFn`]
-    gt: Option<ScalarGtFn>,
+    pub gt: Option<ScalarGtFn>,
 
     /// cf. [`ScalarGteFn`]
-    gte: Option<ScalarGteFn>,
+    pub gte: Option<ScalarGteFn>,
 
     /// cf. [`ScalarLtFn`]
-    lt: Option<ScalarLtFn>,
+    pub lt: Option<ScalarLtFn>,
 
     /// cf. [`ScalarLteFn`]
-    lte: Option<ScalarLteFn>,
+    pub lte: Option<ScalarLteFn>,
 
     /// cf. [`ScalarHashFn`]
-    hash: Option<ScalarHashFn>,
+    pub hash: Option<ScalarHashFn>,
 }

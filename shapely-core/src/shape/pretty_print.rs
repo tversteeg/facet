@@ -42,7 +42,7 @@ impl Shape {
                     if field.flags.contains(FieldFlags::SENSITIVE) {
                         write!(f, "(sensitive) ")?;
                     }
-                    if let Innards::Scalar(_) = field.shape.get().innards {
+                    if let Innards::Scalar { vtable } = field.shape.get().innards {
                         field.shape.get().pretty_print_recursive_internal(
                             f,
                             printed_schemas,

@@ -20,6 +20,9 @@ pub use list_shape::*;
 mod map_shape;
 pub use map_shape::*;
 
+mod peekpoke;
+pub use peekpoke::*;
+
 /// Schema for reflection of a type
 #[derive(Clone, Copy)]
 pub struct Shape {
