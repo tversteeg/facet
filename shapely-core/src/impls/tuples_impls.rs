@@ -17,7 +17,7 @@ where
         {
             if let Some(opts) = opts.for_children() {
                 write!(f, "(")?;
-                (T0::shape().vtable.type_name)(f, opts)?;
+                (T0::shape().vtable().type_name)(f, opts)?;
                 write!(f, ")")
             } else {
                 write!(f, "(…)")
@@ -38,7 +38,7 @@ where
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T0,)>(),
-            vtable: ValueVTable {
+            vtable: || ValueVTable {
                 type_name: type_name::<T0> as _,
                 display: None,
                 debug: None,
@@ -74,9 +74,9 @@ where
         {
             if let Some(opts) = opts.for_children() {
                 write!(f, "(")?;
-                (T0::shape().vtable.type_name)(f, opts)?;
+                (T0::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T1::shape().vtable.type_name)(f, opts)?;
+                (T1::shape().vtable().type_name)(f, opts)?;
                 write!(f, ")")
             } else {
                 write!(f, "(…)")
@@ -97,7 +97,7 @@ where
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T0, T1)>(),
-            vtable: ValueVTable {
+            vtable: || ValueVTable {
                 type_name: type_name::<T0, T1> as _,
                 display: None,
                 debug: None,
@@ -135,11 +135,11 @@ where
         {
             if let Some(opts) = opts.for_children() {
                 write!(f, "(")?;
-                (T0::shape().vtable.type_name)(f, opts)?;
+                (T0::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T1::shape().vtable.type_name)(f, opts)?;
+                (T1::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T2::shape().vtable.type_name)(f, opts)?;
+                (T2::shape().vtable().type_name)(f, opts)?;
                 write!(f, ")")
             } else {
                 write!(f, "(…)")
@@ -160,7 +160,7 @@ where
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T0, T1, T2)>(),
-            vtable: ValueVTable {
+            vtable: || ValueVTable {
                 type_name: type_name::<T0, T1, T2> as _,
                 display: None,
                 debug: None,
@@ -200,13 +200,13 @@ where
         {
             if let Some(opts) = opts.for_children() {
                 write!(f, "(")?;
-                (T0::shape().vtable.type_name)(f, opts)?;
+                (T0::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T1::shape().vtable.type_name)(f, opts)?;
+                (T1::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T2::shape().vtable.type_name)(f, opts)?;
+                (T2::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T3::shape().vtable.type_name)(f, opts)?;
+                (T3::shape().vtable().type_name)(f, opts)?;
                 write!(f, ")")
             } else {
                 write!(f, "(…)")
@@ -227,7 +227,7 @@ where
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T0, T1, T2, T3)>(),
-            vtable: ValueVTable {
+            vtable: || ValueVTable {
                 type_name: type_name::<T0, T1, T2, T3> as _,
                 display: None,
                 debug: None,
@@ -269,15 +269,15 @@ where
         {
             if let Some(opts) = opts.for_children() {
                 write!(f, "(")?;
-                (T0::shape().vtable.type_name)(f, opts)?;
+                (T0::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T1::shape().vtable.type_name)(f, opts)?;
+                (T1::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T2::shape().vtable.type_name)(f, opts)?;
+                (T2::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T3::shape().vtable.type_name)(f, opts)?;
+                (T3::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T4::shape().vtable.type_name)(f, opts)?;
+                (T4::shape().vtable().type_name)(f, opts)?;
                 write!(f, ")")
             } else {
                 write!(f, "(…)")
@@ -298,7 +298,7 @@ where
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T0, T1, T2, T3, T4)>(),
-            vtable: ValueVTable {
+            vtable: || ValueVTable {
                 type_name: type_name::<T0, T1, T2, T3, T4> as _,
                 display: None,
                 debug: None,
@@ -353,17 +353,17 @@ where
         {
             if let Some(opts) = opts.for_children() {
                 write!(f, "(")?;
-                (T0::shape().vtable.type_name)(f, opts)?;
+                (T0::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T1::shape().vtable.type_name)(f, opts)?;
+                (T1::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T2::shape().vtable.type_name)(f, opts)?;
+                (T2::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T3::shape().vtable.type_name)(f, opts)?;
+                (T3::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T4::shape().vtable.type_name)(f, opts)?;
+                (T4::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T5::shape().vtable.type_name)(f, opts)?;
+                (T5::shape().vtable().type_name)(f, opts)?;
                 write!(f, ")")
             } else {
                 write!(f, "(…)")
@@ -384,7 +384,7 @@ where
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T0, T1, T2, T3, T4, T5)>(),
-            vtable: ValueVTable {
+            vtable: || ValueVTable {
                 type_name: type_name::<T0, T1, T2, T3, T4, T5> as _,
                 display: None,
                 debug: None,
@@ -442,19 +442,19 @@ where
         {
             if let Some(opts) = opts.for_children() {
                 write!(f, "(")?;
-                (T0::shape().vtable.type_name)(f, opts)?;
+                (T0::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T1::shape().vtable.type_name)(f, opts)?;
+                (T1::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T2::shape().vtable.type_name)(f, opts)?;
+                (T2::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T3::shape().vtable.type_name)(f, opts)?;
+                (T3::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T4::shape().vtable.type_name)(f, opts)?;
+                (T4::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T5::shape().vtable.type_name)(f, opts)?;
+                (T5::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T6::shape().vtable.type_name)(f, opts)?;
+                (T6::shape().vtable().type_name)(f, opts)?;
                 write!(f, ")")
             } else {
                 write!(f, "(…)")
@@ -475,7 +475,7 @@ where
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6)>(),
-            vtable: ValueVTable {
+            vtable: || ValueVTable {
                 type_name: type_name::<T0, T1, T2, T3, T4, T5, T6> as _,
                 display: None,
                 debug: None,
@@ -536,21 +536,21 @@ where
         {
             if let Some(opts) = opts.for_children() {
                 write!(f, "(")?;
-                (T0::shape().vtable.type_name)(f, opts)?;
+                (T0::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T1::shape().vtable.type_name)(f, opts)?;
+                (T1::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T2::shape().vtable.type_name)(f, opts)?;
+                (T2::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T3::shape().vtable.type_name)(f, opts)?;
+                (T3::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T4::shape().vtable.type_name)(f, opts)?;
+                (T4::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T5::shape().vtable.type_name)(f, opts)?;
+                (T5::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T6::shape().vtable.type_name)(f, opts)?;
+                (T6::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T7::shape().vtable.type_name)(f, opts)?;
+                (T7::shape().vtable().type_name)(f, opts)?;
                 write!(f, ")")
             } else {
                 write!(f, "(…)")
@@ -571,7 +571,7 @@ where
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7)>(),
-            vtable: ValueVTable {
+            vtable: || ValueVTable {
                 type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7> as _,
                 display: None,
                 debug: None,
@@ -635,23 +635,23 @@ where
         {
             if let Some(opts) = opts.for_children() {
                 write!(f, "(")?;
-                (T0::shape().vtable.type_name)(f, opts)?;
+                (T0::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T1::shape().vtable.type_name)(f, opts)?;
+                (T1::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T2::shape().vtable.type_name)(f, opts)?;
+                (T2::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T3::shape().vtable.type_name)(f, opts)?;
+                (T3::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T4::shape().vtable.type_name)(f, opts)?;
+                (T4::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T5::shape().vtable.type_name)(f, opts)?;
+                (T5::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T6::shape().vtable.type_name)(f, opts)?;
+                (T6::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T7::shape().vtable.type_name)(f, opts)?;
+                (T7::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T8::shape().vtable.type_name)(f, opts)?;
+                (T8::shape().vtable().type_name)(f, opts)?;
                 write!(f, ")")
             } else {
                 write!(f, "(…)")
@@ -672,7 +672,7 @@ where
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>(),
-            vtable: ValueVTable {
+            vtable: || ValueVTable {
                 type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7, T8> as _,
                 display: None,
                 debug: None,
@@ -741,25 +741,25 @@ where
         {
             if let Some(opts) = opts.for_children() {
                 write!(f, "(")?;
-                (T0::shape().vtable.type_name)(f, opts)?;
+                (T0::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T1::shape().vtable.type_name)(f, opts)?;
+                (T1::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T2::shape().vtable.type_name)(f, opts)?;
+                (T2::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T3::shape().vtable.type_name)(f, opts)?;
+                (T3::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T4::shape().vtable.type_name)(f, opts)?;
+                (T4::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T5::shape().vtable.type_name)(f, opts)?;
+                (T5::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T6::shape().vtable.type_name)(f, opts)?;
+                (T6::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T7::shape().vtable.type_name)(f, opts)?;
+                (T7::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T8::shape().vtable.type_name)(f, opts)?;
+                (T8::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T9::shape().vtable.type_name)(f, opts)?;
+                (T9::shape().vtable().type_name)(f, opts)?;
                 write!(f, ")")
             } else {
                 write!(f, "(…)")
@@ -780,7 +780,7 @@ where
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>(),
-            vtable: ValueVTable {
+            vtable: || ValueVTable {
                 type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> as _,
                 display: None,
                 debug: None,
@@ -853,27 +853,27 @@ where
         {
             if let Some(opts) = opts.for_children() {
                 write!(f, "(")?;
-                (T0::shape().vtable.type_name)(f, opts)?;
+                (T0::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T1::shape().vtable.type_name)(f, opts)?;
+                (T1::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T2::shape().vtable.type_name)(f, opts)?;
+                (T2::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T3::shape().vtable.type_name)(f, opts)?;
+                (T3::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T4::shape().vtable.type_name)(f, opts)?;
+                (T4::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T5::shape().vtable.type_name)(f, opts)?;
+                (T5::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T6::shape().vtable.type_name)(f, opts)?;
+                (T6::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T7::shape().vtable.type_name)(f, opts)?;
+                (T7::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T8::shape().vtable.type_name)(f, opts)?;
+                (T8::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T9::shape().vtable.type_name)(f, opts)?;
+                (T9::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T10::shape().vtable.type_name)(f, opts)?;
+                (T10::shape().vtable().type_name)(f, opts)?;
                 write!(f, ")")
             } else {
                 write!(f, "(…)")
@@ -897,7 +897,7 @@ where
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>(),
-            vtable: ValueVTable {
+            vtable: || ValueVTable {
                 type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> as _,
                 display: None,
                 debug: None,
@@ -973,29 +973,29 @@ where
         {
             if let Some(opts) = opts.for_children() {
                 write!(f, "(")?;
-                (T0::shape().vtable.type_name)(f, opts)?;
+                (T0::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T1::shape().vtable.type_name)(f, opts)?;
+                (T1::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T2::shape().vtable.type_name)(f, opts)?;
+                (T2::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T3::shape().vtable.type_name)(f, opts)?;
+                (T3::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T4::shape().vtable.type_name)(f, opts)?;
+                (T4::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T5::shape().vtable.type_name)(f, opts)?;
+                (T5::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T6::shape().vtable.type_name)(f, opts)?;
+                (T6::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T7::shape().vtable.type_name)(f, opts)?;
+                (T7::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T8::shape().vtable.type_name)(f, opts)?;
+                (T8::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T9::shape().vtable.type_name)(f, opts)?;
+                (T9::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T10::shape().vtable.type_name)(f, opts)?;
+                (T10::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (T11::shape().vtable.type_name)(f, opts)?;
+                (T11::shape().vtable().type_name)(f, opts)?;
                 write!(f, ")")
             } else {
                 write!(f, "(…)")
@@ -1019,7 +1019,7 @@ where
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)>(),
-            vtable: ValueVTable {
+            vtable: || ValueVTable {
                 type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> as _,
                 display: None,
                 debug: None,

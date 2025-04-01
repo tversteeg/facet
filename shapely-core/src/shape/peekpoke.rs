@@ -1,7 +1,7 @@
 use crate::Shapely;
 use std::cmp::Ordering;
 
-use super::{Opaque, OpaqueConst, Shape, ShapeDesc};
+use super::{Opaque, OpaqueConst, Shape, ShapeDesc, ValueVTable};
 
 /// Lets you peek at the innards of a value
 ///
@@ -17,6 +17,7 @@ pub enum Peek<'mem> {
 pub struct PeekValue<'mem> {
     pub data: OpaqueConst<'mem>,
     pub shape: Shape,
+    pub vtable: ValueVTable,
 }
 
 impl<'mem> Peek<'mem> {
@@ -42,7 +43,12 @@ impl<'mem> Peek<'mem> {
             super::Innards::Tuple { .. } => todo!(),
             super::Innards::Map { .. } => todo!(),
             super::Innards::List { .. } => todo!(),
-            super::Innards::Scalar => Peek::Scalar(PeekValue { data, shape }),
+            super::Innards::Scalar => Peek::Scalar(PeekValue {
+                data,
+                shape,
+                // let's cache that
+                vtable: shape.vtable(),
+            }),
             super::Innards::Enum { .. } => todo!(),
         }
     }
@@ -58,7 +64,7 @@ impl<'mem> PeekValue<'mem> {
     pub fn eq(&self, other: &PeekValue<'_>) -> Option<bool> {
         unsafe {
             self.shape
-                .vtable
+                .vtable()
                 .eq
                 .map(|eq_fn| eq_fn(self.data, other.data))
         }
@@ -71,12 +77,7 @@ impl<'mem> PeekValue<'mem> {
     /// `None` if comparison is not supported for this scalar type
     #[inline(always)]
     pub fn cmp(&self, other: &PeekValue<'_>) -> Option<Ordering> {
-        unsafe {
-            self.shape
-                .vtable
-                .cmp
-                .map(|cmp_fn| cmp_fn(self.data, other.data))
-        }
+        unsafe { self.vtable.cmp.map(|cmp_fn| cmp_fn(self.data, other.data)) }
     }
 
     /// Returns true if this scalar is greater than the other scalar
@@ -130,8 +131,7 @@ impl<'mem> PeekValue<'mem> {
     #[inline(always)]
     pub fn display(&self, f: std::fmt::Formatter<'_>) -> Option<std::fmt::Result> {
         unsafe {
-            self.shape
-                .vtable
+            self.vtable
                 .display
                 .map(|display_fn| display_fn(self.data, f))
         }
@@ -144,12 +144,7 @@ impl<'mem> PeekValue<'mem> {
     /// `None` if debug formatting is not supported for this scalar type
     #[inline(always)]
     pub fn debug(&self, f: std::fmt::Formatter<'_>) -> Option<std::fmt::Result> {
-        unsafe {
-            self.shape
-                .vtable
-                .debug
-                .map(|debug_fn| debug_fn(self.data, f))
-        }
+        unsafe { self.vtable.debug.map(|debug_fn| debug_fn(self.data, f)) }
     }
 
     /// Hashes this scalar
@@ -160,7 +155,7 @@ impl<'mem> PeekValue<'mem> {
     #[inline(always)]
     pub fn hash<H: std::hash::Hasher>(&self, hasher: &mut H) -> bool {
         unsafe {
-            if let Some(hash_fn) = self.shape.vtable.hash {
+            if let Some(hash_fn) = self.vtable.hash {
                 let hasher_opaque = Opaque::from_ref(hasher);
                 hash_fn(self.data, hasher_opaque, |opaque, bytes| {
                     opaque.as_mut_ptr::<H>().write(bytes)

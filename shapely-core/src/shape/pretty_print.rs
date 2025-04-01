@@ -1,4 +1,4 @@
-use super::{Innards, Shape, VariantKind};
+use super::{Innards, Shape, TypeNameOpts, VariantKind};
 use std::{collections::HashSet, fmt::Formatter};
 
 impl Shape {
@@ -15,13 +15,13 @@ impl Shape {
     ) -> std::fmt::Result {
         if !printed_schemas.insert(*self) {
             write!(f, "{:indent$}\x1b[1;33m", "", indent = indent)?;
-            (self.name)(f, TypeNameOpts::one())?;
+            (self.vtable().type_name)(f, TypeNameOpts::one())?;
             writeln!(f, "\x1b[0m (\x1b[1;31malready printed\x1b[0m)")?;
             return Ok(());
         }
 
         write!(f, "{:indent$}\x1b[1;33m", "", indent = indent)?;
-        (self.name)(f, TypeNameOpts::default())?;
+        (self.vtable().type_name)(f, TypeNameOpts::default())?;
         writeln!(f, "\x1b[0m (\x1b[1;34m{}\x1b[0m bytes)", self.layout.size())?;
 
         match &self.innards {
@@ -39,10 +39,10 @@ impl Shape {
                         indent = indent + Self::INDENT,
                         width = max_name_length
                     )?;
-                    if field.flags.contains(FieldFlags::SENSITIVE) {
+                    if field.flags.contains(super::struct_::FieldFlags::SENSITIVE) {
                         write!(f, "(sensitive) ")?;
                     }
-                    if let Innards::Scalar { vtable } = field.shape.get().innards {
+                    if let Innards::Scalar = field.shape.get().innards {
                         field.shape.get().pretty_print_recursive_internal(
                             f,
                             printed_schemas,
@@ -58,33 +58,33 @@ impl Shape {
                     }
                 }
             }
-            Innards::Map { value_shape, .. } => {
+            Innards::Map { k: _, v, vtable: _ } => {
                 writeln!(
                     f,
                     "{:indent$}\x1b[1;36mHashMap with arbitrary keys and value shape:\x1b[0m",
                     "",
                     indent = indent + Self::INDENT
                 )?;
-                value_shape.get().pretty_print_recursive_internal(
+                v.get().pretty_print_recursive_internal(
                     f,
                     printed_schemas,
                     indent + Self::INDENT * 2,
                 )?;
             }
-            Innards::List { item_shape, .. } => {
+            Innards::List { t, vtable: _ } => {
                 write!(
                     f,
                     "{:indent$}\x1b[1;36mArray of:\x1b[0m ",
                     "",
                     indent = indent + Self::INDENT
                 )?;
-                item_shape.get().pretty_print_recursive_internal(
+                t.get().pretty_print_recursive_internal(
                     f,
                     printed_schemas,
                     indent + Self::INDENT * 2,
                 )?;
             }
-            Innards::Scalar { .. } => {
+            Innards::Scalar => {
                 // let's not duplicate `u64 => U64` for example
             }
             Innards::Enum { variants, repr: _ } => {
@@ -136,10 +136,10 @@ impl Shape {
                                     field.name,
                                     indent = indent + Self::INDENT * 3
                                 )?;
-                                if field.flags.contains(FieldFlags::SENSITIVE) {
+                                if field.flags.contains(super::struct_::FieldFlags::SENSITIVE) {
                                     write!(f, "(sensitive) ")?;
                                 }
-                                if let Innards::Scalar(_) = field.shape.get().innards {
+                                if let Innards::Scalar = field.shape.get().innards {
                                     field.shape.get().pretty_print_recursive_internal(
                                         f,
                                         printed_schemas,
@@ -175,10 +175,10 @@ impl Shape {
                                     field.name,
                                     indent = indent + Self::INDENT * 3
                                 )?;
-                                if field.flags.contains(FieldFlags::SENSITIVE) {
+                                if field.flags.contains(super::struct_::FieldFlags::SENSITIVE) {
                                     write!(f, "(sensitive) ")?;
                                 }
-                                if let Innards::Scalar(_) = field.shape.get().innards {
+                                if let Innards::Scalar = field.shape.get().innards {
                                     field.shape.get().pretty_print_recursive_internal(
                                         f,
                                         printed_schemas,

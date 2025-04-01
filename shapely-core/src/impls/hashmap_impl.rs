@@ -20,9 +20,9 @@ where
         ) -> fmt::Result {
             if let Some(opts) = opts.for_children() {
                 write!(f, "HashMap<")?;
-                (K::shape().vtable.type_name)(f, opts)?;
+                (K::shape().vtable().type_name)(f, opts)?;
                 write!(f, ", ")?;
-                (V::shape().vtable.type_name)(f, opts)?;
+                (V::shape().vtable().type_name)(f, opts)?;
                 write!(f, ">")
             } else {
                 write!(f, "HashMap<…>")
@@ -37,7 +37,7 @@ where
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<HashMap<K, V>>(),
-            vtable: ValueVTable {
+            vtable: || ValueVTable {
                 type_name: type_name::<K, V> as _,
                 display: None,
                 debug: None,

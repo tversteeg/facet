@@ -32,17 +32,26 @@ pub struct Shape {
     /// Size, alignment
     pub layout: Layout,
 
-    /// VTable for common operations
-    pub vtable: ValueVTable,
+    /// VTable for common operations. This is indirected because the vtable might
+    /// have different functions implemented based on generic type parameters:
+    /// HashMap<K, V> is not even constructible if `K` is not `Hash` + `Eq`.
+    pub vtable: fn() -> ValueVTable,
 
     /// Details/contents of the value
     pub innards: Innards,
 }
 
+impl Shape {
+    /// Returns the vtable
+    pub fn vtable(&self) -> ValueVTable {
+        (self.vtable)()
+    }
+}
+
 // Helper struct to format the name for display
 impl std::fmt::Display for Shape {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        (self.vtable.type_name)(f, TypeNameOpts::default())
+        (self.vtable().type_name)(f, TypeNameOpts::default())
     }
 }
 
@@ -255,6 +264,14 @@ impl ShapeDesc {
     #[inline(always)]
     pub fn get(&self) -> Shape {
         (self.0)()
+    }
+
+    /// Heap-allocate a value of this shape
+    pub fn allocate(&self) -> OpaqueUninit<'static> {
+        let shape = self.get();
+        let layout = shape.layout;
+        let ptr = unsafe { std::alloc::alloc(layout) };
+        OpaqueUninit(ptr, std::marker::PhantomData)
     }
 }
 

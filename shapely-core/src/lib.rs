@@ -8,9 +8,6 @@ mod impls;
 mod shape;
 pub use shape::*;
 
-mod slot;
-pub use slot::Slot;
-
 mod partial;
 pub use partial::*;
 

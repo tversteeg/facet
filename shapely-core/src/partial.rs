@@ -1,25 +1,10 @@
-use crate::{FieldError, Innards, ListVTable, ShapeDesc, Shapely, Slot, trace};
+use crate::{
+    FieldError, FieldWriter, Innards, ListVTable, OpaqueUninit, Shape, ShapeDesc, Shapely,
+    ValueVTable, trace,
+};
 use std::{alloc, ptr::NonNull};
 
-/// Origin of the partial — did we allocate it? Or is it borrowed?
-pub enum Origin<'s> {
-    /// It was allocated via `alloc::alloc` and needs to be deallocated on drop,
-    /// moving out, etc.
-    HeapAllocated,
-
-    /// It was generously lent to us by some outside code, and we are NOT
-    /// to free it (although we should still uninitialize any fields that we initialized).
-    Borrowed {
-        /// The parent `Partial` that we borrowed from.
-        parent: Option<&'s Partial<'s>>,
-
-        /// Some mark that indicates whether this field is initialized or not — we should
-        /// set it after initializing the memory we got.
-        init_mark: InitMark<'s>,
-    },
-}
-
-/// A partially-initialized shape.
+/// A partially-initialized struct, tuple struct, tuple, or enum.
 ///
 /// This type keeps track of the initialized state of every field and only allows getting out the
 /// concrete type or the boxed concrete type or moving out of this partial into a pointer if all the
@@ -27,39 +12,35 @@ pub enum Origin<'s> {
 pub struct Partial<'s> {
     /// Address of the value we're building in memory.
     /// If the type is a ZST, then the addr will be dangling.
-    pub(crate) addr: NonNull<u8>,
-
-    /// Where `addr` came from (ie. are we responsible for freeing it?)
-    pub(crate) origin: Origin<'s>,
+    pub(crate) data: OpaqueUninit<'s>,
 
     /// Keeps track of which fields are initialized
-    pub(crate) init_set: InitSet64,
+    pub(crate) iset: ISet,
 
-    /// The shape we're building, asserted when building, but
-    /// also when getting fields slots, etc.
-    pub(crate) shape: ShapeDesc,
-}
+    /// The shape desc we're building
+    pub(crate) shape_desc: ShapeDesc,
 
-/// We can build a tree of partials when deserializing, so `Partial<'s>` has to be covariant over 's.
-fn _assert_partial_covariant<'long: 'short, 'short>(partial: Partial<'long>) -> Partial<'short> {
-    partial
+    /// The shape we're building (cache `shape_desc.get()`)
+    pub(crate) shape: Shape,
+
+    /// The value vtable of the shape we're building.
+    pub(crate) vtable: ValueVTable,
 }
 
 impl Drop for Partial<'_> {
     // This drop function is only really called when a partial is dropped without being fully
     // built out. Otherwise, it's forgotten because the value has been moved elsewhere.
     //
-    // As a result, its only job is to drop any fields that may have been initialized. And finally
-    // to free the memory for the partial itself if we own it.
+    // As a result, its only job is to drop any fields that may have been initialized.
     fn drop(&mut self) {
-        match self.shape.get().innards {
+        match self.shape.innards {
             crate::Innards::Struct { fields } => {
                 fields
                     .iter()
                     .enumerate()
                     .filter_map(|(i, field)| {
-                        if self.init_set.is_set(i) {
-                            Some((field, field.shape.get().drop_in_place?))
+                        if self.iset.has(i) {
+                            Some((field, field.shape.get().vtable().drop_in_place?))
                         } else {
                             None
                         }
@@ -75,37 +56,25 @@ impl Drop for Partial<'_> {
                             //
                             // If the struct is not a ZST, then `self.addr` is a valid address.
                             // The fields can still be ZST and that's not a special case, really.
-                            drop_fn(self.addr.byte_add(field.offset).as_ptr());
+                            drop_fn(self.data.field_init(field.offset));
                         }
                     })
             }
-            crate::Innards::Scalar(_) => {
-                if self.init_set.is_set(0) {
-                    // Drop the scalar value if it has a drop function
-                    if let Some(drop_fn) = self.shape.get().drop_in_place {
-                        // SAFETY: self.addr is always valid for Scalar types,
-                        // even for ZSTs where it might be dangling.
-                        unsafe {
-                            drop_fn(self.addr.as_ptr());
-                        }
-                    }
-                }
-            }
+            // TODO: drop partially initialized tuples, etc.
             _ => {}
         }
-
-        self.deallocate()
     }
 }
 
 impl Partial<'_> {
     /// Allocates a partial on the heap for the given shape descriptor.
-    pub fn alloc(shape: ShapeDesc) -> Self {
-        let sh = shape.get();
-        let layout = sh.layout;
+    pub fn alloc(shape_desc: ShapeDesc) -> Self {
+        let shape = shape_desc.get();
+        let vtable = shape.vtable();
+        let layout = shape.layout;
         let addr = if layout.size() == 0 {
             // ZSTs need a well-aligned address
-            sh.dangling()
+            shape.dangling()
         } else {
             let addr = unsafe { alloc::alloc(layout) };
             if addr.is_null() {
@@ -117,10 +86,11 @@ impl Partial<'_> {
         };
 
         Self {
-            origin: Origin::HeapAllocated,
-            addr,
-            init_set: Default::default(),
+            shape_desc,
             shape,
+            vtable,
+            data,
+            iset: Default::default(),
         }
     }
 
@@ -133,8 +103,8 @@ impl Partial<'_> {
                 parent: None,
                 init_mark: InitMark::Ignored,
             },
-            addr: NonNull::new(uninit.as_mut_ptr() as _).unwrap(),
-            init_set: Default::default(),
+            data: NonNull::new(uninit.as_mut_ptr() as _).unwrap(),
+            iset: Default::default(),
             shape: T::shape_desc(),
         }
     }
@@ -142,24 +112,15 @@ impl Partial<'_> {
     /// Checks if all fields in the struct or scalar value have been initialized.
     /// Panics if any field is not initialized, providing details about the uninitialized field.
     pub(crate) fn assert_all_fields_initialized(&self) {
-        match self.shape.get().innards {
+        match self.shape.innards {
             crate::Innards::Struct { fields } => {
                 for (i, field) in fields.iter().enumerate() {
-                    if !self.init_set.is_set(i) {
+                    if !self.iset.has(i) {
                         panic!(
                             "Field '{}' was not initialized. Complete schema:\n{:?}",
-                            field.name,
-                            self.shape.get()
+                            field.name, self.shape
                         );
                     }
-                }
-            }
-            crate::Innards::Scalar(_) => {
-                if !self.init_set.is_set(0) {
-                    panic!(
-                        "Scalar value was not initialized. Complete schema:\n{:?}",
-                        self.shape.get()
-                    );
                 }
             }
             crate::Innards::Enum {
@@ -167,10 +128,10 @@ impl Partial<'_> {
                 repr: _,
             } => {
                 // Check if a variant has been selected (bit 0)
-                if !self.init_set.is_set(0) {
+                if !self.iset.has(0) {
                     panic!(
                         "No enum variant was selected. Complete schema:\n{:?}",
-                        self.shape.get()
+                        self.shape
                     );
                 }
 
@@ -191,7 +152,7 @@ impl Partial<'_> {
                                 for (field_index, field) in fields.iter().enumerate() {
                                     // Field init bits start at index 1 (index 0 is for variant selection)
                                     let init_bit = field_index + 1;
-                                    if !self.init_set.is_set(init_bit) {
+                                    if !self.iset.has(init_bit) {
                                         panic!(
                                             "Field '{}' of variant '{}' was not initialized. Complete schema:\n{:?}",
                                             field.name,
@@ -216,19 +177,19 @@ impl Partial<'_> {
                 vtable,
                 item_shape: _,
             } => {
-                if self.init_set.is_set(0) {
+                if self.iset.has(0) {
                     panic!("Array is already initialized");
                 }
 
                 // Initialize the array using the vtable's init function
                 unsafe {
-                    (vtable.init)(self.addr.as_ptr(), size_hint);
+                    (vtable.init)(self.data.as_ptr(), size_hint);
                 }
 
                 // Mark the array as initialized in our init_set
-                self.init_set.set(0);
+                self.iset.set(0);
 
-                Some(unsafe { ArraySlot::new(self.addr, vtable) })
+                Some(unsafe { ArraySlot::new(self.data, vtable) })
             }
             _ => None,
         }
@@ -241,80 +202,26 @@ impl Partial<'_> {
                 vtable,
                 value_shape: _,
             } => {
-                if self.init_set.is_set(0) {
+                if self.iset.has(0) {
                     panic!("HashMap is already initialized");
                 }
 
                 // Initialize the HashMap using the vtable's init function
                 unsafe {
-                    (vtable.init)(self.addr.as_ptr(), size_hint);
+                    (vtable.init)(self.data.as_ptr(), size_hint);
                 }
 
                 // Mark the HashMap as initialized in our init_set
-                self.init_set.set(0);
+                self.iset.set(0);
 
-                Some(unsafe { HashMapSlot::new(self.addr, vtable) })
+                Some(unsafe { HashMapSlot::new(self.data, vtable) })
             }
             _ => None,
-        }
-    }
-
-    /// Returns an iterator over the key-value pairs in a HashMap
-    pub fn hashmap_iter(&self) -> Option<HashMapIter> {
-        match self.shape.get().innards {
-            crate::Innards::Map {
-                vtable,
-                value_shape: _,
-            } => {
-                // Get the iterator from the vtable
-                let iter_raw = unsafe { (vtable.iter)(self.addr.as_ptr()) };
-                if iter_raw.is_null() {
-                    return None;
-                }
-
-                Some(HashMapIter {
-                    iter_ptr: iter_raw,
-                    vtable: vtable.iter_vtable,
-                })
-            }
-            _ => None,
-        }
-    }
-
-    /// Returns a slot for assigning this whole shape as a scalar
-    pub fn scalar_slot(&mut self) -> Option<Slot<'_>> {
-        match self.shape.get().innards {
-            crate::Innards::Scalar(_) => {
-                let slot = Slot::for_ptr(
-                    self.addr,
-                    self.shape,
-                    InitMark::Struct {
-                        index: 0,
-                        set: &mut self.init_set,
-                    },
-                );
-                Some(slot)
-            }
-            crate::Innards::Transparent(inner_shape) => {
-                let slot = Slot::for_ptr(
-                    self.addr,
-                    inner_shape,
-                    InitMark::Struct {
-                        index: 0,
-                        set: &mut self.init_set,
-                    },
-                );
-                Some(slot)
-            }
-            _ => panic!(
-                "Expected scalar innards, found {:?}",
-                self.shape.get().innards
-            ),
         }
     }
 
     /// Returns a slot for initializing a field in the shape.
-    pub fn slot_by_name<'s>(&'s mut self, name: &str) -> Result<Slot<'s>, FieldError> {
+    pub fn slot_by_name<'s>(&'s mut self, name: &str) -> Result<FieldWriter<'s>, FieldError> {
         let shape = self.shape.get();
         match shape.innards {
             Innards::Struct { fields }
@@ -329,12 +236,12 @@ impl Partial<'_> {
                     // SAFETY: self.addr is a valid pointer to the start of the struct,
                     // and field.offset is the correct offset for this field within the struct.
                     // The resulting pointer is properly aligned and within the bounds of the allocated memory.
-                    self.addr.byte_add(field.offset)
+                    self.data.byte_add(field.offset)
                 };
-                Ok(Slot::for_ptr(
+                Ok(FieldWriter::for_ptr(
                     field_addr,
                     field.shape,
-                    self.init_set.field(index),
+                    self.iset.field(index),
                 ))
             }
             Innards::Map { .. } => Err(FieldError::NoStaticFields),
@@ -352,35 +259,28 @@ impl Partial<'_> {
     }
 
     /// Returns a slot for initializing a field in the shape by index.
-    pub fn slot_by_index(&mut self, index: usize) -> Result<Slot<'_>, FieldError> {
+    pub fn slot_by_index(&mut self, index: usize) -> Result<FieldWriter<'_>, FieldError> {
         let sh = self.shape.get();
         let field = sh.field_by_index(index)?;
         let field_addr = unsafe {
             // SAFETY: self.addr is a valid pointer to the start of the struct,
             // and field.offset is the correct offset for this field within the struct.
             // The resulting pointer is properly aligned and within the bounds of the allocated memory.
-            self.addr.byte_add(field.offset)
+            self.data.as_byte_ptr().byte_add(field.offset)
         };
-        let slot = Slot::for_ptr(field_addr, field.shape, self.init_set.field(index));
+        let slot = FieldWriter::for_ptr(field_addr, field.shape, self.iset.field(index));
         Ok(slot)
     }
 
     fn assert_matching_shape<T: Shapely>(&self) {
-        if self.shape != T::shape_desc() {
-            let partial_shape = self.shape.get();
+        if self.shape_desc != T::shape_desc() {
+            let partial_shape = self.shape;
             let target_shape = T::shape();
 
             panic!(
                 "This is a partial \x1b[1;34m{}\x1b[0m, you can't build a \x1b[1;32m{}\x1b[0m out of it",
                 partial_shape, target_shape,
             );
-        }
-    }
-
-    fn deallocate(&mut self) {
-        // ZSTs don't need to be deallocated
-        if self.shape.get().layout.size() != 0 {
-            unsafe { alloc::dealloc(self.addr.as_ptr(), self.shape.get().layout) }
         }
     }
 
@@ -394,19 +294,9 @@ impl Partial<'_> {
     /// This function will panic if:
     /// - The origin is not borrowed (i.e., it's heap allocated).
     /// - Any field is not initialized.
-    pub fn build_in_place(mut self) {
+    pub fn build_in_place(self) {
         // ensure all fields are initialized
         self.assert_all_fields_initialized();
-
-        match &mut self.origin {
-            Origin::Borrowed { init_mark, .. } => {
-                // Mark the borrowed field as initialized
-                init_mark.set();
-            }
-            Origin::HeapAllocated => {
-                panic!("Cannot build in place for heap allocated Partial");
-            }
-        }
 
         // prevent field drops when the Partial is dropped
         std::mem::forget(self);
@@ -427,7 +317,7 @@ impl Partial<'_> {
 
         // Special handling for enums to ensure the correct variant is built
         if let crate::Innards::Enum { variants, repr } = &shape.innards {
-            if !self.init_set.is_set(0) {
+            if !self.iset.has(0) {
                 panic!("Enum variant not selected");
             }
 
@@ -524,7 +414,7 @@ impl Partial<'_> {
                         crate::VariantKind::Tuple { fields } => {
                             // Copy the fields from our partial to the result
                             for field in fields.iter() {
-                                let src_ptr = (self.addr.as_ptr() as *const u8).add(field.offset);
+                                let src_ptr = (self.data.as_ptr() as *const u8).add(field.offset);
                                 let dst_ptr =
                                     (result_mem.as_mut_ptr() as *mut u8).add(field.offset);
                                 // Access the layout from the shape field
@@ -535,7 +425,7 @@ impl Partial<'_> {
                         crate::VariantKind::Struct { fields } => {
                             // Copy the fields from our partial to the result
                             for field in fields.iter() {
-                                let src_ptr = (self.addr.as_ptr() as *const u8).add(field.offset);
+                                let src_ptr = (self.data.as_ptr() as *const u8).add(field.offset);
                                 let dst_ptr =
                                     (result_mem.as_mut_ptr() as *mut u8).add(field.offset);
                                 // Access the layout from the shape field
@@ -560,7 +450,7 @@ impl Partial<'_> {
 
         // For non-enum types, use the original implementation
         let result = unsafe {
-            let ptr = self.addr.as_ptr() as *const T;
+            let ptr = self.data.as_ptr() as *const T;
             std::ptr::read(ptr)
         };
         trace!("Built \x1b[1;33m{}\x1b[0m successfully", T::shape());
@@ -586,7 +476,7 @@ impl Partial<'_> {
         self.assert_all_fields_initialized();
         self.assert_matching_shape::<T>();
 
-        let boxed = unsafe { Box::from_raw(self.addr.as_ptr() as *mut T) };
+        let boxed = unsafe { Box::from_raw(self.data.as_ptr() as *mut T) };
         std::mem::forget(self);
         boxed
     }
@@ -606,7 +496,7 @@ impl Partial<'_> {
         self.assert_all_fields_initialized();
         unsafe {
             std::ptr::copy_nonoverlapping(
-                self.addr.as_ptr(),
+                self.data.as_ptr(),
                 target.as_ptr(),
                 // note: copy_nonoverlapping takes a count,
                 // since we're dealing with `*mut u8`, it's a byte count.
@@ -625,7 +515,7 @@ impl Partial<'_> {
 
     /// Returns the address of the value we're building in memory.
     pub fn addr(&self) -> NonNull<u8> {
-        self.addr
+        self.data
     }
 
     /// Sets the variant of an enum by name.
@@ -673,7 +563,7 @@ impl Partial<'_> {
             // Prepare memory for the enum
             unsafe {
                 // Zero out the memory first to ensure clean state
-                std::ptr::write_bytes(self.addr.as_ptr(), 0, shape.layout.size());
+                std::ptr::write_bytes(self.data.as_ptr(), 0, shape.layout.size());
 
                 // Set up the discriminant (tag)
                 // For enums in Rust, the first bytes contain the discriminant
@@ -688,58 +578,58 @@ impl Partial<'_> {
                 // Write the discriminant value based on the representation
                 match repr {
                     crate::EnumRepr::U8 => {
-                        let tag_ptr = self.addr.as_ptr();
+                        let tag_ptr = self.data.as_ptr();
                         *tag_ptr = discriminant_value as u8;
                     }
                     crate::EnumRepr::U16 => {
-                        let tag_ptr = self.addr.as_ptr() as *mut u16;
+                        let tag_ptr = self.data.as_ptr() as *mut u16;
                         *tag_ptr = discriminant_value as u16;
                     }
                     crate::EnumRepr::U32 => {
-                        let tag_ptr = self.addr.as_ptr() as *mut u32;
+                        let tag_ptr = self.data.as_ptr() as *mut u32;
                         *tag_ptr = discriminant_value as u32;
                     }
                     crate::EnumRepr::U64 => {
-                        let tag_ptr = self.addr.as_ptr() as *mut u64;
+                        let tag_ptr = self.data.as_ptr() as *mut u64;
                         *tag_ptr = discriminant_value as u64;
                     }
                     crate::EnumRepr::USize => {
-                        let tag_ptr = self.addr.as_ptr() as *mut usize;
+                        let tag_ptr = self.data.as_ptr() as *mut usize;
                         *tag_ptr = discriminant_value as usize;
                     }
                     crate::EnumRepr::I8 => {
-                        let tag_ptr = self.addr.as_ptr() as *mut i8;
+                        let tag_ptr = self.data.as_ptr() as *mut i8;
                         *tag_ptr = discriminant_value as i8;
                     }
                     crate::EnumRepr::I16 => {
-                        let tag_ptr = self.addr.as_ptr() as *mut i16;
+                        let tag_ptr = self.data.as_ptr() as *mut i16;
                         *tag_ptr = discriminant_value as i16;
                     }
                     crate::EnumRepr::I32 => {
-                        let tag_ptr = self.addr.as_ptr() as *mut i32;
+                        let tag_ptr = self.data.as_ptr() as *mut i32;
                         *tag_ptr = discriminant_value as i32;
                     }
                     crate::EnumRepr::I64 => {
-                        let tag_ptr = self.addr.as_ptr() as *mut i64;
+                        let tag_ptr = self.data.as_ptr() as *mut i64;
                         *tag_ptr = discriminant_value;
                     }
                     crate::EnumRepr::ISize => {
-                        let tag_ptr = self.addr.as_ptr() as *mut isize;
+                        let tag_ptr = self.data.as_ptr() as *mut isize;
                         *tag_ptr = discriminant_value as isize;
                     }
                     crate::EnumRepr::Default => {
                         // Use a heuristic based on the number of variants
                         if variants.len() <= 256 {
                             // Can fit in a u8
-                            let tag_ptr = self.addr.as_ptr();
+                            let tag_ptr = self.data.as_ptr();
                             *tag_ptr = discriminant_value as u8;
                         } else if variants.len() <= 65536 {
                             // Can fit in a u16
-                            let tag_ptr = self.addr.as_ptr() as *mut u16;
+                            let tag_ptr = self.data.as_ptr() as *mut u16;
                             *tag_ptr = discriminant_value as u16;
                         } else {
                             // Default to u32
-                            let tag_ptr = self.addr.as_ptr() as *mut u32;
+                            let tag_ptr = self.data.as_ptr() as *mut u32;
                             *tag_ptr = discriminant_value as u32;
                         }
                     }
@@ -747,12 +637,12 @@ impl Partial<'_> {
             }
 
             // Mark the variant as selected (bit 0)
-            self.init_set.set(0);
+            self.iset.set(0);
 
             // Reset all field initialization bits (starting from bit 1)
             // InitSet64 can hold 64 bits, so we'll clear bits 1-63
             for i in 1..64 {
-                self.init_set.unset(i);
+                self.iset.unset(i);
             }
 
             Ok(())
@@ -763,7 +653,7 @@ impl Partial<'_> {
 
     /// Returns the currently selected variant index, if any.
     pub fn selected_variant_index(&self) -> Option<usize> {
-        if !self.init_set.is_set(0) {
+        if !self.iset.has(0) {
             return None;
         }
 
@@ -775,58 +665,58 @@ impl Partial<'_> {
                 // Attempt to read the tag based on the representation
                 let discriminant_value = match repr {
                     crate::EnumRepr::U8 => {
-                        let tag_ptr = self.addr.as_ptr() as *const u8;
+                        let tag_ptr = self.data.as_ptr() as *const u8;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::U16 => {
-                        let tag_ptr = self.addr.as_ptr() as *const u16;
+                        let tag_ptr = self.data.as_ptr() as *const u16;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::U32 => {
-                        let tag_ptr = self.addr.as_ptr() as *const u32;
+                        let tag_ptr = self.data.as_ptr() as *const u32;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::U64 => {
-                        let tag_ptr = self.addr.as_ptr() as *const u64;
+                        let tag_ptr = self.data.as_ptr() as *const u64;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::USize => {
-                        let tag_ptr = self.addr.as_ptr() as *const usize;
+                        let tag_ptr = self.data.as_ptr() as *const usize;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::I8 => {
-                        let tag_ptr = self.addr.as_ptr() as *const i8;
+                        let tag_ptr = self.data.as_ptr() as *const i8;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::I16 => {
-                        let tag_ptr = self.addr.as_ptr() as *const i16;
+                        let tag_ptr = self.data.as_ptr() as *const i16;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::I32 => {
-                        let tag_ptr = self.addr.as_ptr() as *const i32;
+                        let tag_ptr = self.data.as_ptr() as *const i32;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::I64 => {
-                        let tag_ptr = self.addr.as_ptr() as *const i64;
+                        let tag_ptr = self.data.as_ptr() as *const i64;
                         *tag_ptr
                     }
                     crate::EnumRepr::ISize => {
-                        let tag_ptr = self.addr.as_ptr() as *const isize;
+                        let tag_ptr = self.data.as_ptr() as *const isize;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::Default => {
                         // Use a heuristic based on the number of variants
                         if variants.len() <= 256 {
                             // Likely a u8 discriminant
-                            let tag_ptr = self.addr.as_ptr() as *const u8;
+                            let tag_ptr = self.data.as_ptr() as *const u8;
                             *tag_ptr as i64
                         } else if variants.len() <= 65536 {
                             // Likely a u16 discriminant
-                            let tag_ptr = self.addr.as_ptr() as *const u16;
+                            let tag_ptr = self.data.as_ptr() as *const u16;
                             *tag_ptr as i64
                         } else {
                             // Default to u32
-                            let tag_ptr = self.addr.as_ptr() as *const u32;
+                            let tag_ptr = self.data.as_ptr() as *const u32;
                             *tag_ptr as i64
                         }
                     }
@@ -868,12 +758,12 @@ impl Partial<'_> {
     pub fn variant_field_by_name<'s>(
         &'s mut self,
         name: &str,
-    ) -> Result<Slot<'s>, crate::FieldError> {
+    ) -> Result<FieldWriter<'s>, crate::FieldError> {
         let variant_index = self
             .selected_variant_index()
             .ok_or(crate::FieldError::NotAStruct)?; // Using NotAStruct as a stand-in for "no variant selected"
 
-        let shape = self.shape.get();
+        let shape = self.shape;
         if let crate::Innards::Enum { variants, repr: _ } = &shape.innards {
             let variant = &variants[variant_index];
 
@@ -898,13 +788,13 @@ impl Partial<'_> {
                     let field_addr = unsafe {
                         // The actual offset may depend on the variant's layout, but we use the field index for now
                         // This is technically incorrect, as it assumes a simple layout where offsets are contiguous
-                        self.addr.byte_add(field.offset)
+                        self.data.as_ptr().add(field.offset)
                     };
 
-                    Ok(Slot::for_ptr(
+                    Ok(FieldWriter::for_ptr(
                         field_addr,
                         field.shape,
-                        self.init_set.field(init_bit),
+                        self.iset.field(init_bit),
                     ))
                 }
                 crate::VariantKind::Struct { fields } => {
@@ -919,16 +809,12 @@ impl Partial<'_> {
                     let init_bit = field_index + 1;
 
                     // Get the field's address
-                    let field_addr = unsafe {
-                        // The actual offset may depend on the variant's layout, but we use the field index for now
-                        // This is technically incorrect, as it assumes a simple layout where offsets are contiguous
-                        self.addr.byte_add(field.offset)
-                    };
+                    let field_addr = unsafe { self.data.as_ptr().add(field.offset) };
 
-                    Ok(Slot::for_ptr(
+                    Ok(FieldWriter::for_ptr(
                         field_addr,
                         field.shape,
-                        self.init_set.field(init_bit),
+                        self.iset.field(init_bit),
                     ))
                 }
             }
@@ -938,11 +824,11 @@ impl Partial<'_> {
     }
 }
 
-/// A bit array to keep track of which fields were initialized, up to 64 fields
+/// Keeps track of which fields were initialized, up to 64 fields
 #[derive(Clone, Copy, Default)]
-pub struct InitSet64(u64);
+pub struct ISet(u64);
 
-impl InitSet64 {
+impl ISet {
     /// Sets the bit at the given index.
     pub fn set(&mut self, index: usize) {
         if index >= 64 {
@@ -960,7 +846,7 @@ impl InitSet64 {
     }
 
     /// Checks if the bit at the given index is set.
-    pub fn is_set(&self, index: usize) -> bool {
+    pub fn has(&self, index: usize) -> bool {
         if index >= 64 {
             panic!("InitSet64 can only track up to 64 fields. Index {index} is out of bounds.");
         }
@@ -979,48 +865,6 @@ impl InitSet64 {
     /// Gets an [InitMark] to track the initialization state of a single field
     pub fn field(&mut self, index: usize) -> InitMark {
         InitMark::Struct { index, set: self }
-    }
-}
-
-/// `InitMark` is used to track the initialization state of a single field within an `InitSet64`.
-/// It is part of a system used to progressively initialize structs, where each field's
-/// initialization status is represented by a bit in a 64-bit set.
-pub enum InitMark<'s> {
-    /// Represents a field in a struct that needs to be tracked for initialization.
-    Struct {
-        /// The index of the field in the struct (0-63).
-        index: usize,
-        /// A reference to the `InitSet64` that tracks all fields' initialization states.
-        set: &'s mut InitSet64,
-    },
-    /// Represents a field or value that doesn't need initialization tracking.
-    Ignored,
-}
-
-impl InitMark<'_> {
-    /// Marks the field as initialized by setting its corresponding bit in the `InitSet64`.
-    pub fn set(&mut self) {
-        if let Self::Struct { index, set } = self {
-            set.set(*index);
-        }
-    }
-
-    /// Marks the field as uninitialized by clearing its corresponding bit in the `InitSet64`.
-    pub fn unset(&mut self) {
-        if let Self::Struct { index, set } = self {
-            set.0 &= !(1 << *index);
-        }
-    }
-
-    /// Checks if the field is marked as initialized.
-    ///
-    /// Returns `true` if the field is initialized, `false` otherwise.
-    /// Always returns `true` for `Ignored` fields.
-    pub fn get(&self) -> bool {
-        match self {
-            Self::Struct { index, set } => set.is_set(*index),
-            Self::Ignored => true,
-        }
     }
 }
 

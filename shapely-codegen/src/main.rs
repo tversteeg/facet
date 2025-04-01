@@ -64,7 +64,7 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
             (0..n)
                 .map(|i| {
                     let prefix = if i > 0 { "write!(f, \", \")?; " } else { "" };
-                    format!("{}(T{}::shape().vtable.type_name)(f, opts)?;", prefix, i)
+                    format!("{}(T{}::shape().vtable().type_name)(f, opts)?;", prefix, i)
                 })
                 .collect::<Vec<_>>()
                 .join("\n                    ")
@@ -114,7 +114,7 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
                     Shape {{
                         typeid: mini_typeid::of::<Self>(),
                         layout: Layout::new::<{tuple}>(),
-                        vtable: ValueVTable {{
+                        vtable: || ValueVTable {{
                             type_name: type_name::<{type_params}> as _,
                             display: None,
                             debug: None,

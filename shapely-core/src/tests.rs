@@ -700,7 +700,7 @@ fn test_build_simple_enum() {
     println!("Memory layout before build:");
     unsafe {
         // Print memory as bytes
-        let ptr = partial.addr.as_ptr();
+        let ptr = partial.data.as_ptr();
         let size = simple_enum_shape.layout.size();
         println!(
             "Raw memory bytes: {:?}",
@@ -827,7 +827,7 @@ fn test_build_simple_enum_with_explicit_repr() {
     println!("Memory layout before build:");
     unsafe {
         // Print memory as bytes
-        let ptr = partial.addr.as_ptr();
+        let ptr = partial.data.as_ptr();
         let size = enum_shape.layout.size();
         println!(
             "Raw memory bytes: {:?}",

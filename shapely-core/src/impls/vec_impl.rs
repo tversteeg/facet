@@ -13,7 +13,7 @@ where
             if let Some(opts) = opts.for_children() {
                 write!(f, "Vec<")?;
                 let shape = T::shape();
-                (shape.vtable.type_name)(f, opts)?;
+                (shape.vtable().type_name)(f, opts)?;
                 write!(f, ">")
             } else {
                 write!(f, "Vec<…>")
@@ -23,7 +23,7 @@ where
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<Vec<T>>(),
-            vtable: ValueVTable {
+            vtable: || ValueVTable {
                 type_name: type_name::<T> as _,
                 // TODO: specialize these
                 display: None,

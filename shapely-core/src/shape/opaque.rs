@@ -20,6 +20,28 @@ impl<'mem> OpaqueUninit<'mem> {
             self.assume_init()
         }
     }
+
+    /// Returns the underlying raw pointer as a byte pointer
+    pub fn as_ptr(self) -> *mut u8 {
+        self.0
+    }
+
+    /// Returns a pointer with the given offset added
+    ///
+    /// # Safety
+    ///
+    /// Offset is within the bounds of the allocated memory
+    pub unsafe fn field_uninit(self, offset: usize) -> OpaqueUninit<'mem> {
+        OpaqueUninit(unsafe { self.0.byte_add(offset) }, PhantomData)
+    }
+
+    /// Returns a pointer with the given offset added, assuming it's initialized
+    pub unsafe fn field_init(self, offset: usize) -> Opaque<'mem> {
+        Opaque(
+            unsafe { NonNull::new_unchecked(self.0.add(offset)) },
+            PhantomData,
+        )
+    }
 }
 
 /// A type-erased read-only pointer to an initialized value.
