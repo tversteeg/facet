@@ -7,6 +7,7 @@ pub struct PokeMap<'mem> {
     shape: Shape,
     #[allow(dead_code)]
     vtable: ValueVTable,
+    #[allow(dead_code)]
     map_def: MapDef,
     map_vtable: MapVTable,
 }

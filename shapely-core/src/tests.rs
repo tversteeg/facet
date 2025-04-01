@@ -1,4 +1,4 @@
-use crate::{OpaqueConst, Poke, Shape, Shapely, mini_typeid};
+use crate::{Def, OpaqueConst, Poke, Shape, Shapely, StructDef, mini_typeid};
 
 // Allow dead code in test modules since we're not constructing all enum variants
 #[allow(dead_code)]
@@ -27,9 +27,9 @@ impl Shapely for FooBar {
                 parse: None,
                 try_from: None,
             },
-            def: crate::Def::Struct {
+            def: Def::Struct(StructDef {
                 fields: crate::struct_fields!(FooBar, (foo, bar)),
-            },
+            }),
         }
     }
 }

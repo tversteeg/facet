@@ -86,7 +86,7 @@ where
                             let map = state.map.as_ref::<HashMap<K, V>>();
 
                             while let Some(key) = state.keys.pop_front() {
-                                if let Some(value) = map.get(&key) {
+                                if let Some(value) = map.get(key) {
                                     return Some((
                                         OpaqueConst::new_unchecked(key as *const K),
                                         OpaqueConst::new_unchecked(value as *const V),

@@ -12,6 +12,7 @@ pub struct PokeEnum<'mem> {
     #[allow(dead_code)]
     vtable: ValueVTable,
     selected_variant: Option<usize>,
+    #[allow(dead_code)]
     def: EnumDef,
 }
 
@@ -60,21 +61,16 @@ impl<'mem> PokeEnum<'mem> {
     /// - The shape doesn't represent an enum.
     /// - No variant with the given name exists.
     pub fn set_variant_by_name(&mut self, variant_name: &str) -> Result<(), FieldError> {
-        let shape = self.shape;
+        let variant_index = self
+            .def
+            .variants
+            .iter()
+            .enumerate()
+            .find(|(_, v)| v.name == variant_name)
+            .map(|(i, _)| i)
+            .ok_or(FieldError::NoSuchStaticField)?;
 
-        if let crate::Def::Enum(def) = &shape.def {
-            let variant_index = def
-                .variants
-                .iter()
-                .enumerate()
-                .find(|(_, v)| v.name == variant_name)
-                .map(|(i, _)| i)
-                .ok_or(FieldError::NoSuchStaticField)?;
-
-            self.set_variant_by_index(variant_index)
-        } else {
-            Err(FieldError::NotAStruct) // Using NotAStruct as a stand-in for "not an enum"
-        }
+        self.set_variant_by_index(variant_index)
     }
 
     /// Sets the variant of an enum by index.
@@ -85,105 +81,99 @@ impl<'mem> PokeEnum<'mem> {
     /// - The shape doesn't represent an enum.
     /// - The index is out of bounds.
     pub fn set_variant_by_index(&mut self, variant_index: usize) -> Result<(), FieldError> {
-        let shape = self.shape;
+        if variant_index >= self.def.variants.len() {
+            return Err(FieldError::IndexOutOfBounds);
+        }
 
-        if let crate::Def::Enum(def) = &shape.def {
-            if variant_index >= def.variants.len() {
-                return Err(FieldError::IndexOutOfBounds);
-            }
+        // Get the current variant info
+        let variant = &self.def.variants[variant_index];
 
-            // Get the current variant info
-            let variant = &def.variants[variant_index];
+        // Prepare memory for the enum
+        unsafe {
+            // Zero out the memory first to ensure clean state
+            std::ptr::write_bytes(self.data.as_mut_ptr(), 0, self.shape.layout.size());
 
-            // Prepare memory for the enum
-            unsafe {
-                // Zero out the memory first to ensure clean state
-                std::ptr::write_bytes(self.data.as_mut_ptr(), 0, shape.layout.size());
+            // Set up the discriminant (tag)
+            // For enums in Rust, the first bytes contain the discriminant
+            let discriminant_value = match &variant.discriminant {
+                // If we have an explicit discriminant, use it
+                Some(discriminant) => *discriminant,
+                // Otherwise, use the variant index directly
+                None => variant_index as i64,
+            };
 
-                // Set up the discriminant (tag)
-                // For enums in Rust, the first bytes contain the discriminant
-                let discriminant_value = match &variant.discriminant {
-                    // If we have an explicit discriminant, use it
-                    Some(discriminant) => *discriminant,
-                    // Otherwise, use the variant index directly
-                    None => variant_index as i64,
-                };
-
-                // Write the discriminant value based on the representation
-                match def.repr {
-                    crate::EnumRepr::U8 => {
+            // Write the discriminant value based on the representation
+            match self.def.repr {
+                crate::EnumRepr::U8 => {
+                    let tag_ptr = self.data.as_mut_ptr();
+                    *tag_ptr = discriminant_value as u8;
+                }
+                crate::EnumRepr::U16 => {
+                    let tag_ptr = self.data.as_mut_ptr() as *mut u16;
+                    *tag_ptr = discriminant_value as u16;
+                }
+                crate::EnumRepr::U32 => {
+                    let tag_ptr = self.data.as_mut_ptr() as *mut u32;
+                    *tag_ptr = discriminant_value as u32;
+                }
+                crate::EnumRepr::U64 => {
+                    let tag_ptr = self.data.as_mut_ptr() as *mut u64;
+                    *tag_ptr = discriminant_value as u64;
+                }
+                crate::EnumRepr::USize => {
+                    let tag_ptr = self.data.as_mut_ptr() as *mut usize;
+                    *tag_ptr = discriminant_value as usize;
+                }
+                crate::EnumRepr::I8 => {
+                    let tag_ptr = self.data.as_mut_ptr() as *mut i8;
+                    *tag_ptr = discriminant_value as i8;
+                }
+                crate::EnumRepr::I16 => {
+                    let tag_ptr = self.data.as_mut_ptr() as *mut i16;
+                    *tag_ptr = discriminant_value as i16;
+                }
+                crate::EnumRepr::I32 => {
+                    let tag_ptr = self.data.as_mut_ptr() as *mut i32;
+                    *tag_ptr = discriminant_value as i32;
+                }
+                crate::EnumRepr::I64 => {
+                    let tag_ptr = self.data.as_mut_ptr() as *mut i64;
+                    *tag_ptr = discriminant_value;
+                }
+                crate::EnumRepr::ISize => {
+                    let tag_ptr = self.data.as_mut_ptr() as *mut isize;
+                    *tag_ptr = discriminant_value as isize;
+                }
+                crate::EnumRepr::Default => {
+                    // Use a heuristic based on the number of variants
+                    if self.def.variants.len() <= 256 {
+                        // Can fit in a u8
                         let tag_ptr = self.data.as_mut_ptr();
                         *tag_ptr = discriminant_value as u8;
-                    }
-                    crate::EnumRepr::U16 => {
+                    } else if self.def.variants.len() <= 65536 {
+                        // Can fit in a u16
                         let tag_ptr = self.data.as_mut_ptr() as *mut u16;
                         *tag_ptr = discriminant_value as u16;
-                    }
-                    crate::EnumRepr::U32 => {
+                    } else {
+                        // Default to u32
                         let tag_ptr = self.data.as_mut_ptr() as *mut u32;
                         *tag_ptr = discriminant_value as u32;
                     }
-                    crate::EnumRepr::U64 => {
-                        let tag_ptr = self.data.as_mut_ptr() as *mut u64;
-                        *tag_ptr = discriminant_value as u64;
-                    }
-                    crate::EnumRepr::USize => {
-                        let tag_ptr = self.data.as_mut_ptr() as *mut usize;
-                        *tag_ptr = discriminant_value as usize;
-                    }
-                    crate::EnumRepr::I8 => {
-                        let tag_ptr = self.data.as_mut_ptr() as *mut i8;
-                        *tag_ptr = discriminant_value as i8;
-                    }
-                    crate::EnumRepr::I16 => {
-                        let tag_ptr = self.data.as_mut_ptr() as *mut i16;
-                        *tag_ptr = discriminant_value as i16;
-                    }
-                    crate::EnumRepr::I32 => {
-                        let tag_ptr = self.data.as_mut_ptr() as *mut i32;
-                        *tag_ptr = discriminant_value as i32;
-                    }
-                    crate::EnumRepr::I64 => {
-                        let tag_ptr = self.data.as_mut_ptr() as *mut i64;
-                        *tag_ptr = discriminant_value;
-                    }
-                    crate::EnumRepr::ISize => {
-                        let tag_ptr = self.data.as_mut_ptr() as *mut isize;
-                        *tag_ptr = discriminant_value as isize;
-                    }
-                    crate::EnumRepr::Default => {
-                        // Use a heuristic based on the number of variants
-                        if def.variants.len() <= 256 {
-                            // Can fit in a u8
-                            let tag_ptr = self.data.as_mut_ptr();
-                            *tag_ptr = discriminant_value as u8;
-                        } else if def.variants.len() <= 65536 {
-                            // Can fit in a u16
-                            let tag_ptr = self.data.as_mut_ptr() as *mut u16;
-                            *tag_ptr = discriminant_value as u16;
-                        } else {
-                            // Default to u32
-                            let tag_ptr = self.data.as_mut_ptr() as *mut u32;
-                            *tag_ptr = discriminant_value as u32;
-                        }
-                    }
                 }
             }
-
-            // Mark the variant as selected (bit 0)
-            self.iset.set(0);
-            self.selected_variant = Some(variant_index);
-
-            // Reset all field initialization bits (starting from bit 1)
-            // ISet can hold 64 bits, so we'll clear bits 1-63
-            for i in 1..64 {
-                self.iset.unset(i);
-            }
-
-            Ok(())
-        } else {
-            Err(FieldError::NotAStruct) // Using NotAStruct as a stand-in for "not an enum"
         }
+
+        // Mark the variant as selected (bit 0)
+        self.iset.set(0);
+        self.selected_variant = Some(variant_index);
+
+        // Reset all field initialization bits (starting from bit 1)
+        // ISet can hold 64 bits, so we'll clear bits 1-63
+        for i in 1..64 {
+            self.iset.unset(i);
+        }
+
+        Ok(())
     }
 
     /// Returns the currently selected variant index, if any.
@@ -211,45 +201,40 @@ impl<'mem> PokeEnum<'mem> {
             .selected_variant_index()
             .ok_or(FieldError::NotAStruct)?; // Using NotAStruct as a stand-in for "no variant selected"
 
-        let shape = self.shape;
-        if let crate::Def::Enum(def) = &shape.def {
-            let variant = &def.variants[variant_index];
+        let variant = &self.def.variants[variant_index];
 
-            // Find the field in the variant
-            match &variant.kind {
-                crate::VariantKind::Unit => {
-                    // Unit variants have no fields
-                    Err(FieldError::NoSuchStaticField)
-                }
-                crate::VariantKind::Tuple { fields } => {
-                    // For tuple variants, find the field by name
-                    let (_field_index, field) = fields
-                        .iter()
-                        .enumerate()
-                        .find(|(_, f)| f.name == name)
-                        .ok_or(FieldError::NoSuchStaticField)?;
-
-                    // Get the field's address
-                    let field_data = unsafe { self.data.field_uninit(field.offset) };
-                    let poke = unsafe { Poke::from_opaque_uninit(field_data, field.shape) };
-                    Ok(poke)
-                }
-                crate::VariantKind::Struct { fields } => {
-                    // For struct variants, find the field by name
-                    let (_field_index, field) = fields
-                        .iter()
-                        .enumerate()
-                        .find(|(_, f)| f.name == name)
-                        .ok_or(FieldError::NoSuchStaticField)?;
-
-                    // Get the field's address
-                    let field_data = unsafe { self.data.field_uninit(field.offset) };
-                    let poke = unsafe { Poke::from_opaque_uninit(field_data, field.shape) };
-                    Ok(poke)
-                }
+        // Find the field in the variant
+        match &variant.kind {
+            crate::VariantKind::Unit => {
+                // Unit variants have no fields
+                Err(FieldError::NoSuchStaticField)
             }
-        } else {
-            Err(FieldError::NotAStruct)
+            crate::VariantKind::Tuple { fields } => {
+                // For tuple variants, find the field by name
+                let (_field_index, field) = fields
+                    .iter()
+                    .enumerate()
+                    .find(|(_, f)| f.name == name)
+                    .ok_or(FieldError::NoSuchStaticField)?;
+
+                // Get the field's address
+                let field_data = unsafe { self.data.field_uninit(field.offset) };
+                let poke = unsafe { Poke::from_opaque_uninit(field_data, field.shape) };
+                Ok(poke)
+            }
+            crate::VariantKind::Struct { fields } => {
+                // For struct variants, find the field by name
+                let (_field_index, field) = fields
+                    .iter()
+                    .enumerate()
+                    .find(|(_, f)| f.name == name)
+                    .ok_or(FieldError::NoSuchStaticField)?;
+
+                // Get the field's address
+                let field_data = unsafe { self.data.field_uninit(field.offset) };
+                let poke = unsafe { Poke::from_opaque_uninit(field_data, field.shape) };
+                Ok(poke)
+            }
         }
     }
 
@@ -280,27 +265,23 @@ impl<'mem> PokeEnum<'mem> {
 
         // Get the selected variant
         if let Some(variant_index) = self.selected_variant_index() {
-            let shape = self.shape;
-            if let crate::Def::Enum(def) = &shape.def {
-                let variant = &def.variants[variant_index];
+            let variant = &self.def.variants[variant_index];
 
-                // Check if all fields of the selected variant are initialized
-                match &variant.kind {
-                    crate::VariantKind::Unit => {
-                        // Unit variants don't have fields, so they're initialized if the variant is selected
-                    }
-                    crate::VariantKind::Tuple { fields }
-                    | crate::VariantKind::Struct { fields } => {
-                        // Check each field
-                        for (field_index, field) in fields.iter().enumerate() {
-                            // Field init bits start at index 1 (index 0 is for variant selection)
-                            let init_bit = field_index + 1;
-                            if !self.iset.has(init_bit) {
-                                panic!(
-                                    "Field '{}' of variant '{}' was not initialized. Complete schema:\n{:?}",
-                                    field.name, variant.name, self.shape
-                                );
-                            }
+            // Check if all fields of the selected variant are initialized
+            match &variant.kind {
+                crate::VariantKind::Unit => {
+                    // Unit variants don't have fields, so they're initialized if the variant is selected
+                }
+                crate::VariantKind::Tuple { fields } | crate::VariantKind::Struct { fields } => {
+                    // Check each field
+                    for (field_index, field) in fields.iter().enumerate() {
+                        // Field init bits start at index 1 (index 0 is for variant selection)
+                        let init_bit = field_index + 1;
+                        if !self.iset.has(init_bit) {
+                            panic!(
+                                "Field '{}' of variant '{}' was not initialized. Complete schema:\n{:?}",
+                                field.name, variant.name, self.shape
+                            );
                         }
                     }
                 }

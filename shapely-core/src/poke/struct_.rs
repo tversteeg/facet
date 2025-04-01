@@ -103,7 +103,8 @@ impl<'mem> PokeStruct<'mem> {
         std::mem::forget(self);
     }
 
-    /// Builds a value of type `T` from the PokeStruct.
+    /// Builds a value of type `T` from the PokeStruct, then deallocates the memory
+    /// that this PokeStruct was pointing to.
     ///
     /// # Panics
     ///
@@ -119,6 +120,11 @@ impl<'mem> PokeStruct<'mem> {
             std::ptr::read(ptr)
         };
         trace!("Built \x1b[1;33m{}\x1b[0m successfully", T::shape());
+
+        // Deallocate the memory
+        unsafe {
+            std::alloc::dealloc(self.data.as_mut_ptr(), self.shape.layout);
+        };
         std::mem::forget(self);
         result
     }

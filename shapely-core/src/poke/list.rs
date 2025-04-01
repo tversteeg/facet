@@ -7,6 +7,7 @@ pub struct PokeList<'mem> {
     shape: Shape,
     #[allow(dead_code)]
     vtable: ValueVTable,
+    #[allow(dead_code)]
     list_def: ListDef,
     list_vtable: ListVTable,
 }
