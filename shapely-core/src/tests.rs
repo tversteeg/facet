@@ -27,7 +27,7 @@ impl Shapely for FooBar {
                 parse: None,
                 try_from: None,
             },
-            innards: crate::Def::Struct {
+            def: crate::Def::Struct {
                 fields: crate::struct_fields!(FooBar, (foo, bar)),
             },
         }
@@ -140,7 +140,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "DropCounter"),
 //                 typeid: mini_typeid::of::<DropCounter>(),
 //                 layout: std::alloc::Layout::new::<DropCounter>(),
-//                 innards: crate::Innards::Struct { fields: &[] },
+//                 def: Def::Struct { fields: &[] },
 //                 set_to_default: None,
 //                 drop_in_place: Some(|ptr| unsafe {
 //                     std::ptr::drop_in_place(ptr as *mut DropCounter)
@@ -166,7 +166,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "StructWithDrop"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Struct {
+//                 def: Def::Struct {
 //                     fields: crate::struct_fields!(StructWithDrop, (counter, value)),
 //                 },
 //                 set_to_default: None,
@@ -223,7 +223,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "DropScalar"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
+//                 def: Def::Scalar(crate::Scalar::Nothing),
 //                 set_to_default: None,
 //                 drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
 //             }
@@ -290,7 +290,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "Engine"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
+//                 def: Def::Scalar(crate::Scalar::Nothing),
 //                 set_to_default: None,
 //                 drop_in_place: Some(|ptr| unsafe {
 //                     std::ptr::drop_in_place(ptr as *mut Self);
@@ -305,7 +305,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "Wheels"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Scalar(crate::Scalar::Nothing),
+//                 def: Def::Scalar(crate::Scalar::Nothing),
 //                 set_to_default: None,
 //                 drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
 //             }
@@ -323,7 +323,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "Truck"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Struct {
+//                 def: Def::Struct {
 //                     fields: crate::struct_fields!(Truck, (engine, wheels)),
 //                 },
 //                 set_to_default: None,
@@ -428,7 +428,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "DropCounter"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Struct { fields: &[] },
+//                 def: Def::Struct { fields: &[] },
 //                 set_to_default: None,
 //                 drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
 //             }
@@ -452,7 +452,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "TestShape"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Struct {
+//                 def: Def::Struct {
 //                     fields: crate::struct_fields!(TestShape, (counter, unit)),
 //                 },
 //                 set_to_default: None,
@@ -491,7 +491,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "InnerType"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Scalar(crate::Scalar::U32),
+//                 def: Def::Scalar(crate::Scalar::U32),
 //                 set_to_default: None,
 //                 drop_in_place: None,
 //             }
@@ -507,7 +507,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "TransparentWrapper"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Transparent(InnerType::shape_desc()),
+//                 def: Def::Transparent(InnerType::shape_desc()),
 //                 set_to_default: None,
 //                 drop_in_place: None,
 //             }
@@ -568,7 +568,7 @@ fn build_foobar_through_reflection() {
 //             name: |f, _nameopts| write!(f, "UserStatus"),
 //             typeid: mini_typeid::of::<Self>(),
 //             layout: std::alloc::Layout::new::<Self>(),
-//             innards: crate::Innards::Enum {
+//             def: Def::Enum {
 //                 variants: StaticFields::VARIANTS,
 //                 repr: crate::EnumRepr::U8,
 //             },
@@ -683,7 +683,7 @@ fn build_foobar_through_reflection() {
 //             name: |f, _nameopts| write!(f, "SimpleEnum"),
 //             typeid: mini_typeid::of::<Self>(),
 //             layout: std::alloc::Layout::new::<Self>(),
-//             innards: crate::Innards::Enum {
+//             def: Def::Enum {
 //                 variants: StaticFields::VARIANTS,
 //                 repr: crate::EnumRepr::U8,
 //             },
@@ -814,7 +814,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "ExplicitReprEnum"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Enum {
+//                 def: Def::Enum {
 //                     variants: StaticFields::VARIANTS,
 //                     repr: crate::EnumRepr::U8,
 //                 },
@@ -917,7 +917,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "CustomDiscEnum"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Enum {
+//                 def: Def::Enum {
 //                     variants: StaticFields::VARIANTS,
 //                     repr: crate::EnumRepr::I32,
 //                 },
@@ -991,7 +991,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "SimpleVariantEnum"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Enum {
+//                 def: Def::Enum {
 //                     variants: StaticFields::VARIANTS,
 //                     repr: crate::EnumRepr::U8,
 //                 },
@@ -1085,7 +1085,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "StructEnum"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Enum {
+//                 def: Def::Enum {
 //                     variants: StaticFields::VARIANTS,
 //                     repr: crate::EnumRepr::U32,
 //                 },
@@ -1192,7 +1192,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "NoReprEnum"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Enum {
+//                 def: Def::Enum {
 //                     variants: StaticFields::VARIANTS,
 //                     repr: crate::EnumRepr::Default,
 //                 },
@@ -1282,7 +1282,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "NestedData"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Enum {
+//                 def: Def::Enum {
 //                     variants: StaticFields::VARIANTS,
 //                     repr: crate::EnumRepr::U8,
 //                 },
@@ -1403,7 +1403,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "ComplexEnum"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Enum {
+//                 def: Def::Enum {
 //                     variants: StaticFields::VARIANTS,
 //                     repr: crate::EnumRepr::U8,
 //                 },
@@ -1420,7 +1420,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "Box<ComplexEnum>"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Transparent(crate::ShapeDesc(ComplexEnum::shape)),
+//                 def: Def::Transparent(crate::ShapeDesc(ComplexEnum::shape)),
 //                 set_to_default: None,
 //                 drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
 //             }
@@ -1569,7 +1569,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "InnerData"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Enum {
+//                 def: Def::Enum {
 //                     variants: StaticFields::VARIANTS,
 //                     repr: crate::EnumRepr::U8,
 //                 },
@@ -1652,7 +1652,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "OuterData"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Enum {
+//                 def: Def::Enum {
 //                     variants: StaticFields::VARIANTS,
 //                     repr: crate::EnumRepr::U16,
 //                 },
@@ -1669,7 +1669,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "Box<InnerData>"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Transparent(crate::ShapeDesc(InnerData::shape)),
+//                 def: Def::Transparent(crate::ShapeDesc(InnerData::shape)),
 //                 set_to_default: None,
 //                 drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
 //             }
@@ -1774,7 +1774,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "Status"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Enum {
+//                 def: Def::Enum {
 //                     variants: StaticFields::VARIANTS,
 //                     repr: crate::EnumRepr::U8,
 //                 },
@@ -1790,7 +1790,7 @@ fn build_foobar_through_reflection() {
 //                 name: |f, _nameopts| write!(f, "User"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 innards: crate::Innards::Struct {
+//                 def: Def::Struct {
 //                     fields: crate::struct_fields!(User, (id, name, status, score)),
 //                 },
 //                 set_to_default: None,

@@ -7,7 +7,7 @@ impl Shapely for Bytes {
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: std::alloc::Layout::new::<Self>(),
-            innards: Def::Scalar,
+            def: Def::Scalar,
             vtable: || ValueVTable {
                 type_name: |f, _opts| write!(f, "Bytes"),
                 display: None,

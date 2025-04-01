@@ -40,7 +40,7 @@ impl<'mem> Peek<'mem> {
     /// of the type described by `shape`.
     pub unsafe fn unchecked_new(data: OpaqueConst<'mem>, shape_desc: ShapeDesc) -> Self {
         let shape = shape_desc.get();
-        match shape.innards {
+        match shape.def {
             super::Def::Struct { .. } => todo!(),
             super::Def::TupleStruct { .. } => todo!(),
             super::Def::Tuple { .. } => todo!(),

@@ -123,7 +123,7 @@ impl PrettyPrinter {
         let color = self.color_generator.generate_color(hash);
 
         // Format based on the shape's innards
-        match &shape.innards {
+        match &shape.def {
             Def::Scalar(scalar) => self.format_scalar(ptr, *scalar, f, color),
             Def::Struct { fields } | Def::TupleStruct { fields } | Def::Tuple { fields } => {
                 self.format_struct(ptr, shape, fields, f, depth, visited)

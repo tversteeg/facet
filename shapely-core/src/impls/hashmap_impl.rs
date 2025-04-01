@@ -51,7 +51,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Def::Map(MapDef {
+            def: Def::Map(MapDef {
                 k: K::shape_desc(),
                 v: V::shape_desc(),
                 vtable: MapVTable {

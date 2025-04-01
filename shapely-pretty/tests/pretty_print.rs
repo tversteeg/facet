@@ -36,7 +36,7 @@ impl Shapely for TestSecrets {
             name: |f, _opts| write!(f, "TestSecrets"),
             typeid: std::any::TypeId::of::<Self>(),
             layout: Layout::new::<Self>(),
-            innards: Def::Struct {
+            def: Def::Struct {
                 fields: &[
                     Field {
                         name: "normal_field",

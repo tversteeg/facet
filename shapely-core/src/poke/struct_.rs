@@ -25,7 +25,7 @@ impl<'mem> PokeStruct<'mem> {
     ///
     /// The `data` and the `shape_desc` must match
     pub unsafe fn from_opaque_uninit(data: OpaqueUninit<'mem>, shape_desc: ShapeDesc) -> Self {
-        let fields = match &shape_desc.get().innards {
+        let fields = match &shape_desc.get().def {
             Def::Struct { fields } => *fields,
             _ => panic!("Expected a struct"),
         };
@@ -55,7 +55,7 @@ impl<'mem> PokeStruct<'mem> {
     /// Checks if all fields in the struct have been initialized.
     /// Panics if any field is not initialized, providing details about the uninitialized field.
     pub fn assert_all_fields_initialized(&self) {
-        match self.shape.innards {
+        match self.shape.def {
             crate::Def::Struct { fields } => {
                 for (i, field) in fields.iter().enumerate() {
                     if !self.iset.has(i) {

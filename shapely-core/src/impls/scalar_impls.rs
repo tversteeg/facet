@@ -7,7 +7,7 @@ impl Shapely for () {
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<Self>(),
-            innards: Def::Scalar,
+            def: Def::Scalar,
             vtable: || ValueVTable {
                 type_name: |f, _opts| write!(f, "()"),
                 display: Some(|_value, mut f| write!(f, "()")),
@@ -35,7 +35,7 @@ impl Shapely for String {
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<Self>(),
-            innards: Def::Scalar,
+            def: Def::Scalar,
             vtable: || ValueVTable {
                 type_name: |f, _opts| write!(f, "String"),
                 display: Some(|value, mut f| {
@@ -71,7 +71,7 @@ impl Shapely for bool {
         Shape {
             typeid: mini_typeid::of::<Self>(),
             layout: Layout::new::<Self>(),
-            innards: Def::Scalar,
+            def: Def::Scalar,
             vtable: || ValueVTable {
                 type_name: |f, _opts| write!(f, "bool"),
                 display: Some(|value, mut f| {
@@ -111,7 +111,7 @@ macro_rules! impl_shapely_for_integer {
                 Shape {
                     typeid: mini_typeid::of::<Self>(),
                     layout: Layout::new::<Self>(),
-                    innards: Innards::Scalar,
+                    def: Def::Scalar,
                     vtable: || ValueVTable {
                         type_name: |f, _opts| write!(f, stringify!($type)),
                         display: Some(|value, mut f| {
@@ -168,7 +168,7 @@ macro_rules! impl_shapely_for_float {
                 Shape {
                     typeid: mini_typeid::of::<Self>(),
                     layout: Layout::new::<Self>(),
-                    innards: Innards::Scalar,
+                    def: Def::Scalar,
                     vtable: || ValueVTable {
                         type_name: |f, _opts| write!(f, stringify!($type)),
                         display: Some(|value, mut f| {
@@ -219,7 +219,7 @@ impl_shapely_for_float!(f64);
 //             name: |f, _nameopts| write!(f, "String"),
 //             typeid: mini_typeid::of::<Self>(),
 //             layout: Layout::new::<String>(),
-//             innards: Innards::Scalar(Scalar::String),
+//             def: Def::Scalar(Scalar::String),
 //             set_to_default: Some(|addr: *mut u8| unsafe {
 //                 *(addr as *mut String) = String::new();
 //             }),
@@ -236,7 +236,7 @@ impl_shapely_for_float!(f64);
 //             name: |f, _nameopts| write!(f, "bool"),
 //             typeid: mini_typeid::of::<Self>(),
 //             layout: Layout::new::<bool>(),
-//             innards: Innards::Scalar(Scalar::Boolean),
+//             def: Def::Scalar(Scalar::Boolean),
 //             set_to_default: Some(|addr: *mut u8| unsafe {
 //                 *(addr as *mut bool) = false;
 //             }),
@@ -252,7 +252,7 @@ impl_shapely_for_float!(f64);
 //             name: |f, _nameopts| write!(f, "()"),
 //             typeid: mini_typeid::of::<Self>(),
 //             layout: Layout::new::<()>(),
-//             innards: Innards::Scalar(Scalar::Nothing),
+//             def: Def::Scalar(Scalar::Nothing),
 //             set_to_default: None,
 //             drop_in_place: None,
 //         }

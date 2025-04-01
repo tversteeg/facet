@@ -43,7 +43,7 @@ where
                 // TODO: specialize these
                 try_from: None,
             },
-            innards: Def::List(ListDef {
+            def: Def::List(ListDef {
                 vtable: ListVTable {
                     push: |ptr, item| unsafe {
                         let vec = ptr.as_mut_ptr::<Vec<T>>();

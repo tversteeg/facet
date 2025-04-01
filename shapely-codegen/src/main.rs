@@ -128,7 +128,7 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
                             parse: None,
                             try_from: None,
                         }},
-                        innards: Innards::Tuple(StructInnards {{
+                        def: Def::Tuple(StructDef {{
                             fields: {fields}
                         }}),
                     }}

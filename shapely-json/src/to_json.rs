@@ -17,7 +17,7 @@ pub fn to_json<W: Write>(
         indent: bool,
         level: usize,
     ) -> io::Result<()> {
-        match &shape.innards {
+        match &shape.def {
             Def::Scalar(scalar) => match scalar {
                 Scalar::String => {
                     let s = unsafe { &*(data as *const String) };

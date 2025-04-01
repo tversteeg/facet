@@ -58,7 +58,7 @@ impl<'mem> Poke<'mem> {
     /// of the type described by `shape`.
     pub unsafe fn from_opaque_uninit(data: OpaqueUninit<'mem>, shape_desc: ShapeDesc) -> Self {
         let shape = shape_desc.get();
-        match shape.innards {
+        match shape.def {
             super::Def::Struct { fields } => Poke::Struct(unsafe {
                 PokeStruct::from_opaque_uninit_and_fields(data, shape_desc, fields)
             }),

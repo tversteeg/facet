@@ -32,7 +32,7 @@ fn test_to_json() {
             shapely::Shape {
                 name: |f, _opts| write!(f, "TestStruct"),
                 layout: std::alloc::Layout::new::<Self>(),
-                innards: shapely::Def::Struct {
+                def: shapely::Def::Struct {
                     fields: shapely::struct_fields!(TestStruct, (name, age)),
                 },
                 set_to_default: None,

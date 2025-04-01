@@ -91,7 +91,7 @@ impl<'mem> PokeEnum<'mem> {
     pub fn set_variant_by_name(&mut self, variant_name: &str) -> Result<(), FieldError> {
         let shape = self.shape;
 
-        if let crate::Def::Enum { variants, repr: _ } = &shape.innards {
+        if let crate::Def::Enum { variants, repr: _ } = &shape.def {
             let variant_index = variants
                 .iter()
                 .enumerate()
@@ -115,7 +115,7 @@ impl<'mem> PokeEnum<'mem> {
     pub fn set_variant_by_index(&mut self, variant_index: usize) -> Result<(), FieldError> {
         let shape = self.shape;
 
-        if let crate::Def::Enum { variants, repr } = &shape.innards {
+        if let crate::Def::Enum { variants, repr } = &shape.def {
             if variant_index >= variants.len() {
                 return Err(FieldError::IndexOutOfBounds);
             }
@@ -240,7 +240,7 @@ impl<'mem> PokeEnum<'mem> {
             .ok_or(FieldError::NotAStruct)?; // Using NotAStruct as a stand-in for "no variant selected"
 
         let shape = self.shape;
-        if let crate::Def::Enum { variants, repr: _ } = &shape.innards {
+        if let crate::Def::Enum { variants, repr: _ } = &shape.def {
             let variant = &variants[variant_index];
 
             // Find the field in the variant
@@ -309,7 +309,7 @@ impl<'mem> PokeEnum<'mem> {
         // Get the selected variant
         if let Some(variant_index) = self.selected_variant_index() {
             let shape = self.shape;
-            if let crate::Def::Enum { variants, repr: _ } = &shape.innards {
+            if let crate::Def::Enum { variants, repr: _ } = &shape.def {
                 let variant = &variants[variant_index];
 
                 // Check if all fields of the selected variant are initialized
@@ -430,7 +430,7 @@ impl Drop for PokeEnum<'_> {
 
         if let Some(variant_index) = self.selected_variant_index() {
             let shape = self.shape;
-            if let crate::Def::Enum { variants, repr: _ } = &shape.innards {
+            if let crate::Def::Enum { variants, repr: _ } = &shape.def {
                 let variant = &variants[variant_index];
 
                 // Drop fields based on the variant kind

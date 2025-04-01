@@ -28,7 +28,7 @@ impl Shape {
         (self.vtable().type_name)(f, TypeNameOpts::default())?;
         writeln!(f, "\x1b[0m (\x1b[1;34m{}\x1b[0m bytes)", self.layout.size())?;
 
-        match &self.innards {
+        match &self.def {
             Def::Scalar => {}
             Def::Struct(StructDef { fields })
             | Def::TupleStruct(StructDef { fields })
@@ -47,7 +47,7 @@ impl Shape {
                     if field.flags.contains(FieldFlags::SENSITIVE) {
                         write!(f, "(sensitive) ")?;
                     }
-                    if let Def::Scalar = field.shape.get().innards {
+                    if let Def::Scalar = field.shape.get().def {
                         field.shape.get().pretty_print_recursive_internal(
                             f,
                             printed_schemas,
@@ -135,7 +135,7 @@ impl Shape {
                                 if field.flags.contains(FieldFlags::SENSITIVE) {
                                     write!(f, "(sensitive) ")?;
                                 }
-                                if let Def::Scalar = field.shape.get().innards {
+                                if let Def::Scalar = field.shape.get().def {
                                     field.shape.get().pretty_print_recursive_internal(
                                         f,
                                         printed_schemas,
@@ -174,7 +174,7 @@ impl Shape {
                                 if field.flags.contains(FieldFlags::SENSITIVE) {
                                     write!(f, "(sensitive) ")?;
                                 }
-                                if let Def::Scalar = field.shape.get().innards {
+                                if let Def::Scalar = field.shape.get().def {
                                     field.shape.get().pretty_print_recursive_internal(
                                         f,
                                         printed_schemas,

@@ -11,7 +11,7 @@ shapely provides runtime reflection for Rust.
 Any type that implements `Shapely` trait returns a `Shape`, which describes:
 
   * The memory layout of the type
-  * Its innards: struct fields, underlying type for newtypes, etc.
+  * Its definition: struct fields, underlying type for newtypes, etc.
   * How to drop it in place
 
 The `Partial` type is able to allocate (or work from a `&mut MaybeUninit<T>`)

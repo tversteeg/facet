@@ -19,7 +19,7 @@ pub struct Shape {
     pub vtable: fn() -> ValueVTable,
 
     /// Details/contents of the value
-    pub innards: Def,
+    pub def: Def,
 }
 
 impl Shape {
