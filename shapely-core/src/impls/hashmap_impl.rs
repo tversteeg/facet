@@ -55,10 +55,10 @@ where
                 k: K::shape_desc(),
                 v: V::shape_desc(),
                 vtable: MapVTable {
-                    insert: |ptr, key_partial, value_partial| unsafe {
+                    insert: |ptr, key, value| unsafe {
                         let map = ptr.as_mut_ptr::<HashMap<K, V>>();
-                        let key = key_partial.build::<K>();
-                        let value = value_partial.build::<V>();
+                        let key = key.read::<K>();
+                        let value = value.read::<V>();
                         map.insert(key, value);
                     },
                     len: |ptr| unsafe {

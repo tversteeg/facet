@@ -20,8 +20,11 @@ pub use list::*;
 mod map;
 pub use map::*;
 
-mod peekpoke;
-pub use peekpoke::*;
+mod peek;
+pub use peek::*;
+
+mod poke;
+pub use poke::*;
 
 /// Schema for reflection of a type
 #[derive(Clone, Copy)]

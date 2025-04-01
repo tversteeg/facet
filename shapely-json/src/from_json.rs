@@ -141,7 +141,7 @@ pub fn from_json<'input>(
                 parser.expect_array_start()?;
 
                 // Get the array slot to push items into (no size hint in JSON unfortunately)
-                let mut array_slot = partial.array_slot(None).expect("Array slot");
+                let mut array_slot = partial.list_writer(None).expect("Array slot");
 
                 let mut index = 0;
                 while let Some(has_element) = parser.parse_array_element()? {
@@ -175,7 +175,7 @@ pub fn from_json<'input>(
                 let first_key = parser.expect_object_start()?;
 
                 // Get the hashmap slot to insert key-value pairs into
-                let mut hashmap_slot = partial.hashmap_slot(None).expect("HashMap slot");
+                let mut hashmap_slot = partial.map_writer(None).expect("HashMap slot");
 
                 // Process each key-value pair in the JSON object
                 let mut current_key = first_key;

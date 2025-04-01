@@ -1,12 +1,23 @@
 //! Opaque pointers
+//!
+//! TODO: should these carry a Layout around? That would be neat actually.
 
 use std::{marker::PhantomData, ptr::NonNull};
 
 /// A type-erased pointer to an uninitialized value
 #[derive(Clone, Copy)]
-pub struct OpaqueUninit<'mem>(pub *mut u8, pub PhantomData<&'mem mut ()>);
+pub struct OpaqueUninit<'mem>(*mut u8, PhantomData<&'mem mut ()>);
 
 impl<'mem> OpaqueUninit<'mem> {
+    /// Create a new opaque pointer from a mutable pointer
+    pub fn new<T>(ptr: *mut T) -> Self {
+        Self(ptr as *mut u8, PhantomData)
+    }
+
+    pub fn from_maybe_uninit<T>(borrow: &'mem mut std::mem::MaybeUninit<T>) -> Self {
+        Self(borrow.as_mut_ptr() as *mut u8, PhantomData)
+    }
+
     /// Assumes the pointer is initialized and returns an `Opaque` pointer
     pub unsafe fn assume_init(self) -> Opaque<'mem> {
         let ptr = unsafe { NonNull::new_unchecked(self.0) };
@@ -22,7 +33,12 @@ impl<'mem> OpaqueUninit<'mem> {
     }
 
     /// Returns the underlying raw pointer as a byte pointer
-    pub fn as_ptr(self) -> *mut u8 {
+    pub fn as_mut_ptr(self) -> *mut u8 {
+        self.0
+    }
+
+    /// Returns the underlying raw pointer as a const byte pointer
+    pub fn as_ptr(self) -> *const u8 {
         self.0
     }
 
@@ -153,5 +169,10 @@ impl<'mem> Opaque<'mem> {
     /// Make a const ptr out of this mut ptr
     pub fn as_const<'borrow: 'mem>(self) -> OpaqueConst<'borrow> {
         OpaqueConst(self.0, PhantomData)
+    }
+
+    /// Exposes [`std::ptr::read`]
+    pub fn read<T>(self) -> T {
+        unsafe { std::ptr::read(self.as_mut_ptr()) }
     }
 }

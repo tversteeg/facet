@@ -7,6 +7,8 @@ use super::{Opaque, OpaqueConst};
 /// # Safety
 ///
 /// The `list` parameter must point to aligned, initialized memory of the correct type.
+/// `item` is moved out of (with [`std::ptr::read`]) — it should be deallocated
+/// afterwards but NOT dropped.
 pub type ListPushFn = unsafe fn(list: Opaque, item: Opaque);
 // FIXME: this forces allocating item separately, copying it, and then dropping it — it's not great.
 

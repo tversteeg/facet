@@ -1,8 +1,8 @@
 use crate::{
-    FieldError, FieldWriter, Innards, ListVTable, MapIterVTable, MapVTable, Opaque, OpaqueConst,
-    OpaqueUninit, Shape, ShapeDesc, Shapely, ValueVTable, trace,
+    FieldError, Innards, ListVTable, MapIterVTable, MapVTable, Opaque, OpaqueConst, OpaqueUninit,
+    Shape, ShapeDesc, Shapely, ValueVTable, trace,
 };
-use std::{alloc, marker::PhantomData, ptr::NonNull};
+use std::{marker::PhantomData, ptr::NonNull};
 
 /// A partially-initialized struct, tuple struct, tuple, or enum.
 ///
@@ -85,7 +85,7 @@ impl<'mem> Partial<'mem> {
 
                 // Get the selected variant
                 if let Some(variant_index) = self.selected_variant_index() {
-                    let shape = self.shape.get();
+                    let shape = self.shape;
                     if let crate::Innards::Enum { variants, repr: _ } = &shape.innards {
                         let variant = &variants[variant_index];
 
@@ -114,111 +114,6 @@ impl<'mem> Partial<'mem> {
             }
             _ => {}
         }
-    }
-
-    /// Returns a slot for treating this partial as an array (onto which you can push new items)
-    pub fn array_slot(&mut self, size_hint: Option<usize>) -> Option<ListSlot> {
-        match self.shape.innards {
-            crate::Innards::List { vtable, .. } => {
-                if self.iset.has(0) {
-                    panic!("List is already initialized");
-                }
-
-                // Initialize the list
-                let default_in_place = self
-                    .vtable
-                    .default_in_place
-                    .expect("cannot initialize list");
-                unsafe {
-                    // TODO: see `list.rs`, use the more specific constructor with size_hint here
-                    // if it's set.
-                    (default_in_place)(self.data);
-                }
-
-                // Mark the array as initialized in our init_set
-                self.iset.set(0);
-
-                Some(unsafe { ListSlot::new(self.data, vtable) })
-            }
-            _ => None,
-        }
-    }
-
-    /// Returns a slot for a HashMap field in the shape.
-    pub fn hashmap_slot(&mut self, size_hint: Option<usize>) -> Option<HashMapSlot> {
-        match self.shape.get().innards {
-            crate::Innards::Map {
-                vtable,
-                value_shape: _,
-            } => {
-                if self.iset.has(0) {
-                    panic!("HashMap is already initialized");
-                }
-
-                // Initialize the HashMap using the vtable's init function
-                unsafe {
-                    (vtable.init)(self.data.as_ptr(), size_hint);
-                }
-
-                // Mark the HashMap as initialized in our init_set
-                self.iset.set(0);
-
-                Some(unsafe { HashMapSlot::new(self.data, vtable) })
-            }
-            _ => None,
-        }
-    }
-
-    /// Returns a slot for initializing a field in the shape.
-    pub fn slot_by_name<'s>(&'s mut self, name: &str) -> Result<FieldWriter<'s>, FieldError> {
-        let shape = self.shape.get();
-        match shape.innards {
-            Innards::Struct { fields }
-            | Innards::TupleStruct { fields }
-            | Innards::Tuple { fields } => {
-                let (index, field) = fields
-                    .iter()
-                    .enumerate()
-                    .find(|(_, f)| f.name == name)
-                    .ok_or(FieldError::NoSuchStaticField)?;
-                let field_addr = unsafe {
-                    // SAFETY: self.addr is a valid pointer to the start of the struct,
-                    // and field.offset is the correct offset for this field within the struct.
-                    // The resulting pointer is properly aligned and within the bounds of the allocated memory.
-                    self.data.byte_add(field.offset)
-                };
-                Ok(FieldWriter::for_ptr(
-                    field_addr,
-                    field.shape,
-                    self.iset.field(index),
-                ))
-            }
-            Innards::Map { .. } => Err(FieldError::NoStaticFields),
-            Innards::Transparent(_) => Err(FieldError::NoStaticFields),
-            Innards::Scalar(_) => Err(FieldError::NoStaticFields),
-            Innards::List { .. } => Err(FieldError::NoStaticFields),
-            Innards::Enum {
-                variants: _,
-                repr: _,
-            } => {
-                // Enum variants aren't supported yet for slot_by_name
-                Err(FieldError::NotAStruct)
-            }
-        }
-    }
-
-    /// Returns a slot for initializing a field in the shape by index.
-    pub fn slot_by_index(&mut self, index: usize) -> Result<FieldWriter<'_>, FieldError> {
-        let sh = self.shape.get();
-        let field = sh.field_by_index(index)?;
-        let field_addr = unsafe {
-            // SAFETY: self.addr is a valid pointer to the start of the struct,
-            // and field.offset is the correct offset for this field within the struct.
-            // The resulting pointer is properly aligned and within the bounds of the allocated memory.
-            self.data.as_byte_ptr().byte_add(field.offset)
-        };
-        let slot = FieldWriter::for_ptr(field_addr, field.shape, self.iset.field(index));
-        Ok(slot)
     }
 
     fn assert_matching_shape<T: Shapely>(&self) {
@@ -262,7 +157,7 @@ impl<'mem> Partial<'mem> {
         self.assert_all_fields_initialized();
         self.assert_matching_shape::<T>();
 
-        let shape = self.shape.get();
+        let shape = self.shape;
 
         // Special handling for enums to ensure the correct variant is built
         if let crate::Innards::Enum { variants, repr } = &shape.innards {
@@ -363,7 +258,8 @@ impl<'mem> Partial<'mem> {
                         crate::VariantKind::Tuple { fields } => {
                             // Copy the fields from our partial to the result
                             for field in fields.iter() {
-                                let src_ptr = (self.data.as_ptr() as *const u8).add(field.offset);
+                                let src_ptr =
+                                    (self.data.as_mut_ptr() as *const u8).add(field.offset);
                                 let dst_ptr =
                                     (result_mem.as_mut_ptr() as *mut u8).add(field.offset);
                                 // Access the layout from the shape field
@@ -374,7 +270,8 @@ impl<'mem> Partial<'mem> {
                         crate::VariantKind::Struct { fields } => {
                             // Copy the fields from our partial to the result
                             for field in fields.iter() {
-                                let src_ptr = (self.data.as_ptr() as *const u8).add(field.offset);
+                                let src_ptr =
+                                    (self.data.as_mut_ptr() as *const u8).add(field.offset);
                                 let dst_ptr =
                                     (result_mem.as_mut_ptr() as *mut u8).add(field.offset);
                                 // Access the layout from the shape field
@@ -390,7 +287,6 @@ impl<'mem> Partial<'mem> {
                     // Return the completed enum
                     let result = result_mem.assume_init();
                     trace!("Built \x1b[1;33m{}\x1b[0m successfully", T::shape());
-                    self.deallocate();
                     std::mem::forget(self);
                     return result;
                 }
@@ -399,11 +295,10 @@ impl<'mem> Partial<'mem> {
 
         // For non-enum types, use the original implementation
         let result = unsafe {
-            let ptr = self.data.as_ptr() as *const T;
+            let ptr = self.data.as_mut_ptr() as *const T;
             std::ptr::read(ptr)
         };
         trace!("Built \x1b[1;33m{}\x1b[0m successfully", T::shape());
-        self.deallocate();
         std::mem::forget(self);
         result
     }
@@ -425,7 +320,7 @@ impl<'mem> Partial<'mem> {
         self.assert_all_fields_initialized();
         self.assert_matching_shape::<T>();
 
-        let boxed = unsafe { Box::from_raw(self.data.as_ptr() as *mut T) };
+        let boxed = unsafe { Box::from_raw(self.data.as_mut_ptr() as *mut T) };
         std::mem::forget(self);
         boxed
     }
@@ -445,7 +340,7 @@ impl<'mem> Partial<'mem> {
         self.assert_all_fields_initialized();
         unsafe {
             std::ptr::copy_nonoverlapping(
-                self.data.as_ptr(),
+                self.data.as_mut_ptr(),
                 target.as_ptr(),
                 // note: copy_nonoverlapping takes a count,
                 // since we're dealing with `*mut u8`, it's a byte count.
@@ -512,7 +407,7 @@ impl<'mem> Partial<'mem> {
             // Prepare memory for the enum
             unsafe {
                 // Zero out the memory first to ensure clean state
-                std::ptr::write_bytes(self.data.as_ptr(), 0, shape.layout.size());
+                std::ptr::write_bytes(self.data.as_mut_ptr(), 0, shape.layout.size());
 
                 // Set up the discriminant (tag)
                 // For enums in Rust, the first bytes contain the discriminant
@@ -527,58 +422,58 @@ impl<'mem> Partial<'mem> {
                 // Write the discriminant value based on the representation
                 match repr {
                     crate::EnumRepr::U8 => {
-                        let tag_ptr = self.data.as_ptr();
+                        let tag_ptr = self.data.as_mut_ptr();
                         *tag_ptr = discriminant_value as u8;
                     }
                     crate::EnumRepr::U16 => {
-                        let tag_ptr = self.data.as_ptr() as *mut u16;
+                        let tag_ptr = self.data.as_mut_ptr() as *mut u16;
                         *tag_ptr = discriminant_value as u16;
                     }
                     crate::EnumRepr::U32 => {
-                        let tag_ptr = self.data.as_ptr() as *mut u32;
+                        let tag_ptr = self.data.as_mut_ptr() as *mut u32;
                         *tag_ptr = discriminant_value as u32;
                     }
                     crate::EnumRepr::U64 => {
-                        let tag_ptr = self.data.as_ptr() as *mut u64;
+                        let tag_ptr = self.data.as_mut_ptr() as *mut u64;
                         *tag_ptr = discriminant_value as u64;
                     }
                     crate::EnumRepr::USize => {
-                        let tag_ptr = self.data.as_ptr() as *mut usize;
+                        let tag_ptr = self.data.as_mut_ptr() as *mut usize;
                         *tag_ptr = discriminant_value as usize;
                     }
                     crate::EnumRepr::I8 => {
-                        let tag_ptr = self.data.as_ptr() as *mut i8;
+                        let tag_ptr = self.data.as_mut_ptr() as *mut i8;
                         *tag_ptr = discriminant_value as i8;
                     }
                     crate::EnumRepr::I16 => {
-                        let tag_ptr = self.data.as_ptr() as *mut i16;
+                        let tag_ptr = self.data.as_mut_ptr() as *mut i16;
                         *tag_ptr = discriminant_value as i16;
                     }
                     crate::EnumRepr::I32 => {
-                        let tag_ptr = self.data.as_ptr() as *mut i32;
+                        let tag_ptr = self.data.as_mut_ptr() as *mut i32;
                         *tag_ptr = discriminant_value as i32;
                     }
                     crate::EnumRepr::I64 => {
-                        let tag_ptr = self.data.as_ptr() as *mut i64;
+                        let tag_ptr = self.data.as_mut_ptr() as *mut i64;
                         *tag_ptr = discriminant_value;
                     }
                     crate::EnumRepr::ISize => {
-                        let tag_ptr = self.data.as_ptr() as *mut isize;
+                        let tag_ptr = self.data.as_mut_ptr() as *mut isize;
                         *tag_ptr = discriminant_value as isize;
                     }
                     crate::EnumRepr::Default => {
                         // Use a heuristic based on the number of variants
                         if variants.len() <= 256 {
                             // Can fit in a u8
-                            let tag_ptr = self.data.as_ptr();
+                            let tag_ptr = self.data.as_mut_ptr();
                             *tag_ptr = discriminant_value as u8;
                         } else if variants.len() <= 65536 {
                             // Can fit in a u16
-                            let tag_ptr = self.data.as_ptr() as *mut u16;
+                            let tag_ptr = self.data.as_mut_ptr() as *mut u16;
                             *tag_ptr = discriminant_value as u16;
                         } else {
                             // Default to u32
-                            let tag_ptr = self.data.as_ptr() as *mut u32;
+                            let tag_ptr = self.data.as_mut_ptr() as *mut u32;
                             *tag_ptr = discriminant_value as u32;
                         }
                     }
@@ -614,58 +509,58 @@ impl<'mem> Partial<'mem> {
                 // Attempt to read the tag based on the representation
                 let discriminant_value = match repr {
                     crate::EnumRepr::U8 => {
-                        let tag_ptr = self.data.as_ptr() as *const u8;
+                        let tag_ptr = self.data.as_mut_ptr() as *const u8;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::U16 => {
-                        let tag_ptr = self.data.as_ptr() as *const u16;
+                        let tag_ptr = self.data.as_mut_ptr() as *const u16;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::U32 => {
-                        let tag_ptr = self.data.as_ptr() as *const u32;
+                        let tag_ptr = self.data.as_mut_ptr() as *const u32;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::U64 => {
-                        let tag_ptr = self.data.as_ptr() as *const u64;
+                        let tag_ptr = self.data.as_mut_ptr() as *const u64;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::USize => {
-                        let tag_ptr = self.data.as_ptr() as *const usize;
+                        let tag_ptr = self.data.as_mut_ptr() as *const usize;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::I8 => {
-                        let tag_ptr = self.data.as_ptr() as *const i8;
+                        let tag_ptr = self.data.as_mut_ptr() as *const i8;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::I16 => {
-                        let tag_ptr = self.data.as_ptr() as *const i16;
+                        let tag_ptr = self.data.as_mut_ptr() as *const i16;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::I32 => {
-                        let tag_ptr = self.data.as_ptr() as *const i32;
+                        let tag_ptr = self.data.as_mut_ptr() as *const i32;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::I64 => {
-                        let tag_ptr = self.data.as_ptr() as *const i64;
+                        let tag_ptr = self.data.as_mut_ptr() as *const i64;
                         *tag_ptr
                     }
                     crate::EnumRepr::ISize => {
-                        let tag_ptr = self.data.as_ptr() as *const isize;
+                        let tag_ptr = self.data.as_mut_ptr() as *const isize;
                         *tag_ptr as i64
                     }
                     crate::EnumRepr::Default => {
                         // Use a heuristic based on the number of variants
                         if variants.len() <= 256 {
                             // Likely a u8 discriminant
-                            let tag_ptr = self.data.as_ptr() as *const u8;
+                            let tag_ptr = self.data.as_mut_ptr() as *const u8;
                             *tag_ptr as i64
                         } else if variants.len() <= 65536 {
                             // Likely a u16 discriminant
-                            let tag_ptr = self.data.as_ptr() as *const u16;
+                            let tag_ptr = self.data.as_mut_ptr() as *const u16;
                             *tag_ptr as i64
                         } else {
                             // Default to u32
-                            let tag_ptr = self.data.as_ptr() as *const u32;
+                            let tag_ptr = self.data.as_mut_ptr() as *const u32;
                             *tag_ptr as i64
                         }
                     }
@@ -737,7 +632,7 @@ impl<'mem> Partial<'mem> {
                     let field_addr = unsafe {
                         // The actual offset may depend on the variant's layout, but we use the field index for now
                         // This is technically incorrect, as it assumes a simple layout where offsets are contiguous
-                        self.data.as_ptr().add(field.offset)
+                        self.data.as_mut_ptr().add(field.offset)
                     };
 
                     Ok(FieldWriter::for_ptr(
@@ -758,7 +653,7 @@ impl<'mem> Partial<'mem> {
                     let init_bit = field_index + 1;
 
                     // Get the field's address
-                    let field_addr = unsafe { self.data.as_ptr().add(field.offset) };
+                    let field_addr = unsafe { self.data.as_mut_ptr().add(field.offset) };
 
                     Ok(FieldWriter::for_ptr(
                         field_addr,
@@ -849,21 +744,16 @@ impl ISet {
         let mask = (1 << count) - 1;
         self.0 & mask == mask
     }
-
-    /// Gets an [InitMark] to track the initialization state of a single field
-    pub fn field(&mut self, index: usize) -> InitMark {
-        InitMark::Struct { index, set: self }
-    }
 }
 
 /// A helper struct to fill up lists — note that it is designed for `Vec<T>`
 /// rather than fixed-size arrays or slices, so it's a bit of a misnomer at the moment.
-pub struct ListSlot<'mem> {
+pub struct ListWriter<'mem> {
     pub(crate) data: Opaque<'mem>,
     pub(crate) vtable: ListVTable,
 }
 
-impl<'mem> ListSlot<'mem> {
+impl<'mem> ListWriter<'mem> {
     /// Create a new ArraySlot with the given address and vtable
     pub(crate) unsafe fn new(addr: Opaque<'mem>, vtable: ListVTable) -> Self {
         Self { data: addr, vtable }
@@ -885,12 +775,12 @@ impl<'mem> ListSlot<'mem> {
 }
 
 /// Provides insert, length check, and iteration over a type-erased map
-pub struct MapSlot<'mem> {
+pub struct MapWriter<'mem> {
     pub(crate) data: Opaque<'mem>,
     pub(crate) vtable: MapVTable,
 }
 
-impl<'mem> MapSlot<'mem> {
+impl<'mem> MapWriter<'mem> {
     /// Create a new MapSlot with the given address and vtable
     pub(crate) unsafe fn new(data: Opaque<'mem>, vtable: MapVTable) -> Self {
         Self { data, vtable }

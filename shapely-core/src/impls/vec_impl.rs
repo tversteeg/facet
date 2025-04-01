@@ -45,9 +45,9 @@ where
             },
             innards: Innards::List {
                 vtable: ListVTable {
-                    push: |ptr, partial| unsafe {
+                    push: |ptr, item| unsafe {
                         let vec = ptr.as_mut_ptr::<Vec<T>>();
-                        let item = partial.build();
+                        let item = item.read::<T>();
                         (*vec).push(item);
                     },
                     len: |ptr| unsafe {
