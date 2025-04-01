@@ -2,12 +2,25 @@ use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek, Shape, ValueVTable};
 
 /// Lets you write to a value (implements write-only [`ValueVTable`] proxies)
 pub struct PokeValue<'mem> {
-    pub data: OpaqueUninit<'mem>,
-    pub shape: Shape,
-    pub vtable: ValueVTable,
+    data: OpaqueUninit<'mem>,
+    shape: Shape,
+    vtable: ValueVTable,
 }
 
 impl<'mem> PokeValue<'mem> {
+    /// Creates a value write-proxy from its essential components
+    ///
+    /// # Safety
+    ///
+    /// The data buffer must match the size and alignment of the shape.
+    pub(crate) unsafe fn new(data: OpaqueUninit<'mem>, shape: Shape, vtable: ValueVTable) -> Self {
+        Self {
+            data,
+            shape,
+            vtable,
+        }
+    }
+
     /// Attempts to convert a value from another type into this one
     ///
     /// Returns `Some(Opaque)` if the conversion was successful, `None` otherwise.

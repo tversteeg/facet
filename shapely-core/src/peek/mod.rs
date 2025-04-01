@@ -11,15 +11,16 @@ use super::{Opaque, OpaqueConst, Shape, ShapeDesc, ValueVTable};
 /// in which case, you're entirely on your own.
 #[derive(Clone, Copy)]
 pub enum Peek<'mem> {
+    /// cf. [`PeekValue`]
     Scalar(PeekValue<'mem>),
 }
 
 /// Lets you read from a value (implements read-only [`ValueVTable`] proxies)
 #[derive(Clone, Copy)]
 pub struct PeekValue<'mem> {
-    pub data: OpaqueConst<'mem>,
-    pub shape: Shape,
-    pub vtable: ValueVTable,
+    data: OpaqueConst<'mem>,
+    shape: Shape,
+    vtable: ValueVTable,
 }
 
 impl<'mem> Peek<'mem> {

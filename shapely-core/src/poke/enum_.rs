@@ -1,16 +1,17 @@
 use crate::{FieldError, OpaqueUninit, Shape, ShapeDesc, Shapely, ValueVTable, trace};
 use std::ptr::NonNull;
 
-use super::ISet;
+use super::{ISet, Poke};
 
 /// Allows poking an enum (selecting variants, setting fields, etc.)
 pub struct PokeEnum<'mem> {
-    pub data: OpaqueUninit<'mem>,
-    pub iset: ISet,
-    pub shape_desc: ShapeDesc,
-    pub shape: Shape,
-    pub vtable: ValueVTable,
-    pub selected_variant: Option<usize>,
+    data: OpaqueUninit<'mem>,
+    iset: ISet,
+    shape_desc: ShapeDesc,
+    shape: Shape,
+    #[allow(dead_code)]
+    vtable: ValueVTable,
+    selected_variant: Option<usize>,
 }
 
 impl<'mem> PokeEnum<'mem> {
@@ -200,7 +201,7 @@ impl<'mem> PokeEnum<'mem> {
     pub fn variant_field_by_name<'s>(
         &'s mut self,
         name: &str,
-    ) -> Result<crate::PokeValue<'s>, FieldError> {
+    ) -> Result<crate::Poke<'s>, FieldError> {
         let variant_index = self
             .selected_variant_index()
             .ok_or(FieldError::NotAStruct)?; // Using NotAStruct as a stand-in for "no variant selected"
@@ -224,18 +225,9 @@ impl<'mem> PokeEnum<'mem> {
                         .ok_or(FieldError::NoSuchStaticField)?;
 
                     // Get the field's address
-                    let field_addr = unsafe { self.data.field_uninit(field.offset) };
-
-                    let field_shape = field.shape;
-                    let field_vtable = field_shape.get().vtable();
-
-                    let poke_value = crate::PokeValue {
-                        data: field_addr,
-                        shape: field_shape.get(),
-                        vtable: field_vtable,
-                    };
-
-                    Ok(poke_value)
+                    let field_data = unsafe { self.data.field_uninit(field.offset) };
+                    let poke = unsafe { Poke::from_opaque_uninit(field_data, field.shape) };
+                    Ok(poke)
                 }
                 crate::VariantKind::Struct { fields } => {
                     // For struct variants, find the field by name
@@ -246,18 +238,9 @@ impl<'mem> PokeEnum<'mem> {
                         .ok_or(FieldError::NoSuchStaticField)?;
 
                     // Get the field's address
-                    let field_addr = unsafe { self.data.field_uninit(field.offset) };
-
-                    let field_shape = field.shape;
-                    let field_vtable = field_shape.get().vtable();
-
-                    let poke_value = crate::PokeValue {
-                        data: field_addr,
-                        shape: field_shape.get(),
-                        vtable: field_vtable,
-                    };
-
-                    Ok(poke_value)
+                    let field_data = unsafe { self.data.field_uninit(field.offset) };
+                    let poke = unsafe { Poke::from_opaque_uninit(field_data, field.shape) };
+                    Ok(poke)
                 }
             }
         } else {
@@ -266,6 +249,10 @@ impl<'mem> PokeEnum<'mem> {
     }
 
     /// Marks a field in the current variant as initialized.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the field is not already initialized.
     pub unsafe fn mark_field_as_initialized(&mut self, field_index: usize) {
         // Field init bits start at index 1 (index 0 is for variant selection)
         let init_bit = field_index + 1;

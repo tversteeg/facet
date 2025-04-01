@@ -2,10 +2,12 @@ use crate::{MapVTable, Opaque, OpaqueConst, Shape, ValueVTable};
 
 /// Allows poking a map (inserting, etc.)
 pub struct PokeMap<'mem> {
-    pub data: Opaque<'mem>,
-    pub shape: Shape,
-    pub vtable: ValueVTable,
-    pub map_vtable: MapVTable,
+    data: Opaque<'mem>,
+    #[allow(dead_code)]
+    shape: Shape,
+    #[allow(dead_code)]
+    vtable: ValueVTable,
+    map_vtable: MapVTable,
 }
 
 impl<'mem> PokeMap<'mem> {
@@ -22,6 +24,11 @@ impl<'mem> PokeMap<'mem> {
     /// Gets the number of entries in the map
     pub fn len(&self) -> usize {
         unsafe { (self.map_vtable.len)(self.data.as_const()) }
+    }
+
+    /// Checks if the map contains no entries
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     /// Checks if the map contains a key

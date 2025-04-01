@@ -14,17 +14,29 @@ impl<'mem> OpaqueUninit<'mem> {
         Self(ptr as *mut u8, PhantomData)
     }
 
+    /// Creates a new opaque pointer from a reference to a MaybeUninit<T>
+    ///
+    /// The pointer will point to the potentially uninitialized contents
     pub fn from_maybe_uninit<T>(borrow: &'mem mut std::mem::MaybeUninit<T>) -> Self {
         Self(borrow.as_mut_ptr() as *mut u8, PhantomData)
     }
 
     /// Assumes the pointer is initialized and returns an `Opaque` pointer
+    ///
+    /// # Safety
+    ///
+    /// The pointer must actually be pointing to initialized memory of the correct type.
     pub unsafe fn assume_init(self) -> Opaque<'mem> {
         let ptr = unsafe { NonNull::new_unchecked(self.0) };
         Opaque(ptr, PhantomData)
     }
 
     /// Write a value to this location and convert to an initialized pointer
+    ///
+    /// # Safety
+    ///
+    /// The pointer must be properly aligned for T and point to allocated memory
+    /// that can be safely written to.
     pub unsafe fn write<T>(self, value: T) -> Opaque<'mem> {
         unsafe {
             std::ptr::write(self.0 as *mut T, value);
@@ -52,6 +64,13 @@ impl<'mem> OpaqueUninit<'mem> {
     }
 
     /// Returns a pointer with the given offset added, assuming it's initialized
+    ///
+    /// # Safety
+    ///
+    /// The pointer plus offset must be:
+    /// - Within bounds of the allocated object
+    /// - Properly aligned for the type being pointed to
+    /// - Point to initialized data of the correct type
     pub unsafe fn field_init(self, offset: usize) -> Opaque<'mem> {
         Opaque(
             unsafe { NonNull::new_unchecked(self.0.add(offset)) },

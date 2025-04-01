@@ -169,6 +169,11 @@ impl<'a> std::hash::Hasher for HasherProxy<'a> {
     }
 }
 
+/// Function to write bytes to a hasher
+///
+/// # Safety
+///
+/// The `hasher_self` parameter must be a valid pointer to a hasher
 pub type HasherWriteFn = for<'mem> unsafe fn(hasher_self: Opaque<'mem>, bytes: &[u8]);
 
 /// Function to drop a value

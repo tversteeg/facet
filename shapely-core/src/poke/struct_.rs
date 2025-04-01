@@ -7,12 +7,13 @@ use super::ISet;
 
 /// Allows poking a struct (setting fields, etc.)
 pub struct PokeStruct<'mem> {
-    pub data: OpaqueUninit<'mem>,
-    pub iset: ISet,
-    pub shape_desc: ShapeDesc,
-    pub shape: Shape,
-    pub vtable: ValueVTable,
-    pub fields: &'static [Field],
+    data: OpaqueUninit<'mem>,
+    iset: ISet,
+    shape_desc: ShapeDesc,
+    shape: Shape,
+    #[allow(dead_code)]
+    vtable: ValueVTable,
+    fields: &'static [Field],
 }
 
 impl<'mem> PokeStruct<'mem> {

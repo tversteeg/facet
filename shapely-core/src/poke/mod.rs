@@ -21,12 +21,17 @@ pub use struct_::*;
 mod enum_;
 pub use enum_::*;
 
+/// Allows writing values of different kinds.
 pub enum Poke<'mem> {
+    /// A scalar value. See [`PokeValue`].
     Scalar(PokeValue<'mem>),
+    /// A list (array/vec/etc). See [`PokeList`].
     List(PokeList<'mem>),
+    /// A map (HashMap/BTreeMap/etc). See [`PokeMap`].
     Map(PokeMap<'mem>),
-    /// works for structs, tuple structs, and tuples
+    /// A struct, tuple struct, or tuple. See [`PokeStruct`].
     Struct(PokeStruct<'mem>),
+    /// An enum variant. See [`PokeEnum`].
     Enum(PokeEnum<'mem>),
 }
 
@@ -59,16 +64,14 @@ impl<'mem> Poke<'mem> {
             super::Innards::Tuple { .. } => todo!(),
             super::Innards::Map { .. } => todo!(),
             super::Innards::List { .. } => todo!(),
-            super::Innards::Scalar => Poke::Scalar(PokeValue {
-                data,
-                shape,
-                // let's cache that
-                vtable: shape.vtable(),
-            }),
+            super::Innards::Scalar => {
+                Poke::Scalar(unsafe { PokeValue::new(data, shape, shape.vtable()) })
+            }
             super::Innards::Enum { .. } => todo!(),
         }
     }
 
+    /// Converts this Poke into a PokeStruct, panicking if it's not a Struct variant
     pub fn into_struct(self) -> PokeStruct<'mem> {
         match self {
             Poke::Struct(s) => s,
@@ -76,6 +79,7 @@ impl<'mem> Poke<'mem> {
         }
     }
 
+    /// Converts this Poke into a PokeList, panicking if it's not a List variant
     pub fn into_list(self) -> PokeList<'mem> {
         match self {
             Poke::List(l) => l,
@@ -83,6 +87,7 @@ impl<'mem> Poke<'mem> {
         }
     }
 
+    /// Converts this Poke into a PokeMap, panicking if it's not a Map variant
     pub fn into_map(self) -> PokeMap<'mem> {
         match self {
             Poke::Map(m) => m,
@@ -90,6 +95,7 @@ impl<'mem> Poke<'mem> {
         }
     }
 
+    /// Converts this Poke into a PokeValue, panicking if it's not a Scalar variant
     pub fn into_scalar(self) -> PokeValue<'mem> {
         match self {
             Poke::Scalar(s) => s,
@@ -97,6 +103,7 @@ impl<'mem> Poke<'mem> {
         }
     }
 
+    /// Converts this Poke into a PokeEnum, panicking if it's not an Enum variant
     pub fn into_enum(self) -> PokeEnum<'mem> {
         match self {
             Poke::Enum(e) => e,

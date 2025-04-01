@@ -2,10 +2,12 @@ use crate::{ListVTable, Opaque, Shape, ValueVTable};
 
 /// Allows poking a list (appending, etc.)
 pub struct PokeList<'mem> {
-    pub data: Opaque<'mem>,
-    pub shape: Shape,
-    pub vtable: ValueVTable,
-    pub list_vtable: ListVTable,
+    data: Opaque<'mem>,
+    #[allow(dead_code)]
+    shape: Shape,
+    #[allow(dead_code)]
+    vtable: ValueVTable,
+    list_vtable: ListVTable,
 }
 
 impl<'mem> PokeList<'mem> {
@@ -22,6 +24,11 @@ impl<'mem> PokeList<'mem> {
     /// Gets the number of items in the list
     pub fn len(&self) -> usize {
         unsafe { (self.list_vtable.len)(self.data.as_const()) }
+    }
+
+    /// Returns true if the list is empty
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     /// Gets a pointer to the item at the given index
