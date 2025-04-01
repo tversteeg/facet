@@ -1,11 +1,14 @@
 use super::{Opaque, OpaqueConst};
 
+// TODO: instead of `default`, provide a `with_size_hint` function here
+
 /// Push an item to the list
 ///
 /// # Safety
 ///
 /// The `list` parameter must point to aligned, initialized memory of the correct type.
-pub type ListPushFn = unsafe fn(list: Opaque, item: crate::Partial);
+pub type ListPushFn = unsafe fn(list: Opaque, item: Opaque);
+// FIXME: this forces allocating item separately, copying it, and then dropping it — it's not great.
 
 /// Get the number of items in the list
 ///

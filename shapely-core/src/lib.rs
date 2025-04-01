@@ -43,7 +43,7 @@ pub trait Shapely: Sized {
     ///
     /// Before calling assume_init, make sure to call Partial.build_in_place().
     fn partial_from_uninit(dest: &mut MaybeUninit<Self>) -> Partial<'_> {
-        Partial::borrow(dest)
+        Partial::from_maybe_uninit(dest)
     }
 }
 

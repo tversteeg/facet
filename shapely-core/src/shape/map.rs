@@ -5,11 +5,8 @@ use super::{Opaque, OpaqueConst};
 /// # Safety
 ///
 /// The `map` parameter must point to aligned, initialized memory of the correct type.
-pub type MapInsertFn = for<'map, 'key, 'value> unsafe fn(
-    map: Opaque<'map>,
-    key: crate::Partial<'key>,
-    value: crate::Partial<'value>,
-);
+pub type MapInsertFn =
+    for<'map, 'key, 'value> unsafe fn(map: Opaque<'map>, key: Opaque<'key>, value: Opaque<'value>);
 
 /// Get the number of entries in the map
 ///

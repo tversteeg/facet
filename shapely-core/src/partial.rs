@@ -1,8 +1,8 @@
 use crate::{
-    FieldError, FieldWriter, Innards, ListVTable, OpaqueUninit, Shape, ShapeDesc, Shapely,
-    ValueVTable, trace,
+    FieldError, FieldWriter, Innards, ListVTable, MapIterVTable, MapVTable, Opaque, OpaqueConst,
+    OpaqueUninit, Shape, ShapeDesc, Shapely, ValueVTable, trace,
 };
-use std::{alloc, ptr::NonNull};
+use std::{alloc, marker::PhantomData, ptr::NonNull};
 
 /// A partially-initialized struct, tuple struct, tuple, or enum.
 ///
@@ -27,85 +27,33 @@ pub struct Partial<'s> {
     pub(crate) vtable: ValueVTable,
 }
 
-impl Drop for Partial<'_> {
-    // This drop function is only really called when a partial is dropped without being fully
-    // built out. Otherwise, it's forgotten because the value has been moved elsewhere.
-    //
-    // As a result, its only job is to drop any fields that may have been initialized.
-    fn drop(&mut self) {
-        match self.shape.innards {
-            crate::Innards::Struct { fields } => {
-                fields
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(i, field)| {
-                        if self.iset.has(i) {
-                            Some((field, field.shape.get().vtable().drop_in_place?))
-                        } else {
-                            None
-                        }
-                    })
-                    .for_each(|(field, drop_fn)| {
-                        unsafe {
-                            // SAFETY: field_addr is valid, aligned, and initialized.
-                            //
-                            // If the struct is a ZST, then `self.addr` is dangling.
-                            // That also means that all the fields are ZSTs, which means
-                            // the actual address we pass to the drop fn does not matter,
-                            // but we do want the side effects.
-                            //
-                            // If the struct is not a ZST, then `self.addr` is a valid address.
-                            // The fields can still be ZST and that's not a special case, really.
-                            drop_fn(self.data.field_init(field.offset));
-                        }
-                    })
-            }
-            // TODO: drop partially initialized tuples, etc.
-            _ => {}
-        }
-    }
-}
-
-impl Partial<'_> {
-    /// Allocates a partial on the heap for the given shape descriptor.
-    pub fn alloc(shape_desc: ShapeDesc) -> Self {
-        let shape = shape_desc.get();
-        let vtable = shape.vtable();
-        let layout = shape.layout;
-        let addr = if layout.size() == 0 {
-            // ZSTs need a well-aligned address
-            shape.dangling()
-        } else {
-            let addr = unsafe { alloc::alloc(layout) };
-            if addr.is_null() {
-                alloc::handle_alloc_error(layout);
-            }
-            // SAFETY: We just allocated this memory and checked that it's not null,
-            // so it's safe to create a NonNull from it.
-            unsafe { NonNull::new_unchecked(addr) }
-        };
-
-        Self {
-            shape_desc,
-            shape,
-            vtable,
-            data,
-            iset: Default::default(),
-        }
-    }
-
+impl<'mem> Partial<'mem> {
     /// Borrows a `MaybeUninit<Self>` and returns a `Partial`.
     ///
     /// Before calling assume_init, make sure to call Partial.build_in_place().
-    pub fn borrow<T: Shapely>(uninit: &mut std::mem::MaybeUninit<T>) -> Self {
+    pub fn from_maybe_uninit<T: Shapely>(uninit: &'mem mut std::mem::MaybeUninit<T>) -> Self {
         Self {
-            origin: Origin::Borrowed {
-                parent: None,
-                init_mark: InitMark::Ignored,
-            },
-            data: NonNull::new(uninit.as_mut_ptr() as _).unwrap(),
+            data: OpaqueUninit(uninit.as_mut_ptr() as *mut u8, PhantomData),
             iset: Default::default(),
-            shape: T::shape_desc(),
+            shape_desc: T::shape_desc(),
+            shape: T::shape(),
+            vtable: T::shape().vtable(),
+        }
+    }
+
+    /// # Safety
+    ///
+    /// The `data` and the `shape_desc` must match
+    pub unsafe fn from_opaque_uninit(data: OpaqueUninit<'mem>, shape_desc: ShapeDesc) -> Self {
+        let shape = shape_desc.get();
+        let vtable = shape.vtable();
+
+        Self {
+            data,
+            iset: Default::default(),
+            shape_desc,
+            shape,
+            vtable,
         }
     }
 
@@ -155,9 +103,7 @@ impl Partial<'_> {
                                     if !self.iset.has(init_bit) {
                                         panic!(
                                             "Field '{}' of variant '{}' was not initialized. Complete schema:\n{:?}",
-                                            field.name,
-                                            variant.name,
-                                            self.shape.get()
+                                            field.name, variant.name, self.shape
                                         );
                                     }
                                 }
@@ -171,25 +117,28 @@ impl Partial<'_> {
     }
 
     /// Returns a slot for treating this partial as an array (onto which you can push new items)
-    pub fn array_slot(&mut self, size_hint: Option<usize>) -> Option<ArraySlot> {
-        match self.shape.get().innards {
-            crate::Innards::List {
-                vtable,
-                item_shape: _,
-            } => {
+    pub fn array_slot(&mut self, size_hint: Option<usize>) -> Option<ListSlot> {
+        match self.shape.innards {
+            crate::Innards::List { vtable, .. } => {
                 if self.iset.has(0) {
-                    panic!("Array is already initialized");
+                    panic!("List is already initialized");
                 }
 
-                // Initialize the array using the vtable's init function
+                // Initialize the list
+                let default_in_place = self
+                    .vtable
+                    .default_in_place
+                    .expect("cannot initialize list");
                 unsafe {
-                    (vtable.init)(self.data.as_ptr(), size_hint);
+                    // TODO: see `list.rs`, use the more specific constructor with size_hint here
+                    // if it's set.
+                    (default_in_place)(self.data);
                 }
 
                 // Mark the array as initialized in our init_set
                 self.iset.set(0);
 
-                Some(unsafe { ArraySlot::new(self.data, vtable) })
+                Some(unsafe { ListSlot::new(self.data, vtable) })
             }
             _ => None,
         }
@@ -824,6 +773,45 @@ impl Partial<'_> {
     }
 }
 
+impl Drop for Partial<'_> {
+    // This drop function is only really called when a partial is dropped without being fully
+    // built out. Otherwise, it's forgotten because the value has been moved elsewhere.
+    //
+    // As a result, its only job is to drop any fields that may have been initialized.
+    fn drop(&mut self) {
+        match self.shape.innards {
+            crate::Innards::Struct { fields } => {
+                fields
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, field)| {
+                        if self.iset.has(i) {
+                            Some((field, field.shape.get().vtable().drop_in_place?))
+                        } else {
+                            None
+                        }
+                    })
+                    .for_each(|(field, drop_fn)| {
+                        unsafe {
+                            // SAFETY: field_addr is valid, aligned, and initialized.
+                            //
+                            // If the struct is a ZST, then `self.addr` is dangling.
+                            // That also means that all the fields are ZSTs, which means
+                            // the actual address we pass to the drop fn does not matter,
+                            // but we do want the side effects.
+                            //
+                            // If the struct is not a ZST, then `self.addr` is a valid address.
+                            // The fields can still be ZST and that's not a special case, really.
+                            drop_fn(self.data.field_init(field.offset));
+                        }
+                    })
+            }
+            // TODO: drop partially initialized tuples, etc.
+            _ => {}
+        }
+    }
+}
+
 /// Keeps track of which fields were initialized, up to 64 fields
 #[derive(Clone, Copy, Default)]
 pub struct ISet(u64);
@@ -868,17 +856,17 @@ impl ISet {
     }
 }
 
-/// A helper struct to fill up arrays — note that it is designed for `Vec<T>`
+/// A helper struct to fill up lists — note that it is designed for `Vec<T>`
 /// rather than fixed-size arrays or slices, so it's a bit of a misnomer at the moment.
-pub struct ArraySlot {
-    pub(crate) addr: NonNull<u8>,
+pub struct ListSlot<'mem> {
+    pub(crate) data: Opaque<'mem>,
     pub(crate) vtable: ListVTable,
 }
 
-impl ArraySlot {
+impl<'mem> ListSlot<'mem> {
     /// Create a new ArraySlot with the given address and vtable
-    pub(crate) unsafe fn new(addr: NonNull<u8>, vtable: ListVTable) -> Self {
-        Self { addr, vtable }
+    pub(crate) unsafe fn new(addr: Opaque<'mem>, vtable: ListVTable) -> Self {
+        Self { data: addr, vtable }
     }
 
     /// Push a partial value onto the array
@@ -888,75 +876,73 @@ impl ArraySlot {
     /// This function uses unsafe code to push a value into the array.
     /// It's safe to use because the vtable's push function handles
     /// proper memory management and initialization.
-    pub fn push(&mut self, partial: crate::Partial) {
+    pub fn push(&mut self, item: Opaque) {
         // Call the vtable's push function to add the item to the array
         unsafe {
-            (self.vtable.push)(self.addr.as_ptr(), partial);
+            (self.vtable.push)(self.data, item);
         }
     }
 }
 
-/// Provides insert, length check, and iteration over a type-erased hashmap
-pub struct HashMapSlot {
-    pub(crate) addr: NonNull<u8>,
-    pub(crate) vtable: crate::MapVTable,
+/// Provides insert, length check, and iteration over a type-erased map
+pub struct MapSlot<'mem> {
+    pub(crate) data: Opaque<'mem>,
+    pub(crate) vtable: MapVTable,
 }
 
-impl HashMapSlot {
-    /// Create a new HashMapSlot with the given address and vtable
-    pub(crate) unsafe fn new(addr: NonNull<u8>, vtable: crate::MapVTable) -> Self {
-        Self { addr, vtable }
+impl<'mem> MapSlot<'mem> {
+    /// Create a new MapSlot with the given address and vtable
+    pub(crate) unsafe fn new(data: Opaque<'mem>, vtable: MapVTable) -> Self {
+        Self { data, vtable }
     }
 
-    /// Insert a key-value pair into the HashMap
+    /// Insert a key-value pair into the Map
     ///
     /// # Safety
     ///
-    /// This function uses unsafe code to insert a key-value pair into the HashMap.
+    /// This function uses unsafe code to insert a key-value pair into the Map.
     /// It's safe to use because the vtable's insert function handles
     /// proper memory management and initialization.
-    pub fn insert(&mut self, key: crate::Partial, value: crate::Partial) {
-        // Call the vtable's insert function to add the key-value pair to the HashMap
+    pub fn insert(&mut self, key: Opaque, value: Opaque) {
+        // Call the vtable's insert function to add the key-value pair to the Map
         unsafe {
-            (self.vtable.insert)(self.addr.as_ptr(), key, value);
+            (self.vtable.insert)(self.data, key, value);
         }
     }
 
-    /// Get the number of entries in the HashMap
+    /// Get the number of entries in the Map
     pub fn len(&self) -> usize {
-        unsafe { (self.vtable.len)(self.addr.as_ptr()) }
+        unsafe { (self.vtable.len)(self.data.as_const()) }
     }
 
-    /// Check if the HashMap is empty
+    /// Check if the Map is empty
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
-    /// Check if the HashMap contains a key
-    pub fn contains_key(&self, key: &str) -> bool {
-        unsafe { (self.vtable.contains_key)(self.addr.as_ptr(), key) }
+    /// Check if the Map contains a key
+    pub fn contains_key<'key>(&self, key: OpaqueConst<'key>) -> bool {
+        unsafe { (self.vtable.contains_key)(self.data.as_const(), key) }
     }
 }
 
-/// An iterator over key-value pairs in a HashMap
-pub struct HashMapIter {
-    iter_ptr: *const u8,
-    vtable: crate::MapIterVTable,
+/// An iterator over key-value pairs in a Map
+pub struct MapIter<'mem> {
+    iter: Opaque<'mem>,
+    vtable: MapIterVTable,
 }
 
-impl HashMapIter {
+impl<'mem> MapIter<'mem> {
     /// Get the next key-value pair from the iterator
-    pub fn next(&self) -> Option<(&str, *const u8)> {
-        let (k, v) = unsafe { (self.vtable.next)(self.iter_ptr)? };
-        let k = unsafe { (*k).as_str() };
-        Some((k, v))
+    pub fn next(&mut self) -> Option<(OpaqueConst<'mem>, OpaqueConst<'mem>)> {
+        unsafe { (self.vtable.next)(self.iter) }
     }
 }
 
-impl Drop for HashMapIter {
+impl<'mem> Drop for MapIter<'mem> {
     fn drop(&mut self) {
         unsafe {
-            (self.vtable.dealloc)(self.iter_ptr);
+            (self.vtable.dealloc)(self.iter);
         }
     }
 }
