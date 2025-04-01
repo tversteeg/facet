@@ -12,9 +12,6 @@ mod impls;
 mod shape;
 pub use shape::*;
 
-mod partial;
-pub use partial::*;
-
 mod helpers;
 pub use helpers::*;
 

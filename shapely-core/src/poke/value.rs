@@ -1,4 +1,4 @@
-use crate::{OpaqueUninit, Shape, ValueVTable};
+use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek, Shape, ValueVTable};
 
 /// Lets you write to a value (implements write-only [`ValueVTable`] proxies)
 pub struct PokeValue<'mem> {
@@ -11,7 +11,7 @@ impl<'mem> PokeValue<'mem> {
     /// Attempts to convert a value from another type into this one
     ///
     /// Returns `Some(Opaque)` if the conversion was successful, `None` otherwise.
-    pub fn try_from<'src>(self, source: super::Peek<'src>) -> Result<Opaque<'mem>, Self> {
+    pub fn try_from<'src>(self, source: Peek<'src>) -> Result<Opaque<'mem>, Self> {
         if let Some(built_val) = self
             .vtable
             .try_from

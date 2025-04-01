@@ -1,4 +1,6 @@
-use crate::{FieldError, OpaqueUninit, Shape, ShapeDesc, Shapely, ValueVTable, trace};
+use crate::{
+    Field, FieldError, Innards, OpaqueUninit, Shape, ShapeDesc, Shapely, ValueVTable, trace,
+};
 use std::ptr::NonNull;
 
 use super::ISet;
@@ -10,22 +12,14 @@ pub struct PokeStruct<'mem> {
     pub shape_desc: ShapeDesc,
     pub shape: Shape,
     pub vtable: ValueVTable,
+    pub fields: &'static [Field],
 }
 
 impl<'mem> PokeStruct<'mem> {
-    /// Creates a new PokeStruct from a MaybeUninit
+    /// Creates a new PokeStruct from a MaybeUninit. Panic if it's not a struct.
     pub fn from_maybe_uninit<T: Shapely>(uninit: &'mem mut std::mem::MaybeUninit<T>) -> Self {
-        let shape_desc = T::shape_desc();
-        let shape = shape_desc.get();
-        let vtable = shape.vtable();
-
-        Self {
-            data: OpaqueUninit::from_maybe_uninit(uninit),
-            iset: Default::default(),
-            shape_desc,
-            shape,
-            vtable,
-        }
+        let data = OpaqueUninit::from_maybe_uninit(uninit);
+        unsafe { Self::from_opaque_uninit(data, T::shape_desc()) }
     }
 
     /// # Safety
@@ -34,6 +28,10 @@ impl<'mem> PokeStruct<'mem> {
     pub unsafe fn from_opaque_uninit(data: OpaqueUninit<'mem>, shape_desc: ShapeDesc) -> Self {
         let shape = shape_desc.get();
         let vtable = shape.vtable();
+        let fields = match &shape.innards {
+            Innards::Struct { fields } => *fields,
+            _ => panic!("Expected a struct"),
+        };
 
         Self {
             data,
@@ -41,6 +39,7 @@ impl<'mem> PokeStruct<'mem> {
             shape_desc,
             shape,
             vtable,
+            fields,
         }
     }
 
@@ -149,6 +148,16 @@ impl<'mem> PokeStruct<'mem> {
         std::mem::forget(self);
     }
 
+    /// Gets a field, by name
+    pub fn field_by_name<'s>(&'s mut self, name: &str) -> Result<crate::PokeValue<'s>, FieldError> {
+        let index = self
+            .fields
+            .iter()
+            .position(|f| f.name == name)
+            .ok_or(FieldError::NoSuchStaticField)?;
+        self.field(index)
+    }
+
     /// Get a field writer for a field by index.
     ///
     /// # Errors
@@ -157,34 +166,79 @@ impl<'mem> PokeStruct<'mem> {
     /// - The shape doesn't represent a struct.
     /// - The index is out of bounds.
     pub fn field<'s>(&'s mut self, index: usize) -> Result<crate::PokeValue<'s>, FieldError> {
-        let shape = self.shape;
-        if let crate::Innards::Struct { fields } = &shape.innards {
-            if index >= fields.len() {
-                return Err(FieldError::IndexOutOfBounds);
-            }
-
-            let field = &fields[index];
-
-            // Get the field's address
-            let field_addr = unsafe { self.data.field_uninit(field.offset) };
-            let field_shape = field.shape;
-            let field_vtable = field_shape.get().vtable();
-
-            // Create a PokeValue for this field
-            let poke_value = crate::PokeValue {
-                data: field_addr,
-                shape: field_shape.get(),
-                vtable: field_vtable,
-            };
-
-            Ok(poke_value)
-        } else {
-            Err(FieldError::NotAStruct)
+        if index >= self.fields.len() {
+            return Err(FieldError::IndexOutOfBounds);
         }
+
+        let field = &self.fields[index];
+
+        // Get the field's address
+        let field_addr = unsafe { self.data.field_uninit(field.offset) };
+        let field_shape = field.shape;
+        let field_vtable = field_shape.get().vtable();
+
+        // Create a PokeValue for this field
+        let poke_value = crate::PokeValue {
+            data: field_addr,
+            shape: field_shape.get(),
+            vtable: field_vtable,
+        };
+
+        Ok(poke_value)
+    }
+
+    /// Sets a field's value by its index.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The index is out of bounds
+    /// - The field shapes don't match
+    pub fn set(&mut self, index: usize, value: crate::OpaqueConst) -> Result<(), FieldError> {
+        if index >= self.fields.len() {
+            return Err(FieldError::IndexOutOfBounds);
+        }
+
+        let field = &self.fields[index];
+
+        let field_shape = field.shape.get();
+        if field_shape != value.shape {
+            return Err(FieldError::ShapeMismatch {
+                expected: field_shape,
+                got: value.shape,
+            });
+        }
+
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                value.data.as_ptr(),
+                self.data.field_uninit(field.offset).as_mut_ptr(),
+                field_shape.layout.size(),
+            );
+            self.iset.set(index);
+        }
+
+        Ok(())
+    }
+
+    /// Sets a field's value by its name.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The field name doesn't exist
+    /// - The field shapes don't match
+    pub fn set_by_name(&mut self, name: &str, value: crate::OpaqueConst) -> Result<(), FieldError> {
+        let index = self
+            .fields
+            .iter()
+            .position(|f| f.name == name)
+            .ok_or(FieldError::NoSuchStaticField)?;
+        self.set(index, value)
     }
 
     /// Marks a field as initialized.
-    pub unsafe fn mark_field_as_initialized(&mut self, index: usize) {
+    pub unsafe fn mark_initialized(&mut self, index: usize) {
         self.iset.set(index);
     }
 }

@@ -1,3 +1,5 @@
+use crate::{FieldFlags, TypeNameOpts, VariantKind};
+
 use super::{Innards, Shape};
 use std::{collections::HashSet, fmt::Formatter};
 
@@ -39,7 +41,7 @@ impl Shape {
                         indent = indent + Self::INDENT,
                         width = max_name_length
                     )?;
-                    if field.flags.contains(super::struct_::FieldFlags::SENSITIVE) {
+                    if field.flags.contains(FieldFlags::SENSITIVE) {
                         write!(f, "(sensitive) ")?;
                     }
                     if let Innards::Scalar = field.shape.get().innards {
@@ -136,7 +138,7 @@ impl Shape {
                                     field.name,
                                     indent = indent + Self::INDENT * 3
                                 )?;
-                                if field.flags.contains(super::struct_::FieldFlags::SENSITIVE) {
+                                if field.flags.contains(FieldFlags::SENSITIVE) {
                                     write!(f, "(sensitive) ")?;
                                 }
                                 if let Innards::Scalar = field.shape.get().innards {
@@ -175,7 +177,7 @@ impl Shape {
                                     field.name,
                                     indent = indent + Self::INDENT * 3
                                 )?;
-                                if field.flags.contains(super::struct_::FieldFlags::SENSITIVE) {
+                                if field.flags.contains(FieldFlags::SENSITIVE) {
                                     write!(f, "(sensitive) ")?;
                                 }
                                 if let Innards::Scalar = field.shape.get().innards {

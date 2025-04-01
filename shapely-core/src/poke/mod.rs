@@ -31,12 +31,18 @@ pub enum Poke<'mem> {
 }
 
 impl<'mem> Poke<'mem> {
+    /// Allocates a new poke of a type that implements shapely
+    pub fn alloc<S: Shapely>() -> Self {
+        let data = S::shape_desc().allocate();
+        unsafe { Self::from_opaque_uninit(data, S::shape_desc()) }
+    }
+
     /// Creates a new poke from a mutable reference to a MaybeUninit of a type that implements shapely
-    pub fn new<S: Shapely>(borrow: &'mem mut MaybeUninit<S>) -> Self {
+    pub fn from_maybe_uninit<S: Shapely>(borrow: &'mem mut MaybeUninit<S>) -> Self {
         // This is safe because we're creating an Opaque pointer to read-only data
         // The pointer will be valid for the lifetime 'mem
         let data = OpaqueUninit::from_maybe_uninit(borrow);
-        unsafe { Self::unchecked_new(data, S::shape_desc()) }
+        unsafe { Self::from_opaque_uninit(data, S::shape_desc()) }
     }
 
     /// Creates a new peek, for easy manipulation of some opaque data.
@@ -45,7 +51,7 @@ impl<'mem> Poke<'mem> {
     ///
     /// `data` must be initialized and well-aligned, and point to a value
     /// of the type described by `shape`.
-    pub unsafe fn unchecked_new(data: OpaqueUninit<'mem>, shape_desc: ShapeDesc) -> Self {
+    pub unsafe fn from_opaque_uninit(data: OpaqueUninit<'mem>, shape_desc: ShapeDesc) -> Self {
         let shape = shape_desc.get();
         match shape.innards {
             super::Innards::Struct { .. } => todo!(),
@@ -60,6 +66,41 @@ impl<'mem> Poke<'mem> {
                 vtable: shape.vtable(),
             }),
             super::Innards::Enum { .. } => todo!(),
+        }
+    }
+
+    pub fn into_struct(self) -> PokeStruct<'mem> {
+        match self {
+            Poke::Struct(s) => s,
+            _ => panic!("expected Struct variant"),
+        }
+    }
+
+    pub fn into_list(self) -> PokeList<'mem> {
+        match self {
+            Poke::List(l) => l,
+            _ => panic!("expected List variant"),
+        }
+    }
+
+    pub fn into_map(self) -> PokeMap<'mem> {
+        match self {
+            Poke::Map(m) => m,
+            _ => panic!("expected Map variant"),
+        }
+    }
+
+    pub fn into_scalar(self) -> PokeValue<'mem> {
+        match self {
+            Poke::Scalar(s) => s,
+            _ => panic!("expected Scalar variant"),
+        }
+    }
+
+    pub fn into_enum(self) -> PokeEnum<'mem> {
+        match self {
+            Poke::Enum(e) => e,
+            _ => panic!("expected Enum variant"),
         }
     }
 }
