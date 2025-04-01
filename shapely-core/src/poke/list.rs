@@ -11,6 +11,25 @@ pub struct PokeList<'mem> {
 }
 
 impl<'mem> PokeList<'mem> {
+    /// Creates a new list write-proxy
+    ///
+    /// # Safety
+    ///
+    /// The data buffer must match the size and alignment of the shape.
+    pub(crate) unsafe fn new(
+        data: Opaque<'mem>,
+        shape: Shape,
+        vtable: ValueVTable,
+        list_vtable: ListVTable,
+    ) -> Self {
+        Self {
+            data,
+            shape,
+            vtable,
+            list_vtable,
+        }
+    }
+
     /// Pushes an item to the list
     ///
     /// # Safety

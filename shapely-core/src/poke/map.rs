@@ -11,6 +11,25 @@ pub struct PokeMap<'mem> {
 }
 
 impl<'mem> PokeMap<'mem> {
+    /// Creates a value-proxy for a map
+    ///
+    /// # Safety
+    ///
+    /// The data buffer must match the size and alignment of the shape.
+    pub(crate) unsafe fn new(
+        data: Opaque<'mem>,
+        shape: Shape,
+        vtable: ValueVTable,
+        map_vtable: MapVTable,
+    ) -> Self {
+        Self {
+            data,
+            shape,
+            vtable,
+            map_vtable,
+        }
+    }
+
     /// Inserts a key-value pair into the map
     ///
     /// # Safety

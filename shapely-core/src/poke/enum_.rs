@@ -15,6 +15,27 @@ pub struct PokeEnum<'mem> {
 }
 
 impl<'mem> PokeEnum<'mem> {
+    /// Creates a new PokeEnum from raw data
+    ///
+    /// # Safety
+    ///
+    /// The data buffer must match the size and alignment of the enum shape described by shape_desc
+    pub(crate) unsafe fn new(
+        data: OpaqueUninit<'mem>,
+        shape_desc: ShapeDesc,
+        vtable: ValueVTable,
+    ) -> Self {
+        let shape = shape_desc.get();
+        Self {
+            data,
+            iset: Default::default(),
+            shape_desc,
+            shape,
+            vtable,
+            selected_variant: None,
+        }
+    }
+
     /// Creates a new PokeEnum from a MaybeUninit
     pub fn from_maybe_uninit<T: Shapely>(uninit: &'mem mut std::mem::MaybeUninit<T>) -> Self {
         let shape_desc = T::shape_desc();

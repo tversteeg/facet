@@ -59,9 +59,15 @@ impl<'mem> Poke<'mem> {
     pub unsafe fn from_opaque_uninit(data: OpaqueUninit<'mem>, shape_desc: ShapeDesc) -> Self {
         let shape = shape_desc.get();
         match shape.innards {
-            super::Innards::Struct { .. } => todo!(),
-            super::Innards::TupleStruct { .. } => todo!(),
-            super::Innards::Tuple { .. } => todo!(),
+            super::Innards::Struct { fields } => Poke::Struct(unsafe {
+                PokeStruct::from_opaque_uninit_and_fields(data, shape_desc, fields)
+            }),
+            super::Innards::TupleStruct { fields } => Poke::Struct(unsafe {
+                PokeStruct::from_opaque_uninit_and_fields(data, shape_desc, fields)
+            }),
+            super::Innards::Tuple { fields } => Poke::Struct(unsafe {
+                PokeStruct::from_opaque_uninit_and_fields(data, shape_desc, fields)
+            }),
             super::Innards::Map { .. } => todo!(),
             super::Innards::List { .. } => todo!(),
             super::Innards::Scalar => {

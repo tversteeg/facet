@@ -27,18 +27,25 @@ impl<'mem> PokeStruct<'mem> {
     ///
     /// The `data` and the `shape_desc` must match
     pub unsafe fn from_opaque_uninit(data: OpaqueUninit<'mem>, shape_desc: ShapeDesc) -> Self {
-        let shape = shape_desc.get();
-        let vtable = shape.vtable();
-        let fields = match &shape.innards {
+        let fields = match &shape_desc.get().innards {
             Innards::Struct { fields } => *fields,
             _ => panic!("Expected a struct"),
         };
+        unsafe { Self::from_opaque_uninit_and_fields(data, shape_desc, fields) }
+    }
 
+    pub unsafe fn from_opaque_uninit_and_fields(
+        data: OpaqueUninit<'mem>,
+        shape_desc: ShapeDesc,
+        fields: &'static [Field],
+    ) -> Self {
+        let shape = shape_desc.get();
+        let vtable = shape.vtable();
         Self {
             data,
             iset: Default::default(),
             shape_desc,
-            shape,
+            shape: shape_desc.get(),
             vtable,
             fields,
         }
