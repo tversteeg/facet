@@ -1,6 +1,9 @@
 use std::{alloc::Layout, any::TypeId, ptr::NonNull};
 
-use crate::ValueVTable;
+use crate::{
+    EnumRepr, Field, ListVTable, MapVTable, OpaqueUninit, TypeNameOpts, ValueVTable, Variant,
+    VariantError,
+};
 
 mod pretty_print;
 
@@ -252,7 +255,7 @@ impl ShapeDesc {
         let shape = self.get();
         let layout = shape.layout;
         let ptr = unsafe { std::alloc::alloc(layout) };
-        OpaqueUninit(ptr, std::marker::PhantomData)
+        OpaqueUninit::new(ptr)
     }
 }
 

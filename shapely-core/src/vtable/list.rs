@@ -1,6 +1,6 @@
-use super::{Opaque, OpaqueConst};
+// TODO: instead of `default`, provide a `new_with_size_hint` function here
 
-// TODO: instead of `default`, provide a `with_size_hint` function here
+use crate::{Opaque, OpaqueConst};
 
 /// Push an item to the list
 ///

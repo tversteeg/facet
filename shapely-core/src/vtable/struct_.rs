@@ -1,4 +1,4 @@
-use super::ShapeDesc;
+use crate::ShapeDesc;
 
 /// Describes a field in a struct or tuple
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

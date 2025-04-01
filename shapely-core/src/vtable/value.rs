@@ -1,4 +1,4 @@
-use super::{Opaque, OpaqueConst, OpaqueUninit, Peek};
+use crate::{Opaque, OpaqueConst, OpaqueUninit};
 use std::cmp::Ordering;
 
 /// A function that formats the name of a type.

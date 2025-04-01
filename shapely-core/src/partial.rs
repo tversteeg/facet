@@ -32,12 +32,16 @@ impl<'mem> Partial<'mem> {
     ///
     /// Before calling assume_init, make sure to call Partial.build_in_place().
     pub fn from_maybe_uninit<T: Shapely>(uninit: &'mem mut std::mem::MaybeUninit<T>) -> Self {
+        let shape_desc = T::shape_desc();
+        let shape = shape_desc.get();
+        let vtable = shape.vtable();
+
         Self {
-            data: OpaqueUninit(uninit.as_mut_ptr() as *mut u8, PhantomData),
+            data: OpaqueUninit::from_maybe_uninit(uninit),
             iset: Default::default(),
-            shape_desc: T::shape_desc(),
-            shape: T::shape(),
-            vtable: T::shape().vtable(),
+            shape_desc,
+            shape,
+            vtable,
         }
     }
 
@@ -345,10 +349,9 @@ impl<'mem> Partial<'mem> {
                 // note: copy_nonoverlapping takes a count,
                 // since we're dealing with `*mut u8`, it's a byte count.
                 // if we were dealing with `*mut ()`, we'd have a nasty surprise.
-                self.shape.get().layout.size(),
+                self.shape.layout.size(),
             );
         }
-        self.deallocate();
         std::mem::forget(self);
     }
 

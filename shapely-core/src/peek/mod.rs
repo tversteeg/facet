@@ -1,3 +1,5 @@
+//! Allows peeking (reading from) shapes
+
 use crate::Shapely;
 use std::cmp::Ordering;
 

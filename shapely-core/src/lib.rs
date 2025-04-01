@@ -18,6 +18,12 @@ pub use partial::*;
 mod helpers;
 pub use helpers::*;
 
+mod poke;
+pub use poke::*;
+
+mod peek;
+pub use peek::*;
+
 pub mod mini_typeid;
 
 #[doc(hidden)]

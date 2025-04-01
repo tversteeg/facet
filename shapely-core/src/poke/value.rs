@@ -1,7 +1,6 @@
 use crate::{OpaqueUninit, Shape, ValueVTable};
 
 /// Lets you write to a value (implements write-only [`ValueVTable`] proxies)
-#[derive(Clone, Copy)]
 pub struct PokeValue<'mem> {
     pub data: OpaqueUninit<'mem>,
     pub shape: Shape,

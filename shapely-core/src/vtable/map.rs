@@ -1,4 +1,4 @@
-use super::{Opaque, OpaqueConst};
+use crate::{Opaque, OpaqueConst};
 
 /// Insert a key-value pair into the map
 ///
