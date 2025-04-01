@@ -149,7 +149,7 @@ impl<'mem> PokeStruct<'mem> {
     }
 
     /// Gets a field, by name
-    pub fn field_by_name<'s>(&'s mut self, name: &str) -> Result<crate::PokeValue<'s>, FieldError> {
+    pub fn field_by_name<'s>(&'s mut self, name: &str) -> Result<crate::Poke<'s>, FieldError> {
         let index = self
             .fields
             .iter()
@@ -165,7 +165,7 @@ impl<'mem> PokeStruct<'mem> {
     /// Returns an error if:
     /// - The shape doesn't represent a struct.
     /// - The index is out of bounds.
-    pub fn field<'s>(&'s mut self, index: usize) -> Result<crate::PokeValue<'s>, FieldError> {
+    pub fn field<'s>(&'s mut self, index: usize) -> Result<crate::Poke<'s>, FieldError> {
         if index >= self.fields.len() {
             return Err(FieldError::IndexOutOfBounds);
         }
@@ -175,16 +175,9 @@ impl<'mem> PokeStruct<'mem> {
         // Get the field's address
         let field_addr = unsafe { self.data.field_uninit(field.offset) };
         let field_shape = field.shape;
-        let field_vtable = field_shape.get().vtable();
 
-        // Create a PokeValue for this field
-        let poke_value = crate::PokeValue {
-            data: field_addr,
-            shape: field_shape.get(),
-            vtable: field_vtable,
-        };
-
-        Ok(poke_value)
+        let poke = unsafe { crate::Poke::from_opaque_uninit(field_addr, field_shape) };
+        Ok(poke)
     }
 
     /// Sets a field's value by its index.
@@ -198,20 +191,12 @@ impl<'mem> PokeStruct<'mem> {
         if index >= self.fields.len() {
             return Err(FieldError::IndexOutOfBounds);
         }
-
         let field = &self.fields[index];
-
         let field_shape = field.shape.get();
-        if field_shape != value.shape {
-            return Err(FieldError::ShapeMismatch {
-                expected: field_shape,
-                got: value.shape,
-            });
-        }
 
         unsafe {
             std::ptr::copy_nonoverlapping(
-                value.data.as_ptr(),
+                value.as_ptr(),
                 self.data.field_uninit(field.offset).as_mut_ptr(),
                 field_shape.layout.size(),
             );
@@ -238,6 +223,11 @@ impl<'mem> PokeStruct<'mem> {
     }
 
     /// Marks a field as initialized.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the field is initialized. Only call this after writing to
+    /// an address gotten through [`Self::field`] or [`Self::field_by_name`].
     pub unsafe fn mark_initialized(&mut self, index: usize) {
         self.iset.set(index);
     }
@@ -245,21 +235,18 @@ impl<'mem> PokeStruct<'mem> {
 
 impl Drop for PokeStruct<'_> {
     fn drop(&mut self) {
-        match self.shape.innards {
-            crate::Innards::Struct { fields } => fields
-                .iter()
-                .enumerate()
-                .filter_map(|(i, field)| {
-                    if self.iset.has(i) {
-                        Some((field, field.shape.get().vtable().drop_in_place?))
-                    } else {
-                        None
-                    }
-                })
-                .for_each(|(field, drop_fn)| unsafe {
-                    drop_fn(self.data.field_init(field.offset));
-                }),
-            _ => {}
-        }
+        self.fields
+            .iter()
+            .enumerate()
+            .filter_map(|(i, field)| {
+                if self.iset.has(i) {
+                    Some((field, field.shape.get().vtable().drop_in_place?))
+                } else {
+                    None
+                }
+            })
+            .for_each(|(field, drop_fn)| unsafe {
+                drop_fn(self.data.field_init(field.offset));
+            });
     }
 }
