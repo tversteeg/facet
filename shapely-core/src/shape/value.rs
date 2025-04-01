@@ -76,6 +76,29 @@ pub type DebugFn =
 /// same pointer wrapped in an [`Opaque`].
 pub type DefaultInPlaceFn = for<'mem> unsafe fn(target: OpaqueUninit<'mem>) -> Option<Opaque<'mem>>;
 
+/// Function to create a value from a string
+///
+/// # Safety
+///
+/// The `target` parameter has the correct layout and alignment, but points to
+/// uninitialized memory. If this function succeeds, it should return `Some` with the
+/// same pointer wrapped in an [`Opaque`].
+pub type FromStrFn =
+    for<'mem> unsafe fn(s: &str, target: OpaqueUninit<'mem>) -> Option<Opaque<'mem>>;
+
+/// Function to try converting from another type
+///
+/// # Safety
+///
+/// The `source` parameter must point to aligned, initialized memory of the source type.
+/// The `target` parameter has the correct layout and alignment, but points to
+/// uninitialized memory. If this function succeeds, it should return `Some` with the
+/// same pointer wrapped in an [`Opaque`].
+pub type TryFromFn = for<'src, 'mem> unsafe fn(
+    source: OpaqueConst<'src>,
+    target: OpaqueUninit<'mem>,
+) -> Option<Opaque<'mem>>;
+
 /// Function to check if two values are equal
 ///
 /// # Safety
@@ -132,4 +155,10 @@ pub struct ValueVTable {
 
     /// cf. [`DropInPlaceFn`] — if None, drops without side-effects
     pub drop_in_place: Option<DropInPlaceFn>,
+
+    /// cf. [`FromStrFn`]
+    pub from_str: Option<FromStrFn>,
+
+    /// cf. [`TryFromFn`]
+    pub try_from: Option<TryFromFn>,
 }
