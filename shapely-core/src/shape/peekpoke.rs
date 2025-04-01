@@ -1,7 +1,7 @@
 use crate::Shapely;
 use std::cmp::Ordering;
 
-use super::{OpaqueConst, ScalarVTable, ShapeDesc};
+use super::{OpaqueConst, Shape, ShapeDesc};
 
 /// Lets you peek at the innards of a value
 ///
@@ -9,14 +9,14 @@ use super::{OpaqueConst, ScalarVTable, ShapeDesc};
 /// in which case, you're entirely on your own.
 #[derive(Clone, Copy)]
 pub enum Peek<'mem> {
-    Scalar(PeekScalar<'mem>),
+    Scalar(PeekValue<'mem>),
 }
 
-/// Lets you read from a scalar
+/// Lets you read from a value (implements read-only [`ValueVTable`] proxies)
 #[derive(Clone, Copy)]
-pub struct PeekScalar<'mem> {
+pub struct PeekValue<'mem> {
     data: OpaqueConst<'mem>,
-    vtable: ScalarVTable,
+    shape: Shape,
 }
 
 impl<'mem> Peek<'mem> {
@@ -34,29 +34,34 @@ impl<'mem> Peek<'mem> {
     ///
     /// `data` must be initialized and well-aligned, and point to a value
     /// of the type described by `shape`.
-    pub unsafe fn unchecked_new(data: OpaqueConst<'mem>, shape: ShapeDesc) -> Self {
-        let sh = shape.get();
-        match sh.innards {
+    pub unsafe fn unchecked_new(data: OpaqueConst<'mem>, shape_desc: ShapeDesc) -> Self {
+        let shape = shape_desc.get();
+        match shape.innards {
             super::Innards::Struct { .. } => todo!(),
             super::Innards::TupleStruct { .. } => todo!(),
             super::Innards::Tuple { .. } => todo!(),
             super::Innards::Map { .. } => todo!(),
             super::Innards::List { .. } => todo!(),
-            super::Innards::Scalar { vtable } => Peek::Scalar(PeekScalar { data, vtable }),
+            super::Innards::Scalar => Peek::Scalar(PeekValue { data, shape }),
             super::Innards::Enum { .. } => todo!(),
         }
     }
 }
 
-impl PeekScalar<'_> {
+impl<'mem> PeekValue<'mem> {
     /// Returns true if this scalar is equal to the other scalar
     ///
     /// # Returns
     ///
     /// `None` if equality comparison is not supported for this scalar type
     #[inline(always)]
-    pub fn eq(&self, other: &PeekScalar) -> Option<bool> {
-        unsafe { self.vtable.eq.map(|eq_fn| eq_fn(self.data, other.data)) }
+    pub fn eq(&self, other: &PeekValue<'_>) -> Option<bool> {
+        unsafe {
+            self.shape
+                .vtable
+                .eq
+                .map(|eq_fn| eq_fn(self.data, other.data))
+        }
     }
 
     /// Compares this scalar with another and returns their ordering
@@ -65,8 +70,13 @@ impl PeekScalar<'_> {
     ///
     /// `None` if comparison is not supported for this scalar type
     #[inline(always)]
-    pub fn cmp(&self, other: &PeekScalar) -> Option<Ordering> {
-        unsafe { self.vtable.cmp.map(|cmp_fn| cmp_fn(self.data, other.data)) }
+    pub fn cmp(&self, other: &PeekValue<'_>) -> Option<Ordering> {
+        unsafe {
+            self.shape
+                .vtable
+                .cmp
+                .map(|cmp_fn| cmp_fn(self.data, other.data))
+        }
     }
 
     /// Returns true if this scalar is greater than the other scalar
@@ -75,7 +85,7 @@ impl PeekScalar<'_> {
     ///
     /// `None` if comparison is not supported for this scalar type
     #[inline(always)]
-    pub fn gt(&self, other: &PeekScalar) -> Option<bool> {
+    pub fn gt(&self, other: &PeekValue<'_>) -> Option<bool> {
         self.cmp(other)
             .map(|ordering| ordering == Ordering::Greater)
     }
@@ -86,7 +96,7 @@ impl PeekScalar<'_> {
     ///
     /// `None` if comparison is not supported for this scalar type
     #[inline(always)]
-    pub fn gte(&self, other: &PeekScalar) -> Option<bool> {
+    pub fn gte(&self, other: &PeekValue<'_>) -> Option<bool> {
         self.cmp(other)
             .map(|ordering| ordering == Ordering::Greater || ordering == Ordering::Equal)
     }
@@ -97,7 +107,7 @@ impl PeekScalar<'_> {
     ///
     /// `None` if comparison is not supported for this scalar type
     #[inline(always)]
-    pub fn lt(&self, other: &PeekScalar) -> Option<bool> {
+    pub fn lt(&self, other: &PeekValue<'_>) -> Option<bool> {
         self.cmp(other).map(|ordering| ordering == Ordering::Less)
     }
 
@@ -107,7 +117,7 @@ impl PeekScalar<'_> {
     ///
     /// `None` if comparison is not supported for this scalar type
     #[inline(always)]
-    pub fn lte(&self, other: &PeekScalar) -> Option<bool> {
+    pub fn lte(&self, other: &PeekValue<'_>) -> Option<bool> {
         self.cmp(other)
             .map(|ordering| ordering == Ordering::Less || ordering == Ordering::Equal)
     }
@@ -118,9 +128,10 @@ impl PeekScalar<'_> {
     ///
     /// `None` if display formatting is not supported for this scalar type
     #[inline(always)]
-    pub fn display(&self, f: std::fmt::Formatter<'_>) -> Option<String> {
+    pub fn display(&self, f: std::fmt::Formatter<'_>) -> Option<std::fmt::Result> {
         unsafe {
-            self.vtable
+            self.shape
+                .vtable
                 .display
                 .map(|display_fn| display_fn(self.data, f))
         }
@@ -132,8 +143,13 @@ impl PeekScalar<'_> {
     ///
     /// `None` if debug formatting is not supported for this scalar type
     #[inline(always)]
-    pub fn debug(&self, f: std::fmt::Formatter<'_>) -> Option<String> {
-        unsafe { self.vtable.debug.map(|debug_fn| debug_fn(self.data, f)) }
+    pub fn debug(&self, f: std::fmt::Formatter<'_>) -> Option<std::fmt::Result> {
+        unsafe {
+            self.shape
+                .vtable
+                .debug
+                .map(|debug_fn| debug_fn(self.data, f))
+        }
     }
 
     /// Hashes this scalar
@@ -144,7 +160,7 @@ impl PeekScalar<'_> {
     #[inline(always)]
     pub fn hash(&self, hasher: &mut (dyn std::hash::Hasher + 'static)) -> bool {
         unsafe {
-            if let Some(hash_fn) = self.vtable.hash {
+            if let Some(hash_fn) = self.shape.vtable.hash {
                 hash_fn(self.data, hasher as *mut dyn std::hash::Hasher);
                 true
             } else {

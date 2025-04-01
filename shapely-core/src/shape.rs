@@ -205,8 +205,11 @@ pub enum Innards {
         /// vtable for interacting with the map
         vtable: MapVTable,
 
-        /// shape of the values in the map (keys must be String, sorry)
-        value_shape: ShapeDesc,
+        /// shape of the keys in the map
+        k: ShapeDesc,
+
+        /// shape of the values in the map
+        v: ShapeDesc,
     },
 
     /// Ordered list of heterogenous values, variable size
@@ -217,13 +220,13 @@ pub enum Innards {
         vtable: ListVTable,
 
         /// shape of the items in the list
-        item_shape: ShapeDesc,
+        t: ShapeDesc,
     },
 
     /// Scalar — known base type
     ///
     /// e.g. `u32`, `String`, `bool`, `SocketAddr`, etc.
-    Scalar { vtable: ScalarVTable },
+    Scalar,
 
     /// Enum with variants
     ///
