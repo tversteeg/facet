@@ -1,7 +1,8 @@
 use std::{alloc::Layout, fmt};
 
 use crate::{
-    Innards, ListVTable, OpaqueConst, Shape, Shapely, TypeNameOpts, ValueVTable, mini_typeid,
+    Innards, ListInnards, ListVTable, OpaqueConst, Shape, Shapely, TypeNameOpts, ValueVTable,
+    mini_typeid,
 };
 
 impl<T> Shapely for Vec<T>
@@ -43,7 +44,7 @@ where
                 // TODO: specialize these
                 try_from: None,
             },
-            innards: Innards::List {
+            innards: Innards::List(ListInnards {
                 vtable: ListVTable {
                     push: |ptr, item| unsafe {
                         let vec = ptr.as_mut_ptr::<Vec<T>>();
@@ -67,7 +68,7 @@ where
                     },
                 },
                 t: T::shape_desc(),
-            },
+            }),
         }
     }
 }

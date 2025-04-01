@@ -34,6 +34,9 @@ impl<'mem> PokeStruct<'mem> {
         unsafe { Self::from_opaque_uninit_and_fields(data, shape_desc, fields) }
     }
 
+    /// # Safety
+    ///
+    /// The `data`, `shape_desc`, and `fields` must match
     pub unsafe fn from_opaque_uninit_and_fields(
         data: OpaqueUninit<'mem>,
         shape_desc: ShapeDesc,

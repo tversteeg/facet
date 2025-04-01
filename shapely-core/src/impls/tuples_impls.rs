@@ -52,9 +52,9 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple {
+            innards: Innards::Tuple(StructInnards {
                 fields: &const { [field!(0, T0)] },
-            },
+            }),
         }
     }
 }
@@ -111,9 +111,9 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple {
+            innards: Innards::Tuple(StructInnards {
                 fields: &const { [field!(0, T0), field!(1, T1)] },
-            },
+            }),
         }
     }
 }
@@ -174,9 +174,9 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple {
+            innards: Innards::Tuple(StructInnards {
                 fields: &const { [field!(0, T0), field!(1, T1), field!(2, T2)] },
-            },
+            }),
         }
     }
 }
@@ -241,9 +241,9 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple {
+            innards: Innards::Tuple(StructInnards {
                 fields: &const { [field!(0, T0), field!(1, T1), field!(2, T2), field!(3, T3)] },
-            },
+            }),
         }
     }
 }
@@ -312,7 +312,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple {
+            innards: Innards::Tuple(StructInnards {
                 fields: &const {
                     [
                         field!(0, T0),
@@ -322,7 +322,7 @@ where
                         field!(4, T4),
                     ]
                 },
-            },
+            }),
         }
     }
 }
@@ -398,7 +398,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple {
+            innards: Innards::Tuple(StructInnards {
                 fields: &const {
                     [
                         field!(0, T0),
@@ -409,7 +409,7 @@ where
                         field!(5, T5),
                     ]
                 },
-            },
+            }),
         }
     }
 }
@@ -489,7 +489,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple {
+            innards: Innards::Tuple(StructInnards {
                 fields: &const {
                     [
                         field!(0, T0),
@@ -501,7 +501,7 @@ where
                         field!(6, T6),
                     ]
                 },
-            },
+            }),
         }
     }
 }
@@ -585,7 +585,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple {
+            innards: Innards::Tuple(StructInnards {
                 fields: &const {
                     [
                         field!(0, T0),
@@ -598,7 +598,7 @@ where
                         field!(7, T7),
                     ]
                 },
-            },
+            }),
         }
     }
 }
@@ -688,7 +688,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple {
+            innards: Innards::Tuple(StructInnards {
                 fields: &const {
                     [
                         field!(0, T0),
@@ -702,7 +702,7 @@ where
                         field!(8, T8),
                     ]
                 },
-            },
+            }),
         }
     }
 }
@@ -796,7 +796,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple {
+            innards: Innards::Tuple(StructInnards {
                 fields: &const {
                     [
                         field!(0, T0),
@@ -811,7 +811,7 @@ where
                         field!(9, T9),
                     ]
                 },
-            },
+            }),
         }
     }
 }
@@ -913,7 +913,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple {
+            innards: Innards::Tuple(StructInnards {
                 fields: &const {
                     [
                         field!(0, T0),
@@ -929,7 +929,7 @@ where
                         field!(10, T10),
                     ]
                 },
-            },
+            }),
         }
     }
 }
@@ -1046,7 +1046,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Tuple {
+            innards: Innards::Tuple(StructInnards {
                 fields: &const {
                     [
                         field!(0, T0),
@@ -1063,7 +1063,7 @@ where
                         field!(11, T11),
                     ]
                 },
-            },
+            }),
         }
     }
 }

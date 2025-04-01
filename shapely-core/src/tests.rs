@@ -39,8 +39,15 @@ fn build_foobar_through_reflection() {
     let mut poke = Poke::alloc::<FooBar>().into_struct();
     poke.set_by_name("foo", OpaqueConst::from_ref(&42u64))
         .unwrap();
-    poke.set_by_name("bar", OpaqueConst::from_ref(&String::from("Hello, World!")))
-        .unwrap();
+
+    {
+        let bar = String::from("Hello, World!");
+        poke.set_by_name("bar", OpaqueConst::from_ref(&bar))
+            .unwrap();
+        // bar has been moved out of
+        std::mem::forget(bar);
+    }
+
     let foo_bar = poke.build::<FooBar>();
 
     // Verify the fields were set correctly

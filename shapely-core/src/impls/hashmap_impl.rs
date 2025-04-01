@@ -5,7 +5,8 @@ use std::{
 };
 
 use crate::{
-    Innards, MapVTable, OpaqueConst, Shape, Shapely, TypeNameOpts, ValueVTable, mini_typeid,
+    Innards, MapInnards, MapVTable, OpaqueConst, Shape, Shapely, TypeNameOpts, ValueVTable,
+    mini_typeid,
 };
 
 impl<K, V> Shapely for HashMap<K, V>
@@ -51,7 +52,7 @@ where
                 parse: None,
                 try_from: None,
             },
-            innards: Innards::Map {
+            innards: Innards::Map(MapInnards {
                 k: K::shape_desc(),
                 v: V::shape_desc(),
                 vtable: MapVTable {
@@ -86,7 +87,7 @@ where
                             let map = state.map.as_ref::<HashMap<K, V>>();
 
                             while let Some(key) = state.keys.pop_front() {
-                                if let Some(value) = map.get(key) {
+                                if let Some(value) = map.get(&key) {
                                     return Some((
                                         OpaqueConst::new_unchecked(key as *const K),
                                         OpaqueConst::new_unchecked(value as *const V),
@@ -103,7 +104,7 @@ where
                         },
                     },
                 },
-            },
+            }),
         }
     }
 }

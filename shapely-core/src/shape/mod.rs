@@ -164,57 +164,69 @@ impl std::fmt::Debug for Shape {
     }
 }
 
+/// Common fields for struct-like types
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct StructInnards {
+    /// all fields, in declaration order (not necessarily in memory order)
+    pub fields: &'static [Field],
+}
+
+/// Fields for map types
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct MapInnards {
+    /// vtable for interacting with the map
+    pub vtable: MapVTable,
+    /// shape of the keys in the map
+    pub k: ShapeDesc,
+    /// shape of the values in the map
+    pub v: ShapeDesc,
+}
+
+/// Fields for list types
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ListInnards {
+    /// vtable for interacting with the list
+    pub vtable: ListVTable,
+    /// shape of the items in the list
+    pub t: ShapeDesc,
+}
+
+/// Fields for enum types
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct EnumInnards {
+    /// all variants for this enum
+    pub variants: &'static [Variant],
+    /// representation of the enum
+    pub repr: EnumRepr,
+}
+
 /// The shape of a schema: is it more map-shaped, array-shaped, scalar-shaped?
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Innards {
     /// Struct with statically-known, named fields
     ///
     /// e.g. `struct Struct { field: u32 }`
-    Struct {
-        /// all fields, in declaration order (not necessarily in memory order)
-        fields: &'static [Field],
-    },
+    Struct(StructInnards),
 
     /// Tuple-struct, with numbered fields
     ///
     /// e.g. `struct TupleStruct(u32, u32);`
-    TupleStruct {
-        /// all fields, in declaration order (not necessarily in memory order)
-        fields: &'static [Field],
-    },
+    TupleStruct(StructInnards),
 
     /// Tuple, with numbered fields
     ///
     /// e.g. `(u32, u32);`
-    Tuple {
-        /// all fields, in declaration order (not necessarily in memory order)
-        fields: &'static [Field],
-    },
+    Tuple(StructInnards),
 
     /// Map — keys are dynamic (and strings, sorry), values are homogeneous
     ///
     /// e.g. `Map<String, T>`
-    Map {
-        /// vtable for interacting with the map
-        vtable: MapVTable,
-
-        /// shape of the keys in the map
-        k: ShapeDesc,
-
-        /// shape of the values in the map
-        v: ShapeDesc,
-    },
+    Map(MapInnards),
 
     /// Ordered list of heterogenous values, variable size
     ///
     /// e.g. `Vec<T>`
-    List {
-        /// vtable for interacting with the list
-        vtable: ListVTable,
-
-        /// shape of the items in the list
-        t: ShapeDesc,
-    },
+    List(ListInnards),
 
     /// Scalar — known base type
     ///
@@ -224,13 +236,7 @@ pub enum Innards {
     /// Enum with variants
     ///
     /// e.g. `enum Enum { Variant1, Variant2 }`
-    Enum {
-        /// all variants for this enum
-        variants: &'static [Variant],
-
-        /// representation of the enum
-        repr: EnumRepr,
-    },
+    Enum(EnumInnards),
 }
 
 /// A function that returns a shape. There should only be one of these per concrete type in a

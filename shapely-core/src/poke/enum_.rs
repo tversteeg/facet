@@ -1,4 +1,6 @@
-use crate::{FieldError, OpaqueUninit, Shape, ShapeDesc, Shapely, ValueVTable, trace};
+use crate::{
+    EnumRepr, FieldError, OpaqueUninit, Shape, ShapeDesc, Shapely, ValueVTable, Variant, trace,
+};
 use std::ptr::NonNull;
 
 use super::{ISet, Poke};
@@ -12,30 +14,15 @@ pub struct PokeEnum<'mem> {
     #[allow(dead_code)]
     vtable: ValueVTable,
     selected_variant: Option<usize>,
+
+    /// all variants for this enum
+    variants: &'static [Variant],
+
+    /// representation of the enum
+    repr: EnumRepr,
 }
 
 impl<'mem> PokeEnum<'mem> {
-    /// Creates a new PokeEnum from raw data
-    ///
-    /// # Safety
-    ///
-    /// The data buffer must match the size and alignment of the enum shape described by shape_desc
-    pub(crate) unsafe fn new(
-        data: OpaqueUninit<'mem>,
-        shape_desc: ShapeDesc,
-        vtable: ValueVTable,
-    ) -> Self {
-        let shape = shape_desc.get();
-        Self {
-            data,
-            iset: Default::default(),
-            shape_desc,
-            shape,
-            vtable,
-            selected_variant: None,
-        }
-    }
-
     /// Creates a new PokeEnum from a MaybeUninit
     pub fn from_maybe_uninit<T: Shapely>(uninit: &'mem mut std::mem::MaybeUninit<T>) -> Self {
         let shape_desc = T::shape_desc();
@@ -49,6 +36,31 @@ impl<'mem> PokeEnum<'mem> {
             shape,
             vtable,
             selected_variant: None,
+        }
+    }
+
+    /// Creates a new PokeEnum from raw data
+    ///
+    /// # Safety
+    ///
+    /// The data buffer must match the size and alignment of the enum shape described by shape_desc
+    pub(crate) unsafe fn new(
+        data: OpaqueUninit<'mem>,
+        shape_desc: ShapeDesc,
+        vtable: ValueVTable,
+        variants: &'static [Variant],
+        repr: EnumRepr,
+    ) -> Self {
+        let shape = shape_desc.get();
+        Self {
+            data,
+            iset: Default::default(),
+            shape_desc,
+            shape,
+            vtable,
+            selected_variant: None,
+            variants,
+            repr,
         }
     }
 
