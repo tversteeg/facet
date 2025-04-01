@@ -84,20 +84,7 @@ impl Shape {
                     indent + Self::INDENT * 2,
                 )?;
             }
-            Innards::Transparent(inner_schema) => {
-                write!(
-                    f,
-                    "{:indent$}\x1b[1;36mTransparent wrapper for:\x1b[0m ",
-                    "",
-                    indent = indent + Self::INDENT
-                )?;
-                inner_schema.get().pretty_print_recursive_internal(
-                    f,
-                    printed_schemas,
-                    indent + Self::INDENT * 2,
-                )?;
-            }
-            Innards::Scalar(_scalar) => {
+            Innards::Scalar { .. } => {
                 // let's not duplicate `u64 => U64` for example
             }
             Innards::Enum { variants, repr: _ } => {

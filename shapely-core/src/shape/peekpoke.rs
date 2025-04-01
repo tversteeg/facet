@@ -42,7 +42,6 @@ impl<'mem> Peek<'mem> {
             super::Innards::Tuple { .. } => todo!(),
             super::Innards::Map { .. } => todo!(),
             super::Innards::List { .. } => todo!(),
-            super::Innards::Transparent(_) => todo!(),
             super::Innards::Scalar { vtable } => Peek::Scalar(PeekScalar { data, vtable }),
             super::Innards::Enum { .. } => todo!(),
         }
@@ -146,7 +145,7 @@ impl PeekScalar<'_> {
     pub fn hash(&self, hasher: &mut dyn std::hash::Hasher) -> bool {
         unsafe {
             if let Some(hash_fn) = self.vtable.hash {
-                hash_fn(self.data, hasher as *const dyn std::hash::Hasher);
+                hash_fn(self.data, hasher as *mut dyn std::hash::Hasher);
                 true
             } else {
                 false

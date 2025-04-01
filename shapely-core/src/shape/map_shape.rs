@@ -43,21 +43,21 @@ pub type MapGetValuePtrFn =
 /// # Safety
 ///
 /// The `map` parameter must point to aligned, initialized memory of the correct type.
-pub type MapIterFn = unsafe fn(map: OpaqueConst) -> OpaqueConst;
+pub type MapIterFn = for<'mem> unsafe fn(map: OpaqueConst<'mem>) -> OpaqueConst<'mem>;
 
 /// Get the next key-value pair from the iterator
 ///
 /// # Safety
 ///
 /// The `iter` parameter must point to aligned, initialized memory of the correct type.
-pub type MapIterNextFn = unsafe fn(iter: OpaqueConst) -> Option<(*const String, OpaqueConst)>;
+pub type MapIterNextFn = unsafe fn(iter: Opaque) -> Option<(*const String, OpaqueConst)>;
 
 /// Deallocate the iterator
 ///
 /// # Safety
 ///
 /// The `iter` parameter must point to aligned, initialized memory of the correct type.
-pub type MapIterDeallocFn = unsafe fn(iter: OpaqueConst);
+pub type MapIterDeallocFn = unsafe fn(iter: Opaque);
 
 /// VTable for an iterator over a map
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]

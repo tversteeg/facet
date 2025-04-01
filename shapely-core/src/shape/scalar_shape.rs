@@ -53,7 +53,8 @@ pub type ScalarCmpFn = unsafe fn(left: OpaqueConst, right: OpaqueConst) -> Order
 ///
 /// The `value` parameter must point to aligned, initialized memory of the correct type.
 /// The hasher pointer must be a valid pointer to a Hasher trait object.
-pub type ScalarHashFn = unsafe fn(value: OpaqueConst, hasher: *const dyn std::hash::Hasher);
+pub type ScalarHashFn =
+    for<'mem> unsafe fn(value: OpaqueConst<'mem>, hasher: *mut dyn std::hash::Hasher);
 
 /// Function to try to convert a value from one scalar type to another
 ///

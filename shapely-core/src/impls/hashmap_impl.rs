@@ -1,10 +1,14 @@
-use std::{alloc::Layout, collections::HashMap, fmt, marker::PhantomData};
+use std::{
+    alloc::Layout,
+    collections::{HashMap, VecDeque},
+    fmt,
+};
 
 use crate::{Innards, NameOpts, OpaqueConst, Shape, Shapely, mini_typeid};
 
 impl<V> Shapely for HashMap<String, V>
 where
-    V: Shapely,
+    V: Shapely + 'static,
 {
     fn shape() -> Shape {
         // This name function doesn't need the type parameter
@@ -16,6 +20,11 @@ where
             } else {
                 write!(f, "HashMap<…>")
             }
+        }
+
+        struct Iterator<'mem> {
+            map: OpaqueConst<'mem>,
+            keys: VecDeque<String>,
         }
 
         Shape {
@@ -48,38 +57,33 @@ where
                     },
                     get_value_ptr: |ptr, key| unsafe {
                         let map = ptr.as_ref::<HashMap<String, V>>();
-                        map.get(key).map(OpaqueConst::from_ref)
+                        map.get(key)
+                            .map(|v| OpaqueConst::new_unchecked(v as *const _))
                     },
                     iter: |ptr| unsafe {
                         let map = ptr.as_ref::<HashMap<String, V>>();
-                        let entries: Vec<(String, *const V)> = map
-                            .iter()
-                            .map(|(k, v)| (k.clone(), v as *const V))
-                            .collect();
-
-                        let iter_state = Box::new((entries, 0usize));
+                        let keys: VecDeque<String> = map.keys().cloned().collect();
+                        let iter_state = Box::new(Iterator { map: ptr, keys });
                         OpaqueConst::new_unchecked(Box::into_raw(iter_state) as *mut u8)
                     },
                     iter_vtable: crate::MapIterVTable {
                         next: |iter_ptr| unsafe {
-                            let state = &mut *(iter_ptr.as_mut_ptr()
-                                as *mut (Vec<(String, *const V)>, usize));
-                            let (entries, index) = state;
+                            let state = iter_ptr.as_mut::<Iterator>();
+                            let map = state.map.as_ref::<HashMap<String, V>>();
 
-                            if *index < entries.len() {
-                                let current = &entries[*index];
-                                let key_ptr = &current.0 as *const String;
-                                let value = OpaqueConst::new_unchecked(current.1 as *const u8);
-                                *index += 1;
-                                Some((key_ptr, value))
-                            } else {
-                                None
+                            while let Some(key) = state.keys.pop_front() {
+                                if let Some(value) = map.get(&key) {
+                                    return Some((
+                                        &key as *const String,
+                                        OpaqueConst::from_ref(value),
+                                    ));
+                                }
                             }
+
+                            None
                         },
                         dealloc: |iter_ptr| unsafe {
-                            drop(Box::from_raw(
-                                iter_ptr.as_mut_ptr() as *mut (Vec<(String, *const V)>, usize)
-                            ));
+                            drop(Box::from_raw(iter_ptr.as_ptr::<Iterator>() as *mut Iterator));
                         },
                     },
                 },

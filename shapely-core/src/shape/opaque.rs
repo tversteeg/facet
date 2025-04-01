@@ -45,7 +45,7 @@ impl<'mem> OpaqueConst<'mem> {
     }
 
     /// Gets the underlying raw pointer as a byte pointer
-    pub fn as_byte_ptr(&self) -> *const u8 {
+    pub fn as_byte_ptr(self) -> *const u8 {
         self.0.as_ptr()
     }
 
@@ -54,7 +54,7 @@ impl<'mem> OpaqueConst<'mem> {
     /// # Safety
     ///
     /// Must be called with the original type T that was used to create this pointer
-    pub unsafe fn as_ptr<T>(&self) -> *const T {
+    pub unsafe fn as_ptr<T>(self) -> *const T {
         self.0.as_ptr() as *const T
     }
 
@@ -63,7 +63,7 @@ impl<'mem> OpaqueConst<'mem> {
     /// # Safety
     ///
     /// `T` must be the _actual_ underlying type. You're downcasting with no guardrails.
-    pub unsafe fn as_ref<'borrow: 'mem, T>(&'borrow self) -> &'borrow T {
+    pub unsafe fn as_ref<'borrow: 'mem, T>(self) -> &'borrow T {
         unsafe { &*(self.0.as_ptr() as *const T) }
     }
 }
@@ -92,12 +92,12 @@ impl<'mem> Opaque<'mem> {
     }
 
     /// Gets the underlying raw pointer
-    pub fn as_byte_ptr(&self) -> *const u8 {
+    pub fn as_byte_ptr(self) -> *const u8 {
         self.0.as_ptr()
     }
 
     /// Gets the underlying raw pointer as mutable
-    pub fn as_mut_byte_ptr(&mut self) -> *mut u8 {
+    pub fn as_mut_byte_ptr(self) -> *mut u8 {
         self.0.as_ptr()
     }
 
@@ -106,7 +106,7 @@ impl<'mem> Opaque<'mem> {
     /// # Safety
     ///
     /// Must be called with the original type T that was used to create this pointer
-    pub unsafe fn as_ptr<T>(&self) -> *const T {
+    pub unsafe fn as_ptr<T>(self) -> *const T {
         self.0.as_ptr() as *const T
     }
 
@@ -115,7 +115,7 @@ impl<'mem> Opaque<'mem> {
     /// # Safety
     ///
     /// `T` must be the _actual_ iunderlying type. You're downcasting with no guardrails.
-    pub unsafe fn as_mut<'borrow: 'mem, T>(&'borrow mut self) -> &'borrow mut T {
+    pub unsafe fn as_mut<'borrow: 'mem, T>(self) -> &'borrow mut T {
         unsafe { &mut *(self.0.as_ptr() as *mut T) }
     }
 
@@ -124,12 +124,12 @@ impl<'mem> Opaque<'mem> {
     /// # Safety
     ///
     /// `T` must be the _actual_ underlying type. You're downcasting with no guardrails.
-    pub unsafe fn as_ref<'borrow: 'mem, T>(&'borrow self) -> &'borrow T {
+    pub unsafe fn as_ref<'borrow: 'mem, T>(self) -> &'borrow T {
         unsafe { &*(self.0.as_ptr() as *const T) }
     }
 
     /// Make a const ptr out of this mut ptr
-    pub fn as_const<'borrow: 'mem>(&'borrow self) -> OpaqueConst<'borrow> {
+    pub fn as_const<'borrow: 'mem>(self) -> OpaqueConst<'borrow> {
         OpaqueConst(self.0, PhantomData)
     }
 }
