@@ -15,8 +15,8 @@ pub enum Peek<'mem> {
 /// Lets you read from a value (implements read-only [`ValueVTable`] proxies)
 #[derive(Clone, Copy)]
 pub struct PeekValue<'mem> {
-    data: OpaqueConst<'mem>,
-    shape: Shape,
+    pub data: OpaqueConst<'mem>,
+    pub shape: Shape,
 }
 
 impl<'mem> Peek<'mem> {

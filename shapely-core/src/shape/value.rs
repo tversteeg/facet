@@ -1,4 +1,4 @@
-use super::{Opaque, OpaqueConst, OpaqueUninit};
+use super::{Opaque, OpaqueConst, OpaqueUninit, Peek};
 use std::cmp::Ordering;
 
 /// A function that formats the name of a type.
@@ -93,12 +93,11 @@ pub type ParseFn = for<'mem> unsafe fn(s: &str, target: OpaqueUninit<'mem>) -> O
 ///
 /// # Safety
 ///
-/// The `source` parameter must point to aligned, initialized memory of the source type.
 /// The `target` parameter has the correct layout and alignment, but points to
 /// uninitialized memory. If this function succeeds, it should return `Some` with the
 /// same pointer wrapped in an [`Opaque`].
 pub type TryFromFn = for<'src, 'mem> unsafe fn(
-    source: OpaqueConst<'src>,
+    source: Peek<'src>,
     target: OpaqueUninit<'mem>,
 ) -> Option<Opaque<'mem>>;
 
