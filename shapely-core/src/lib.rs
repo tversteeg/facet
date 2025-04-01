@@ -26,27 +26,6 @@ pub use log::*;
 #[cfg(test)]
 mod tests;
 
-/// A wrapper around `Vec<u8>` for binary data
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Bytes(pub Vec<u8>);
-
-impl Shapely for Bytes {
-    fn shape() -> Shape {
-        Shape {
-            name: |f, _opts| write!(f, "Bytes"),
-            typeid: mini_typeid::of::<Self>(),
-            layout: std::alloc::Layout::new::<Self>(),
-            innards: Innards::Scalar(Scalar::Bytes),
-            set_to_default: Some(|addr: *mut u8| unsafe {
-                *(addr as *mut Bytes) = Bytes(Vec::new());
-            }),
-            drop_in_place: Some(|addr: *mut u8| unsafe {
-                std::ptr::drop_in_place(addr as *mut Bytes);
-            }),
-        }
-    }
-}
-
 /// Allows querying the [Shape] of a type, which in turn lets us inspect any fields, build a value of
 /// this type progressively, etc.
 pub trait Shapely: Sized {
@@ -69,6 +48,8 @@ pub trait Shapely: Sized {
     fn partial_from_uninit(dest: &mut MaybeUninit<Self>) -> Partial<'_> {
         Partial::borrow(dest)
     }
-
-    // TODO: partial_from_mut? where all the fields are already initialized?
 }
+
+/// A wrapper around `Vec<u8>` for binary data
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Bytes(pub Vec<u8>);

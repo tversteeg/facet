@@ -1,3 +1,4 @@
+mod bytes_impl;
 mod hashmap_impl;
 mod scalar_impls;
 mod tuples_impls;
