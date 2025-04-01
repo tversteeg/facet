@@ -142,7 +142,7 @@ impl PeekScalar<'_> {
     ///
     /// `false` if hashing is not supported for this scalar type, `true` otherwise
     #[inline(always)]
-    pub fn hash(&self, hasher: &mut dyn std::hash::Hasher) -> bool {
+    pub fn hash(&self, hasher: &mut (dyn std::hash::Hasher + 'static)) -> bool {
         unsafe {
             if let Some(hash_fn) = self.vtable.hash {
                 hash_fn(self.data, hasher as *mut dyn std::hash::Hasher);
