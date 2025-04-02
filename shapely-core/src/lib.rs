@@ -33,6 +33,7 @@ mod tests;
 /// Allows querying the [Shape] of a type, which in turn lets us inspect any fields, build a value of
 /// this type progressively, etc.
 pub trait Shapely: Sized {
+    /// Returns the shape function of this type
     const SHAPE_FN: ShapeFn = const { ShapeFn(Self::shape) };
 
     /// Returns the shape of this type

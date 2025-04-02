@@ -16,7 +16,7 @@ macro_rules! struct_field {
     ($struct:ty, $field:tt) => {
         $crate::Field {
             name: stringify!($field),
-            shape: $crate::shape_fn_for(&|s: $struct| s.$field),
+            shape_fn: $crate::shape_fn_for(&|s: $struct| s.$field),
             offset: ::std::mem::offset_of!($struct, $field),
             flags: $crate::FieldFlags::EMPTY,
         }
