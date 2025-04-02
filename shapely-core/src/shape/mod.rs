@@ -208,36 +208,20 @@ impl std::fmt::Display for FieldFlags {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MapDef {
     /// vtable for interacting with the map
-    pub vtable: fn() -> MapVTable,
+    pub vtable: &'static MapVTable,
     /// shape of the keys in the map
     pub k: &'static Shape,
     /// shape of the values in the map
     pub v: &'static Shape,
 }
 
-impl MapDef {
-    /// Returns the vtable for this map
-    #[inline(always)]
-    pub fn vtable(&self) -> MapVTable {
-        (self.vtable)()
-    }
-}
-
 /// Fields for list types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ListDef {
     /// vtable for interacting with the list
-    pub vtable: fn() -> ListVTable,
+    pub vtable: &'static ListVTable,
     /// shape of the items in the list
     pub t: &'static Shape,
-}
-
-impl ListDef {
-    /// Returns the vtable for this list
-    #[inline(always)]
-    pub fn vtable(&self) -> ListVTable {
-        (self.vtable)()
-    }
 }
 
 /// Fields for enum types

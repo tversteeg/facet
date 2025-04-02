@@ -20,7 +20,7 @@ impl<'mem> PokeMapUninit<'mem> {
     /// Initializes the map with an optional size hint
     pub fn init(self, size_hint: Option<usize>) -> Result<PokeMap<'mem>, OpaqueUninit<'mem>> {
         let res = if let Some(capacity) = size_hint {
-            let init_in_place_with_capacity = self.def.vtable().init_in_place_with_capacity;
+            let init_in_place_with_capacity = self.def.vtable.init_in_place_with_capacity;
             unsafe { init_in_place_with_capacity(self.data, capacity) }
         } else {
             let pv = unsafe { PokeValue::new(self.data, self.shape) };
@@ -52,8 +52,8 @@ impl<'mem> PokeMap<'mem> {
 
     /// Gets the vtable for the map
     #[inline(always)]
-    pub fn map_vtable(&self) -> MapVTable {
-        (self.def.vtable)()
+    pub fn map_vtable(&self) -> &'static MapVTable {
+        self.def.vtable
     }
 
     /// Inserts a key-value pair into the map

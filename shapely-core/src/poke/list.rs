@@ -24,7 +24,7 @@ impl<'mem> PokeListUninit<'mem> {
     /// Initializes the list with an optional size hint
     pub fn init(self, size_hint: Option<usize>) -> Result<PokeList<'mem>, OpaqueUninit<'mem>> {
         let res = if let Some(capacity) = size_hint {
-            let init_in_place_with_capacity = self.def.vtable().init_in_place_with_capacity;
+            let init_in_place_with_capacity = self.def.vtable.init_in_place_with_capacity;
             unsafe { init_in_place_with_capacity(self.data, capacity) }
         } else {
             let pv = unsafe { PokeValue::new(self.data, self.shape) };
@@ -55,8 +55,8 @@ impl<'mem> PokeList<'mem> {
 
     /// Gets the vtable for the list
     #[inline(always)]
-    fn list_vtable(&self) -> ListVTable {
-        (self.def.vtable)()
+    fn list_vtable(&self) -> &'static ListVTable {
+        self.def.vtable
     }
 
     /// Pushes an item to the list
