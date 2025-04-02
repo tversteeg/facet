@@ -1,36 +1,17 @@
-use crate::{EnumDef, FieldError, OpaqueUninit, Shape, ShapeFn, Shapely, ValueVTable, trace};
+use crate::{EnumDef, FieldError, OpaqueUninit, ShapeFn, Shapely, trace};
 use std::ptr::NonNull;
 
 use super::{ISet, Poke};
 
-/// Allows poking an enum (selecting variants, setting fields, etc.)
-pub struct PokeEnum<'mem> {
+/// Represents an enum before a variant has been selected
+pub struct PokeEnumNoVariant<'mem> {
     data: OpaqueUninit<'mem>,
-    iset: ISet,
     shape_fn: ShapeFn,
-    shape: Shape,
-    #[allow(dead_code)]
-    vtable: ValueVTable,
-    selected_variant: Option<usize>,
-    #[allow(dead_code)]
     def: EnumDef,
 }
 
-impl<'mem> PokeEnum<'mem> {
-    /// Creates a new PokeEnum from a MaybeUninit
-    pub fn from_maybe_uninit<T: Shapely>(uninit: &'mem mut std::mem::MaybeUninit<T>) -> Self {
-        let shape_fn = T::SHAPE_FN;
-        let shape = shape_fn.get();
-        let vtable = shape.vtable();
-        let def = match shape.def {
-            crate::Def::Enum(def) => def,
-            _ => panic!("expected enum shape"),
-        };
-        let data = OpaqueUninit::from_maybe_uninit(uninit);
-        unsafe { Self::from_opaque_uninit(data, shape_fn, vtable, def) }
-    }
-
-    /// Creates a new PokeEnum from raw data
+impl<'mem> PokeEnumNoVariant<'mem> {
+    /// Creates a new PokeEnumNoVariant from raw data
     ///
     /// # Safety
     ///
@@ -38,17 +19,11 @@ impl<'mem> PokeEnum<'mem> {
     pub(crate) unsafe fn from_opaque_uninit(
         data: OpaqueUninit<'mem>,
         shape_fn: ShapeFn,
-        vtable: ValueVTable,
         def: EnumDef,
     ) -> Self {
-        let shape = shape_fn.get();
         Self {
             data,
-            iset: Default::default(),
             shape_fn,
-            shape,
-            vtable,
-            selected_variant: None,
             def,
         }
     }
@@ -58,9 +33,8 @@ impl<'mem> PokeEnum<'mem> {
     /// # Errors
     ///
     /// Returns an error if:
-    /// - The shape doesn't represent an enum.
     /// - No variant with the given name exists.
-    pub fn set_variant_by_name(&mut self, variant_name: &str) -> Result<(), FieldError> {
+    pub fn set_variant_by_name(self, variant_name: &str) -> Result<PokeEnum<'mem>, FieldError> {
         let variant_index = self
             .def
             .variants
@@ -78,9 +52,8 @@ impl<'mem> PokeEnum<'mem> {
     /// # Errors
     ///
     /// Returns an error if:
-    /// - The shape doesn't represent an enum.
     /// - The index is out of bounds.
-    pub fn set_variant_by_index(&mut self, variant_index: usize) -> Result<(), FieldError> {
+    pub fn set_variant_by_index(self, variant_index: usize) -> Result<PokeEnum<'mem>, FieldError> {
         if variant_index >= self.def.variants.len() {
             return Err(FieldError::IndexOutOfBounds);
         }
@@ -91,7 +64,7 @@ impl<'mem> PokeEnum<'mem> {
         // Prepare memory for the enum
         unsafe {
             // Zero out the memory first to ensure clean state
-            std::ptr::write_bytes(self.data.as_mut_ptr(), 0, self.shape.layout.size());
+            std::ptr::write_bytes(self.data.as_mut_ptr(), 0, self.shape_fn.get().layout.size());
 
             // Set up the discriminant (tag)
             // For enums in Rust, the first bytes contain the discriminant
@@ -163,25 +136,29 @@ impl<'mem> PokeEnum<'mem> {
             }
         }
 
-        // Mark the variant as selected (bit 0)
-        self.iset.set(0);
-        self.selected_variant = Some(variant_index);
-
-        // Reset all field initialization bits (starting from bit 1)
-        // ISet can hold 64 bits, so we'll clear bits 1-63
-        for i in 1..64 {
-            self.iset.unset(i);
-        }
-
-        Ok(())
+        // Create PokeEnum with the selected variant
+        Ok(PokeEnum {
+            data: self.data,
+            iset: Default::default(),
+            shape_fn: self.shape_fn,
+            def: self.def,
+            selected_variant: variant_index,
+        })
     }
+}
 
-    /// Returns the currently selected variant index, if any.
-    pub fn selected_variant_index(&self) -> Option<usize> {
-        if !self.iset.has(0) {
-            return None;
-        }
+/// Allows poking an enum with a selected variant (setting fields, etc.)
+pub struct PokeEnum<'mem> {
+    data: OpaqueUninit<'mem>,
+    iset: ISet,
+    shape_fn: ShapeFn,
+    def: EnumDef,
+    selected_variant: usize,
+}
 
+impl<'mem> PokeEnum<'mem> {
+    /// Returns the currently selected variant index
+    pub fn selected_variant_index(&self) -> usize {
         self.selected_variant
     }
 
@@ -190,18 +167,13 @@ impl<'mem> PokeEnum<'mem> {
     /// # Errors
     ///
     /// Returns an error if:
-    /// - No variant has been selected yet.
     /// - The field name doesn't exist in the selected variant.
     /// - The selected variant is a unit variant (which has no fields).
     pub fn variant_field_by_name<'s>(
         &'s mut self,
         name: &str,
     ) -> Result<crate::Poke<'s>, FieldError> {
-        let variant_index = self
-            .selected_variant_index()
-            .ok_or(FieldError::NotAStruct)?; // Using NotAStruct as a stand-in for "no variant selected"
-
-        let variant = &self.def.variants[variant_index];
+        let variant = &self.def.variants[self.selected_variant];
 
         // Find the field in the variant
         match &variant.kind {
@@ -211,10 +183,9 @@ impl<'mem> PokeEnum<'mem> {
             }
             crate::VariantKind::Tuple { fields } => {
                 // For tuple variants, find the field by name
-                let (_field_index, field) = fields
+                let field = fields
                     .iter()
-                    .enumerate()
-                    .find(|(_, f)| f.name == name)
+                    .find(|f| f.name == name)
                     .ok_or(FieldError::NoSuchStaticField)?;
 
                 // Get the field's address
@@ -224,10 +195,9 @@ impl<'mem> PokeEnum<'mem> {
             }
             crate::VariantKind::Struct { fields } => {
                 // For struct variants, find the field by name
-                let (_field_index, field) = fields
+                let field = fields
                     .iter()
-                    .enumerate()
-                    .find(|(_, f)| f.name == name)
+                    .find(|f| f.name == name)
                     .ok_or(FieldError::NoSuchStaticField)?;
 
                 // Get the field's address
@@ -244,45 +214,32 @@ impl<'mem> PokeEnum<'mem> {
     ///
     /// The caller must ensure that the field is not already initialized.
     pub unsafe fn mark_field_as_initialized(&mut self, field_index: usize) {
-        // Field init bits start at index 1 (index 0 is for variant selection)
-        let init_bit = field_index + 1;
-        self.iset.set(init_bit);
+        self.iset.set(field_index);
     }
 
     /// Checks if all required fields in the enum are initialized.
-    /// For enums, this means a variant is selected and all fields in that variant are initialized.
     ///
     /// # Panics
     ///
-    /// Panics if no variant is selected or if any field in the selected variant is not initialized.
+    /// Panics if any field in the selected variant is not initialized.
     pub fn assert_all_fields_initialized(&self) {
-        if !self.iset.has(0) {
-            panic!(
-                "No enum variant was selected. Complete schema:\n{:?}",
-                self.shape
-            );
-        }
+        let variant = &self.def.variants[self.selected_variant];
 
-        // Get the selected variant
-        if let Some(variant_index) = self.selected_variant_index() {
-            let variant = &self.def.variants[variant_index];
-
-            // Check if all fields of the selected variant are initialized
-            match &variant.kind {
-                crate::VariantKind::Unit => {
-                    // Unit variants don't have fields, so they're initialized if the variant is selected
-                }
-                crate::VariantKind::Tuple { fields } | crate::VariantKind::Struct { fields } => {
-                    // Check each field
-                    for (field_index, field) in fields.iter().enumerate() {
-                        // Field init bits start at index 1 (index 0 is for variant selection)
-                        let init_bit = field_index + 1;
-                        if !self.iset.has(init_bit) {
-                            panic!(
-                                "Field '{}' of variant '{}' was not initialized. Complete schema:\n{:?}",
-                                field.name, variant.name, self.shape
-                            );
-                        }
+        // Check if all fields of the selected variant are initialized
+        match &variant.kind {
+            crate::VariantKind::Unit => {
+                // Unit variants don't have fields, so they're always fully initialized
+            }
+            crate::VariantKind::Tuple { fields } | crate::VariantKind::Struct { fields } => {
+                // Check each field
+                for (field_index, field) in fields.iter().enumerate() {
+                    if !self.iset.has(field_index) {
+                        panic!(
+                            "Field '{}' of variant '{}' was not initialized. Complete schema:\n{:?}",
+                            field.name,
+                            variant.name,
+                            self.shape_fn.get()
+                        );
                     }
                 }
             }
@@ -291,7 +248,7 @@ impl<'mem> PokeEnum<'mem> {
 
     fn assert_matching_shape<T: Shapely>(&self) {
         if self.shape_fn != T::SHAPE_FN {
-            let current_shape = self.shape;
+            let current_shape = self.shape_fn.get();
             let target_shape = T::shape();
 
             panic!(
@@ -322,7 +279,7 @@ impl<'mem> PokeEnum<'mem> {
     /// # Panics
     ///
     /// This function will panic if:
-    /// - No variant is selected or not all fields in the selected variant have been initialized.
+    /// - Not all fields in the selected variant have been initialized.
     /// - The generic type parameter T does not match the shape that this PokeEnum is building.
     pub fn build<T: Shapely>(self) -> T {
         self.assert_all_fields_initialized();
@@ -342,7 +299,7 @@ impl<'mem> PokeEnum<'mem> {
     /// # Panics
     ///
     /// This function will panic if:
-    /// - No variant is selected or not all fields in the selected variant have been initialized.
+    /// - Not all fields in the selected variant have been initialized.
     /// - The generic type parameter T does not match the shape that this PokeEnum is building.
     pub fn build_boxed<T: Shapely>(self) -> Box<T> {
         self.assert_all_fields_initialized();
@@ -367,7 +324,7 @@ impl<'mem> PokeEnum<'mem> {
             std::ptr::copy_nonoverlapping(
                 self.data.as_mut_ptr(),
                 target.as_ptr(),
-                self.shape.layout.size(),
+                self.shape_fn.get().layout.size(),
             );
         }
         std::mem::forget(self);
@@ -376,32 +333,20 @@ impl<'mem> PokeEnum<'mem> {
 
 impl Drop for PokeEnum<'_> {
     fn drop(&mut self) {
-        // If no variant is selected, there's nothing to drop
-        if !self.iset.has(0) {
-            return;
-        }
+        let variant = &self.def.variants[self.selected_variant];
 
-        if let Some(variant_index) = self.selected_variant_index() {
-            let shape = self.shape;
-            if let crate::Def::Enum(def) = &shape.def {
-                let variant = &def.variants[variant_index];
-
-                // Drop fields based on the variant kind
-                match &variant.kind {
-                    crate::VariantKind::Unit => {
-                        // Unit variants have no fields to drop
-                    }
-                    crate::VariantKind::Tuple { fields }
-                    | crate::VariantKind::Struct { fields } => {
-                        // Drop each initialized field
-                        for (field_index, field) in fields.iter().enumerate() {
-                            let init_bit = field_index + 1;
-                            if self.iset.has(init_bit) {
-                                if let Some(drop_fn) = field.shape_fn.get().vtable().drop_in_place {
-                                    unsafe {
-                                        drop_fn(self.data.field_init(field.offset));
-                                    }
-                                }
+        // Drop fields based on the variant kind
+        match &variant.kind {
+            crate::VariantKind::Unit => {
+                // Unit variants have no fields to drop
+            }
+            crate::VariantKind::Tuple { fields } | crate::VariantKind::Struct { fields } => {
+                // Drop each initialized field
+                for (field_index, field) in fields.iter().enumerate() {
+                    if self.iset.has(field_index) {
+                        if let Some(drop_fn) = field.shape_fn.get().vtable().drop_in_place {
+                            unsafe {
+                                drop_fn(self.data.field_init(field.offset));
                             }
                         }
                     }

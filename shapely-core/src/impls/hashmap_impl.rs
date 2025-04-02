@@ -55,6 +55,9 @@ where
                 k: K::SHAPE_FN,
                 v: V::SHAPE_FN,
                 vtable: || MapVTable {
+                    init_in_place_with_capacity: |uninit, capacity| unsafe {
+                        Ok(uninit.write(Self::with_capacity(capacity)))
+                    },
                     insert: |ptr, key, value| unsafe {
                         let map = ptr.as_mut_ptr::<HashMap<K, V>>();
                         let key = key.read::<K>();

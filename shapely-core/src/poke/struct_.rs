@@ -1,4 +1,4 @@
-use crate::{FieldError, OpaqueUninit, ShapeFn, StructDef, StructVTable};
+use crate::{FieldError, OpaqueUninit, ShapeFn, StructDef};
 use std::ptr::NonNull;
 
 use super::ISet;
@@ -24,12 +24,6 @@ impl<'mem> PokeStruct<'mem> {
             shape_fn,
             def,
         }
-    }
-
-    /// Gets the vtable for the struct
-    #[inline(always)]
-    pub fn struct_vtable(&self) -> StructVTable {
-        (self.shape_fn.get().vtable)()
     }
 
     /// Checks if all fields in the struct have been initialized.

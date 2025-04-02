@@ -1,8 +1,7 @@
 use std::{alloc::Layout, fmt};
 
 use crate::{
-    Def, ListDef, ListVTable, Opaque, OpaqueConst, Shape, Shapely, TypeNameOpts, ValueVTable,
-    mini_typeid,
+    Def, ListDef, ListVTable, OpaqueConst, Shape, Shapely, TypeNameOpts, ValueVTable, mini_typeid,
 };
 
 impl<T> Shapely for Vec<T>

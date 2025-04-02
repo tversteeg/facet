@@ -29,7 +29,7 @@ where
             ($idx:tt, $ty:ty) => {
                 Field {
                     name: stringify!($idx),
-                    shape: ShapeDesc(<$ty>::shape),
+                    shape_fn: ShapeFn(<$ty>::shape),
                     offset: std::mem::offset_of!((T0,), $idx),
                     flags: FieldFlags::EMPTY,
                 }
@@ -88,7 +88,7 @@ where
             ($idx:tt, $ty:ty) => {
                 Field {
                     name: stringify!($idx),
-                    shape: ShapeDesc(<$ty>::shape),
+                    shape_fn: ShapeFn(<$ty>::shape),
                     offset: std::mem::offset_of!((T0, T1), $idx),
                     flags: FieldFlags::EMPTY,
                 }
@@ -151,7 +151,7 @@ where
             ($idx:tt, $ty:ty) => {
                 Field {
                     name: stringify!($idx),
-                    shape: ShapeDesc(<$ty>::shape),
+                    shape_fn: ShapeFn(<$ty>::shape),
                     offset: std::mem::offset_of!((T0, T1, T2), $idx),
                     flags: FieldFlags::EMPTY,
                 }
@@ -218,7 +218,7 @@ where
             ($idx:tt, $ty:ty) => {
                 Field {
                     name: stringify!($idx),
-                    shape: ShapeDesc(<$ty>::shape),
+                    shape_fn: ShapeFn(<$ty>::shape),
                     offset: std::mem::offset_of!((T0, T1, T2, T3), $idx),
                     flags: FieldFlags::EMPTY,
                 }
@@ -289,7 +289,7 @@ where
             ($idx:tt, $ty:ty) => {
                 Field {
                     name: stringify!($idx),
-                    shape: ShapeDesc(<$ty>::shape),
+                    shape_fn: ShapeFn(<$ty>::shape),
                     offset: std::mem::offset_of!((T0, T1, T2, T3, T4), $idx),
                     flags: FieldFlags::EMPTY,
                 }
@@ -375,7 +375,7 @@ where
             ($idx:tt, $ty:ty) => {
                 Field {
                     name: stringify!($idx),
-                    shape: ShapeDesc(<$ty>::shape),
+                    shape_fn: ShapeFn(<$ty>::shape),
                     offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5), $idx),
                     flags: FieldFlags::EMPTY,
                 }
@@ -466,7 +466,7 @@ where
             ($idx:tt, $ty:ty) => {
                 Field {
                     name: stringify!($idx),
-                    shape: ShapeDesc(<$ty>::shape),
+                    shape_fn: ShapeFn(<$ty>::shape),
                     offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5, T6), $idx),
                     flags: FieldFlags::EMPTY,
                 }
@@ -562,7 +562,7 @@ where
             ($idx:tt, $ty:ty) => {
                 Field {
                     name: stringify!($idx),
-                    shape: ShapeDesc(<$ty>::shape),
+                    shape_fn: ShapeFn(<$ty>::shape),
                     offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5, T6, T7), $idx),
                     flags: FieldFlags::EMPTY,
                 }
@@ -663,7 +663,7 @@ where
             ($idx:tt, $ty:ty) => {
                 Field {
                     name: stringify!($idx),
-                    shape: ShapeDesc(<$ty>::shape),
+                    shape_fn: ShapeFn(<$ty>::shape),
                     offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5, T6, T7, T8), $idx),
                     flags: FieldFlags::EMPTY,
                 }
@@ -771,7 +771,7 @@ where
             ($idx:tt, $ty:ty) => {
                 Field {
                     name: stringify!($idx),
-                    shape: ShapeDesc(<$ty>::shape),
+                    shape_fn: ShapeFn(<$ty>::shape),
                     offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5, T6, T7, T8, T9), $idx),
                     flags: FieldFlags::EMPTY,
                 }
@@ -885,7 +885,7 @@ where
             ($idx:tt, $ty:ty) => {
                 Field {
                     name: stringify!($idx),
-                    shape: ShapeDesc(<$ty>::shape),
+                    shape_fn: ShapeFn(<$ty>::shape),
                     offset: std::mem::offset_of!(
                         (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10),
                         $idx
@@ -1007,7 +1007,7 @@ where
             ($idx:tt, $ty:ty) => {
                 Field {
                     name: stringify!($idx),
-                    shape: ShapeDesc(<$ty>::shape),
+                    shape_fn: ShapeFn(<$ty>::shape),
                     offset: std::mem::offset_of!(
                         (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11),
                         $idx

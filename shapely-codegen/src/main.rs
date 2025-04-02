@@ -34,7 +34,7 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
     writeln!(w)?;
     writeln!(
         w,
-        "use crate::{{Field, FieldFlags, Def, StructDef, Shape, ShapeDesc, Shapely, TypeNameOpts, ValueVTable, mini_typeid}};"
+        "use crate::{{Field, FieldFlags, Def, StructDef, Shape, ShapeFn, Shapely, TypeNameOpts, ValueVTable, mini_typeid}};"
     )?;
 
     // Generate implementations for tuples of size 1 to 12
@@ -82,7 +82,7 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
             ($idx:tt, $ty:ty) => {{
                 Field {{
                     name: stringify!($idx),
-                    shape: ShapeDesc(<$ty>::shape),
+                    shape_fn: ShapeFn(<$ty>::shape),
                     offset: std::mem::offset_of!({tuple}, $idx),
                     flags: FieldFlags::EMPTY,
                 }}
