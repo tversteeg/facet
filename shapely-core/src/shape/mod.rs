@@ -24,6 +24,7 @@ pub struct Shape {
 
 impl Shape {
     /// Returns the vtable
+    #[inline(always)]
     pub fn vtable(&self) -> ValueVTable {
         (self.vtable)()
     }
@@ -363,6 +364,12 @@ impl ShapeDesc {
     #[inline(always)]
     pub fn get(&self) -> Shape {
         (self.0)()
+    }
+
+    /// Returns the vtable for this shape
+    #[inline(always)]
+    pub fn vtable(&self) -> ValueVTable {
+        self.get().vtable()
     }
 
     /// Heap-allocate a value of this shape

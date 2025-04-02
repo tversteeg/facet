@@ -1,6 +1,4 @@
-use crate::{
-    Def, FieldError, OpaqueUninit, Shape, ShapeDesc, Shapely, StructDef, ValueVTable, trace,
-};
+use crate::{FieldError, OpaqueUninit, ShapeDesc, StructDef, StructVTable};
 use std::ptr::NonNull;
 
 use super::ISet;
@@ -10,80 +8,41 @@ pub struct PokeStruct<'mem> {
     data: OpaqueUninit<'mem>,
     iset: ISet,
     shape_desc: ShapeDesc,
-    shape: Shape,
-    #[allow(dead_code)]
-    vtable: ValueVTable,
     def: StructDef,
 }
 
 impl<'mem> PokeStruct<'mem> {
-    /// Creates a new PokeStruct from a MaybeUninit. Panic if it's not a struct.
-    pub fn from_maybe_uninit<T: Shapely>(uninit: &'mem mut std::mem::MaybeUninit<T>) -> Self {
-        let data = OpaqueUninit::from_maybe_uninit(uninit);
-        unsafe { Self::from_opaque_uninit(data, T::shape_desc()) }
-    }
-
-    /// # Safety
+    /// Creates a new PokeStruct
     ///
-    /// The `data` and the `shape_desc` must match
-    pub unsafe fn from_opaque_uninit(data: OpaqueUninit<'mem>, shape_desc: ShapeDesc) -> Self {
-        let def = match &shape_desc.get().def {
-            Def::Struct(def) => *def,
-            _ => panic!("Expected a struct"),
-        };
-        unsafe { Self::from_opaque_uninit_and_def(data, shape_desc, def) }
-    }
-
     /// # Safety
     ///
     /// The `data`, `shape_desc`, and `def` must match
-    pub unsafe fn from_opaque_uninit_and_def(
-        data: OpaqueUninit<'mem>,
-        shape_desc: ShapeDesc,
-        def: StructDef,
-    ) -> Self {
-        let shape = shape_desc.get();
-        let vtable = shape.vtable();
+    pub unsafe fn new(data: OpaqueUninit<'mem>, shape_desc: ShapeDesc, def: StructDef) -> Self {
         Self {
             data,
             iset: Default::default(),
             shape_desc,
-            shape: shape_desc.get(),
-            vtable,
             def,
         }
+    }
+
+    /// Gets the vtable for the struct
+    #[inline(always)]
+    pub fn struct_vtable(&self) -> StructVTable {
+        (self.shape_desc.get().vtable)()
     }
 
     /// Checks if all fields in the struct have been initialized.
     /// Panics if any field is not initialized, providing details about the uninitialized field.
     pub fn assert_all_fields_initialized(&self) {
-        match self.shape.def {
-            Def::Struct(def) => {
-                for (i, field) in def.fields.iter().enumerate() {
-                    if !self.iset.has(i) {
-                        panic!(
-                            "Field '{}' was not initialized. Complete schema:\n{:?}",
-                            field.name, self.shape
-                        );
-                    }
-                }
+        for (i, field) in self.def.fields.iter().enumerate() {
+            if !self.iset.has(i) {
+                panic!(
+                    "Field '{}' was not initialized. Complete schema:\n{:?}",
+                    field.name,
+                    self.shape_desc.get()
+                );
             }
-            _ => panic!(
-                "Expected struct shape, got something else: {:?}",
-                self.shape
-            ),
-        }
-    }
-
-    fn assert_matching_shape<T: Shapely>(&self) {
-        if self.shape_desc != T::shape_desc() {
-            let current_shape = self.shape;
-            let target_shape = T::shape();
-
-            panic!(
-                "This is a partial \x1b[1;34m{}\x1b[0m, you can't build a \x1b[1;32m{}\x1b[0m out of it",
-                current_shape, target_shape,
-            );
         }
     }
 
@@ -111,19 +70,19 @@ impl<'mem> PokeStruct<'mem> {
     /// This function will panic if:
     /// - Not all the fields have been initialized.
     /// - The generic type parameter T does not match the shape that this PokeStruct is building.
-    pub fn build<T: Shapely>(self) -> T {
+    pub fn build<T: crate::Shapely>(self) -> T {
         self.assert_all_fields_initialized();
-        self.assert_matching_shape::<T>();
+        assert_eq!(self.shape_desc, T::shape_desc(), "Shape mismatch");
 
         let result = unsafe {
             let ptr = self.data.as_mut_ptr() as *const T;
             std::ptr::read(ptr)
         };
-        trace!("Built \x1b[1;33m{}\x1b[0m successfully", T::shape());
+        crate::trace!("Built \x1b[1;33m{}\x1b[0m successfully", T::shape());
 
         // Deallocate the memory
         unsafe {
-            std::alloc::dealloc(self.data.as_mut_ptr(), self.shape.layout);
+            std::alloc::dealloc(self.data.as_mut_ptr(), self.shape_desc.get().layout);
         };
         std::mem::forget(self);
         result
@@ -136,9 +95,9 @@ impl<'mem> PokeStruct<'mem> {
     /// This function will panic if:
     /// - Not all the fields have been initialized.
     /// - The generic type parameter T does not match the shape that this PokeStruct is building.
-    pub fn build_boxed<T: Shapely>(self) -> Box<T> {
+    pub fn build_boxed<T: crate::Shapely>(self) -> Box<T> {
         self.assert_all_fields_initialized();
-        self.assert_matching_shape::<T>();
+        assert_eq!(self.shape_desc, T::shape_desc(), "Shape mismatch");
 
         let boxed = unsafe { Box::from_raw(self.data.as_mut_ptr() as *mut T) };
         std::mem::forget(self);
@@ -159,7 +118,7 @@ impl<'mem> PokeStruct<'mem> {
             std::ptr::copy_nonoverlapping(
                 self.data.as_mut_ptr(),
                 target.as_ptr(),
-                self.shape.layout.size(),
+                self.shape_desc.get().layout.size(),
             );
         }
         std::mem::forget(self);
@@ -254,6 +213,7 @@ impl<'mem> PokeStruct<'mem> {
 
 impl Drop for PokeStruct<'_> {
     fn drop(&mut self) {
+        let struct_vtable = self.struct_vtable();
         self.def
             .fields
             .iter()

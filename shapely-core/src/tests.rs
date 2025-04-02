@@ -1,30 +1,3 @@
-
-// #[test]
-// fn build_u64_through_reflection() {
-//     let shape = u64::shape();
-//     eprintln!("{shape:#?}");
-
-//     let mut partial = u64::partial();
-//     let slot = partial.scalar_slot().unwrap();
-//     slot.put(crate::OpaqueConst::from_ref(&42u64));
-//     let value = partial.build::<u64>();
-
-//     // Verify the value was set correctly
-//     assert_eq!(value, 42);
-// }
-
-// #[test]
-// #[should_panic(expected = "Scalar value was not initialized")]
-// fn build_u64_through_reflection_without_filling() {
-//     let shape = u64::shape();
-//     eprintln!("{shape:#?}");
-
-//     let uninit = u64::partial();
-//     // Intentionally not filling the slot
-//     let _value = uninit.build::<u64>();
-//     // This should panic
-// }
-
 // #[test]
 // #[should_panic(expected = "Field 'bar' was not initialized")]
 // fn build_foobar_through_reflection_with_missing_field() {

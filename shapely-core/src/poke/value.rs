@@ -1,10 +1,17 @@
-use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek, Shape, ValueVTable};
+use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek, ShapeDesc, ValueVTable};
 
 /// Lets you write to a value (implements write-only [`ValueVTable`] proxies)
 pub struct PokeValue<'mem> {
     data: OpaqueUninit<'mem>,
-    shape: Shape,
-    vtable: ValueVTable,
+    shape_desc: ShapeDesc,
+}
+
+impl std::fmt::Debug for PokeValue<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PokeValue")
+            .field("shape_desc", &self.shape_desc)
+            .finish_non_exhaustive()
+    }
 }
 
 impl<'mem> PokeValue<'mem> {
@@ -13,12 +20,14 @@ impl<'mem> PokeValue<'mem> {
     /// # Safety
     ///
     /// The data buffer must match the size and alignment of the shape.
-    pub(crate) unsafe fn new(data: OpaqueUninit<'mem>, shape: Shape, vtable: ValueVTable) -> Self {
-        Self {
-            data,
-            shape,
-            vtable,
-        }
+    pub(crate) unsafe fn new(data: OpaqueUninit<'mem>, shape_desc: ShapeDesc) -> Self {
+        Self { data, shape_desc }
+    }
+
+    /// Gets the vtable for the value
+    #[inline(always)]
+    fn vtable(&self) -> ValueVTable {
+        self.shape_desc.vtable()
     }
 
     /// Attempts to convert a value from another type into this one
@@ -26,7 +35,7 @@ impl<'mem> PokeValue<'mem> {
     /// Returns `Some(Opaque)` if the conversion was successful, `None` otherwise.
     pub fn try_from<'src>(self, source: Peek<'src>) -> Result<Opaque<'mem>, Self> {
         if let Some(built_val) = self
-            .vtable
+            .vtable()
             .try_from
             .and_then(|try_from_fn| unsafe { try_from_fn(source, self.data) })
         {
@@ -42,7 +51,7 @@ impl<'mem> PokeValue<'mem> {
     /// Returns `Some(Opaque)` if parsing was successful, `None` otherwise.
     pub fn parse(self, s: &str) -> Result<Opaque<'mem>, Self> {
         if let Some(parsed_val) = self
-            .vtable
+            .vtable()
             .parse
             .and_then(|parse_fn| unsafe { parse_fn(s, self.data) })
         {
@@ -67,7 +76,7 @@ impl<'mem> PokeValue<'mem> {
             std::ptr::copy_nonoverlapping(
                 source.as_ptr(),
                 self.data.as_mut_ptr(),
-                self.shape.layout.size(),
+                self.shape_desc.get().layout.size(),
             );
             self.data.assume_init()
         }
@@ -78,7 +87,7 @@ impl<'mem> PokeValue<'mem> {
     /// Returns `Some(Opaque)` if setting to default was successful, `None` otherwise.
     pub fn default_in_place(self) -> Result<Opaque<'mem>, Self> {
         if let Some(default_val) = self
-            .vtable
+            .vtable()
             .default_in_place
             .and_then(|default_fn| unsafe { default_fn(self.data) })
         {

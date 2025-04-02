@@ -1,6 +1,12 @@
-// TODO: instead of `default`, provide a `new_with_size_hint` function here
-
 use crate::{Opaque, OpaqueConst};
+
+/// Initialize a list in place with a given capacity
+///
+/// # Safety
+///
+/// The `list` parameter must point to uninitialized memory of sufficient size.
+/// The function must properly initialize the memory.
+pub type ListInitInPlaceWithCapacityFn = unsafe fn(list: Opaque, capacity: usize);
 
 /// Push an item to the list
 ///
@@ -30,6 +36,9 @@ pub type ListGetItemPtrFn = unsafe fn(list: OpaqueConst, index: usize) -> Opaque
 /// but also `HashSet<T>`, etc.)
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub struct ListVTable {
+    /// cf. [`ListInitInPlaceWithCapacityFn`]
+    pub init_in_place_with_capacity: ListInitInPlaceWithCapacityFn,
+
     /// cf. [`ListPushFn`]
     pub push: ListPushFn,
 
