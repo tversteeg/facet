@@ -254,14 +254,23 @@ fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
             impl shapely::Shapely for {struct_name} {{
                 fn shape() -> shapely::Shape {{
                     shapely::Shape {{
-                        name: |f, _opts| std::fmt::Write::write_str(f, "{struct_name}"),
                         typeid: shapely::mini_typeid::of::<Self>(),
                         layout: std::alloc::Layout::new::<Self>(),
-                        def: Def::Struct {{
-                            fields: shapely::struct_fields!({struct_name}, ({fields})),
+                        vtable: || shapely::ValueVTable {{
+                            type_name: |f, _opts| std::fmt::Write::write_str(f, "{struct_name}"),
+                            display: None,
+                            debug: None,
+                            default_in_place: None,
+                            eq: None,
+                            cmp: None,
+                            hash: None,
+                            drop_in_place: Some(|data| unsafe {{ data.drop_in_place::<Self>() }}),
+                            parse: None,
+                            try_from: None,
                         }},
-                        set_to_default: None,
-                        drop_in_place: Some(|ptr| unsafe {{ std::ptr::drop_in_place(ptr as *mut Self) }}),
+                        def: shapely::Def::Struct(shapely::StructDef {{
+                            fields: shapely::struct_fields!({struct_name}, ({fields})),
+                        }}),
                     }}
                 }}
             }}

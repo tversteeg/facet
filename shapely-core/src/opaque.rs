@@ -191,7 +191,24 @@ impl<'mem> Opaque<'mem> {
     }
 
     /// Exposes [`std::ptr::read`]
-    pub fn read<T>(self) -> T {
+    ///
+    /// # Safety
+    ///
+    /// `T` must be the actual underlying type of the pointed-to memory.
+    /// The memory must be properly initialized and aligned for type `T`.
+    pub unsafe fn read<T>(self) -> T {
         unsafe { std::ptr::read(self.as_mut_ptr()) }
+    }
+
+    /// Exposes [`std::ptr::drop_in_place`]
+    ///
+    /// # Safety
+    ///
+    /// `T` must be the actual underlying type of the pointed-to memory.
+    /// The memory must be properly initialized and aligned for type `T`.
+    /// After calling this function, the memory should not be accessed again
+    /// until it is properly reinitialized.
+    pub unsafe fn drop_in_place<T>(self) {
+        unsafe { std::ptr::drop_in_place(self.as_mut_ptr::<T>()) }
     }
 }
