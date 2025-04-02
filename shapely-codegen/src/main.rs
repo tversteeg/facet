@@ -34,7 +34,7 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
     writeln!(w)?;
     writeln!(
         w,
-        "use crate::{{Field, FieldFlags, Def, StructDef, Shape, ShapeFn, Shapely, TypeNameOpts, ValueVTable, mini_typeid}};"
+        "use crate::{{Field, FieldFlags, Def, StructDef, Shape, Shapely, TypeNameOpts, ValueVTable}};"
     )?;
 
     // Generate implementations for tuples of size 1 to 12
@@ -64,7 +64,7 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
             (0..n)
                 .map(|i| {
                     let prefix = if i > 0 { "write!(f, \", \")?; " } else { "" };
-                    format!("{}(T{}::shape().vtable().type_name)(f, opts)?;", prefix, i)
+                    format!("{}(T{}::SHAPE.vtable.type_name)(f, opts)?;", prefix, i)
                 })
                 .collect::<Vec<_>>()
                 .join("\n                    ")
@@ -82,7 +82,7 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
             ($idx:tt, $ty:ty) => {{
                 Field {{
                     name: stringify!($idx),
-                    shape_fn: ShapeFn(<$ty>::shape),
+                    shape: <$ty>::SHAPE,
                     offset: std::mem::offset_of!({tuple}, $idx),
                     flags: FieldFlags::EMPTY,
                 }}
@@ -104,7 +104,7 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
             r#"
             impl<{type_params}> Shapely for {tuple} where {where_clause}
             {{
-                fn shape() -> Shape {{
+                const SHAPE: &'static Shape = &const {{
                     use std::fmt;
 
                     {type_name_fn}
@@ -112,9 +112,8 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
                     {field_macro}
 
                     Shape {{
-                        typeid: mini_typeid::of::<Self>(),
                         layout: Layout::new::<{tuple}>(),
-                        vtable: || ValueVTable {{
+                        vtable: &ValueVTable {{
                             type_name: type_name::<{type_params}> as _,
                             display: None,
                             debug: None,
@@ -132,7 +131,7 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
                             fields: {fields}
                         }}),
                     }}
-                }}
+                }};
             }}"#
         )?;
     }
