@@ -73,7 +73,7 @@ fn build_foobar_after_default() {
     let mut foo_bar: FooBar = Default::default();
 
     let mut poke = unsafe {
-        Poke::from_opaque_uninit(OpaqueUninit::new(&mut foo_bar as *mut _), FooBar::SHAPE_FN)
+        Poke::from_opaque_uninit(OpaqueUninit::new(&mut foo_bar as *mut _), FooBar::SHAPE)
     }
     .into_struct();
     unsafe {

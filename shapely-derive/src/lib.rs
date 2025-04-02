@@ -250,29 +250,29 @@ fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
     // Generate the impl
     let output = format!(
         r#"
-            #[automatically_derived]
-            impl shapely::Shapely for {struct_name} {{
-                const SHAPE: &'static Shape = &const {{
-                    shapely::Shape {{
-                        layout: std::alloc::Layout::new::<Self>(),
-                        vtable: &shapely::ValueVTable {{
-                            type_name: |f, _opts| std::fmt::Write::write_str(f, "{struct_name}"),
-                            display: None,
-                            debug: None,
-                            default_in_place: None,
-                            eq: None,
-                            cmp: None,
-                            hash: None,
-                            drop_in_place: Some(|data| unsafe {{ data.drop_in_place::<Self>() }}),
-                            parse: None,
-                            try_from: None,
-                        }},
-                        def: shapely::Def::Struct(shapely::StructDef {{
-                            fields: shapely::struct_fields!({struct_name}, ({fields})),
-                        }}),
-                    }}
-                }}
-            }}
+#[automatically_derived]
+impl shapely::Shapely for {struct_name} {{
+    const SHAPE: &'static Shape = &const {{
+        shapely::Shape {{
+            layout: std::alloc::Layout::new::<Self>(),
+            vtable: &shapely::ValueVTable {{
+                type_name: |f, _opts| std::fmt::Write::write_str(f, "{struct_name}"),
+                display: None,
+                debug: None,
+                default_in_place: None,
+                eq: None,
+                cmp: None,
+                hash: None,
+                drop_in_place: Some(|data| unsafe {{ data.drop_in_place::<Self>() }}),
+                parse: None,
+                try_from: None,
+            }},
+            def: shapely::Def::Struct(shapely::StructDef {{
+                fields: shapely::struct_fields!({struct_name}, ({fields})),
+            }}),
+        }}
+    }},
+}}
         "#
     );
     output.into_token_stream().into()
@@ -303,21 +303,30 @@ fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStream {
     // Generate the impl
     let output = format!(
         r#"
-            impl shapely::Shapely for {struct_name} {{
-                fn shape() -> shapely::Shape {{
-                    shapely::Shape {{
-                        name: |f, _opts| std::fmt::Write::write_str(f, "{struct_name}"),
-                        typeid: shapely::mini_typeid::of::<Self>(),
-                        layout: std::alloc::Layout::new::<Self>(),
-                        def: Def::TupleStruct {{
-                            fields: shapely::struct_fields!({struct_name}, ({fields_str})),
-                        }},
-                        set_to_default: None,
-                        drop_in_place: Some(|ptr| unsafe {{ std::ptr::drop_in_place(ptr as *mut Self) }}),
-                    }}
-                }}
-            }}
-        "#
+#[automatically_derived]
+impl shapely::Shapely for {struct_name} {{
+    const SHAPE: &'static Shape = &const {{
+        shapely::Shape {{
+            layout: std::alloc::Layout::new::<Self>(),
+            vtable: &shapely::ValueVTable {{
+                type_name: |f, _opts| std::fmt::Write::write_str(f, "{struct_name}"),
+                display: None,
+                debug: None,
+                default_in_place: None,
+                eq: None,
+                cmp: None,
+                hash: None,
+                drop_in_place: Some(|data| unsafe {{ data.drop_in_place::<Self>() }}),
+                parse: None,
+                try_from: None,
+            }},
+            def: shapely::Def::TupleStruct(shapely::StructDef {{
+                fields: shapely::struct_fields!({struct_name}, ({fields_str})),
+            }}),
+        }}
+    }},
+}}
+    "#
     );
     output.into_token_stream().into()
 }
@@ -420,21 +429,30 @@ fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
     // Generate the impl
     let output = format!(
         r#"
-            impl shapely::Shapely for {enum_name} {{
-                fn shape() -> shapely::Shape {{
-                    shapely::Shape {{
-                        name: |f, _opts| std::fmt::Write::write_str(f, "{enum_name}"),
-                        typeid: shapely::mini_typeid::of::<Self>(),
-                        layout: std::alloc::Layout::new::<Self>(),
-                        def: Def::Enum {{
-                            variants: shapely::enum_variants!({enum_name}, [{variants}]),
-                            repr: shapely::EnumRepr::{repr_type},
-                        }},
-                        set_to_default: None,
-                        drop_in_place: Some(|ptr| unsafe {{ std::ptr::drop_in_place(ptr as *mut Self) }}),
-                    }}
-                }}
-            }}
+#[automatically_derived]
+impl shapely::Shapely for {enum_name} {{
+    const SHAPE: &'static Shape = &const {{
+        shapely::Shape {{
+            layout: std::alloc::Layout::new::<Self>(),
+            vtable: &shapely::ValueVTable {{
+                type_name: |f, _opts| std::fmt::Write::write_str(f, "{enum_name}"),
+                display: None,
+                debug: None,
+                default_in_place: None,
+                eq: None,
+                cmp: None,
+                hash: None,
+                drop_in_place: Some(|data| unsafe {{ data.drop_in_place::<Self>() }}),
+                parse: None,
+                try_from: None,
+            }},
+            def: shapely::Def::Enum(shapely::EnumDef {{
+                variants: shapely::enum_variants!({enum_name}, [{variants}]),
+                repr: shapely::EnumRepr::{repr_type},
+            }}),
+        }}
+    }},
+}}
         "#
     );
     output.into_token_stream().into()
