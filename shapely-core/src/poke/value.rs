@@ -3,7 +3,7 @@ use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek, Shape, ValueVTable};
 /// Lets you write to a value (implements write-only [`ValueVTable`] proxies)
 pub struct PokeValue<'mem> {
     data: OpaqueUninit<'mem>,
-    pub(crate) shape: &'static Shape,
+    pub shape: &'static Shape,
 }
 
 impl std::fmt::Debug for PokeValue<'_> {

@@ -1,5 +1,5 @@
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
-use shapely::{Def, OpaqueUninit, Poke, error, trace, warn};
+use shapely::{Def, OpaqueConst, OpaqueUninit, Poke, Shapely as _, error, trace};
 
 /// Deserialize a `Poke` object from a JSON string.
 pub fn from_json<'input>(
@@ -18,20 +18,23 @@ pub fn from_json<'input>(
 
         match &shape.def {
             Def::Scalar => {
-                let scalar_poke = poke.into_scalar();
+                let pv = poke.into_scalar();
                 trace!("Deserializing \x1b[1;36mscalar\x1b[0m");
 
-                // Parse the scalar based on the type name from the shape
-                let type_name = shape.to_string();
-                match type_name.as_str() {
-                    _ => {
-                        warn!("Unsupported scalar type: {}", type_name);
-                        return Err(parser.make_error(JsonParseErrorKind::Custom(format!(
-                            "Unsupported scalar type: {}",
-                            type_name
-                        ))));
-                    }
-                };
+                trace!(
+                    "pv.shape == *String::SHAPE: {}",
+                    *pv.shape == *String::SHAPE
+                );
+                trace!("pv.shape == *u64::SHAPE: {}", *pv.shape == *u64::SHAPE);
+
+                if *pv.shape == *String::SHAPE {
+                    trace!("Deserializing string (pv shape = {})", pv.shape);
+                    let s = parser.parse_string()?;
+                    unsafe { pv.put(OpaqueConst::from_ref(&s)) };
+                    std::mem::forget(s);
+                } else {
+                    panic!("Unknown scalar shape: {}", pv.shape);
+                }
             }
             Def::Struct(struct_def) | Def::TupleStruct(struct_def) => {
                 trace!("Deserializing \x1b[1;36mstruct\x1b[0m");
