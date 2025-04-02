@@ -1,4 +1,13 @@
-use crate::{Opaque, OpaqueConst};
+use crate::{Opaque, OpaqueConst, OpaqueUninit};
+
+/// Initialize a map in place with a given capacity
+///
+/// # Safety
+///
+/// The `map` parameter must point to uninitialized memory of sufficient size.
+/// The function must properly initialize the memory.
+pub type MapInitInPlaceWithCapacityFn =
+    unsafe fn(map: OpaqueUninit, capacity: usize) -> Result<Opaque, ()>;
 
 /// Insert a key-value pair into the map
 ///
@@ -70,6 +79,9 @@ pub struct MapIterVTable {
 /// Virtual table for a Map<K, V>
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub struct MapVTable {
+    /// cf. [`MapInitInPlaceWithCapacityFn`]
+    pub init_in_place_with_capacity: MapInitInPlaceWithCapacityFn,
+
     /// cf. [`MapInsertFn`]
     pub insert: MapInsertFn,
 

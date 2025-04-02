@@ -26,13 +26,13 @@ pub enum Poke<'mem> {
     /// A scalar value. See [`PokeValue`].
     Scalar(PokeValue<'mem>),
     /// A list (array/vec/etc). See [`PokeList`].
-    List(PokeList<'mem>),
+    List(PokeListUninit<'mem>),
     /// A map (HashMap/BTreeMap/etc). See [`PokeMap`].
-    Map(PokeMap<'mem>),
+    Map(PokeMapUninit<'mem>),
     /// A struct, tuple struct, or tuple. See [`PokeStruct`].
     Struct(PokeStruct<'mem>),
     /// An enum variant. See [`PokeEnum`].
-    Enum(PokeEnum<'mem>),
+    Enum(PokeEnumNoVariant<'mem>),
 }
 
 impl<'mem> Poke<'mem> {

@@ -226,6 +226,14 @@ pub struct MapDef {
     pub v: ShapeFn,
 }
 
+impl MapDef {
+    /// Returns the vtable for this map
+    #[inline(always)]
+    pub fn vtable(&self) -> MapVTable {
+        (self.vtable)()
+    }
+}
+
 /// Fields for list types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ListDef {
@@ -233,6 +241,14 @@ pub struct ListDef {
     pub vtable: fn() -> ListVTable,
     /// shape of the items in the list
     pub t: ShapeFn,
+}
+
+impl ListDef {
+    /// Returns the vtable for this list
+    #[inline(always)]
+    pub fn vtable(&self) -> ListVTable {
+        (self.vtable)()
+    }
 }
 
 /// Fields for enum types

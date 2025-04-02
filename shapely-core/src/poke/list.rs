@@ -1,4 +1,39 @@
-use crate::{ListDef, ListVTable, Opaque, ShapeFn};
+use crate::{ListDef, ListVTable, Opaque, OpaqueUninit, PokeValue, ShapeFn};
+
+/// Allows initializing an uninitialized list
+pub struct PokeListUninit<'mem> {
+    data: OpaqueUninit<'mem>,
+    shape_fn: ShapeFn,
+    def: ListDef,
+}
+
+impl<'mem> PokeListUninit<'mem> {
+    /// Creates a new uninitialized list write-proxy
+    ///
+    /// # Safety
+    ///
+    /// The data buffer must match the size and alignment of the shape.
+    pub(crate) unsafe fn new(data: OpaqueUninit<'mem>, shape_fn: ShapeFn, def: ListDef) -> Self {
+        Self {
+            data,
+            shape_fn,
+            def,
+        }
+    }
+
+    /// Initializes the list with an optional size hint
+    pub fn init(self, size_hint: Option<usize>) -> Result<PokeList<'mem>, OpaqueUninit<'mem>> {
+        let res = if let Some(capacity) = size_hint {
+            let init_in_place_with_capacity = self.def.vtable().init_in_place_with_capacity;
+            unsafe { init_in_place_with_capacity(self.data, capacity) }
+        } else {
+            let pv = unsafe { PokeValue::new(self.data, self.shape_fn) };
+            pv.default_in_place().map_err(|_| ())
+        };
+        let data = res.map_err(|_| self.data)?;
+        Ok(unsafe { PokeList::new(data, self.shape_fn, self.def) })
+    }
+}
 
 /// Allows poking a list (appending, etc.)
 pub struct PokeList<'mem> {
@@ -25,16 +60,6 @@ impl<'mem> PokeList<'mem> {
     #[inline(always)]
     fn list_vtable(&self) -> ListVTable {
         (self.def.vtable)()
-    }
-
-    /// Initialize the list in place with a given capacity
-    ///
-    /// # Safety
-    ///
-    /// The list must point to uninitialized memory of sufficient size.
-    /// The function must properly initialize the memory.
-    pub unsafe fn init_in_place_with_capacity(&mut self, capacity: usize) {
-        unsafe { (self.list_vtable().init_in_place_with_capacity)(self.data, capacity) }
     }
 
     /// Pushes an item to the list

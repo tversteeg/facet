@@ -1,4 +1,39 @@
-use crate::{MapDef, MapVTable, Opaque, OpaqueConst, ShapeFn};
+use crate::{MapDef, MapVTable, Opaque, OpaqueConst, OpaqueUninit, PokeValue, ShapeFn};
+
+/// Allows initializing an uninitialized map
+pub struct PokeMapUninit<'mem> {
+    data: OpaqueUninit<'mem>,
+    shape_fn: ShapeFn,
+    def: MapDef,
+}
+
+impl<'mem> PokeMapUninit<'mem> {
+    /// Creates a new uninitialized map write-proxy
+    ///
+    /// # Safety
+    ///
+    /// The data buffer must match the size and alignment of the shape.
+    pub(crate) unsafe fn new(data: OpaqueUninit<'mem>, shape_fn: ShapeFn, def: MapDef) -> Self {
+        Self {
+            data,
+            shape_fn,
+            def,
+        }
+    }
+
+    /// Initializes the map with an optional size hint
+    pub fn init(self, size_hint: Option<usize>) -> Result<PokeMap<'mem>, OpaqueUninit<'mem>> {
+        let res = if let Some(capacity) = size_hint {
+            let init_in_place_with_capacity = self.def.vtable().init_in_place_with_capacity;
+            unsafe { init_in_place_with_capacity(self.data, capacity) }
+        } else {
+            let pv = unsafe { PokeValue::new(self.data, self.shape_fn) };
+            pv.default_in_place().map_err(|_| ())
+        };
+        let data = res.map_err(|_| self.data)?;
+        Ok(unsafe { PokeMap::new(data, self.shape_fn, self.def) })
+    }
+}
 
 /// Allows poking a map (inserting, etc.)
 pub struct PokeMap<'mem> {
