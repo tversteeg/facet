@@ -252,11 +252,10 @@ fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
         r#"
             #[automatically_derived]
             impl shapely::Shapely for {struct_name} {{
-                fn shape() -> shapely::Shape {{
+                const SHAPE: &'static Shape = &const {{
                     shapely::Shape {{
-                        typeid: shapely::mini_typeid::of::<Self>(),
                         layout: std::alloc::Layout::new::<Self>(),
-                        vtable: || shapely::ValueVTable {{
+                        vtable: &shapely::ValueVTable {{
                             type_name: |f, _opts| std::fmt::Write::write_str(f, "{struct_name}"),
                             display: None,
                             debug: None,

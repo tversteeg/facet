@@ -2,9 +2,9 @@
 
 use std::mem::MaybeUninit;
 
-use crate::Shapely;
+use crate::{Shape, Shapely};
 
-use super::{Def, OpaqueUninit, ShapeFn};
+use super::{Def, OpaqueUninit};
 
 mod value;
 pub use value::*;
@@ -38,8 +38,8 @@ pub enum Poke<'mem> {
 impl<'mem> Poke<'mem> {
     /// Allocates a new poke of a type that implements shapely
     pub fn alloc<S: Shapely>() -> Self {
-        let data = S::SHAPE_FN.allocate();
-        unsafe { Self::from_opaque_uninit(data, S::SHAPE_FN) }
+        let data = S::allocate();
+        unsafe { Self::from_opaque_uninit(data, S::SHAPE) }
     }
 
     /// Creates a new poke from a mutable reference to a MaybeUninit of a type that implements shapely
@@ -47,7 +47,7 @@ impl<'mem> Poke<'mem> {
         // This is safe because we're creating an Opaque pointer to read-only data
         // The pointer will be valid for the lifetime 'mem
         let data = OpaqueUninit::from_maybe_uninit(borrow);
-        unsafe { Self::from_opaque_uninit(data, S::SHAPE_FN) }
+        unsafe { Self::from_opaque_uninit(data, S::SHAPE) }
     }
 
     /// Creates a new peek, for easy manipulation of some opaque data.
@@ -56,23 +56,22 @@ impl<'mem> Poke<'mem> {
     ///
     /// `data` must be initialized and well-aligned, and point to a value
     /// of the type described by `shape`.
-    pub unsafe fn from_opaque_uninit(data: OpaqueUninit<'mem>, shape_fn: ShapeFn) -> Self {
-        let shape = shape_fn.get();
+    pub unsafe fn from_opaque_uninit(data: OpaqueUninit<'mem>, shape: &'static Shape) -> Self {
         match shape.def {
             Def::Struct(struct_def) | Def::TupleStruct(struct_def) | Def::Tuple(struct_def) => {
-                Poke::Struct(unsafe { PokeStruct::new(data, shape_fn, struct_def) })
+                Poke::Struct(unsafe { PokeStruct::new(data, shape, struct_def) })
             }
             Def::Map(map_def) => {
-                let pmu = unsafe { PokeMapUninit::new(data, shape_fn, map_def) };
+                let pmu = unsafe { PokeMapUninit::new(data, shape, map_def) };
                 Poke::Map(pmu)
             }
             Def::List(list_def) => {
-                let plu = unsafe { PokeListUninit::new(data, shape_fn, list_def) };
+                let plu = unsafe { PokeListUninit::new(data, shape, list_def) };
                 Poke::List(plu)
             }
-            Def::Scalar => Poke::Scalar(unsafe { PokeValue::new(data, shape_fn) }),
+            Def::Scalar => Poke::Scalar(unsafe { PokeValue::new(data, shape) }),
             Def::Enum(enum_def) => {
-                Poke::Enum(unsafe { PokeEnumNoVariant::new(data, shape_fn, enum_def) })
+                Poke::Enum(unsafe { PokeEnumNoVariant::new(data, shape, enum_def) })
             }
         }
     }

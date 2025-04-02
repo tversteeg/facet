@@ -1,9 +1,9 @@
-use crate::{MapDef, MapVTable, Opaque, OpaqueConst, OpaqueUninit, PokeValue, ShapeFn};
+use crate::{MapDef, MapVTable, Opaque, OpaqueConst, OpaqueUninit, PokeValue, Shape};
 
 /// Allows initializing an uninitialized map
 pub struct PokeMapUninit<'mem> {
     data: OpaqueUninit<'mem>,
-    shape_fn: ShapeFn,
+    shape: &'static Shape,
     def: MapDef,
 }
 
@@ -13,12 +13,8 @@ impl<'mem> PokeMapUninit<'mem> {
     /// # Safety
     ///
     /// The data buffer must match the size and alignment of the shape.
-    pub(crate) unsafe fn new(data: OpaqueUninit<'mem>, shape_fn: ShapeFn, def: MapDef) -> Self {
-        Self {
-            data,
-            shape_fn,
-            def,
-        }
+    pub(crate) unsafe fn new(data: OpaqueUninit<'mem>, shape: &'static Shape, def: MapDef) -> Self {
+        Self { data, shape, def }
     }
 
     /// Initializes the map with an optional size hint
@@ -27,11 +23,11 @@ impl<'mem> PokeMapUninit<'mem> {
             let init_in_place_with_capacity = self.def.vtable().init_in_place_with_capacity;
             unsafe { init_in_place_with_capacity(self.data, capacity) }
         } else {
-            let pv = unsafe { PokeValue::new(self.data, self.shape_fn) };
+            let pv = unsafe { PokeValue::new(self.data, self.shape) };
             pv.default_in_place().map_err(|_| ())
         };
         let data = res.map_err(|_| self.data)?;
-        Ok(unsafe { PokeMap::new(data, self.shape_fn, self.def) })
+        Ok(unsafe { PokeMap::new(data, self.shape, self.def) })
     }
 }
 
@@ -39,7 +35,7 @@ impl<'mem> PokeMapUninit<'mem> {
 pub struct PokeMap<'mem> {
     data: Opaque<'mem>,
     #[allow(dead_code)]
-    shape_fn: ShapeFn,
+    shape: &'static Shape,
     def: MapDef,
 }
 
@@ -50,12 +46,8 @@ impl<'mem> PokeMap<'mem> {
     ///
     /// The data buffer must match the size and alignment of the shape.
     #[inline]
-    pub(crate) unsafe fn new(data: Opaque<'mem>, shape_fn: ShapeFn, def: MapDef) -> Self {
-        Self {
-            data,
-            shape_fn,
-            def,
-        }
+    pub(crate) unsafe fn new(data: Opaque<'mem>, shape: &'static Shape, def: MapDef) -> Self {
+        Self { data, shape, def }
     }
 
     /// Gets the vtable for the map

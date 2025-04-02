@@ -1,4 +1,4 @@
-use crate::{EnumDef, FieldError, OpaqueUninit, ShapeFn, Shapely, trace};
+use crate::{EnumDef, FieldError, OpaqueUninit, Shape, Shapely, trace};
 use std::ptr::NonNull;
 
 use super::{ISet, Poke};
@@ -6,7 +6,7 @@ use super::{ISet, Poke};
 /// Represents an enum before a variant has been selected
 pub struct PokeEnumNoVariant<'mem> {
     data: OpaqueUninit<'mem>,
-    shape_fn: ShapeFn,
+    shape: &'static Shape,
     def: EnumDef,
 }
 
@@ -15,13 +15,13 @@ impl<'mem> PokeEnumNoVariant<'mem> {
     ///
     /// # Safety
     ///
-    /// The data buffer must match the size and alignment of the enum shape described by shape_fn
-    pub(crate) unsafe fn new(data: OpaqueUninit<'mem>, shape_fn: ShapeFn, def: EnumDef) -> Self {
-        Self {
-            data,
-            shape_fn,
-            def,
-        }
+    /// The data buffer must match the size and alignment of the enum shape described by shape
+    pub(crate) unsafe fn new(
+        data: OpaqueUninit<'mem>,
+        shape: &'static Shape,
+        def: EnumDef,
+    ) -> Self {
+        Self { data, shape, def }
     }
 
     /// Sets the variant of an enum by name.
@@ -60,7 +60,7 @@ impl<'mem> PokeEnumNoVariant<'mem> {
         // Prepare memory for the enum
         unsafe {
             // Zero out the memory first to ensure clean state
-            std::ptr::write_bytes(self.data.as_mut_ptr(), 0, self.shape_fn.get().layout.size());
+            std::ptr::write_bytes(self.data.as_mut_ptr(), 0, self.shape.layout.size());
 
             // Set up the discriminant (tag)
             // For enums in Rust, the first bytes contain the discriminant
@@ -136,7 +136,7 @@ impl<'mem> PokeEnumNoVariant<'mem> {
         Ok(PokeEnum {
             data: self.data,
             iset: Default::default(),
-            shape_fn: self.shape_fn,
+            shape: self.shape,
             def: self.def,
             selected_variant: variant_index,
         })
@@ -147,7 +147,7 @@ impl<'mem> PokeEnumNoVariant<'mem> {
 pub struct PokeEnum<'mem> {
     data: OpaqueUninit<'mem>,
     iset: ISet,
-    shape_fn: ShapeFn,
+    shape: &'static Shape,
     def: EnumDef,
     selected_variant: usize,
 }
@@ -186,7 +186,7 @@ impl<'mem> PokeEnum<'mem> {
 
                 // Get the field's address
                 let field_data = unsafe { self.data.field_uninit(field.offset) };
-                let poke = unsafe { Poke::from_opaque_uninit(field_data, field.shape_fn) };
+                let poke = unsafe { Poke::from_opaque_uninit(field_data, field.shape) };
                 Ok(poke)
             }
             crate::VariantKind::Struct { fields } => {
@@ -198,7 +198,7 @@ impl<'mem> PokeEnum<'mem> {
 
                 // Get the field's address
                 let field_data = unsafe { self.data.field_uninit(field.offset) };
-                let poke = unsafe { Poke::from_opaque_uninit(field_data, field.shape_fn) };
+                let poke = unsafe { Poke::from_opaque_uninit(field_data, field.shape) };
                 Ok(poke)
             }
         }
@@ -232,9 +232,7 @@ impl<'mem> PokeEnum<'mem> {
                     if !self.iset.has(field_index) {
                         panic!(
                             "Field '{}' of variant '{}' was not initialized. Complete schema:\n{:?}",
-                            field.name,
-                            variant.name,
-                            self.shape_fn.get()
+                            field.name, variant.name, self.shape
                         );
                     }
                 }
@@ -243,9 +241,9 @@ impl<'mem> PokeEnum<'mem> {
     }
 
     fn assert_matching_shape<T: Shapely>(&self) {
-        if self.shape_fn != T::SHAPE_FN {
-            let current_shape = self.shape_fn.get();
-            let target_shape = T::shape();
+        if self.shape != T::SHAPE {
+            let current_shape = self.shape;
+            let target_shape = T::SHAPE;
 
             panic!(
                 "This is a partial \x1b[1;34m{}\x1b[0m, you can't build a \x1b[1;32m{}\x1b[0m out of it",
@@ -285,7 +283,7 @@ impl<'mem> PokeEnum<'mem> {
             let ptr = self.data.as_ptr() as *const T;
             std::ptr::read(ptr)
         };
-        trace!("Built \x1b[1;33m{}\x1b[0m successfully", T::shape());
+        trace!("Built \x1b[1;33m{}\x1b[0m successfully", T::SHAPE);
         std::mem::forget(self);
         result
     }
@@ -320,7 +318,7 @@ impl<'mem> PokeEnum<'mem> {
             std::ptr::copy_nonoverlapping(
                 self.data.as_mut_ptr(),
                 target.as_ptr(),
-                self.shape_fn.get().layout.size(),
+                self.shape.layout.size(),
             );
         }
         std::mem::forget(self);
@@ -340,7 +338,7 @@ impl Drop for PokeEnum<'_> {
                 // Drop each initialized field
                 for (field_index, field) in fields.iter().enumerate() {
                     if self.iset.has(field_index) {
-                        if let Some(drop_fn) = field.shape_fn.get().vtable().drop_in_place {
+                        if let Some(drop_fn) = field.shape.vtable.drop_in_place {
                             unsafe {
                                 drop_fn(self.data.field_init(field.offset));
                             }

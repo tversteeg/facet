@@ -1,4 +1,4 @@
-use crate::{FieldError, OpaqueUninit, ShapeFn, StructDef};
+use crate::{FieldError, OpaqueUninit, Shape, StructDef};
 use std::ptr::NonNull;
 
 use super::ISet;
@@ -7,7 +7,7 @@ use super::ISet;
 pub struct PokeStruct<'mem> {
     data: OpaqueUninit<'mem>,
     iset: ISet,
-    shape_fn: ShapeFn,
+    shape: &'static Shape,
     def: StructDef,
 }
 
@@ -16,12 +16,12 @@ impl<'mem> PokeStruct<'mem> {
     ///
     /// # Safety
     ///
-    /// The `data`, `shape_fn`, and `def` must match
-    pub unsafe fn new(data: OpaqueUninit<'mem>, shape_fn: ShapeFn, def: StructDef) -> Self {
+    /// The `data`, `shape`, and `def` must match
+    pub unsafe fn new(data: OpaqueUninit<'mem>, shape: &'static Shape, def: StructDef) -> Self {
         Self {
             data,
             iset: Default::default(),
-            shape_fn,
+            shape,
             def,
         }
     }
@@ -33,8 +33,7 @@ impl<'mem> PokeStruct<'mem> {
             if !self.iset.has(i) {
                 panic!(
                     "Field '{}' was not initialized. Complete schema:\n{:?}",
-                    field.name,
-                    self.shape_fn.get()
+                    field.name, self.shape
                 );
             }
         }
@@ -66,17 +65,17 @@ impl<'mem> PokeStruct<'mem> {
     /// - The generic type parameter T does not match the shape that this PokeStruct is building.
     pub fn build<T: crate::Shapely>(self) -> T {
         self.assert_all_fields_initialized();
-        assert_eq!(self.shape_fn, T::SHAPE_FN, "Shape mismatch");
+        assert_eq!(self.shape, T::SHAPE, "Shape mismatch");
 
         let result = unsafe {
             let ptr = self.data.as_mut_ptr() as *const T;
             std::ptr::read(ptr)
         };
-        crate::trace!("Built \x1b[1;33m{}\x1b[0m successfully", T::shape());
+        crate::trace!("Built \x1b[1;33m{}\x1b[0m successfully", T::SHAPE);
 
         // Deallocate the memory
         unsafe {
-            std::alloc::dealloc(self.data.as_mut_ptr(), self.shape_fn.get().layout);
+            std::alloc::dealloc(self.data.as_mut_ptr(), self.shape.layout);
         };
         std::mem::forget(self);
         result
@@ -91,7 +90,7 @@ impl<'mem> PokeStruct<'mem> {
     /// - The generic type parameter T does not match the shape that this PokeStruct is building.
     pub fn build_boxed<T: crate::Shapely>(self) -> Box<T> {
         self.assert_all_fields_initialized();
-        assert_eq!(self.shape_fn, T::SHAPE_FN, "Shape mismatch");
+        assert_eq!(self.shape, T::SHAPE, "Shape mismatch");
 
         let boxed = unsafe { Box::from_raw(self.data.as_mut_ptr() as *mut T) };
         std::mem::forget(self);
@@ -112,7 +111,7 @@ impl<'mem> PokeStruct<'mem> {
             std::ptr::copy_nonoverlapping(
                 self.data.as_mut_ptr(),
                 target.as_ptr(),
-                self.shape_fn.get().layout.size(),
+                self.shape.layout.size(),
             );
         }
         std::mem::forget(self);
@@ -145,7 +144,7 @@ impl<'mem> PokeStruct<'mem> {
 
         // Get the field's address
         let field_addr = unsafe { self.data.field_uninit(field.offset) };
-        let field_shape = field.shape_fn;
+        let field_shape = field.shape;
 
         let poke = unsafe { crate::Poke::from_opaque_uninit(field_addr, field_shape) };
         Ok(poke)
@@ -163,7 +162,7 @@ impl<'mem> PokeStruct<'mem> {
             return Err(FieldError::IndexOutOfBounds);
         }
         let field = &self.def.fields[index];
-        let field_shape = field.shape_fn.get();
+        let field_shape = field.shape;
 
         unsafe {
             std::ptr::copy_nonoverlapping(
@@ -213,7 +212,7 @@ impl Drop for PokeStruct<'_> {
             .enumerate()
             .filter_map(|(i, field)| {
                 if self.iset.has(i) {
-                    Some((field, field.shape_fn.get().vtable().drop_in_place?))
+                    Some((field, field.shape.vtable.drop_in_place?))
                 } else {
                     None
                 }

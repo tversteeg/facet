@@ -21,8 +21,6 @@ pub use poke::*;
 mod peek;
 pub use peek::*;
 
-pub mod mini_typeid;
-
 #[doc(hidden)]
 pub mod log;
 pub use log::*;
@@ -34,10 +32,12 @@ mod tests;
 /// this type progressively, etc.
 pub trait Shapely: Sized {
     /// Returns the shape function of this type
-    const SHAPE_FN: ShapeFn = const { ShapeFn(Self::shape) };
+    const SHAPE: &'static Shape;
 
-    /// Returns the shape of this type
-    fn shape() -> Shape;
+    /// Heap-allocate a value of this shape
+    fn allocate() -> OpaqueUninit<'static> {
+        OpaqueUninit::new(unsafe { std::alloc::alloc(Self::SHAPE.layout) })
+    }
 }
 
 /// A wrapper around `Vec<u8>` for binary data

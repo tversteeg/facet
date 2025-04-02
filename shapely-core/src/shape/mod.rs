@@ -1,45 +1,34 @@
-use std::{alloc::Layout, any::TypeId};
+use std::alloc::Layout;
 
-use crate::{ListVTable, MapVTable, OpaqueUninit, TypeNameOpts, ValueVTable};
+use crate::{ListVTable, MapVTable, TypeNameOpts, ValueVTable};
 
 mod pretty_print;
 
 /// Schema for reflection of a type
 #[derive(Clone, Copy)]
 pub struct Shape {
-    /// The typeid of the underlying type
-    pub typeid: TypeId,
-
     /// Size, alignment
     pub layout: Layout,
 
     /// VTable for common operations. This is indirected because the vtable might
     /// have different functions implemented based on generic type parameters:
     /// HashMap<K, V> is not even constructible if `K` is not `Hash` + `Eq`.
-    pub vtable: fn() -> ValueVTable,
+    pub vtable: &'static ValueVTable,
 
     /// Details/contents of the value
     pub def: Def,
 }
 
-impl Shape {
-    /// Returns the vtable
-    #[inline(always)]
-    pub fn vtable(&self) -> ValueVTable {
-        (self.vtable)()
-    }
-}
-
 // Helper struct to format the name for display
 impl std::fmt::Display for Shape {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        (self.vtable().type_name)(f, TypeNameOpts::default())
+        (self.vtable.type_name)(f, TypeNameOpts::default())
     }
 }
 
 impl PartialEq for Shape {
     fn eq(&self, other: &Self) -> bool {
-        self.typeid == other.typeid
+        self.def == other.def
     }
 }
 
@@ -47,7 +36,7 @@ impl Eq for Shape {}
 
 impl std::hash::Hash for Shape {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.typeid.hash(state);
+        self.def.hash(state);
     }
 }
 
@@ -104,7 +93,7 @@ pub struct Field {
     pub name: &'static str,
 
     /// schema of the inner type
-    pub shape_fn: ShapeFn,
+    pub shape: &'static Shape,
 
     /// offset of the field in the struct (obtained through `std::mem::offset_of`)
     pub offset: usize,
@@ -221,9 +210,9 @@ pub struct MapDef {
     /// vtable for interacting with the map
     pub vtable: fn() -> MapVTable,
     /// shape of the keys in the map
-    pub k: ShapeFn,
+    pub k: &'static Shape,
     /// shape of the values in the map
-    pub v: ShapeFn,
+    pub v: &'static Shape,
 }
 
 impl MapDef {
@@ -240,7 +229,7 @@ pub struct ListDef {
     /// vtable for interacting with the list
     pub vtable: fn() -> ListVTable,
     /// shape of the items in the list
-    pub t: ShapeFn,
+    pub t: &'static Shape,
 }
 
 impl ListDef {
@@ -363,63 +352,4 @@ pub enum Def {
     ///
     /// e.g. `enum Enum { Variant1, Variant2 }`
     Enum(EnumDef),
-}
-
-/// A function that returns a shape. There should only be one of these per concrete type in a
-#[derive(Clone, Copy)]
-pub struct ShapeFn(pub fn() -> Shape);
-
-impl From<fn() -> Shape> for ShapeFn {
-    fn from(f: fn() -> Shape) -> Self {
-        Self(f)
-    }
-}
-
-impl ShapeFn {
-    /// Build the inner shape
-    #[inline(always)]
-    pub fn get(&self) -> Shape {
-        (self.0)()
-    }
-
-    /// Returns the vtable for this shape
-    #[inline(always)]
-    pub fn vtable(&self) -> ValueVTable {
-        self.get().vtable()
-    }
-
-    /// Heap-allocate a value of this shape
-    pub fn allocate(&self) -> OpaqueUninit<'static> {
-        let shape = self.get();
-        let layout = shape.layout;
-        let ptr = unsafe { std::alloc::alloc(layout) };
-        OpaqueUninit::new(ptr)
-    }
-}
-
-impl PartialEq for ShapeFn {
-    fn eq(&self, other: &Self) -> bool {
-        if std::ptr::eq(self.0 as *const (), other.0 as *const ()) {
-            true
-        } else {
-            let self_shape = self.0();
-            let other_shape = other.0();
-            self_shape == other_shape
-        }
-    }
-}
-
-impl Eq for ShapeFn {}
-
-impl std::hash::Hash for ShapeFn {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        // Hash the function pointer
-        (self.0 as *const ()).hash(state);
-    }
-}
-
-impl std::fmt::Debug for ShapeFn {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.get().fmt(f)
-    }
 }
