@@ -28,7 +28,16 @@ impl std::fmt::Display for Shape {
 
 impl PartialEq for Shape {
     fn eq(&self, other: &Self) -> bool {
-        self.def == other.def
+        if self.def != other.def {
+            return false;
+        }
+
+        // FIXME: big hack for now
+        if self.to_string() != other.to_string() {
+            return false;
+        }
+
+        true
     }
 }
 

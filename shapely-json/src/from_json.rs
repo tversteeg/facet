@@ -32,6 +32,10 @@ pub fn from_json<'input>(
                     let s = parser.parse_string()?;
                     unsafe { pv.put(OpaqueConst::from_ref(&s)) };
                     std::mem::forget(s);
+                } else if *pv.shape == *u64::SHAPE {
+                    trace!("Deserializing u64 (pv shape = {})", pv.shape);
+                    let n = parser.parse_u64()?;
+                    unsafe { pv.put(OpaqueConst::from_ref(&n)) };
                 } else {
                     panic!("Unknown scalar shape: {}", pv.shape);
                 }
