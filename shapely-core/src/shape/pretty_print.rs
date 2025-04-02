@@ -47,15 +47,15 @@ impl Shape {
                     if field.flags.contains(FieldFlags::SENSITIVE) {
                         write!(f, "(sensitive) ")?;
                     }
-                    if let Def::Scalar = field.shape.get().def {
-                        field.shape.get().pretty_print_recursive_internal(
+                    if let Def::Scalar = field.shape_fn.get().def {
+                        field.shape_fn.get().pretty_print_recursive_internal(
                             f,
                             printed_schemas,
                             indent + INDENT * 2,
                         )?;
                     } else {
                         writeln!(f)?;
-                        field.shape.get().pretty_print_recursive_internal(
+                        field.shape_fn.get().pretty_print_recursive_internal(
                             f,
                             printed_schemas,
                             indent + INDENT * 2,
@@ -135,15 +135,15 @@ impl Shape {
                                 if field.flags.contains(FieldFlags::SENSITIVE) {
                                     write!(f, "(sensitive) ")?;
                                 }
-                                if let Def::Scalar = field.shape.get().def {
-                                    field.shape.get().pretty_print_recursive_internal(
+                                if let Def::Scalar = field.shape_fn.get().def {
+                                    field.shape_fn.get().pretty_print_recursive_internal(
                                         f,
                                         printed_schemas,
                                         indent + INDENT * 4,
                                     )?;
                                 } else {
                                     writeln!(f)?;
-                                    field.shape.get().pretty_print_recursive_internal(
+                                    field.shape_fn.get().pretty_print_recursive_internal(
                                         f,
                                         printed_schemas,
                                         indent + INDENT * 4,
@@ -174,15 +174,15 @@ impl Shape {
                                 if field.flags.contains(FieldFlags::SENSITIVE) {
                                     write!(f, "(sensitive) ")?;
                                 }
-                                if let Def::Scalar = field.shape.get().def {
-                                    field.shape.get().pretty_print_recursive_internal(
+                                if let Def::Scalar = field.shape_fn.get().def {
+                                    field.shape_fn.get().pretty_print_recursive_internal(
                                         f,
                                         printed_schemas,
                                         indent + INDENT * 4,
                                     )?;
                                 } else {
                                     writeln!(f)?;
-                                    field.shape.get().pretty_print_recursive_internal(
+                                    field.shape_fn.get().pretty_print_recursive_internal(
                                         f,
                                         printed_schemas,
                                         indent + INDENT * 4,

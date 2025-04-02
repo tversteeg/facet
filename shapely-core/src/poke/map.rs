@@ -1,9 +1,9 @@
-use crate::{MapDef, MapVTable, Opaque, OpaqueConst, ShapeDesc};
+use crate::{MapDef, MapVTable, Opaque, OpaqueConst, ShapeFn};
 
 /// Allows poking a map (inserting, etc.)
 pub struct PokeMap<'mem> {
     data: Opaque<'mem>,
-    shape_desc: ShapeDesc,
+    shape_fn: ShapeFn,
     def: MapDef,
 }
 
@@ -14,10 +14,10 @@ impl<'mem> PokeMap<'mem> {
     ///
     /// The data buffer must match the size and alignment of the shape.
     #[inline]
-    pub(crate) unsafe fn new(data: Opaque<'mem>, shape_desc: ShapeDesc, def: MapDef) -> Self {
+    pub(crate) unsafe fn new(data: Opaque<'mem>, shape_fn: ShapeFn, def: MapDef) -> Self {
         Self {
             data,
-            shape_desc,
+            shape_fn,
             def,
         }
     }

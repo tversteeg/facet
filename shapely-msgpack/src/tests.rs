@@ -25,7 +25,7 @@ fn it_works() {
         0x00, 0x00, 0x00, 0x1e, // 30
     ];
 
-    let mut partial = Partial::alloc(TestStruct::shape_desc());
+    let mut partial = Partial::alloc(TestStruct::SHAPE_FN);
     from_msgpack(&mut partial, &data).unwrap();
 
     let result = partial.build::<TestStruct>();

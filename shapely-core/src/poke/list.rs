@@ -1,9 +1,9 @@
-use crate::{ListDef, ListVTable, Opaque, ShapeDesc};
+use crate::{ListDef, ListVTable, Opaque, ShapeFn};
 
 /// Allows poking a list (appending, etc.)
 pub struct PokeList<'mem> {
     data: Opaque<'mem>,
-    shape_desc: ShapeDesc,
+    shape_fn: ShapeFn,
     def: ListDef,
 }
 
@@ -13,10 +13,10 @@ impl<'mem> PokeList<'mem> {
     /// # Safety
     ///
     /// The data buffer must match the size and alignment of the shape.
-    pub(crate) unsafe fn new(data: Opaque<'mem>, shape_desc: ShapeDesc, def: ListDef) -> Self {
+    pub(crate) unsafe fn new(data: Opaque<'mem>, shape_fn: ShapeFn, def: ListDef) -> Self {
         Self {
             data,
-            shape_desc,
+            shape_fn,
             def,
         }
     }

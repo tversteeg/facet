@@ -104,7 +104,7 @@ pub struct Field {
     pub name: &'static str,
 
     /// schema of the inner type
-    pub shape: ShapeDesc,
+    pub shape_fn: ShapeFn,
 
     /// offset of the field in the struct (obtained through `std::mem::offset_of`)
     pub offset: usize,
@@ -221,9 +221,9 @@ pub struct MapDef {
     /// vtable for interacting with the map
     pub vtable: fn() -> MapVTable,
     /// shape of the keys in the map
-    pub k: ShapeDesc,
+    pub k: ShapeFn,
     /// shape of the values in the map
-    pub v: ShapeDesc,
+    pub v: ShapeFn,
 }
 
 /// Fields for list types
@@ -232,7 +232,7 @@ pub struct ListDef {
     /// vtable for interacting with the list
     pub vtable: fn() -> ListVTable,
     /// shape of the items in the list
-    pub t: ShapeDesc,
+    pub t: ShapeFn,
 }
 
 /// Fields for enum types
@@ -351,15 +351,15 @@ pub enum Def {
 
 /// A function that returns a shape. There should only be one of these per concrete type in a
 #[derive(Clone, Copy)]
-pub struct ShapeDesc(pub fn() -> Shape);
+pub struct ShapeFn(pub fn() -> Shape);
 
-impl From<fn() -> Shape> for ShapeDesc {
+impl From<fn() -> Shape> for ShapeFn {
     fn from(f: fn() -> Shape) -> Self {
         Self(f)
     }
 }
 
-impl ShapeDesc {
+impl ShapeFn {
     /// Build the inner shape
     #[inline(always)]
     pub fn get(&self) -> Shape {
@@ -381,7 +381,7 @@ impl ShapeDesc {
     }
 }
 
-impl PartialEq for ShapeDesc {
+impl PartialEq for ShapeFn {
     fn eq(&self, other: &Self) -> bool {
         if std::ptr::eq(self.0 as *const (), other.0 as *const ()) {
             true
@@ -393,16 +393,16 @@ impl PartialEq for ShapeDesc {
     }
 }
 
-impl Eq for ShapeDesc {}
+impl Eq for ShapeFn {}
 
-impl std::hash::Hash for ShapeDesc {
+impl std::hash::Hash for ShapeFn {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         // Hash the function pointer
         (self.0 as *const ()).hash(state);
     }
 }
 
-impl std::fmt::Debug for ShapeDesc {
+impl std::fmt::Debug for ShapeFn {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.get().fmt(f)
     }

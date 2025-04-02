@@ -1,4 +1,4 @@
-use crate::{Shape, ShapeDesc, Shapely};
+use crate::{Shape, ShapeFn, Shapely};
 
 #[doc(hidden)]
 pub fn shape_of<TStruct, TField: Shapely>(_f: impl Fn(TStruct) -> TField) -> Shape {
@@ -6,8 +6,8 @@ pub fn shape_of<TStruct, TField: Shapely>(_f: impl Fn(TStruct) -> TField) -> Sha
 }
 
 #[doc(hidden)]
-pub const fn shape_desc_of<TStruct, TField: Shapely>(_f: &dyn Fn(TStruct) -> TField) -> ShapeDesc {
-    ShapeDesc(TField::shape)
+pub const fn shape_fn_for<TStruct, TField: Shapely>(_f: &dyn Fn(TStruct) -> TField) -> ShapeFn {
+    ShapeFn(TField::shape)
 }
 
 #[doc(hidden)]
@@ -16,7 +16,7 @@ macro_rules! struct_field {
     ($struct:ty, $field:tt) => {
         $crate::Field {
             name: stringify!($field),
-            shape: $crate::shape_desc_of(&|s: $struct| s.$field),
+            shape: $crate::shape_fn_for(&|s: $struct| s.$field),
             offset: ::std::mem::offset_of!($struct, $field),
             flags: $crate::FieldFlags::EMPTY,
         }
@@ -59,7 +59,7 @@ macro_rules! enum_tuple_variant {
             $(
                 $crate::Field {
                     name: concat!("_", stringify!($field_type)),
-                    shape: <$field_type>::shape_desc(),
+                    shape: <$field_type>::SHAPE_FN,
                     offset: 0, // Will be calculated at runtime
                     flags: $crate::FieldFlags::EMPTY,
                 }
@@ -77,7 +77,7 @@ macro_rules! enum_tuple_variant {
             $(
                 $crate::Field {
                     name: concat!("_", stringify!($field_type)),
-                    shape: <$field_type>::shape_desc(),
+                    shape: <$field_type>::SHAPE_FN,
                     offset: 0, // Will be calculated at runtime
                     flags: $crate::FieldFlags::EMPTY,
                 }
@@ -100,7 +100,7 @@ macro_rules! enum_struct_variant {
             $(
                 $crate::Field {
                     name: stringify!($field),
-                    shape: <$field_type>::shape_desc(),
+                    shape: <$field_type>::SHAPE_FN,
                     offset: 0, // Will be calculated at runtime
                     flags: $crate::FieldFlags::EMPTY,
                 }
@@ -118,7 +118,7 @@ macro_rules! enum_struct_variant {
             $(
                 $crate::Field {
                     name: stringify!($field),
-                    shape: <$field_type>::shape_desc(),
+                    shape: <$field_type>::SHAPE_FN,
                     offset: 0, // Will be calculated at runtime
                     flags: $crate::FieldFlags::EMPTY,
                 }

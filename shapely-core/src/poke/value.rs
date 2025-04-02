@@ -1,15 +1,15 @@
-use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek, ShapeDesc, ValueVTable};
+use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek, ShapeFn, ValueVTable};
 
 /// Lets you write to a value (implements write-only [`ValueVTable`] proxies)
 pub struct PokeValue<'mem> {
     data: OpaqueUninit<'mem>,
-    shape_desc: ShapeDesc,
+    shape_fn: ShapeFn,
 }
 
 impl std::fmt::Debug for PokeValue<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PokeValue")
-            .field("shape_desc", &self.shape_desc)
+            .field("shape_fn", &self.shape_fn)
             .finish_non_exhaustive()
     }
 }
@@ -20,14 +20,14 @@ impl<'mem> PokeValue<'mem> {
     /// # Safety
     ///
     /// The data buffer must match the size and alignment of the shape.
-    pub(crate) unsafe fn new(data: OpaqueUninit<'mem>, shape_desc: ShapeDesc) -> Self {
-        Self { data, shape_desc }
+    pub(crate) unsafe fn new(data: OpaqueUninit<'mem>, shape_fn: ShapeFn) -> Self {
+        Self { data, shape_fn }
     }
 
     /// Gets the vtable for the value
     #[inline(always)]
     fn vtable(&self) -> ValueVTable {
-        self.shape_desc.vtable()
+        self.shape_fn.vtable()
     }
 
     /// Attempts to convert a value from another type into this one
@@ -76,7 +76,7 @@ impl<'mem> PokeValue<'mem> {
             std::ptr::copy_nonoverlapping(
                 source.as_ptr(),
                 self.data.as_mut_ptr(),
-                self.shape_desc.get().layout.size(),
+                self.shape_fn.get().layout.size(),
             );
             self.data.assume_init()
         }

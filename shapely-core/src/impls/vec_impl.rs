@@ -1,7 +1,8 @@
 use std::{alloc::Layout, fmt};
 
 use crate::{
-    Def, ListDef, ListVTable, OpaqueConst, Shape, Shapely, TypeNameOpts, ValueVTable, mini_typeid,
+    Def, ListDef, ListVTable, Opaque, OpaqueConst, Shape, Shapely, TypeNameOpts, ValueVTable,
+    mini_typeid,
 };
 
 impl<T> Shapely for Vec<T>
@@ -45,6 +46,9 @@ where
             },
             def: Def::List(ListDef {
                 vtable: || ListVTable {
+                    init_in_place_with_capacity: |data, capacity| unsafe {
+                        Ok(data.write(Self::with_capacity(capacity)))
+                    },
                     push: |ptr, item| unsafe {
                         let vec = ptr.as_mut_ptr::<Vec<T>>();
                         let item = item.read::<T>();
@@ -56,17 +60,16 @@ where
                     },
                     get_item_ptr: |ptr, index| unsafe {
                         let vec = ptr.as_ref::<Vec<T>>();
-                        if index >= vec.len() {
+                        let len = vec.len();
+                        if index >= len {
                             panic!(
-                                "Index out of bounds: the len is {} but the index is {}",
-                                vec.len(),
-                                index
+                                "Index out of bounds: the len is {len} but the index is {index}"
                             );
                         }
                         OpaqueConst::new_unchecked(vec.as_ptr().add(index))
                     },
                 },
-                t: T::shape_desc(),
+                t: T::SHAPE_FN,
             }),
         }
     }

@@ -1,4 +1,4 @@
-use crate::{FieldError, OpaqueUninit, ShapeDesc, StructDef, StructVTable};
+use crate::{FieldError, OpaqueUninit, ShapeFn, StructDef, StructVTable};
 use std::ptr::NonNull;
 
 use super::ISet;
@@ -7,7 +7,7 @@ use super::ISet;
 pub struct PokeStruct<'mem> {
     data: OpaqueUninit<'mem>,
     iset: ISet,
-    shape_desc: ShapeDesc,
+    shape_fn: ShapeFn,
     def: StructDef,
 }
 
@@ -16,12 +16,12 @@ impl<'mem> PokeStruct<'mem> {
     ///
     /// # Safety
     ///
-    /// The `data`, `shape_desc`, and `def` must match
-    pub unsafe fn new(data: OpaqueUninit<'mem>, shape_desc: ShapeDesc, def: StructDef) -> Self {
+    /// The `data`, `shape_fn`, and `def` must match
+    pub unsafe fn new(data: OpaqueUninit<'mem>, shape_fn: ShapeFn, def: StructDef) -> Self {
         Self {
             data,
             iset: Default::default(),
-            shape_desc,
+            shape_fn,
             def,
         }
     }
@@ -29,7 +29,7 @@ impl<'mem> PokeStruct<'mem> {
     /// Gets the vtable for the struct
     #[inline(always)]
     pub fn struct_vtable(&self) -> StructVTable {
-        (self.shape_desc.get().vtable)()
+        (self.shape_fn.get().vtable)()
     }
 
     /// Checks if all fields in the struct have been initialized.
@@ -40,7 +40,7 @@ impl<'mem> PokeStruct<'mem> {
                 panic!(
                     "Field '{}' was not initialized. Complete schema:\n{:?}",
                     field.name,
-                    self.shape_desc.get()
+                    self.shape_fn.get()
                 );
             }
         }
@@ -72,7 +72,7 @@ impl<'mem> PokeStruct<'mem> {
     /// - The generic type parameter T does not match the shape that this PokeStruct is building.
     pub fn build<T: crate::Shapely>(self) -> T {
         self.assert_all_fields_initialized();
-        assert_eq!(self.shape_desc, T::shape_desc(), "Shape mismatch");
+        assert_eq!(self.shape_fn, T::SHAPE_FN, "Shape mismatch");
 
         let result = unsafe {
             let ptr = self.data.as_mut_ptr() as *const T;
@@ -82,7 +82,7 @@ impl<'mem> PokeStruct<'mem> {
 
         // Deallocate the memory
         unsafe {
-            std::alloc::dealloc(self.data.as_mut_ptr(), self.shape_desc.get().layout);
+            std::alloc::dealloc(self.data.as_mut_ptr(), self.shape_fn.get().layout);
         };
         std::mem::forget(self);
         result
@@ -97,7 +97,7 @@ impl<'mem> PokeStruct<'mem> {
     /// - The generic type parameter T does not match the shape that this PokeStruct is building.
     pub fn build_boxed<T: crate::Shapely>(self) -> Box<T> {
         self.assert_all_fields_initialized();
-        assert_eq!(self.shape_desc, T::shape_desc(), "Shape mismatch");
+        assert_eq!(self.shape_fn, T::SHAPE_FN, "Shape mismatch");
 
         let boxed = unsafe { Box::from_raw(self.data.as_mut_ptr() as *mut T) };
         std::mem::forget(self);
@@ -118,7 +118,7 @@ impl<'mem> PokeStruct<'mem> {
             std::ptr::copy_nonoverlapping(
                 self.data.as_mut_ptr(),
                 target.as_ptr(),
-                self.shape_desc.get().layout.size(),
+                self.shape_fn.get().layout.size(),
             );
         }
         std::mem::forget(self);
@@ -151,7 +151,7 @@ impl<'mem> PokeStruct<'mem> {
 
         // Get the field's address
         let field_addr = unsafe { self.data.field_uninit(field.offset) };
-        let field_shape = field.shape;
+        let field_shape = field.shape_fn;
 
         let poke = unsafe { crate::Poke::from_opaque_uninit(field_addr, field_shape) };
         Ok(poke)
@@ -169,7 +169,7 @@ impl<'mem> PokeStruct<'mem> {
             return Err(FieldError::IndexOutOfBounds);
         }
         let field = &self.def.fields[index];
-        let field_shape = field.shape.get();
+        let field_shape = field.shape_fn.get();
 
         unsafe {
             std::ptr::copy_nonoverlapping(
@@ -220,7 +220,7 @@ impl Drop for PokeStruct<'_> {
             .enumerate()
             .filter_map(|(i, field)| {
                 if self.iset.has(i) {
-                    Some((field, field.shape.get().vtable().drop_in_place?))
+                    Some((field, field.shape_fn.get().vtable().drop_in_place?))
                 } else {
                     None
                 }

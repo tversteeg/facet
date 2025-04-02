@@ -3,7 +3,7 @@
 use crate::Shapely;
 use std::cmp::Ordering;
 
-use super::{Opaque, OpaqueConst, Shape, ShapeDesc, ValueVTable};
+use super::{Opaque, OpaqueConst, Shape, ShapeFn, ValueVTable};
 
 /// Lets you peek at the innards of a value
 ///
@@ -29,7 +29,7 @@ impl<'mem> Peek<'mem> {
         // This is safe because we're creating an Opaque pointer to read-only data
         // The pointer will be valid for the lifetime 'mem
         let data = OpaqueConst::from_ref(s);
-        unsafe { Self::unchecked_new(data, S::shape_desc()) }
+        unsafe { Self::unchecked_new(data, S::SHAPE_FN) }
     }
 
     /// Creates a new peek, for easy manipulation of some opaque data.
@@ -38,8 +38,8 @@ impl<'mem> Peek<'mem> {
     ///
     /// `data` must be initialized and well-aligned, and point to a value
     /// of the type described by `shape`.
-    pub unsafe fn unchecked_new(data: OpaqueConst<'mem>, shape_desc: ShapeDesc) -> Self {
-        let shape = shape_desc.get();
+    pub unsafe fn unchecked_new(data: OpaqueConst<'mem>, shape_fn: ShapeFn) -> Self {
+        let shape = shape_fn.get();
         match shape.def {
             super::Def::Struct { .. } => todo!(),
             super::Def::TupleStruct { .. } => todo!(),

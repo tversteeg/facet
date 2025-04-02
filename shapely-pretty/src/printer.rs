@@ -7,7 +7,7 @@ use std::{
     str,
 };
 
-use shapely_core::{Def, FieldFlags, Scalar, Shape, ShapeDesc, Shapely};
+use shapely_core::{Def, FieldFlags, Scalar, Shape, ShapeFn, Shapely};
 
 use crate::{
     ansi,
@@ -65,11 +65,11 @@ impl PrettyPrinter {
 
     /// Pretty-print a value that implements Shapely
     pub fn print<T: Shapely>(&self, value: &T) {
-        let shape_desc = T::shape_desc();
+        let shape_fn = T::SHAPE_FN;
         let ptr = value as *const T as *mut u8;
 
         let mut output = String::new();
-        self.format_value(ptr, shape_desc, &mut output, 0, &mut HashSet::new())
+        self.format_value(ptr, shape_fn, &mut output, 0, &mut HashSet::new())
             .expect("Formatting failed");
 
         print!("{}", output);
@@ -77,11 +77,11 @@ impl PrettyPrinter {
 
     /// Format a value to a string
     pub fn format<T: Shapely>(&self, value: &T) -> String {
-        let shape_desc = T::shape_desc();
+        let shape_fn = T::SHAPE_FN;
         let ptr = value as *const T as *mut u8;
 
         let mut output = String::new();
-        self.format_value(ptr, shape_desc, &mut output, 0, &mut HashSet::new())
+        self.format_value(ptr, shape_fn, &mut output, 0, &mut HashSet::new())
             .expect("Formatting failed");
 
         output
@@ -89,17 +89,17 @@ impl PrettyPrinter {
 
     /// Format a value to a formatter
     pub fn format_to<T: Shapely>(&self, value: &T, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let shape_desc = T::shape_desc();
+        let shape_fn = T::SHAPE_FN;
         let ptr = value as *const T as *mut u8;
 
-        self.format_value(ptr, shape_desc, f, 0, &mut HashSet::new())
+        self.format_value(ptr, shape_fn, f, 0, &mut HashSet::new())
     }
 
     /// Internal method to format a value at a specific memory address
     pub(crate) fn format_value(
         &self,
         ptr: *mut u8,
-        shape_desc: ShapeDesc,
+        shape_fn: ShapeFn,
         f: &mut impl Write,
         depth: usize,
         visited: &mut HashSet<*mut u8>,
@@ -114,7 +114,7 @@ impl PrettyPrinter {
         }
 
         // Get the shape
-        let shape = shape_desc.get();
+        let shape = shape_fn.get();
 
         // Generate a color for this shape
         let mut hasher = DefaultHasher::new();
@@ -253,7 +253,7 @@ impl PrettyPrinter {
             } else {
                 // Field value - compute the field address
                 let field_ptr = unsafe { ptr.add(field.offset) };
-                self.format_value(field_ptr, field.shape, f, depth + 1, visited)?;
+                self.format_value(field_ptr, field.shape_fn, f, depth + 1, visited)?;
             }
 
             writeln!(f, "{}", self.style_punctuation(","))?;
@@ -279,7 +279,7 @@ impl PrettyPrinter {
         &self,
         _ptr: *mut u8,
         shape: Shape,
-        _value_shape: ShapeDesc,
+        _value_shape: ShapeFn,
         f: &mut impl Write,
         depth: usize,
         _visited: &mut HashSet<*mut u8>,
@@ -311,7 +311,7 @@ impl PrettyPrinter {
         &self,
         _ptr: *mut u8,
         shape: Shape,
-        _elem_shape: ShapeDesc,
+        _elem_shape: ShapeFn,
         f: &mut impl Write,
         depth: usize,
         _visited: &mut HashSet<*mut u8>,
@@ -343,7 +343,7 @@ impl PrettyPrinter {
         &self,
         ptr: *mut u8,
         shape: Shape,
-        inner_shape: ShapeDesc,
+        inner_shape: ShapeFn,
         f: &mut impl Write,
         depth: usize,
         visited: &mut HashSet<*mut u8>,

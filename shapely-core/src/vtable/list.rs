@@ -1,4 +1,4 @@
-use crate::{Opaque, OpaqueConst};
+use crate::{Opaque, OpaqueConst, OpaqueUninit};
 
 /// Initialize a list in place with a given capacity
 ///
@@ -6,7 +6,8 @@ use crate::{Opaque, OpaqueConst};
 ///
 /// The `list` parameter must point to uninitialized memory of sufficient size.
 /// The function must properly initialize the memory.
-pub type ListInitInPlaceWithCapacityFn = unsafe fn(list: Opaque, capacity: usize);
+pub type ListInitInPlaceWithCapacityFn =
+    unsafe fn(list: OpaqueUninit, capacity: usize) -> Result<Opaque, ()>;
 
 /// Push an item to the list
 ///

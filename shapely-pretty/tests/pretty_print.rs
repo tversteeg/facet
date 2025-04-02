@@ -1,5 +1,5 @@
 use shapely::Shapely;
-use shapely_core::{Def, Field, FieldFlags, Shape, ShapeDesc};
+use shapely_core::{Def, Field, FieldFlags, Shape, ShapeFn};
 use shapely_pretty::{PrettyPrinter, ShapelyPretty};
 use std::{alloc::Layout, fmt::Write};
 
@@ -40,13 +40,13 @@ impl Shapely for TestSecrets {
                 fields: &[
                     Field {
                         name: "normal_field",
-                        shape: ShapeDesc(String::shape),
+                        shape_fn: ShapeFn(String::shape),
                         offset: 0,
                         flags: FieldFlags::EMPTY,
                     },
                     Field {
                         name: "sensitive_field",
-                        shape: ShapeDesc(String::shape),
+                        shape_fn: ShapeFn(String::shape),
                         offset: std::mem::size_of::<String>(),
                         flags: FieldFlags::SENSITIVE,
                     },

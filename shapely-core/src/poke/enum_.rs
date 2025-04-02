@@ -1,4 +1,4 @@
-use crate::{EnumDef, FieldError, OpaqueUninit, Shape, ShapeDesc, Shapely, ValueVTable, trace};
+use crate::{EnumDef, FieldError, OpaqueUninit, Shape, ShapeFn, Shapely, ValueVTable, trace};
 use std::ptr::NonNull;
 
 use super::{ISet, Poke};
@@ -7,7 +7,7 @@ use super::{ISet, Poke};
 pub struct PokeEnum<'mem> {
     data: OpaqueUninit<'mem>,
     iset: ISet,
-    shape_desc: ShapeDesc,
+    shape_fn: ShapeFn,
     shape: Shape,
     #[allow(dead_code)]
     vtable: ValueVTable,
@@ -19,33 +19,33 @@ pub struct PokeEnum<'mem> {
 impl<'mem> PokeEnum<'mem> {
     /// Creates a new PokeEnum from a MaybeUninit
     pub fn from_maybe_uninit<T: Shapely>(uninit: &'mem mut std::mem::MaybeUninit<T>) -> Self {
-        let shape_desc = T::shape_desc();
-        let shape = shape_desc.get();
+        let shape_fn = T::SHAPE_FN;
+        let shape = shape_fn.get();
         let vtable = shape.vtable();
         let def = match shape.def {
             crate::Def::Enum(def) => def,
             _ => panic!("expected enum shape"),
         };
         let data = OpaqueUninit::from_maybe_uninit(uninit);
-        unsafe { Self::from_opaque_uninit(data, shape_desc, vtable, def) }
+        unsafe { Self::from_opaque_uninit(data, shape_fn, vtable, def) }
     }
 
     /// Creates a new PokeEnum from raw data
     ///
     /// # Safety
     ///
-    /// The data buffer must match the size and alignment of the enum shape described by shape_desc
+    /// The data buffer must match the size and alignment of the enum shape described by shape_fn
     pub(crate) unsafe fn from_opaque_uninit(
         data: OpaqueUninit<'mem>,
-        shape_desc: ShapeDesc,
+        shape_fn: ShapeFn,
         vtable: ValueVTable,
         def: EnumDef,
     ) -> Self {
-        let shape = shape_desc.get();
+        let shape = shape_fn.get();
         Self {
             data,
             iset: Default::default(),
-            shape_desc,
+            shape_fn,
             shape,
             vtable,
             selected_variant: None,
@@ -219,7 +219,7 @@ impl<'mem> PokeEnum<'mem> {
 
                 // Get the field's address
                 let field_data = unsafe { self.data.field_uninit(field.offset) };
-                let poke = unsafe { Poke::from_opaque_uninit(field_data, field.shape) };
+                let poke = unsafe { Poke::from_opaque_uninit(field_data, field.shape_fn) };
                 Ok(poke)
             }
             crate::VariantKind::Struct { fields } => {
@@ -232,7 +232,7 @@ impl<'mem> PokeEnum<'mem> {
 
                 // Get the field's address
                 let field_data = unsafe { self.data.field_uninit(field.offset) };
-                let poke = unsafe { Poke::from_opaque_uninit(field_data, field.shape) };
+                let poke = unsafe { Poke::from_opaque_uninit(field_data, field.shape_fn) };
                 Ok(poke)
             }
         }
@@ -290,7 +290,7 @@ impl<'mem> PokeEnum<'mem> {
     }
 
     fn assert_matching_shape<T: Shapely>(&self) {
-        if self.shape_desc != T::shape_desc() {
+        if self.shape_fn != T::SHAPE_FN {
             let current_shape = self.shape;
             let target_shape = T::shape();
 
@@ -397,7 +397,7 @@ impl Drop for PokeEnum<'_> {
                         for (field_index, field) in fields.iter().enumerate() {
                             let init_bit = field_index + 1;
                             if self.iset.has(init_bit) {
-                                if let Some(drop_fn) = field.shape.get().vtable().drop_in_place {
+                                if let Some(drop_fn) = field.shape_fn.get().vtable().drop_in_place {
                                     unsafe {
                                         drop_fn(self.data.field_init(field.offset));
                                     }

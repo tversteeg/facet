@@ -416,7 +416,7 @@
 //                 name: |f, _nameopts| write!(f, "TransparentWrapper"),
 //                 typeid: mini_typeid::of::<Self>(),
 //                 layout: std::alloc::Layout::new::<Self>(),
-//                 def: Def::Transparent(InnerType::shape_desc()),
+//                 def: Def::Transparent(InnerType::SHAPE_FN),
 //                 set_to_default: None,
 //                 drop_in_place: None,
 //             }

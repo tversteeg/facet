@@ -15,8 +15,8 @@ pub fn from_json<'input>(
         parser: &mut JsonParser<'input>,
         partial: &mut Partial,
     ) -> Result<(), JsonParseErrorWithContext<'input>> {
-        let shape_desc = partial.shape();
-        let shape = shape_desc.get();
+        let shape_fn = partial.shape();
+        let shape = shape_fn.get();
         trace!("Deserializing value with shape:\n{:?}", shape);
 
         match &shape.innards {
@@ -183,7 +183,7 @@ pub fn from_json<'input>(
                     trace!("Processing hashmap key: \x1b[1;33m{}\x1b[0m", key);
 
                     // Create a partial for the key (string type)
-                    let mut key_partial = Partial::alloc(String::shape_desc());
+                    let mut key_partial = Partial::alloc(String::SHAPE_FN);
                     key_partial.scalar_slot().expect("String slot").fill(key);
 
                     // Create a partial for the value

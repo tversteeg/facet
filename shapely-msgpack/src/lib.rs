@@ -60,8 +60,8 @@ pub fn from_msgpack(partial: &mut Partial, msgpack: &[u8]) -> Result<(), DecodeE
     let mut decoder = Decoder::new(msgpack);
 
     fn deserialize_value(decoder: &mut Decoder, partial: &mut Partial) -> Result<(), DecodeError> {
-        let shape_desc = partial.shape();
-        let shape = shape_desc.get();
+        let shape_fn = partial.shape();
+        let shape = shape_fn.get();
 
         match &shape.innards {
             shapely_core::Def::Scalar(scalar) => {

@@ -33,13 +33,10 @@ mod tests;
 /// Allows querying the [Shape] of a type, which in turn lets us inspect any fields, build a value of
 /// this type progressively, etc.
 pub trait Shapely: Sized {
+    const SHAPE_FN: ShapeFn = const { ShapeFn(Self::shape) };
+
     /// Returns the shape of this type
     fn shape() -> Shape;
-
-    /// Returns a shape def (a function that can describe this shape)
-    fn shape_desc() -> ShapeDesc {
-        ShapeDesc(Self::shape)
-    }
 }
 
 /// A wrapper around `Vec<u8>` for binary data

@@ -56,7 +56,7 @@ fn test_to_json() {
     let mut buffer = Vec::new();
     to_json(
         &test_struct as *const _ as *mut u8,
-        TestStruct::shape_desc(),
+        TestStruct::SHAPE_FN,
         &mut buffer,
         false,
     )
@@ -67,7 +67,7 @@ fn test_to_json() {
     let mut buffer = Vec::new();
     to_json(
         &test_struct as *const _ as *mut u8,
-        TestStruct::shape_desc(),
+        TestStruct::SHAPE_FN,
         &mut buffer,
         true,
     )
@@ -198,7 +198,7 @@ fn test_from_json_with_vec() {
     let mut buffer = Vec::new();
     to_json(
         &built_struct as *const _ as *mut u8,
-        VecStruct::shape_desc(),
+        VecStruct::SHAPE_FN,
         &mut buffer,
         true,
     )
@@ -265,7 +265,7 @@ fn test_from_json_with_hashmap() {
     let mut buffer = Vec::new();
     to_json(
         &built_struct as *const _ as *mut u8,
-        HashmapStruct::shape_desc(),
+        HashmapStruct::SHAPE_FN,
         &mut buffer,
         true,
     )

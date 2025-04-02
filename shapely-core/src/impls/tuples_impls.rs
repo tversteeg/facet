@@ -1,7 +1,7 @@
 use std::alloc::Layout;
 
 use crate::{
-    Def, Field, FieldFlags, Shape, ShapeDesc, Shapely, StructDef, TypeNameOpts, ValueVTable,
+    Def, Field, FieldFlags, Shape, ShapeFn, Shapely, StructDef, TypeNameOpts, ValueVTable,
     mini_typeid,
 };
 
