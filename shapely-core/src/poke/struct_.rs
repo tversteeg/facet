@@ -207,7 +207,6 @@ impl<'mem> PokeStruct<'mem> {
 
 impl Drop for PokeStruct<'_> {
     fn drop(&mut self) {
-        let struct_vtable = self.struct_vtable();
         self.def
             .fields
             .iter()

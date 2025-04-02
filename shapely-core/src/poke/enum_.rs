@@ -16,11 +16,7 @@ impl<'mem> PokeEnumNoVariant<'mem> {
     /// # Safety
     ///
     /// The data buffer must match the size and alignment of the enum shape described by shape_fn
-    pub(crate) unsafe fn from_opaque_uninit(
-        data: OpaqueUninit<'mem>,
-        shape_fn: ShapeFn,
-        def: EnumDef,
-    ) -> Self {
+    pub(crate) unsafe fn new(data: OpaqueUninit<'mem>, shape_fn: ShapeFn, def: EnumDef) -> Self {
         Self {
             data,
             shape_fn,

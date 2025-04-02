@@ -63,25 +63,17 @@ impl<'mem> Poke<'mem> {
                 Poke::Struct(unsafe { PokeStruct::new(data, shape_fn, struct_def) })
             }
             Def::Map(map_def) => {
-                let pv = unsafe { PokeValue::new(data, shape) };
-                let data = pv.default_in_place().unwrap_or_else(|_| {
-                    panic!("Failed to initialize map value. Shape is: {shape:?}")
-                });
-                let pm = unsafe { PokeMap::new(data, shape, shape.vtable(), map_def) };
-                Poke::Map(pm)
+                let pmu = unsafe { PokeMapUninit::new(data, shape_fn, map_def) };
+                Poke::Map(pmu)
             }
             Def::List(list_def) => {
-                let pv = unsafe { PokeValue::new(data, shape, shape.vtable()) };
-                let data = pv.default_in_place().unwrap_or_else(|_| {
-                    panic!("Failed to initialize list value. Shape is: {shape:?}")
-                });
-                let pl = unsafe { PokeList::new(data, shape, shape.vtable(), list_def) };
-                Poke::List(pl)
+                let plu = unsafe { PokeListUninit::new(data, shape_fn, list_def) };
+                Poke::List(plu)
             }
-            Def::Scalar => Poke::Scalar(unsafe { PokeValue::new(data, shape, shape.vtable()) }),
-            Def::Enum(enum_def) => Poke::Enum(unsafe {
-                PokeEnum::from_opaque_uninit(data, shape_fn, shape.vtable(), enum_def)
-            }),
+            Def::Scalar => Poke::Scalar(unsafe { PokeValue::new(data, shape_fn) }),
+            Def::Enum(enum_def) => {
+                Poke::Enum(unsafe { PokeEnumNoVariant::new(data, shape_fn, enum_def) })
+            }
         }
     }
 
@@ -94,7 +86,7 @@ impl<'mem> Poke<'mem> {
     }
 
     /// Converts this Poke into a PokeList, panicking if it's not a List variant
-    pub fn into_list(self) -> PokeList<'mem> {
+    pub fn into_list(self) -> PokeListUninit<'mem> {
         match self {
             Poke::List(l) => l,
             _ => panic!("expected List variant"),
@@ -102,7 +94,7 @@ impl<'mem> Poke<'mem> {
     }
 
     /// Converts this Poke into a PokeMap, panicking if it's not a Map variant
-    pub fn into_map(self) -> PokeMap<'mem> {
+    pub fn into_map(self) -> PokeMapUninit<'mem> {
         match self {
             Poke::Map(m) => m,
             _ => panic!("expected Map variant"),
@@ -118,7 +110,7 @@ impl<'mem> Poke<'mem> {
     }
 
     /// Converts this Poke into a PokeEnum, panicking if it's not an Enum variant
-    pub fn into_enum(self) -> PokeEnum<'mem> {
+    pub fn into_enum(self) -> PokeEnumNoVariant<'mem> {
         match self {
             Poke::Enum(e) => e,
             _ => panic!("expected Enum variant"),

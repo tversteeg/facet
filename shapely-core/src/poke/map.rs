@@ -38,6 +38,7 @@ impl<'mem> PokeMapUninit<'mem> {
 /// Allows poking a map (inserting, etc.)
 pub struct PokeMap<'mem> {
     data: Opaque<'mem>,
+    #[allow(dead_code)]
     shape_fn: ShapeFn,
     def: MapDef,
 }
