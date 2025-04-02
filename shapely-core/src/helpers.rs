@@ -1,7 +1,7 @@
 use crate::{Shape, Shapely};
 
 #[doc(hidden)]
-pub fn shape_of<TStruct, TField: Shapely>(_f: impl Fn(TStruct) -> TField) -> &'static Shape {
+pub const fn shape_of<TStruct, TField: Shapely>(_f: &dyn Fn(TStruct) -> TField) -> &'static Shape {
     TField::SHAPE
 }
 
@@ -11,7 +11,7 @@ macro_rules! struct_field {
     ($struct:ty, $field:tt) => {
         $crate::Field {
             name: stringify!($field),
-            shape: $crate::shape_of(|s: $struct| s.$field),
+            shape: $crate::shape_of(&|s: $struct| s.$field),
             offset: ::std::mem::offset_of!($struct, $field),
             flags: $crate::FieldFlags::EMPTY,
         }

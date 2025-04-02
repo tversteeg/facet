@@ -252,7 +252,7 @@ fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
         r#"
 #[automatically_derived]
 impl shapely::Shapely for {struct_name} {{
-    const SHAPE: &'static Shape = &const {{
+    const SHAPE: &'static shapely::Shape = &const {{
         shapely::Shape {{
             layout: std::alloc::Layout::new::<Self>(),
             vtable: &shapely::ValueVTable {{
@@ -271,7 +271,7 @@ impl shapely::Shapely for {struct_name} {{
                 fields: shapely::struct_fields!({struct_name}, ({fields})),
             }}),
         }}
-    }},
+    }};
 }}
         "#
     );
@@ -305,7 +305,7 @@ fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStream {
         r#"
 #[automatically_derived]
 impl shapely::Shapely for {struct_name} {{
-    const SHAPE: &'static Shape = &const {{
+    const SHAPE: &'static shapely::Shape = &const {{
         shapely::Shape {{
             layout: std::alloc::Layout::new::<Self>(),
             vtable: &shapely::ValueVTable {{
@@ -324,7 +324,7 @@ impl shapely::Shapely for {struct_name} {{
                 fields: shapely::struct_fields!({struct_name}, ({fields_str})),
             }}),
         }}
-    }},
+    }};
 }}
     "#
     );
@@ -431,7 +431,7 @@ fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
         r#"
 #[automatically_derived]
 impl shapely::Shapely for {enum_name} {{
-    const SHAPE: &'static Shape = &const {{
+    const SHAPE: &'static shapely::Shape = &const {{
         shapely::Shape {{
             layout: std::alloc::Layout::new::<Self>(),
             vtable: &shapely::ValueVTable {{
@@ -451,7 +451,7 @@ impl shapely::Shapely for {enum_name} {{
                 repr: shapely::EnumRepr::{repr_type},
             }}),
         }}
-    }},
+    }};
 }}
         "#
     );

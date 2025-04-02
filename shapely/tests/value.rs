@@ -2,7 +2,7 @@ use shapely::{OpaqueConst, Poke, Shapely};
 
 #[test]
 fn build_u64_properly() {
-    let shape = u64::shape();
+    let shape = u64::SHAPE;
     eprintln!("{shape:#?}");
 
     let scalar = Poke::alloc::<u64>().into_scalar();
