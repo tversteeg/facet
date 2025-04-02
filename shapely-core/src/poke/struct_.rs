@@ -7,7 +7,7 @@ use super::ISet;
 pub struct PokeStruct<'mem> {
     data: OpaqueUninit<'mem>,
     iset: ISet,
-    shape: &'static Shape,
+    pub(crate) shape: &'static Shape,
     def: StructDef,
 }
 

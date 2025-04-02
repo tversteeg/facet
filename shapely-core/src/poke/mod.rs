@@ -115,6 +115,18 @@ impl<'mem> Poke<'mem> {
             _ => panic!("expected Enum variant"),
         }
     }
+
+    /// Get the shape of this Poke.
+    #[inline(always)]
+    pub fn shape(&self) -> &'static Shape {
+        match self {
+            Poke::Scalar(poke_value) => poke_value.shape,
+            Poke::List(poke_list_uninit) => poke_list_uninit.shape,
+            Poke::Map(poke_map_uninit) => poke_map_uninit.shape,
+            Poke::Struct(poke_struct) => poke_struct.shape,
+            Poke::Enum(poke_enum_no_variant) => poke_enum_no_variant.shape,
+        }
+    }
 }
 
 /// Keeps track of which fields were initialized, up to 64 fields

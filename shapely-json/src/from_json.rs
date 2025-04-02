@@ -1,53 +1,41 @@
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
-use shapely::{Partial, Shapely as _, error, trace, warn};
+use shapely::{Def, OpaqueUninit, Poke, error, trace, warn};
 
-/// Deserialize a `Partial` object from a JSON string.
+/// Deserialize a `Poke` object from a JSON string.
 pub fn from_json<'input>(
-    partial: &mut Partial,
+    poke: Poke<'_>,
     json: &'input str,
 ) -> Result<(), JsonParseErrorWithContext<'input>> {
-    use shapely::{Def, Scalar};
-
     trace!("Starting JSON deserialization");
     let mut parser = JsonParser::new(json);
 
     fn deserialize_value<'input>(
         parser: &mut JsonParser<'input>,
-        partial: &mut Partial,
+        poke: Poke<'_>,
     ) -> Result<(), JsonParseErrorWithContext<'input>> {
-        let shape_fn = partial.shape();
-        let shape = shape_fn.get();
+        let shape = poke.shape();
         trace!("Deserializing value with shape:\n{:?}", shape);
 
-        match &shape.innards {
-            Def::Scalar(scalar) => {
-                let slot = partial.scalar_slot().expect("Scalar slot");
-                trace!("Deserializing \x1b[1;36mscalar\x1b[0m, \x1b[1;35m{scalar:?}\x1b[0m");
+        match &shape.def {
+            Def::Scalar => {
+                let scalar_poke = poke.into_scalar();
+                trace!("Deserializing \x1b[1;36mscalar\x1b[0m");
 
-                match scalar {
-                    Scalar::String => slot.fill(parser.parse_string()?),
-                    Scalar::U8 => slot.fill(parser.parse_u8()?),
-                    Scalar::U16 => slot.fill(parser.parse_u16()?),
-                    Scalar::U32 => slot.fill(parser.parse_u32()?),
-                    Scalar::U64 => slot.fill(parser.parse_u64()?),
-                    Scalar::I8 => slot.fill(parser.parse_i8()?),
-                    Scalar::I16 => slot.fill(parser.parse_i16()?),
-                    Scalar::I32 => slot.fill(parser.parse_i32()?),
-                    Scalar::I64 => slot.fill(parser.parse_i64()?),
-                    Scalar::F32 => slot.fill(parser.parse_f32()?),
-                    Scalar::F64 => slot.fill(parser.parse_f64()?),
-                    Scalar::Boolean => slot.fill(parser.parse_bool()?),
+                // Parse the scalar based on the type name from the shape
+                let type_name = shape.to_string();
+                match type_name.as_str() {
                     _ => {
-                        warn!("Unsupported scalar type: {:?}", scalar);
+                        warn!("Unsupported scalar type: {}", type_name);
                         return Err(parser.make_error(JsonParseErrorKind::Custom(format!(
-                            "Unsupported scalar type: {:?}",
-                            scalar
+                            "Unsupported scalar type: {}",
+                            type_name
                         ))));
                     }
-                }
+                };
             }
-            Def::Struct { .. } => {
+            Def::Struct(struct_def) | Def::TupleStruct(struct_def) => {
                 trace!("Deserializing \x1b[1;36mstruct\x1b[0m");
+                let mut struct_poke = poke.into_struct();
 
                 let mut first = true;
                 while let Some(key) = if first {
@@ -57,20 +45,20 @@ pub fn from_json<'input>(
                     parser.parse_object_key()?
                 } {
                     trace!("Processing struct key: \x1b[1;33m{}\x1b[0m", key);
-                    let slot = partial
-                        .slot_by_name(&key)
-                        .map_err(|_| parser.make_error(JsonParseErrorKind::UnknownField(key)))?;
-                    let mut partial_field = Partial::alloc(slot.shape());
-                    deserialize_value(parser, &mut partial_field)?;
-                    slot.fill_from_partial(partial_field);
+                    match struct_poke.field_by_name(&key) {
+                        Ok(field_poke) => {
+                            deserialize_value(parser, field_poke)?;
+                        }
+                        Err(_) => {
+                            return Err(parser.make_error(JsonParseErrorKind::UnknownField(key)));
+                        }
+                    }
                 }
                 trace!("Finished deserializing \x1b[1;36mstruct\x1b[0m");
-
-                // TODO: this would be a good place to decide what to do about unset fields? Is this
-                // where we finally get to use `set_default`?
             }
-            Def::Tuple { .. } => {
+            Def::Tuple(struct_def) => {
                 trace!("Deserializing \x1b[1;36mtuple\x1b[0m");
+                let mut struct_poke = poke.into_struct();
 
                 // Parse array start
                 parser.expect_array_start()?;
@@ -81,67 +69,32 @@ pub fn from_json<'input>(
                         break;
                     }
 
-                    let field_name = index.to_string();
-                    trace!("Processing tuple index: \x1b[1;33m{}\x1b[0m", field_name);
-
-                    let slot = partial.slot_by_name(&field_name).map_err(|_| {
-                        parser.make_error(JsonParseErrorKind::Custom(format!(
+                    trace!("Processing tuple index: \x1b[1;33m{}\x1b[0m", index);
+                    if index < struct_def.fields.len() {
+                        let field_poke = struct_poke.field(index).unwrap(); // TODO: map errors
+                        deserialize_value(parser, field_poke)?;
+                    } else {
+                        return Err(parser.make_error(JsonParseErrorKind::Custom(format!(
                             "Tuple index out of bounds: {}",
                             index
-                        )))
-                    })?;
-
-                    let mut partial_field = Partial::alloc(slot.shape());
-                    deserialize_value(parser, &mut partial_field)?;
-                    slot.fill_from_partial(partial_field);
+                        ))));
+                    }
 
                     index += 1;
                 }
 
                 trace!("Finished deserializing \x1b[1;36mtuple\x1b[0m");
             }
-            Def::TupleStruct { .. } => {
-                trace!("Deserializing \x1b[1;36mtuple struct\x1b[0m");
-
-                // Parse array start
-                parser.expect_array_start()?;
-
-                let mut index = 0;
-                while let Some(has_element) = parser.parse_array_element()? {
-                    if !has_element {
-                        break;
-                    }
-
-                    let field_name = index.to_string();
-                    trace!(
-                        "Processing tuple struct index: \x1b[1;33m{}\x1b[0m",
-                        field_name
-                    );
-
-                    let slot = partial.slot_by_name(&field_name).map_err(|_| {
-                        parser.make_error(JsonParseErrorKind::Custom(format!(
-                            "Tuple struct index out of bounds: {}",
-                            index
-                        )))
-                    })?;
-
-                    let mut partial_field = Partial::alloc(slot.shape());
-                    deserialize_value(parser, &mut partial_field)?;
-                    slot.fill_from_partial(partial_field);
-
-                    index += 1;
-                }
-
-                trace!("Finished deserializing \x1b[1;36mtuple struct\x1b[0m");
-            }
-            Def::List { item_shape, .. } => {
+            Def::List(list_def) => {
                 trace!("Deserializing \x1b[1;36marray\x1b[0m");
 
                 // Parse array start
                 parser.expect_array_start()?;
 
-                // Get the array slot to push items into (no size hint in JSON unfortunately)
-                let mut array_slot = partial.list_writer(None).expect("Array slot");
+                // Initialize the list with no size hint
+                let mut list_poke = poke.into_list().init(None).unwrap_or_else(|_| {
+                    panic!("Failed to initialize list");
+                });
 
                 let mut index = 0;
                 while let Some(has_element) = parser.parse_array_element()? {
@@ -151,14 +104,16 @@ pub fn from_json<'input>(
 
                     trace!("Processing array item at index: \x1b[1;33m{}\x1b[0m", index);
 
-                    // Create a partial for the item
-                    let mut item_partial = Partial::alloc(*item_shape);
+                    let data = OpaqueUninit::new(unsafe { std::alloc::alloc(shape.layout) });
+                    let item_poke = unsafe { Poke::from_opaque_uninit(data, shape) };
 
                     // Deserialize the item
-                    deserialize_value(parser, &mut item_partial)?;
+                    deserialize_value(parser, item_poke)?;
 
-                    // Add the item to the array
-                    array_slot.push(item_partial);
+                    // Add the item to the list
+                    unsafe {
+                        list_poke.push(data.assume_init());
+                    }
 
                     index += 1;
                 }
@@ -168,32 +123,42 @@ pub fn from_json<'input>(
                     index
                 );
             }
-            Def::Map { value_shape, .. } => {
+            Def::Map(map_def) => {
                 trace!("Deserializing \x1b[1;36mhashmap\x1b[0m");
 
                 // Parse object start and get first key if it exists
                 let first_key = parser.expect_object_start()?;
 
-                // Get the hashmap slot to insert key-value pairs into
-                let mut hashmap_slot = partial.map_writer(None).expect("HashMap slot");
+                // Initialize the map with no size hint
+                let mut map_poke = poke
+                    .into_map()
+                    .init(None)
+                    .unwrap_or_else(|_| panic!("Failed to initialize map")); // TODO: map errors
 
                 // Process each key-value pair in the JSON object
                 let mut current_key = first_key;
                 while let Some(key) = current_key {
                     trace!("Processing hashmap key: \x1b[1;33m{}\x1b[0m", key);
 
-                    // Create a partial for the key (string type)
-                    let mut key_partial = Partial::alloc(String::SHAPE_FN);
-                    key_partial.scalar_slot().expect("String slot").fill(key);
+                    // Create a poke for the key (string type)
+                    let key_data =
+                        OpaqueUninit::new(unsafe { std::alloc::alloc(map_def.k.layout) });
+                    let key_poke = unsafe { Poke::from_opaque_uninit(key_data, map_def.k) };
+                    let scalar_key_poke = key_poke.into_scalar();
+                    scalar_key_poke.parse(&key).unwrap(); // TODO: map errors
 
-                    // Create a partial for the value
-                    let mut value_partial = Partial::alloc(*value_shape);
+                    // Create a poke for the value based on map def
+                    let value_data =
+                        OpaqueUninit::new(unsafe { std::alloc::alloc(map_def.v.layout) });
+                    let value_poke = unsafe { Poke::from_opaque_uninit(value_data, map_def.v) };
 
                     // Deserialize the value
-                    deserialize_value(parser, &mut value_partial)?;
+                    deserialize_value(parser, value_poke)?;
 
                     // Insert the key-value pair into the hashmap
-                    hashmap_slot.insert(key_partial, value_partial);
+                    unsafe {
+                        map_poke.insert(key_data.assume_init(), value_data.assume_init());
+                    }
 
                     // Get the next key
                     current_key = parser.parse_object_key()?;
@@ -201,20 +166,35 @@ pub fn from_json<'input>(
 
                 trace!("Finished deserializing \x1b[1;36mhashmap\x1b[0m");
             }
-            // Add support for other shapes (Array, Transparent) as needed
+            Def::Enum(enum_def) => {
+                trace!("Deserializing \x1b[1;36menum\x1b[0m");
+                // Assuming enums are serialized as JSON strings representing the variant name
+                let variant_str = parser.parse_string()?;
+                let enum_poke = poke.into_enum();
+
+                enum_poke.set_variant_by_name(&variant_str).map_err(|_| {
+                    parser.make_error(JsonParseErrorKind::Custom(format!(
+                        "Invalid enum variant: {}",
+                        variant_str
+                    )))
+                })?;
+
+                trace!("Finished deserializing \x1b[1;36menum\x1b[0m");
+            }
+            // Add support for other shapes as needed
             _ => {
                 error!(
                     "Don't know how to parse this shape as JSON: {:?}",
-                    shape.innards
+                    shape.def
                 );
                 return Err(parser.make_error(JsonParseErrorKind::Custom(format!(
                     "Don't know how to parse this shape as JSON: {:?}",
-                    shape.innards
+                    shape.def
                 ))));
             }
         }
         Ok(())
     }
 
-    deserialize_value(&mut parser, partial)
+    deserialize_value(&mut parser, poke)
 }

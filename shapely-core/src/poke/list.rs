@@ -3,7 +3,7 @@ use crate::{ListDef, ListVTable, Opaque, OpaqueUninit, PokeValue, Shape};
 /// Allows initializing an uninitialized list
 pub struct PokeListUninit<'mem> {
     data: OpaqueUninit<'mem>,
-    shape: &'static Shape,
+    pub(crate) shape: &'static Shape,
     def: ListDef,
 }
 

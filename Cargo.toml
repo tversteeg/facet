@@ -1,6 +1,12 @@
 [workspace]
 # members = ["shapely", "shapely-codegen", "shapely-core", "shapely-derive", "shapely-json", "shapely-msgpack", "shapely-pretty", "shapely-urlencoded", "shapely-yaml"]
-members = ["shapely", "shapely-codegen", "shapely-core", "shapely-derive"]
+members = [
+    "shapely",
+    "shapely-codegen",
+    "shapely-core",
+    "shapely-derive",
+    "shapely-json",
+]
 resolver = "3"
 
 [workspace.package]

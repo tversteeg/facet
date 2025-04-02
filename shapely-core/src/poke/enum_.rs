@@ -6,7 +6,7 @@ use super::{ISet, Poke};
 /// Represents an enum before a variant has been selected
 pub struct PokeEnumNoVariant<'mem> {
     data: OpaqueUninit<'mem>,
-    shape: &'static Shape,
+    pub(crate) shape: &'static Shape,
     def: EnumDef,
 }
 
