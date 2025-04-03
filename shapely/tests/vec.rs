@@ -60,4 +60,11 @@ fn vec_can_be_debug_or_not() {
     }
     let peek = Peek::new(&NotDebug { blah: 42 });
     println!("NotDebug Peek: {}", format!("{peek:#?}").red());
+
+    #[derive(Shapely, Debug)]
+    struct YesDebug {
+        blah: i32,
+    }
+    let peek = Peek::new(&YesDebug { blah: 42 });
+    println!("YesDebug Peek: {}", format!("{peek:#?}").green());
 }
