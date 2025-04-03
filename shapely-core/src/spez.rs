@@ -107,3 +107,60 @@ impl<T> SpezParseNo for Spez<T> {
         unreachable!()
     }
 }
+
+// For Eq
+pub trait SpezEqYes {
+    fn spez_eq(&self, other: &Self) -> bool;
+}
+impl<T: PartialEq> SpezEqYes for &Spez<T> {
+    fn spez_eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+pub trait SpezEqNo {
+    fn spez_eq(&self, _other: &Self) -> bool;
+}
+impl<T> SpezEqNo for Spez<T> {
+    fn spez_eq(&self, _other: &Self) -> bool {
+        unreachable!()
+    }
+}
+
+// For Cmp
+pub trait SpezCmpYes {
+    fn spez_cmp(&self, other: &Self) -> std::cmp::Ordering;
+}
+impl<T: Ord> SpezCmpYes for &Spez<T> {
+    fn spez_cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.0.cmp(&other.0)
+    }
+}
+
+pub trait SpezCmpNo {
+    fn spez_cmp(&self, _other: &Self) -> std::cmp::Ordering;
+}
+impl<T> SpezCmpNo for Spez<T> {
+    fn spez_cmp(&self, _other: &Self) -> std::cmp::Ordering {
+        unreachable!()
+    }
+}
+
+// For Hash
+pub trait SpezHashYes {
+    fn spez_hash<H: std::hash::Hasher>(&self, state: &mut H);
+}
+impl<T: std::hash::Hash> SpezHashYes for &Spez<T> {
+    fn spez_hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.hash(state)
+    }
+}
+
+pub trait SpezHashNo {
+    fn spez_hash<H: std::hash::Hasher>(&self, _state: &mut H);
+}
+impl<T> SpezHashNo for Spez<T> {
+    fn spez_hash<H: std::hash::Hasher>(&self, _state: &mut H) {
+        unreachable!()
+    }
+}

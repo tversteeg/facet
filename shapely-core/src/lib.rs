@@ -8,7 +8,12 @@ pub mod spez;
 mod opaque;
 pub use opaque::*;
 
-mod vtable;
+/// Module containing the virtual table (vtable) definitions and implementations.
+///
+/// The vtable module provides structures and traits for defining and working with
+/// virtual tables, which are used to store metadata and function pointers for
+/// dynamic dispatch in the Shapely library.
+pub mod vtable;
 pub use vtable::*;
 
 mod impls;

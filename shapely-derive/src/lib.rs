@@ -274,9 +274,34 @@ impl shapely::Shapely for {struct_name} {{
                     None
                 }},
                 default_in_place: None,
-                eq: None,
-                cmp: None,
-                hash: None,
+                eq: if shapely_core::impls!(Self: std::cmp::PartialEq) {{
+                    Some(|left, right| {{
+                        use shapely::spez::*;
+                        (&&Spez(unsafe {{ left.as_ref::<Self>() }}))
+                            .spez_eq(&&Spez(unsafe {{ right.as_ref::<Self>() }}))
+                    }})
+                }} else {{
+                    None
+                }},
+                cmp: if shapely_core::impls!(Self: std::cmp::Ord) {{
+                    Some(|left, right| {{
+                        use shapely::spez::*;
+                        (&&Spez(unsafe {{ left.as_ref::<Self>() }}))
+                            .spez_cmp(&&Spez(unsafe {{ right.as_ref::<Self>() }}))
+                    }})
+                }} else {{
+                    None
+                }},
+                hash: if shapely_core::impls!(Self: std::hash::Hash) {{
+                    Some(|value, hasher_this, hasher_write_fn| {{
+                        use shapely::spez::*;
+                        use shapely::vtable::HasherProxy;
+                        (&&Spez(unsafe {{ value.as_ref::<Self>() }}))
+                            .spez_hash(&mut unsafe {{ HasherProxy::new(hasher_this, hasher_write_fn) }})
+                    }})
+                }} else {{
+                    None
+                }},
                 drop_in_place: Some(|data| unsafe {{ data.drop_in_place::<Self>() }}),
                 parse: None,
                 try_from: None,
@@ -341,9 +366,34 @@ impl shapely::Shapely for {struct_name} {{
                     None
                 }},
                 default_in_place: None,
-                eq: None,
-                cmp: None,
-                hash: None,
+                eq: if shapely_core::impls!(Self: std::cmp::PartialEq) {{
+                    Some(|left, right| {{
+                        use shapely::spez::*;
+                        (&&Spez(unsafe {{ left.as_ref::<Self>() }}))
+                            .spez_eq(&&Spez(unsafe {{ right.as_ref::<Self>() }}))
+                    }})
+                }} else {{
+                    None
+                }},
+                cmp: if shapely_core::impls!(Self: std::cmp::Ord) {{
+                    Some(|left, right| {{
+                        use shapely::spez::*;
+                        (&&Spez(unsafe {{ left.as_ref::<Self>() }}))
+                            .spez_cmp(&&Spez(unsafe {{ right.as_ref::<Self>() }}))
+                    }})
+                }} else {{
+                    None
+                }},
+                hash: if shapely_core::impls!(Self: std::hash::Hash) {{
+                    Some(|value, hasher_this, hasher_write_fn| {{
+                        use shapely::spez::*;
+                        use shapely::vtable::HasherProxy;
+                        (&&Spez(unsafe {{ value.as_ref::<Self>() }}))
+                            .spez_hash(&mut unsafe {{ HasherProxy::new(hasher_this, hasher_write_fn) }})
+                    }})
+                }} else {{
+                    None
+                }},
                 drop_in_place: Some(|data| unsafe {{ data.drop_in_place::<Self>() }}),
                 parse: None,
                 try_from: None,
@@ -481,9 +531,34 @@ impl shapely::Shapely for {enum_name} {{
                     None
                 }},
                 default_in_place: None,
-                eq: None,
-                cmp: None,
-                hash: None,
+                eq: if shapely_core::impls!(Self: std::cmp::PartialEq) {{
+                    Some(|left, right| {{
+                        use shapely::spez::*;
+                        (&&Spez(unsafe {{ left.as_ref::<Self>() }}))
+                            .spez_eq(&&Spez(unsafe {{ right.as_ref::<Self>() }}))
+                    }})
+                }} else {{
+                    None
+                }},
+                cmp: if shapely_core::impls!(Self: std::cmp::Ord) {{
+                    Some(|left, right| {{
+                        use shapely::spez::*;
+                        (&&Spez(unsafe {{ left.as_ref::<Self>() }}))
+                            .spez_cmp(&&Spez(unsafe {{ right.as_ref::<Self>() }}))
+                    }})
+                }} else {{
+                    None
+                }},
+                hash: if shapely_core::impls!(Self: std::hash::Hash) {{
+                    Some(|value, hasher_this, hasher_write_fn| {{
+                        use shapely::spez::*;
+                        use shapely::vtable::HasherProxy;
+                        (&&Spez(unsafe {{ value.as_ref::<Self>() }}))
+                            .spez_hash(&mut unsafe {{ HasherProxy::new(hasher_this, hasher_write_fn) }})
+                    }})
+                }} else {{
+                    None
+                }},
                 drop_in_place: Some(|data| unsafe {{ data.drop_in_place::<Self>() }}),
                 parse: None,
                 try_from: None,
