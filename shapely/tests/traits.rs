@@ -109,6 +109,15 @@ fn test_primitive_types() {
 }
 
 #[test]
+fn test_multis() {
+    // &[i32] implements Debug, PartialEq, and Ord
+    test_peek_pair(&[1, 2, 3][..], &[4, 5, 6][..]);
+
+    // &[&str] implements Debug, PartialEq, and Ord
+    test_peek_pair(&["hello", "world"][..], &["foo", "bar"][..]);
+}
+
+#[test]
 fn test_custom_structs() {
     // Struct with no trait implementations
     #[derive(Shapely)]
