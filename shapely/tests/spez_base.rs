@@ -42,10 +42,10 @@ fn test_spez2() {
     struct Wrap<T>(T);
 
     trait DefaultYes {
-        fn default_fn(&self, unrelated: u32);
+        fn default_fn(&self, _unrelated: u32);
     }
     impl<T: Default + Debug> DefaultYes for Wrap<T> {
-        fn default_fn(&self, unrelated: u32) {
+        fn default_fn(&self, _unrelated: u32) {
             println!("DefaultYes: {:?}", T::default());
         }
     }
@@ -54,7 +54,7 @@ fn test_spez2() {
         fn default_fn(&self, unrelated: u32);
     }
     impl<T> DefaultNo for &Wrap<T> {
-        fn default_fn(&self, unrelated: u32) {
+        fn default_fn(&self, _unrelated: u32) {
             println!("DefaultNo");
         }
     }

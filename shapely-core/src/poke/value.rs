@@ -1,5 +1,7 @@
 use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek, Shape, ShapeDebug, ValueVTable};
 
+use super::Poke;
+
 /// Lets you write to a value (implements write-only [`ValueVTable`] proxies)
 pub struct PokeValue<'mem> {
     data: OpaqueUninit<'mem>,
@@ -96,5 +98,10 @@ impl<'mem> PokeValue<'mem> {
         } else {
             Err(self)
         }
+    }
+
+    /// Unwrap back into a poke
+    pub fn unwrap(self) -> Poke<'mem> {
+        unsafe { Poke::from_opaque_uninit(self.data, self.shape) }
     }
 }

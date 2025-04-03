@@ -5,7 +5,7 @@ use super::{Guard, ISet};
 
 /// Allows poking a struct (setting fields, etc.)
 pub struct PokeStruct<'mem> {
-    data: OpaqueUninit<'mem>,
+    pub(crate) data: OpaqueUninit<'mem>,
     iset: ISet,
     pub(crate) shape: &'static Shape,
     def: StructDef,
