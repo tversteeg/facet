@@ -11,6 +11,9 @@ pub use struct_::*;
 mod list;
 pub use list::*;
 
+mod map;
+pub use map::*;
+
 use super::{Def, OpaqueConst, Shape};
 
 /// Lets you peek at the innards of a value
@@ -24,6 +27,9 @@ pub enum Peek<'mem> {
 
     /// cf. [`PeekList`]
     List(PeekList<'mem>),
+
+    /// cf. [`PeekMap`]
+    Map(PeekMap<'mem>),
 
     /// cf. [`PeekStruct`]
     Struct(PeekStruct<'mem>),
@@ -49,7 +55,7 @@ impl<'mem> Peek<'mem> {
             Def::Struct(def) | Def::TupleStruct(def) | Def::Tuple(def) => {
                 Peek::Struct(PeekStruct { data, shape, def })
             }
-            Def::Map { .. } => todo!(),
+            Def::Map(def) => Peek::Map(PeekMap { data, shape, def }),
             Def::List(def) => Peek::List(PeekList { data, shape, def }),
             Def::Scalar { .. } => Peek::Scalar(PeekValue { data, shape }),
             Def::Enum { .. } => todo!(),
@@ -61,6 +67,7 @@ impl<'mem> Peek<'mem> {
         match self {
             Self::Scalar(v) => v,
             Self::List(l) => l.as_value(),
+            Self::Map(m) => m.as_value(),
             Self::Struct(s) => s.as_value(),
         }
     }

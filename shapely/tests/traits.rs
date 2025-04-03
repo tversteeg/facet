@@ -35,8 +35,6 @@ where
     let r = Peek::new(&val2);
 
     let remarkable = Style::new().blue();
-    let good = Style::new().green();
-    let bad = Style::new().bright_red();
 
     // Format display representation
     if l.as_value().shape().vtable.display.is_some() {
