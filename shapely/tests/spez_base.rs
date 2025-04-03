@@ -42,19 +42,19 @@ fn test_spez2() {
     struct Wrap<T>(T);
 
     trait DefaultYes {
-        fn foo(&self);
+        fn default_fn(&self, unrelated: u32);
     }
     impl<T: Default + Debug> DefaultYes for Wrap<T> {
-        fn foo(&self) {
+        fn default_fn(&self, unrelated: u32) {
             println!("DefaultYes: {:?}", T::default());
         }
     }
 
     trait DefaultNo {
-        fn foo(&self);
+        fn default_fn(&self, unrelated: u32);
     }
     impl<T> DefaultNo for &Wrap<T> {
-        fn foo(&self) {
+        fn default_fn(&self, unrelated: u32) {
             println!("DefaultNo");
         }
     }
@@ -62,7 +62,7 @@ fn test_spez2() {
     struct NoDefaultHere;
 
     #[allow(clippy::needless_borrow)]
-    (&Wrap(String::from("hi"))).foo();
+    (&Wrap(String::from("hi"))).default_fn(238);
     #[allow(clippy::needless_borrow)]
-    (&Wrap(NoDefaultHere)).foo();
+    (&Wrap(NoDefaultHere)).default_fn(238);
 }
