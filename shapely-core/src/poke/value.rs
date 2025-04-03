@@ -1,4 +1,4 @@
-use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek, Shape, ValueVTable};
+use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek, Shape, ShapeDebug, ValueVTable};
 
 /// Lets you write to a value (implements write-only [`ValueVTable`] proxies)
 pub struct PokeValue<'mem> {
@@ -10,7 +10,7 @@ pub struct PokeValue<'mem> {
 impl std::fmt::Debug for PokeValue<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PokeValue")
-            .field("shape", &self.shape)
+            .field("shape", &ShapeDebug(self.shape))
             .finish_non_exhaustive()
     }
 }

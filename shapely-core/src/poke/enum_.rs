@@ -1,4 +1,4 @@
-use crate::{EnumDef, FieldError, OpaqueUninit, Shape, Shapely, trace};
+use crate::{EnumDef, FieldError, OpaqueUninit, Shape, ShapeDebug, Shapely, trace};
 use std::ptr::NonNull;
 
 use super::{ISet, Poke};
@@ -232,7 +232,9 @@ impl<'mem> PokeEnum<'mem> {
                     if !self.iset.has(field_index) {
                         panic!(
                             "Field '{}' of variant '{}' was not initialized. Complete schema:\n{:?}",
-                            field.name, variant.name, self.shape
+                            field.name,
+                            variant.name,
+                            ShapeDebug(self.shape)
                         );
                     }
                 }
@@ -241,13 +243,11 @@ impl<'mem> PokeEnum<'mem> {
     }
 
     fn assert_matching_shape<T: Shapely>(&self) {
-        if self.shape != T::SHAPE {
-            let current_shape = self.shape;
-            let target_shape = T::SHAPE;
-
+        if !self.shape.is_type::<T>() {
             panic!(
                 "This is a partial \x1b[1;34m{}\x1b[0m, you can't build a \x1b[1;32m{}\x1b[0m out of it",
-                current_shape, target_shape,
+                self.shape,
+                T::SHAPE,
             );
         }
     }

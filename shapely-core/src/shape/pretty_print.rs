@@ -1,4 +1,4 @@
-use crate::{FieldFlags, TypeNameOpts, VariantKind};
+use crate::{FieldFlags, ShapeId, TypeNameOpts, VariantKind};
 
 use super::{Def, EnumDef, ListDef, MapDef, Shape, StructDef};
 use std::{collections::HashSet, fmt::Formatter};
@@ -7,17 +7,17 @@ const INDENT: usize = 2;
 
 impl Shape {
     /// Pretty-print this shape, recursively.
-    pub fn pretty_print_recursive(&self, f: &mut Formatter) -> std::fmt::Result {
+    pub fn pretty_print_recursive(&'static self, f: &mut Formatter) -> std::fmt::Result {
         self.pretty_print_recursive_internal(f, &mut HashSet::new(), 0)
     }
 
     fn pretty_print_recursive_internal(
-        &self,
+        &'static self,
         f: &mut Formatter,
-        printed_schemas: &mut HashSet<Shape>,
+        printed_schemas: &mut HashSet<ShapeId>,
         indent: usize,
     ) -> std::fmt::Result {
-        if !printed_schemas.insert(*self) {
+        if !printed_schemas.insert(ShapeId::of(self)) {
             write!(f, "{:indent$}\x1b[1;33m", "", indent = indent)?;
             (self.vtable.type_name)(f, TypeNameOpts::one())?;
             writeln!(f, "\x1b[0m (\x1b[1;31malready printed\x1b[0m)")?;

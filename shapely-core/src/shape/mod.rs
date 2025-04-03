@@ -1,6 +1,6 @@
 use std::alloc::Layout;
 
-use crate::{ListVTable, MapVTable, TypeNameOpts, ValueVTable};
+use crate::{ListVTable, MapVTable, OpaqueUninit, ShapeId, Shapely, TypeNameOpts, ValueVTable};
 
 mod pretty_print;
 
@@ -19,6 +19,18 @@ pub struct Shape {
     pub def: Def,
 }
 
+impl Shape {
+    /// Check if this shape is of the given type
+    pub fn is_type<Other: Shapely>(&'static self) -> bool {
+        ShapeId::of(self) == Other::shape_id()
+    }
+
+    /// Check if this shape is of the given type
+    pub fn eq_type(&'static self, other: &'static Shape) -> bool {
+        ShapeId::of(self) == ShapeId::of(other)
+    }
+}
+
 // Helper struct to format the name for display
 impl std::fmt::Display for Shape {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -26,26 +38,11 @@ impl std::fmt::Display for Shape {
     }
 }
 
-impl PartialEq for Shape {
-    fn eq(&self, other: &Self) -> bool {
-        if self.def != other.def {
-            return false;
-        }
-
-        // FIXME: big hack for now
-        if self.to_string() != other.to_string() {
-            return false;
-        }
-
-        true
-    }
-}
-
-impl Eq for Shape {}
-
-impl std::hash::Hash for Shape {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.def.hash(state);
+impl Shape {
+    /// Heap-allocate a value of this shape
+    #[inline]
+    pub fn allocate(&self) -> OpaqueUninit<'static> {
+        OpaqueUninit::new(unsafe { std::alloc::alloc(self.layout) })
     }
 }
 
@@ -82,21 +79,24 @@ impl std::fmt::Display for FieldError {
     }
 }
 
-impl std::fmt::Debug for Shape {
+/// Debug wrapper implementation for Shape
+pub struct ShapeDebug(pub &'static Shape);
+
+impl std::fmt::Debug for ShapeDebug {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.pretty_print_recursive(f)
+        self.0.pretty_print_recursive(f)
     }
 }
 
 /// Common fields for struct-like types
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy)]
 pub struct StructDef {
     /// all fields, in declaration order (not necessarily in memory order)
     pub fields: &'static [Field],
 }
 
 /// Describes a field in a struct or tuple
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy)]
 pub struct Field {
     /// key for the struct field (for tuples and tuple-structs, this is the 0-based index)
     pub name: &'static str,
@@ -214,7 +214,7 @@ impl std::fmt::Display for FieldFlags {
 }
 
 /// Fields for map types
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy)]
 pub struct MapDef {
     /// vtable for interacting with the map
     pub vtable: &'static MapVTable,
@@ -225,7 +225,7 @@ pub struct MapDef {
 }
 
 /// Fields for list types
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy)]
 pub struct ListDef {
     /// vtable for interacting with the list
     pub vtable: &'static ListVTable,
@@ -234,7 +234,7 @@ pub struct ListDef {
 }
 
 /// Fields for enum types
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy)]
 pub struct EnumDef {
     /// representation of the enum (u8, u16, etc.)
     pub repr: EnumRepr,
@@ -243,7 +243,7 @@ pub struct EnumDef {
 }
 
 /// Describes a variant of an enum
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy)]
 pub struct Variant {
     /// Name of the variant
     pub name: &'static str,
@@ -256,7 +256,7 @@ pub struct Variant {
 }
 
 /// Represents the different kinds of variants that can exist in a Rust enum
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy)]
 pub enum VariantKind {
     /// Unit variant (e.g., `None` in Option)
     Unit,
@@ -275,7 +275,7 @@ pub enum VariantKind {
 }
 
 /// All possible representations for Rust enums
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EnumRepr {
     /// Default representation (compiler-dependent)
     Default,
@@ -308,7 +308,7 @@ impl Default for EnumRepr {
 }
 
 /// The definition of a shape: is it more like a struct, a map, a list?
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy)]
 pub enum Def {
     /// Scalar — those don't have a def, they're not composed of other things.
     /// You can interact with them through [`ValueVTable`].

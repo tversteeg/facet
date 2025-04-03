@@ -54,7 +54,7 @@ impl Drop for Guard {
 impl<'mem> Poke<'mem> {
     /// Allocates a new poke of a type that implements shapely
     pub fn alloc<S: Shapely>() -> (Self, Guard) {
-        let data = S::allocate();
+        let data = S::SHAPE.allocate();
         let layout = Layout::new::<S>();
         let guard = Guard {
             ptr: data.as_mut_ptr(),

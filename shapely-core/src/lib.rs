@@ -28,15 +28,33 @@ pub use log::*;
 #[cfg(test)]
 mod tests;
 
+/// A unique identifier for a type's shape
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Default, PartialOrd, Ord)]
+pub struct ShapeId(u64, u64);
+
+impl ShapeId {
+    /// Returns a unique identifier for the given shape
+    #[inline(always)]
+    pub fn of(shape: &'static Shape) -> ShapeId {
+        ShapeId(shape as *const _ as u64, 0)
+    }
+}
+
 /// Allows querying the [Shape] of a type, which in turn lets us inspect any fields, build a value of
 /// this type progressively, etc.
 pub trait Shapely: Sized {
     /// Returns the shape function of this type
     const SHAPE: &'static Shape;
 
-    /// Heap-allocate a value of this shape
-    fn allocate() -> OpaqueUninit<'static> {
-        OpaqueUninit::new(unsafe { std::alloc::alloc(Self::SHAPE.layout) })
+    /// Returns a unique identifier for this type
+    #[inline(always)]
+    fn shape_id() -> ShapeId {
+        ShapeId::of(Self::SHAPE)
+    }
+
+    /// Returns true if the type of `self` is equal to the type of `other`
+    fn type_eq<Other: Shapely>() -> bool {
+        Self::shape_id() == Other::shape_id()
     }
 }
 
