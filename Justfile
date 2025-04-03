@@ -45,5 +45,8 @@ doc-tests:
     RUSTDOCFLAGS="-D warnings" cargo test --doc
 
 miri *args:
+    #!/bin/bash -euo pipefail
     echo -e "\033[1;31m🧪 Running tests under Miri in a separate target directory...\033[0m"
+    export RUST_BACKTRACE=1
+    export MIRIFLAGS=-Zmiri-env-forward=RUST_BACKTRACE
     cargo miri nextest run --target-dir=target/miri {{args}}
