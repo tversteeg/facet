@@ -31,43 +31,49 @@ where
         .join(" + ");
     eprintln!("{} {}", trait_str, "======".yellow());
 
-    let peek1 = Peek::new(&val1);
-    let peek2 = Peek::new(&val2);
+    let l = Peek::new(&val1);
+    let r = Peek::new(&val2);
 
+    let remarkable = Style::new().blue();
     let good = Style::new().green();
     let bad = Style::new().bright_red();
 
     // Format display representation
-    if peek1.as_value().shape().vtable.display.is_some() {
-        let display_str = format!("{} vs {}", peek1.style(good), peek2.style(good));
+    if l.as_value().shape().vtable.display.is_some() {
+        let display_str = format!("{} vs {}", l.style(remarkable), r.style(remarkable));
         eprintln!("Display:   {}", display_str);
     }
 
     // Format debug representation
-    if peek1.as_value().shape().vtable.debug.is_some() {
-        let debug_str = format!("{:?} vs {:?}", peek1.style(good), peek2.style(good));
+    if l.as_value().shape().vtable.debug.is_some() {
+        let debug_str = format!("{:?} vs {:?}", l.style(remarkable), r.style(remarkable));
         eprintln!("Debug:     {}", debug_str);
     }
 
     // Test equality
-    if let Some(eq_result) = peek1.as_value().eq(&peek2.as_value()) {
+    if let Some(eq_result) = l.as_value().eq(&r.as_value()) {
         let eq_str = format!(
             "{:?} {} {:?}",
-            peek1,
+            l.style(remarkable),
             if eq_result { "==" } else { "!=" }.yellow(),
-            peek2,
+            r.style(remarkable),
         );
         eprintln!("Equality:  {}", eq_str);
     }
 
     // Test ordering
-    if let Some(cmp_result) = peek1.as_value().cmp(&peek2.as_value()) {
+    if let Some(cmp_result) = l.as_value().cmp(&r.as_value()) {
         let cmp_symbol = match cmp_result {
             Ordering::Less => "<",
             Ordering::Equal => "==",
             Ordering::Greater => ">",
         };
-        let cmp_str = format!("{:?} {} {:?}", peek1, cmp_symbol.yellow(), peek2,);
+        let cmp_str = format!(
+            "{:?} {} {:?}",
+            l.style(remarkable),
+            cmp_symbol.yellow(),
+            r.style(remarkable),
+        );
         eprintln!("Ordering:  {}", cmp_str);
     }
 
@@ -76,7 +82,7 @@ where
     let poke_value = poke.into_value();
     if let Ok(value) = poke_value.default_in_place() {
         let peek = unsafe { Peek::unchecked_new(value.as_const(), T::SHAPE) };
-        eprintln!("Default:   {}", format!("{:?}", peek).style(good));
+        eprintln!("Default:   {}", format!("{:?}", peek).style(remarkable));
     }
 }
 
