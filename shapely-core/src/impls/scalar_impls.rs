@@ -39,11 +39,8 @@ impl Shapely for String {
         def: Def::Scalar(ScalarDef::of::<Self>()),
         vtable: &ValueVTable {
             type_name: |f, _opts| write!(f, "String"),
-            display: Some(|value, f| {
-                let val = unsafe { value.as_ref::<Self>() };
-                write!(f, "{val}")
-            }),
-            debug: Some(debug_fn_for::<Self>()),
+            display: display_fn_for::<Self>(),
+            debug: debug_fn_for::<Self>(),
             default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
             eq: Some(|left, right| unsafe { left.as_ref::<Self>() == right.as_ref::<Self>() }),
             cmp: Some(|left, right| unsafe { left.as_ref::<Self>().cmp(right.as_ref::<Self>()) }),
@@ -72,7 +69,7 @@ impl Shapely for bool {
                 let val = unsafe { value.as_ref::<Self>() };
                 write!(f, "{val}")
             }),
-            debug: Some(debug_fn_for::<Self>()),
+            debug: debug_fn_for::<Self>(),
             default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
             eq: Some(|left, right| unsafe { left.as_ref::<Self>() == right.as_ref::<Self>() }),
             cmp: Some(|left, right| unsafe { left.as_ref::<Self>().cmp(right.as_ref::<Self>()) }),
@@ -101,11 +98,8 @@ macro_rules! impl_shapely_for_integer {
                 def: Def::Scalar(ScalarDef::of::<Self>()),
                 vtable: &ValueVTable {
                     type_name: |f, _opts| write!(f, stringify!($type)),
-                    display: Some(|value, f| {
-                        let val = unsafe { *value.as_ptr::<Self>() };
-                        write!(f, "{val}")
-                    }),
-                    debug: Some(debug_fn_for::<Self>()),
+                    display: display_fn_for::<Self>(),
+                    debug: debug_fn_for::<Self>(),
                     default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
                     eq: Some(|left, right| unsafe {
                         left.as_ref::<Self>() == right.as_ref::<Self>()
@@ -155,7 +149,7 @@ macro_rules! impl_shapely_for_float {
                         let val = unsafe { *value.as_ptr::<Self>() };
                         write!(f, "{val}")
                     }),
-                    debug: Some(debug_fn_for::<Self>()),
+                    debug: debug_fn_for::<Self>(),
                     default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
                     eq: Some(|left, right| unsafe {
                         left.as_ref::<Self>() == right.as_ref::<Self>()
