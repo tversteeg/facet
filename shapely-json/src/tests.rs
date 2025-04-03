@@ -16,7 +16,12 @@ fn test_from_json() {
     from_json(poke, json).unwrap();
 
     let built_struct = unsafe { data.assume_init() };
+    let ptr = built_struct.as_mut_byte_ptr();
     let s = unsafe { built_struct.read::<TestStruct>() };
+    unsafe {
+        std::alloc::dealloc(ptr, TestStruct::SHAPE.layout);
+    }
+
     assert_eq!(s.name, "Alice");
     assert_eq!(s.age, 30);
 }

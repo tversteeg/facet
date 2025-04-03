@@ -1,5 +1,5 @@
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
-use shapely::{Def, OpaqueConst, OpaqueUninit, Poke, Shapely as _, error, trace};
+use shapely::{Def, OpaqueConst, OpaqueUninit, Poke, Shapely as _, trace};
 
 /// Deserialize a `Poke` object from a JSON string.
 pub fn from_json<'input>(
@@ -40,7 +40,7 @@ pub fn from_json<'input>(
                     panic!("Unknown scalar shape: {}", pv.shape);
                 }
             }
-            Def::Struct(struct_def) | Def::TupleStruct(struct_def) => {
+            Def::Struct(_struct_def) | Def::TupleStruct(_struct_def) => {
                 trace!("Deserializing \x1b[1;36mstruct\x1b[0m");
                 let mut struct_poke = poke.into_struct();
 
@@ -92,7 +92,7 @@ pub fn from_json<'input>(
 
                 trace!("Finished deserializing \x1b[1;36mtuple\x1b[0m");
             }
-            Def::List(list_def) => {
+            Def::List(_list_def) => {
                 trace!("Deserializing \x1b[1;36marray\x1b[0m");
 
                 // Parse array start
@@ -173,7 +173,7 @@ pub fn from_json<'input>(
 
                 trace!("Finished deserializing \x1b[1;36mhashmap\x1b[0m");
             }
-            Def::Enum(enum_def) => {
+            Def::Enum(_enum_def) => {
                 trace!("Deserializing \x1b[1;36menum\x1b[0m");
                 // Assuming enums are serialized as JSON strings representing the variant name
                 let variant_str = parser.parse_string()?;
@@ -187,17 +187,6 @@ pub fn from_json<'input>(
                 })?;
 
                 trace!("Finished deserializing \x1b[1;36menum\x1b[0m");
-            }
-            // Add support for other shapes as needed
-            _ => {
-                error!(
-                    "Don't know how to parse this shape as JSON: {:?}",
-                    shape.def
-                );
-                return Err(parser.make_error(JsonParseErrorKind::Custom(format!(
-                    "Don't know how to parse this shape as JSON: {:?}",
-                    shape.def
-                ))));
             }
         }
         Ok(())

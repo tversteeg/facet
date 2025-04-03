@@ -3,6 +3,8 @@
 //! For now it is extremely naive, it's just a proof of concept, it doesn't use SIMD or anything,
 //! it's not fast, it's nothing, it's just proving that we can use shapely types to deserialize something.
 
+#![allow(dead_code)]
+
 #[derive(Debug)]
 pub struct JsonParseError {
     pub kind: JsonParseErrorKind,
