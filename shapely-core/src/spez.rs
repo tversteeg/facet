@@ -1,29 +1,27 @@
 //! Tricks for specialization on Rust stable
+//!
+//! Completely missing docs, sorry, read this for background:
+//! <https://lukaskalbertodt.github.io/2019/12/05/generalized-autoref-based-specialization.html>
 
-use core::fmt;
+#![allow(missing_docs)]
 
-/// proxies, using the <https://docs.rs/spez> trick, kind of:
+use core::fmt::{self, Debug};
+
 pub struct Spez<T>(pub T);
 
-/// Trait for types that can be debugged via the `Debug` trait
-pub trait ViaDebug {
-    /// Attempts to format self using the `Debug` trait
+pub trait SpezDebugYes {
     fn spez_debug(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error>;
 }
-
-/// Trait for types that cannot be debugged
-pub trait ViaNone {
-    /// Always returns None, indicating the type cannot be debugged
-    fn spez_debug(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error>;
-}
-
-impl<T: fmt::Debug> ViaDebug for &Spez<T> {
+impl<T: Debug> SpezDebugYes for &Spez<T> {
     fn spez_debug(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        fmt::Debug::fmt(&self.0, f)
+        Debug::fmt(&self.0, f)
     }
 }
 
-impl<T> ViaNone for Spez<T> {
+pub trait SpezDebugNo {
+    fn spez_debug(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error>;
+}
+impl<T> SpezDebugNo for Spez<T> {
     fn spez_debug(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         unreachable!()
     }
