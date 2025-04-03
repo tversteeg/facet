@@ -167,10 +167,11 @@ pub const fn eq_fn_for<T: Eq>() -> Option<EqFn> {
 /// # Safety
 ///
 /// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
-pub type CmpFn = for<'l, 'r> unsafe fn(left: OpaqueConst<'l>, right: OpaqueConst<'r>) -> Ordering;
+pub type OrdFn = for<'l, 'r> unsafe fn(left: OpaqueConst<'l>, right: OpaqueConst<'r>) -> Ordering;
 
-/// Generates a [`CmpFn`] for a concrete type
-pub const fn cmp_fn_for<T: Ord>() -> Option<CmpFn> {
+///
+/// Generates a [`OrdFn`] for a concrete type
+pub const fn ord_fn_for<T: Ord>() -> Option<OrdFn> {
     Some(
         |left: OpaqueConst<'_>, right: OpaqueConst<'_>| -> Ordering {
             let left_val = unsafe { left.as_ref::<T>() };
@@ -284,7 +285,7 @@ pub struct ValueVTable {
     pub eq: Option<EqFn>,
 
     /// cf. [`CmpFn`]
-    pub cmp: Option<CmpFn>,
+    pub cmp: Option<OrdFn>,
 
     /// cf. [`HashFn`]
     pub hash: Option<HashFn>,

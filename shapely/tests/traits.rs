@@ -9,10 +9,28 @@ where
 {
     let name = format!("{}", T::SHAPE);
 
-    eprintln!(
-        "{}",
-        format!("== {name} ==========================").yellow()
-    );
+    eprint!("{}", format!("== {name}: ").yellow());
+    let value_vtable = T::SHAPE.vtable;
+    let traits = [
+        ("Debug", value_vtable.debug.is_some()),
+        ("Display", value_vtable.display.is_some()),
+        ("Default", value_vtable.default_in_place.is_some()),
+        ("Eq", value_vtable.eq.is_some()),
+        ("Ord", value_vtable.cmp.is_some()),
+    ];
+    let trait_str = traits
+        .iter()
+        .filter_map(|(name, has_impl)| {
+            if *has_impl {
+                Some(name.to_string())
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" + ");
+    eprintln!("{} {}", trait_str, "======".yellow());
+
     let peek1 = Peek::new(&val1);
     let peek2 = Peek::new(&val2);
 
@@ -64,17 +82,17 @@ where
     eprintln!("Ordering:  {}", cmp_str);
 
     // Test default_in_place
-    let (poke, guard) = Poke::alloc::<T>();
-    match poke {
-        Poke::Scalar(scalar) => {
-            if let Ok(value) = scalar.default_in_place() {
-                let peek = unsafe { Peek::unchecked_new(value.as_const(), T::SHAPE) };
-                eprintln!("Default in place gave us: {:?}", peek.blue());
-                drop(guard);
-            }
+    let (poke, _guard) = Poke::alloc::<T>();
+    let poke_value = poke.into_value();
+    let default_result = poke_value.default_in_place();
+    let style = if default_result.is_ok() { good } else { bad };
+    match default_result {
+        Ok(value) => {
+            let peek = unsafe { Peek::unchecked_new(value.as_const(), T::SHAPE) };
+            eprintln!("Default:   {}", format!("{:?}", peek).style(style));
         }
-        _ => {
-            // meh
+        Err(_) => {
+            eprintln!("Default:   {}", "unsupported!".style(bad));
         }
     }
 }
