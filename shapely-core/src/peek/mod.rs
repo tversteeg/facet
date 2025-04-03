@@ -5,10 +5,13 @@ use crate::Shapely;
 mod value;
 pub use value::*;
 
+mod struct_;
+pub use struct_::*;
+
 mod list;
 pub use list::*;
 
-use super::{OpaqueConst, Shape};
+use super::{Def, OpaqueConst, Shape};
 
 /// Lets you peek at the innards of a value
 ///
@@ -21,6 +24,9 @@ pub enum Peek<'mem> {
 
     /// cf. [`PeekList`]
     List(PeekList<'mem>),
+
+    /// cf. [`PeekStruct`]
+    Struct(PeekStruct<'mem>),
 }
 
 impl<'mem> Peek<'mem> {
@@ -40,13 +46,13 @@ impl<'mem> Peek<'mem> {
     /// of the type described by `shape`.
     pub unsafe fn unchecked_new(data: OpaqueConst<'mem>, shape: &'static Shape) -> Self {
         match shape.def {
-            super::Def::Struct { .. } => todo!(),
-            super::Def::TupleStruct { .. } => todo!(),
-            super::Def::Tuple { .. } => todo!(),
-            super::Def::Map { .. } => todo!(),
-            super::Def::List(def) => Peek::List(PeekList { data, shape, def }),
-            super::Def::Scalar { .. } => Peek::Scalar(PeekValue { data, shape }),
-            super::Def::Enum { .. } => todo!(),
+            Def::Struct(def) | Def::TupleStruct(def) | Def::Tuple(def) => {
+                Peek::Struct(PeekStruct { data, shape, def })
+            }
+            Def::Map { .. } => todo!(),
+            Def::List(def) => Peek::List(PeekList { data, shape, def }),
+            Def::Scalar { .. } => Peek::Scalar(PeekValue { data, shape }),
+            Def::Enum { .. } => todo!(),
         }
     }
 
@@ -55,6 +61,7 @@ impl<'mem> Peek<'mem> {
         match self {
             Self::Scalar(v) => v,
             Self::List(l) => l.as_value(),
+            Self::Struct(s) => s.as_value(),
         }
     }
 }

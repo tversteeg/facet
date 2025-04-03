@@ -123,6 +123,19 @@ impl<'mem> OpaqueConst<'mem> {
     pub unsafe fn as_ref<'borrow: 'mem, T>(self) -> &'borrow T {
         unsafe { &*(self.0.as_ptr() as *const T) }
     }
+
+    /// Returns a pointer with the given offset added
+    ///
+    /// # Safety
+    ///
+    /// Offset must be within the bounds of the allocated memory,
+    /// and the resulting pointer must be properly aligned.
+    pub unsafe fn field(self, offset: usize) -> OpaqueConst<'mem> {
+        OpaqueConst(
+            unsafe { NonNull::new_unchecked(self.0.as_ptr().byte_add(offset)) },
+            PhantomData,
+        )
+    }
 }
 
 /// A type-erased pointer to an initialized value
