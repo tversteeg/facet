@@ -35,65 +35,43 @@ where
     let peek2 = Peek::new(&val2);
 
     let good = Style::new().green();
-    let bad = Style::new().red();
 
     // Format debug representation
-    let style1 = if peek1.as_value().shape().vtable.debug.is_some() {
-        good
-    } else {
-        bad
-    };
-    let style2 = if peek2.as_value().shape().vtable.debug.is_some() {
-        good
-    } else {
-        bad
-    };
-    let debug_str = format!("{:?} vs {:?}", peek1.style(style1), peek2.style(style2));
-    eprintln!("Debug:     {}", debug_str);
+    if peek1.as_value().shape().vtable.debug.is_some() {
+        let debug_str = format!("{:?} vs {:?}", peek1.style(good), peek2.style(good));
+        eprintln!("Debug:     {}", debug_str);
+    }
 
     // Test equality
-    let eq_result = peek1.as_value().eq(&peek2.as_value());
-    let style = if eq_result.is_some() { good } else { bad };
-    let eq_str = match eq_result {
-        Some(result) => format!(
+    if let Some(eq_result) = peek1.as_value().eq(&peek2.as_value()) {
+        let eq_str = format!(
             "{:?} {} {:?} is {:?}",
             peek1,
-            "==".style(style),
+            "==".style(good),
             peek2,
-            result
-        ),
-        None => "unsupported!".style(bad).to_string(),
-    };
-    eprintln!("Equality:  {}", eq_str);
+            eq_result
+        );
+        eprintln!("Equality:  {}", eq_str);
+    }
 
     // Test ordering
-    let cmp_result = peek1.as_value().cmp(&peek2.as_value());
-    let style = if cmp_result.is_some() { good } else { bad };
-    let cmp_str = match cmp_result {
-        Some(result) => format!(
+    if let Some(cmp_result) = peek1.as_value().cmp(&peek2.as_value()) {
+        let cmp_str = format!(
             "{:?} {} {:?} is {:?}",
             peek1,
-            "cmp".style(style),
+            "cmp".style(good),
             peek2,
-            result
-        ),
-        None => "unsupported!".style(bad).to_string(),
-    };
-    eprintln!("Ordering:  {}", cmp_str);
+            cmp_result
+        );
+        eprintln!("Ordering:  {}", cmp_str);
+    }
 
     // Test default_in_place
     let (poke, _guard) = Poke::alloc::<T>();
     let poke_value = poke.into_value();
-    let default_result = poke_value.default_in_place();
-    let style = if default_result.is_ok() { good } else { bad };
-    match default_result {
-        Ok(value) => {
-            let peek = unsafe { Peek::unchecked_new(value.as_const(), T::SHAPE) };
-            eprintln!("Default:   {}", format!("{:?}", peek).style(style));
-        }
-        Err(_) => {
-            eprintln!("Default:   {}", "unsupported!".style(bad));
-        }
+    if let Ok(value) = poke_value.default_in_place() {
+        let peek = unsafe { Peek::unchecked_new(value.as_const(), T::SHAPE) };
+        eprintln!("Default:   {}", format!("{:?}", peek).style(good));
     }
 }
 
