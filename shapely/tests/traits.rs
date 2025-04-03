@@ -211,7 +211,7 @@ fn test_other_types() {
 }
 
 #[test]
-fn test_multis() {
+fn test_slice_traits() {
     // &[i32] implements Debug, PartialEq, and Ord
     test_peek_pair(
         &[1, 2, 3][..],
@@ -233,7 +233,10 @@ fn test_multis() {
             .ord_and(Ordering::Greater)
             .build(),
     );
+}
 
+#[test]
+fn test_array_traits() {
     // [i32; 1] implements Debug, PartialEq, and Ord
     test_peek_pair(
         [42],
