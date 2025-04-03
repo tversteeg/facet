@@ -65,4 +65,9 @@ fn test_spez2() {
     (&Wrap(String::from("hi"))).default_fn(238);
     #[allow(clippy::needless_borrow)]
     (&Wrap(NoDefaultHere)).default_fn(238);
+
+    // that's UB, btw
+    let v: i32 = unsafe { std::mem::zeroed() };
+    #[allow(clippy::needless_borrow)]
+    (&Wrap(v)).default_fn(238);
 }
