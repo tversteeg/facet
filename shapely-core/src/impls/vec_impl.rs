@@ -1,6 +1,6 @@
 use std::alloc::Layout;
 
-use crate::{Def, ListDef, ListVTable, OpaqueConst, Shape, Shapely, ValueVTable};
+use crate::{Def, ListDef, ListVTable, OpaqueConst, Shape, Shapely, value_vtable};
 
 impl<T> Shapely for Vec<T>
 where
@@ -9,53 +9,15 @@ where
     const SHAPE: &'static Shape = &const {
         Shape {
             layout: Layout::new::<Vec<T>>(),
-            vtable: &ValueVTable {
-                type_name: |f, opts| {
-                    if let Some(opts) = opts.for_children() {
-                        write!(f, "Vec<")?;
-                        (T::SHAPE.vtable.type_name)(f, opts)?;
-                        write!(f, ">")
-                    } else {
-                        write!(f, "Vec<⋯>")
-                    }
-                },
-                display: None,
-                debug: const {
-                    if T::SHAPE.vtable.debug.is_some() {
-                        Some(|value, f| {
-                            let value = unsafe { value.as_ref::<Vec<T>>() };
-                            write!(f, "vec![")?;
-                            for (i, item) in value.iter().enumerate() {
-                                if i > 0 {
-                                    write!(f, ", ")?;
-                                }
-                                unsafe {
-                                    (T::SHAPE.vtable.debug.unwrap_unchecked())(
-                                        OpaqueConst::from_ref(item),
-                                        f,
-                                    )?;
-                                }
-                            }
-                            write!(f, "]")
-                        })
-                    } else {
-                        None
-                    }
-                },
-                // TODO: specialize these
-                eq: None,
-                // TODO: specialize these
-                cmp: None,
-                // TODO: specialize these
-                hash: None,
-                drop_in_place: Some(|value| unsafe {
-                    std::ptr::drop_in_place(value.as_mut_ptr::<Vec<T>>());
-                }),
-                parse: None,
-                // TODO: specialize these
-                try_from: None,
-                default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
-            },
+            vtable: value_vtable!(Self, |f, opts| {
+                if let Some(opts) = opts.for_children() {
+                    write!(f, "Vec<")?;
+                    (T::SHAPE.vtable.type_name)(f, opts)?;
+                    write!(f, ">")
+                } else {
+                    write!(f, "Vec<⋯>")
+                }
+            }),
             def: Def::List(ListDef {
                 vtable: &ListVTable {
                     init_in_place_with_capacity: |data, capacity| unsafe {
@@ -94,47 +56,15 @@ where
     const SHAPE: &'static Shape = &const {
         Shape {
             layout: Layout::new::<&[T]>(),
-            vtable: &ValueVTable {
-                type_name: |f, opts| {
-                    if let Some(opts) = opts.for_children() {
-                        write!(f, "&[")?;
-                        (T::SHAPE.vtable.type_name)(f, opts)?;
-                        write!(f, "]")
-                    } else {
-                        write!(f, "&[⋯]")
-                    }
-                },
-                display: None,
-                debug: const {
-                    if T::SHAPE.vtable.debug.is_some() {
-                        Some(|value, f| {
-                            let value = unsafe { value.as_ref::<&[T]>() };
-                            write!(f, "[")?;
-                            for (i, item) in value.iter().enumerate() {
-                                if i > 0 {
-                                    write!(f, ", ")?;
-                                }
-                                unsafe {
-                                    (T::SHAPE.vtable.debug.unwrap_unchecked())(
-                                        OpaqueConst::from_ref(item),
-                                        f,
-                                    )?;
-                                }
-                            }
-                            write!(f, "]")
-                        })
-                    } else {
-                        None
-                    }
-                },
-                eq: None,
-                cmp: None,
-                hash: None,
-                drop_in_place: None,
-                parse: None,
-                try_from: None,
-                default_in_place: None,
-            },
+            vtable: value_vtable!(Self, |f, opts| {
+                if let Some(opts) = opts.for_children() {
+                    write!(f, "&[")?;
+                    (T::SHAPE.vtable.type_name)(f, opts)?;
+                    write!(f, "]")
+                } else {
+                    write!(f, "&[⋯]")
+                }
+            }),
             def: Def::List(ListDef {
                 vtable: &ListVTable {
                     init_in_place_with_capacity: |_, _| Err(()),
@@ -154,6 +84,42 @@ where
                             );
                         }
                         OpaqueConst::new_unchecked(slice.as_ptr().add(index))
+                    },
+                },
+                t: T::SHAPE,
+            }),
+        }
+    };
+}
+
+impl<T> Shapely for [T; 1]
+where
+    T: Shapely,
+{
+    const SHAPE: &'static Shape = &const {
+        Shape {
+            layout: Layout::new::<Self>(),
+            vtable: value_vtable!(Self, |f, opts| {
+                write!(f, "[")?;
+                if let Some(opts) = opts.for_children() {
+                    (T::SHAPE.vtable.type_name)(f, opts)?;
+                } else {
+                    write!(f, "⋯")?;
+                }
+                write!(f, "; 1]")
+            }),
+            def: Def::List(ListDef {
+                vtable: &ListVTable {
+                    init_in_place_with_capacity: |_, _| Err(()),
+                    push: |_, _| {
+                        panic!("Cannot push to [T; 1]");
+                    },
+                    len: |_| 1,
+                    get_item_ptr: |ptr, index| unsafe {
+                        if index >= 1 {
+                            panic!("Index out of bounds: the len is 1 but the index is {index}");
+                        }
+                        OpaqueConst::new_unchecked(ptr.as_ptr::<[T; 1]>())
                     },
                 },
                 t: T::SHAPE,

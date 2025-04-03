@@ -115,6 +115,12 @@ fn test_multis() {
 
     // &[&str] implements Debug, PartialEq, and Ord
     test_peek_pair(&["hello", "world"][..], &["foo", "bar"][..]);
+
+    // [i32; 1] implements Debug, PartialEq, and Ord
+    test_peek_pair([42], [24]);
+
+    // [&str; 1] implements Debug, PartialEq, and Ord
+    test_peek_pair(["hello"], ["world"]);
 }
 
 #[test]

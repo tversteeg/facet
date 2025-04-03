@@ -1,7 +1,7 @@
 quickcheck:
     just rustfmt
     just clippy
-    just nextest
+    just test
     just doc-tests
     just absolve
 

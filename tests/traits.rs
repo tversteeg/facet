@@ -48,7 +48,7 @@ fn test_primitive_types() {
 }
 
 #[test]
-fn test_vec() {
+fn test_vectors() {
     let vec1: Vec<i32> = vec![1, 2, 3];
     let vec2: Vec<i32> = vec![4, 5, 6];
     let peek1 = Peek::new(&vec1);
