@@ -136,3 +136,75 @@ macro_rules! enum_variants {
         VARIANTS
     }};
 }
+
+/// Creates a `ValueVTable` for a given type.
+///
+/// This macro generates a `ValueVTable` with implementations for various traits
+/// (Display, Debug, PartialEq, Ord, Hash) if they are implemented for the given type.
+///
+/// # Arguments
+///
+/// * `$type_name:ty` - The type for which to create the `ValueVTable`.
+/// * `$type_name_fn:expr` - A function that writes the type name to a formatter.
+///
+/// # Example
+///
+/// ```
+/// let vtable = value_vtable!(String, |f, _opts| write!(f, "String"));
+/// ```
+#[macro_export]
+macro_rules! value_vtable {
+    ($type_name:ty, $type_name_fn:expr) => {
+        &$crate::ValueVTable {
+            type_name: $type_name_fn,
+            display: if $crate::impls!($type_name: std::fmt::Display) {
+                Some(|data, f| {
+                    use $crate::spez::*;
+                    (&&Spez(unsafe { data.as_ref::<$type_name>() })).spez_display(f)
+                })
+            } else {
+                None
+            },
+            debug: if $crate::impls!($type_name: std::fmt::Debug) {
+                Some(|data, f| {
+                    use $crate::spez::*;
+                    (&&Spez(unsafe { data.as_ref::<$type_name>() })).spez_debug(f)
+                })
+            } else {
+                None
+            },
+            default_in_place: None,
+            eq: if $crate::impls!($type_name: std::cmp::PartialEq) {
+                Some(|left, right| {
+                    use $crate::spez::*;
+                    (&&Spez(unsafe { left.as_ref::<$type_name>() }))
+                        .spez_eq(&&Spez(unsafe { right.as_ref::<$type_name>() }))
+                })
+            } else {
+                None
+            },
+            cmp: if $crate::impls!($type_name: std::cmp::Ord) {
+                Some(|left, right| {
+                    use $crate::spez::*;
+                    (&&Spez(unsafe { left.as_ref::<$type_name>() }))
+                        .spez_cmp(&&Spez(unsafe { right.as_ref::<$type_name>() }))
+                })
+            } else {
+                None
+            },
+            hash: if $crate::impls!($type_name: std::hash::Hash) {
+                Some(|value, hasher_this, hasher_write_fn| {
+                    use $crate::spez::*;
+                    use $crate::vtable::HasherProxy;
+                    (&&Spez(unsafe { value.as_ref::<$type_name>() }))
+                        .spez_hash(&mut unsafe { HasherProxy::new(hasher_this, hasher_write_fn) })
+                })
+            } else {
+                None
+            },
+            drop_in_place: Some(|data| unsafe { data.drop_in_place::<$type_name>() }),
+            parse: None,
+            try_from: None,
+        }
+    };
+}
