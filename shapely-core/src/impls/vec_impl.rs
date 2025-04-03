@@ -19,12 +19,33 @@ where
                         write!(f, "Vec<⋯>")
                     }
                 },
-                display: None,
+                display: const {
+                    if T::SHAPE.vtable.display.is_some() {
+                        Some(|value, f| {
+                            let value = unsafe { value.as_ref::<Vec<T>>() };
+                            write!(f, "[")?;
+                            for (i, item) in value.iter().enumerate() {
+                                if i > 0 {
+                                    write!(f, ", ")?;
+                                }
+                                unsafe {
+                                    (T::SHAPE.vtable.display.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(item),
+                                        f,
+                                    )?;
+                                }
+                            }
+                            write!(f, "]")
+                        })
+                    } else {
+                        None
+                    }
+                },
                 debug: const {
                     if T::SHAPE.vtable.debug.is_some() {
                         Some(|value, f| {
                             let value = unsafe { value.as_ref::<Vec<T>>() };
-                            write!(f, "vec![")?;
+                            write!(f, "[")?;
                             for (i, item) in value.iter().enumerate() {
                                 if i > 0 {
                                     write!(f, ", ")?;
