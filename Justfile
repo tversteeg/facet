@@ -37,6 +37,8 @@ clippy:
     cargo clippy --all-targets -- -D warnings
 
 test *args:
+    #!/bin/bash -euo pipefail
+    export RUST_BACKTRACE=1
     echo -e "\033[1;33m🏃 Running all but doc-tests with nextest...\033[0m"
     cargo nextest run {{args}}
 
@@ -46,7 +48,7 @@ doc-tests:
 
 miri *args:
     #!/bin/bash -euo pipefail
-    echo -e "\033[1;31m🧪 Running tests under Miri in a separate target directory...\033[0m"
     export RUST_BACKTRACE=1
     export MIRIFLAGS=-Zmiri-env-forward=RUST_BACKTRACE
+    echo -e "\033[1;31m🧪 Running tests under Miri in a separate target directory...\033[0m"
     cargo miri nextest run --target-dir=target/miri {{args}}
