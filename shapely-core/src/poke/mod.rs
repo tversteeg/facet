@@ -35,6 +35,7 @@ pub enum Poke<'mem> {
     Enum(PokeEnumNoVariant<'mem>),
 }
 
+/// Ensures a value is dropped when the guard is dropped.
 pub struct Guard {
     ptr: *mut u8,
     layout: Layout,

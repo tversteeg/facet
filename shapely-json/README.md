@@ -14,27 +14,6 @@ A serialization and deserialization library for JSON using the shapely runtime r
 - Detailed error reporting with context
 - Support for nested structs and scalar values
 
-## Example
-
-```rust
-use shapely::Shapely;
-use shapely_json::from_json;
-
-#[derive(Debug, Shapely, PartialEq)]
-struct Person {
-    name: String,
-    age: u64,
-}
-
-let json = r#"{"name": "Alice", "age": 30}"#;
-
-let mut partial = Person::partial();
-from_json(&mut partial, json).expect("Failed to parse JSON");
-
-let person = partial.build::<Person>();
-assert_eq!(person, Person { name: "Alice".to_string(), age: 30 });
-```
-
 ### Funding
 
 Thanks to Namespace for providing fast GitHub Actions workers:
