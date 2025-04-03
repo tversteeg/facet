@@ -1,11 +1,11 @@
 use std::hash::Hash as _;
 
-use crate::{Bytes, Def, HasherProxy, Shape, Shapely, ValueVTable};
+use crate::{Bytes, Def, HasherProxy, ScalarDef, Shape, Shapely, ValueVTable};
 
 impl Shapely for Bytes {
     const SHAPE: &'static Shape = &Shape {
         layout: std::alloc::Layout::new::<Self>(),
-        def: Def::Scalar,
+        def: Def::Scalar(ScalarDef::of::<Self>()),
         vtable: &ValueVTable {
             type_name: |f, _opts| write!(f, "Bytes"),
             display: None,

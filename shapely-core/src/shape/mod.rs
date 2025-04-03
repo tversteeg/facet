@@ -1,6 +1,8 @@
 use std::alloc::Layout;
 
-use crate::{ListVTable, MapVTable, OpaqueUninit, ShapeId, Shapely, TypeNameOpts, ValueVTable};
+use typeid::ConstTypeId;
+
+use crate::{ListVTable, MapVTable, OpaqueUninit, Shapely, TypeNameOpts, ValueVTable};
 
 mod pretty_print;
 
@@ -19,15 +21,30 @@ pub struct Shape {
     pub def: Def,
 }
 
+impl PartialEq for Shape {
+    fn eq(&self, other: &Self) -> bool {
+        self.def == other.def && self.layout == other.layout
+    }
+}
+
+impl Eq for Shape {}
+
+impl std::hash::Hash for Shape {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.def.hash(state);
+        self.layout.hash(state);
+    }
+}
+
 impl Shape {
     /// Check if this shape is of the given type
     pub fn is_type<Other: Shapely>(&'static self) -> bool {
-        ShapeId::of(self) == Other::shape_id()
+        self == Other::SHAPE
     }
 
     /// Check if this shape is of the given type
     pub fn is_shape(&'static self, other: &'static Shape) -> bool {
-        ShapeId::of(self) == ShapeId::of(other)
+        self == other
     }
 
     /// Assert that this shape is of the given type, panicking if it's not
@@ -109,14 +126,14 @@ impl std::fmt::Debug for ShapeDebug {
 }
 
 /// Common fields for struct-like types
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct StructDef {
     /// all fields, in declaration order (not necessarily in memory order)
     pub fields: &'static [Field],
 }
 
 /// Describes a field in a struct or tuple
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Field {
     /// key for the struct field (for tuples and tuple-structs, this is the 0-based index)
     pub name: &'static str,
@@ -234,7 +251,7 @@ impl std::fmt::Display for FieldFlags {
 }
 
 /// Fields for map types
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MapDef {
     /// vtable for interacting with the map
     pub vtable: &'static MapVTable,
@@ -245,7 +262,7 @@ pub struct MapDef {
 }
 
 /// Fields for list types
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ListDef {
     /// vtable for interacting with the list
     pub vtable: &'static ListVTable,
@@ -254,7 +271,7 @@ pub struct ListDef {
 }
 
 /// Fields for enum types
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EnumDef {
     /// representation of the enum (u8, u16, etc.)
     pub repr: EnumRepr,
@@ -263,7 +280,7 @@ pub struct EnumDef {
 }
 
 /// Describes a variant of an enum
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Variant {
     /// Name of the variant
     pub name: &'static str,
@@ -276,7 +293,7 @@ pub struct Variant {
 }
 
 /// Represents the different kinds of variants that can exist in a Rust enum
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum VariantKind {
     /// Unit variant (e.g., `None` in Option)
     Unit,
@@ -327,14 +344,30 @@ impl Default for EnumRepr {
     }
 }
 
+/// Definition for scalar types
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ScalarDef {
+    /// The TypeId of the scalar type
+    pub type_id: ConstTypeId,
+}
+
+impl ScalarDef {
+    /// Create a new ScalarDef with the given TypeId
+    pub const fn of<T>() -> Self {
+        Self {
+            type_id: ConstTypeId::of::<T>(),
+        }
+    }
+}
+
 /// The definition of a shape: is it more like a struct, a map, a list?
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Def {
     /// Scalar — those don't have a def, they're not composed of other things.
     /// You can interact with them through [`ValueVTable`].
     ///
     /// e.g. `u32`, `String`, `bool`, `SocketAddr`, etc.
-    Scalar,
+    Scalar(ScalarDef),
 
     /// Struct with statically-known, named fields
     ///

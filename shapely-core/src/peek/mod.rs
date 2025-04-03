@@ -44,7 +44,7 @@ impl<'mem> Peek<'mem> {
             super::Def::Tuple { .. } => todo!(),
             super::Def::Map { .. } => todo!(),
             super::Def::List { .. } => todo!(),
-            super::Def::Scalar => Peek::Scalar(PeekValue { data, shape }),
+            super::Def::Scalar { .. } => Peek::Scalar(PeekValue { data, shape }),
             super::Def::Enum { .. } => todo!(),
         }
     }

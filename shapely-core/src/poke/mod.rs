@@ -92,7 +92,7 @@ impl<'mem> Poke<'mem> {
                 let plu = unsafe { PokeListUninit::new(data, shape, list_def) };
                 Poke::List(plu)
             }
-            Def::Scalar => Poke::Scalar(unsafe { PokeValue::new(data, shape) }),
+            Def::Scalar { .. } => Poke::Scalar(unsafe { PokeValue::new(data, shape) }),
             Def::Enum(enum_def) => {
                 Poke::Enum(unsafe { PokeEnumNoVariant::new(data, shape, enum_def) })
             }

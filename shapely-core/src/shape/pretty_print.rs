@@ -1,4 +1,4 @@
-use crate::{FieldFlags, ShapeId, TypeNameOpts, VariantKind};
+use crate::{FieldFlags, TypeNameOpts, VariantKind};
 
 use super::{Def, EnumDef, ListDef, MapDef, Shape, StructDef};
 use std::{collections::HashSet, fmt::Formatter};
@@ -14,10 +14,10 @@ impl Shape {
     fn pretty_print_recursive_internal(
         &'static self,
         f: &mut Formatter,
-        printed_schemas: &mut HashSet<ShapeId>,
+        printed_schemas: &mut HashSet<&'static Shape>,
         indent: usize,
     ) -> std::fmt::Result {
-        if !printed_schemas.insert(ShapeId::of(self)) {
+        if !printed_schemas.insert(self) {
             write!(f, "{:indent$}\x1b[1;33m", "", indent = indent)?;
             (self.vtable.type_name)(f, TypeNameOpts::one())?;
             writeln!(f, "\x1b[0m (\x1b[1;31malready printed\x1b[0m)")?;
@@ -29,7 +29,7 @@ impl Shape {
         writeln!(f, "\x1b[0m (\x1b[1;34m{}\x1b[0m bytes)", self.layout.size())?;
 
         match &self.def {
-            Def::Scalar => {}
+            Def::Scalar { .. } => {}
             Def::Struct(StructDef { fields })
             | Def::TupleStruct(StructDef { fields })
             | Def::Tuple(StructDef { fields }) => {
@@ -47,7 +47,7 @@ impl Shape {
                     if field.flags.contains(FieldFlags::SENSITIVE) {
                         write!(f, "(sensitive) ")?;
                     }
-                    if let Def::Scalar = field.shape.def {
+                    if let Def::Scalar { .. } = field.shape.def {
                         field.shape.pretty_print_recursive_internal(
                             f,
                             printed_schemas,
@@ -133,7 +133,7 @@ impl Shape {
                                 if field.flags.contains(FieldFlags::SENSITIVE) {
                                     write!(f, "(sensitive) ")?;
                                 }
-                                if let Def::Scalar = field.shape.def {
+                                if let Def::Scalar { .. } = field.shape.def {
                                     field.shape.pretty_print_recursive_internal(
                                         f,
                                         printed_schemas,
@@ -172,7 +172,7 @@ impl Shape {
                                 if field.flags.contains(FieldFlags::SENSITIVE) {
                                     write!(f, "(sensitive) ")?;
                                 }
-                                if let Def::Scalar = field.shape.def {
+                                if let Def::Scalar { .. } = field.shape.def {
                                     field.shape.pretty_print_recursive_internal(
                                         f,
                                         printed_schemas,

@@ -17,7 +17,7 @@ pub fn from_json<'input>(
         trace!("Deserializing value with shape:\n{:?}", ShapeDebug(shape));
 
         match &shape.def {
-            Def::Scalar => {
+            Def::Scalar { .. } => {
                 let pv = poke.into_scalar();
                 trace!("Deserializing \x1b[1;36mscalar\x1b[0m");
 

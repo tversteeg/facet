@@ -19,40 +19,25 @@ impl Default for FooBar {
 
 #[test]
 fn build_foobar_through_reflection() {
-    eprintln!("At this point, FooBar ShapeId is {:?}", FooBar::shape_id());
-
-    eprintln!("Allocating FooBar");
     let (poke, guard) = Poke::alloc::<FooBar>();
-    eprintln!("Converting poke to struct");
     let mut poke = poke.into_struct();
-    eprintln!("Setting 'foo' field");
     poke.set_by_name("foo", OpaqueConst::from_ref(&42u64))
         .unwrap();
-    eprintln!("Creating 'bar' string");
 
     {
-        eprintln!("Creating 'bar' string");
         let bar = String::from("Hello, World!");
-        eprintln!("Setting 'bar' field");
         poke.set_by_name("bar", OpaqueConst::from_ref(&bar))
             .unwrap();
-        eprintln!("Forgetting 'bar'");
         // bar has been moved out of
         std::mem::forget(bar);
     }
 
-    eprintln!("Building FooBar");
-    eprintln!("At this point, FooBar ShapeId is {:?}", FooBar::shape_id());
     let foo_bar = poke.build::<FooBar>(Some(guard));
 
-    eprintln!("Verifying fields");
     // Verify the fields were set correctly
     assert_eq!(foo_bar.foo, 42);
-    eprintln!("Verified 'foo' field");
     assert_eq!(foo_bar.bar, "Hello, World!");
-    eprintln!("Verified 'bar' field");
 
-    eprintln!("Final assertion");
     assert_eq!(
         FooBar {
             foo: 42,
