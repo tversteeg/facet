@@ -26,7 +26,7 @@ where
                     (V::SHAPE.vtable.type_name)(f, opts)?;
                     write!(f, ">")
                 } else {
-                    write!(f, "HashMap<…>")
+                    write!(f, "HashMap<⋯>")
                 }
             },
             display: None,

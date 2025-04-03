@@ -16,10 +16,9 @@ where
                         (T::SHAPE.vtable.type_name)(f, opts)?;
                         write!(f, ">")
                     } else {
-                        write!(f, "Vec<…>")
+                        write!(f, "Vec<⋯>")
                     }
                 },
-                // TODO: specialize these
                 display: None,
                 debug: const {
                     if T::SHAPE.vtable.debug.is_some() {

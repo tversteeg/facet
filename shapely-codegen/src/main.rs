@@ -58,7 +58,7 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
                     {}
                     write!(f, ")")
                 }} else {{
-                    write!(f, "(…)")
+                    write!(f, "(⋯)")
                 }}
             }}"#,
             (0..n)
