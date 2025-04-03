@@ -260,8 +260,8 @@ fn test_floating_traits() {
 
     // Test equal values
     test_peek_pair(
-        3.14,
-        3.14,
+        3.18,
+        3.18,
         FactBuilder::new()
             .debug()
             .display()

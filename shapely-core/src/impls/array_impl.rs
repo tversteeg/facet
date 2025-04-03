@@ -36,9 +36,54 @@ where
                         None
                     }
                 },
-                eq: None,
-                cmp: None,
-                hash: None,
+                eq: const {
+                    if T::SHAPE.vtable.eq.is_some() {
+                        Some(|a, b| {
+                            let a = unsafe { a.as_ref::<[T; 1]>() };
+                            let b = unsafe { b.as_ref::<[T; 1]>() };
+                            unsafe {
+                                (T::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::from_ref(&a[0]),
+                                    OpaqueConst::from_ref(&b[0]),
+                                )
+                            }
+                        })
+                    } else {
+                        None
+                    }
+                },
+                cmp: const {
+                    if T::SHAPE.vtable.cmp.is_some() {
+                        Some(|a, b| {
+                            let a = unsafe { a.as_ref::<[T; 1]>() };
+                            let b = unsafe { b.as_ref::<[T; 1]>() };
+                            unsafe {
+                                (T::SHAPE.vtable.cmp.unwrap_unchecked())(
+                                    OpaqueConst::from_ref(&a[0]),
+                                    OpaqueConst::from_ref(&b[0]),
+                                )
+                            }
+                        })
+                    } else {
+                        None
+                    }
+                },
+                hash: const {
+                    if T::SHAPE.vtable.hash.is_some() {
+                        Some(|value, state, hasher| {
+                            let value = unsafe { value.as_ref::<[T; 1]>() };
+                            unsafe {
+                                (T::SHAPE.vtable.hash.unwrap_unchecked())(
+                                    OpaqueConst::from_ref(&value[0]),
+                                    state,
+                                    hasher,
+                                )
+                            }
+                        })
+                    } else {
+                        None
+                    }
+                },
                 drop_in_place: Some(|value| unsafe {
                     std::ptr::drop_in_place(value.as_mut_ptr::<[T; 1]>());
                 }),
@@ -48,6 +93,17 @@ where
                     Some(|target| unsafe {
                         let t_dip = T::SHAPE.vtable.default_in_place.unwrap_unchecked();
                         (t_dip)(target.field_uninit(0))
+                    })
+                } else {
+                    None
+                },
+                clone_in_place: if T::SHAPE.vtable.clone_in_place.is_some() {
+                    Some(|src, dst| unsafe {
+                        let t_cip = T::SHAPE.vtable.clone_in_place.unwrap_unchecked();
+                        (t_cip)(
+                            OpaqueConst::from_ref(&src.as_ref::<[T; 1]>()[0]),
+                            dst.field_uninit(0),
+                        )
                     })
                 } else {
                     None

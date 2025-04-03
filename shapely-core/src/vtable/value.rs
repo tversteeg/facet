@@ -266,6 +266,27 @@ pub const fn drop_in_place_fn_for<T>() -> Option<DropInPlaceFn> {
     })
 }
 
+/// Function to clone a value in-place
+///
+/// # Safety
+///
+/// The `source` parameter must point to aligned, initialized memory of the correct type.
+/// The `target` parameter has the correct layout and alignment, but points to
+/// uninitialized memory. If this function succeeds, it should return `Some` with the
+/// same pointer wrapped in an [`Opaque`].
+pub type CloneInPlaceFn = for<'src, 'dst> unsafe fn(
+    source: OpaqueConst<'src>,
+    target: OpaqueUninit<'dst>,
+) -> Option<Opaque<'dst>>;
+
+/// Generates a [`CloneInPlaceFn`] for a concrete type
+pub const fn clone_in_place_fn_for<T: Clone>() -> Option<CloneInPlaceFn> {
+    Some(|source: OpaqueConst<'_>, target: OpaqueUninit<'_>| unsafe {
+        let source_val = source.as_ref::<T>();
+        Some(target.write(source_val.clone()))
+    })
+}
+
 /// VTable for common operations that can be performed on any shape
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ValueVTable {
@@ -280,6 +301,9 @@ pub struct ValueVTable {
 
     /// cf. [`DefaultInPlaceFn`]
     pub default_in_place: Option<DefaultInPlaceFn>,
+
+    /// cf. [`CloneInPlaceFn`]
+    pub clone_in_place: Option<CloneInPlaceFn>,
 
     /// cf. [`EqFn`]
     pub eq: Option<EqFn>,

@@ -41,13 +41,75 @@ where
                         None
                     }
                 },
-                eq: None,
-                cmp: None,
-                hash: None,
+                eq: const {
+                    if T::SHAPE.vtable.eq.is_some() {
+                        Some(|a, b| {
+                            let a = unsafe { a.as_ref::<&[T]>() };
+                            let b = unsafe { b.as_ref::<&[T]>() };
+                            if a.len() != b.len() {
+                                return false;
+                            }
+                            for (a_item, b_item) in a.iter().zip(b.iter()) {
+                                if !unsafe {
+                                    (T::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(a_item),
+                                        OpaqueConst::from_ref(b_item),
+                                    )
+                                } {
+                                    return false;
+                                }
+                            }
+                            true
+                        })
+                    } else {
+                        None
+                    }
+                },
+                cmp: const {
+                    if T::SHAPE.vtable.cmp.is_some() {
+                        Some(|a, b| {
+                            let a = unsafe { a.as_ref::<&[T]>() };
+                            let b = unsafe { b.as_ref::<&[T]>() };
+                            for (a_item, b_item) in a.iter().zip(b.iter()) {
+                                let cmp = unsafe {
+                                    (T::SHAPE.vtable.cmp.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(a_item),
+                                        OpaqueConst::from_ref(b_item),
+                                    )
+                                };
+                                if cmp != std::cmp::Ordering::Equal {
+                                    return cmp;
+                                }
+                            }
+                            a.len().cmp(&b.len())
+                        })
+                    } else {
+                        None
+                    }
+                },
+                hash: const {
+                    if T::SHAPE.vtable.hash.is_some() {
+                        Some(|value, state, hasher| {
+                            let value = unsafe { value.as_ref::<&[T]>() };
+                            for item in value.iter() {
+                                unsafe {
+                                    (T::SHAPE.vtable.hash.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(item),
+                                        state,
+                                        hasher,
+                                    );
+                                }
+                            }
+                        })
+                    } else {
+                        None
+                    }
+                },
                 drop_in_place: None,
                 parse: None,
                 try_from: None,
                 default_in_place: None,
+                clone_in_place: None,
             },
             def: Def::List(ListDef {
                 vtable: &ListVTable {

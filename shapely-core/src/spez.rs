@@ -78,6 +78,28 @@ impl<T> SpezDefaultInPlaceNo for Spez<T> {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
+// Clone (in place)
+////////////////////////////////////////////////////////////////////////////////////////
+
+pub trait SpezCloneInPlaceYes {
+    fn spez_clone_in_place<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem>;
+}
+impl<T: Clone> SpezCloneInPlaceYes for &Spez<T> {
+    fn spez_clone_in_place<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem> {
+        unsafe { target.write(self.0.clone()) }
+    }
+}
+
+pub trait SpezCloneInPlaceNo {
+    fn spez_clone_in_place<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem>;
+}
+impl<T> SpezCloneInPlaceNo for Spez<T> {
+    fn spez_clone_in_place<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem> {
+        unreachable!()
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
 // Parse
 ////////////////////////////////////////////////////////////////////////////////////////
 
