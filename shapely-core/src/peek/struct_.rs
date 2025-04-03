@@ -1,6 +1,5 @@
 use crate::peek::PeekValue;
 use crate::{OpaqueConst, Shape, StructDef};
-use std::fmt;
 
 /// Lets you read from a struct (implements read-only struct operations)
 #[derive(Clone, Copy)]
@@ -61,19 +60,6 @@ impl<'mem> PeekStruct<'mem> {
         PeekValue {
             data: self.data,
             shape: self.shape,
-        }
-    }
-}
-
-// Helper struct for field debug formatting
-struct DebugFieldWrapper<'a, 'mem>(&'a PeekValue<'mem>);
-
-impl<'a, 'mem> fmt::Debug for DebugFieldWrapper<'a, 'mem> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some(result) = self.0.debug(f) {
-            result
-        } else {
-            write!(f, "<unprintable>")
         }
     }
 }

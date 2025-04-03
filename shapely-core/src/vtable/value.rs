@@ -70,6 +70,7 @@ impl TypeNameOpts {
 pub type DisplayFn =
     for<'mem> unsafe fn(value: OpaqueConst<'mem>, f: &mut std::fmt::Formatter) -> std::fmt::Result;
 
+/// Generates a [`DisplayFn`] for a concrete type
 pub const fn display_fn_for<T: std::fmt::Display>() -> DisplayFn {
     |value: OpaqueConst<'_>, f: &mut std::fmt::Formatter| -> std::fmt::Result {
         let val = unsafe { value.as_ref::<T>() };
@@ -86,6 +87,7 @@ pub const fn display_fn_for<T: std::fmt::Display>() -> DisplayFn {
 pub type DebugFn =
     for<'mem> unsafe fn(value: OpaqueConst<'mem>, f: &mut std::fmt::Formatter) -> std::fmt::Result;
 
+/// Generates a [`DebugFn`] for a concrete type
 pub const fn debug_fn_for<T: std::fmt::Debug>() -> DebugFn {
     |value: OpaqueConst<'_>, f: &mut std::fmt::Formatter| -> std::fmt::Result {
         let val = unsafe { value.as_ref::<T>() };
