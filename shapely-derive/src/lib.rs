@@ -273,7 +273,20 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                default_in_place: None,
+                default_in_place: if shapely_core::impls!(Self: std::default::Default) {{
+                    Some(|data| unsafe {{
+                        Some(data.write(<Self as std::default::Default>::default()))
+                    }})
+                }} else {{
+                    None
+                }},
+                clone_in_place: if shapely_core::impls!(Self: std::clone::Clone) {{
+                    Some(|src, dst| unsafe {{
+                        Some(dst.write(<Self as std::clone::Clone>::clone(src.as_ref::<Self>())))
+                    }})
+                }} else {{
+                    None
+                }},
                 eq: if shapely_core::impls!(Self: std::cmp::PartialEq) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
@@ -365,7 +378,20 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                default_in_place: None,
+                default_in_place: if shapely_core::impls!(Self: std::default::Default) {{
+                    Some(|data| unsafe {{
+                        Some(data.write(<Self as std::default::Default>::default()))
+                    }})
+                }} else {{
+                    None
+                }},
+                clone_in_place: if shapely_core::impls!(Self: std::clone::Clone) {{
+                    Some(|src, dst| unsafe {{
+                        Some(dst.write(<Self as std::clone::Clone>::clone(src.as_ref::<Self>())))
+                    }})
+                }} else {{
+                    None
+                }},
                 eq: if shapely_core::impls!(Self: std::cmp::PartialEq) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
@@ -530,7 +556,20 @@ impl shapely::Shapely for {enum_name} {{
                 }} else {{
                     None
                 }},
-                default_in_place: None,
+                default_in_place: if shapely_core::impls!(Self: std::default::Default) {{
+                    Some(|data| unsafe {{
+                        Some(data.write(<Self as std::default::Default>::default()))
+                    }})
+                }} else {{
+                    None
+                }},
+                clone_in_place: if shapely_core::impls!(Self: std::clone::Clone) {{
+                    Some(|src, dst| unsafe {{
+                        Some(dst.write(<Self as std::clone::Clone>::clone(src.as_ref::<Self>())))
+                    }})
+                }} else {{
+                    None
+                }},
                 eq: if shapely_core::impls!(Self: std::cmp::PartialEq) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
