@@ -63,8 +63,28 @@ where
                         None
                     }
                 },
-                // TODO: specialize these
-                eq: None,
+                eq: const {
+                    if T::SHAPE.vtable.eq.is_some() {
+                        Some(|a, b| unsafe {
+                            let a = a.as_ref::<Vec<T>>();
+                            let b = b.as_ref::<Vec<T>>();
+                            if a.len() != b.len() {
+                                return false;
+                            }
+                            for (item_a, item_b) in a.iter().zip(b.iter()) {
+                                if !(T::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::from_ref(item_a),
+                                    OpaqueConst::from_ref(item_b),
+                                ) {
+                                    return false;
+                                }
+                            }
+                            true
+                        })
+                    } else {
+                        None
+                    }
+                },
                 // TODO: specialize these
                 cmp: None,
                 // TODO: specialize these

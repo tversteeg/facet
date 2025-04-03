@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{cmp::Ordering, fmt::Debug};
 
 use owo_colors::{OwoColorize, Style};
 use shapely::{Peek, Poke, Shapely};
@@ -35,6 +35,7 @@ where
     let peek2 = Peek::new(&val2);
 
     let good = Style::new().green();
+    let bad = Style::new().bright_red();
 
     // Format display representation
     if peek1.as_value().shape().vtable.display.is_some() {
@@ -51,24 +52,22 @@ where
     // Test equality
     if let Some(eq_result) = peek1.as_value().eq(&peek2.as_value()) {
         let eq_str = format!(
-            "{:?} {} {:?} is {:?}",
+            "{:?} {} {:?}",
             peek1,
-            "==".style(good),
+            if eq_result { "==" } else { "!=" }.yellow(),
             peek2,
-            eq_result
         );
         eprintln!("Equality:  {}", eq_str);
     }
 
     // Test ordering
     if let Some(cmp_result) = peek1.as_value().cmp(&peek2.as_value()) {
-        let cmp_str = format!(
-            "{:?} {} {:?} is {:?}",
-            peek1,
-            "cmp".style(good),
-            peek2,
-            cmp_result
-        );
+        let cmp_symbol = match cmp_result {
+            Ordering::Less => "<",
+            Ordering::Equal => "==",
+            Ordering::Greater => ">",
+        };
+        let cmp_str = format!("{:?} {} {:?}", peek1, cmp_symbol.yellow(), peek2,);
         eprintln!("Ordering:  {}", cmp_str);
     }
 
@@ -133,6 +132,15 @@ fn test_vecs() {
         vec!["hello".to_string(), "world".to_string()],
         vec!["foo".to_string(), "bar".to_string()],
     );
+
+    // Two pairs of equal Vecs
+    let vec1 = vec![1, 2, 3];
+    let vec2 = vec![1, 2, 3];
+    test_peek_pair(vec1, vec2);
+
+    let vec3 = vec!["hello".to_string(), "world".to_string()];
+    let vec4 = vec!["hello".to_string(), "world".to_string()];
+    test_peek_pair(vec3, vec4);
 }
 
 #[test]
@@ -149,6 +157,17 @@ fn test_hashmaps() {
     map2.insert("key4".to_string(), 200);
 
     test_peek_pair(map1, map2);
+
+    // Two pairs of equal HashMaps
+    let mut map3 = HashMap::new();
+    map3.insert("key1".to_string(), 10);
+    map3.insert("key2".to_string(), 20);
+
+    let mut map4 = HashMap::new();
+    map4.insert("key1".to_string(), 10);
+    map4.insert("key2".to_string(), 20);
+
+    test_peek_pair(map3, map4);
 }
 
 #[test]
