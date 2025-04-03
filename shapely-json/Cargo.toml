@@ -14,3 +14,9 @@ rust-version.workspace = true
 
 [dependencies]
 shapely = { workspace = true }
+
+[dev-dependencies]
+color-backtrace = { version = "0.7.0", default-features = false, features = [
+    "use-btparse-crate",
+] }
+ctor = "0.4.1"

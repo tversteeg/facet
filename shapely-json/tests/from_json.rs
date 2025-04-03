@@ -1,6 +1,13 @@
+use ctor::ctor;
+
+#[ctor]
+fn init_backtrace() {
+    color_backtrace::install();
+}
+
 use shapely::{Poke, Shapely};
 
-use crate::from_json;
+use shapely_json::from_json;
 
 #[test]
 fn test_from_json() {
