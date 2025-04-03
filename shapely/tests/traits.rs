@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use owo_colors::{OwoColorize, Style};
-use shapely::{Peek, Shapely};
+use shapely::{Peek, Poke, Shapely};
 
 fn test_peek_pair<T>(val1: T, val2: T)
 where
@@ -62,6 +62,21 @@ where
         None => "unsupported!".style(bad).to_string(),
     };
     eprintln!("Ordering:  {}", cmp_str);
+
+    // Test default_in_place
+    let (poke, guard) = Poke::alloc::<T>();
+    match poke {
+        Poke::Scalar(scalar) => {
+            if let Ok(value) = scalar.default_in_place() {
+                let peek = unsafe { Peek::unchecked_new(value.as_const(), T::SHAPE) };
+                eprintln!("Default in place gave us: {:?}", peek.blue());
+                drop(guard);
+            }
+        }
+        _ => {
+            // meh
+        }
+    }
 }
 
 #[test]

@@ -177,7 +177,16 @@ macro_rules! value_vtable {
             } else {
                 None
             },
-            default_in_place: None,
+            default_in_place: if $crate::impls!($type_name: std::default::Default) {
+                Some(|target| {
+                    use $crate::spez::*;
+                    #[allow(invalid_value)]
+                    let dummy_ref: Self = unsafe { std::mem::zeroed() };
+                    Some((&&Spez(&dummy_ref)).spez_default_in_place(target))
+                })
+            } else {
+                None
+            },
             eq: if $crate::impls!($type_name: std::cmp::PartialEq) {
                 Some(|left, right| {
                     use $crate::spez::*;
