@@ -1,6 +1,6 @@
+use crate::value_vtable;
 use crate::*;
 use std::alloc::Layout;
-use crate::value_vtable;
 
 impl Shapely for () {
     const SHAPE: &'static Shape = &const {
