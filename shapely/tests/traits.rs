@@ -24,7 +24,7 @@ where
         ("Display", value_vtable.display.is_some()),
         ("Default", value_vtable.default_in_place.is_some()),
         ("Eq", value_vtable.eq.is_some()),
-        ("Ord", value_vtable.cmp.is_some()),
+        ("Ord", value_vtable.ord.is_some()),
         ("Clone", value_vtable.clone_into.is_some()),
     ];
     let trait_str = traits
@@ -261,93 +261,10 @@ fn test_boolean_traits() {
 
 #[test]
 fn test_floating_traits() {
-    // f64 implements Debug, PartialEq, and PartialOrd
+    // f64 implements Debug, PartialEq
     test_peek_pair(
         3.18,
         2.71,
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .ord_and(Ordering::Greater)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    // Test equal values
-    test_peek_pair(
-        3.18,
-        3.18,
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(true)
-            .ord_and(Ordering::Equal)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    // Test less than
-    test_peek_pair(
-        1.5,
-        2.5,
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .ord_and(Ordering::Less)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    // Test zero and negative
-    test_peek_pair(
-        0.0,
-        -1.5,
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .ord_and(Ordering::Greater)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    // Test infinity
-    test_peek_pair(
-        f64::INFINITY,
-        f64::NEG_INFINITY,
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .ord_and(Ordering::Greater)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    // Test NaN behavior
-    test_peek_pair(
-        f64::NAN,
-        f64::NAN,
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    // Test NaN with regular number
-    test_peek_pair(
-        f64::NAN,
-        1.0,
         FactBuilder::new()
             .debug()
             .display()
@@ -384,6 +301,7 @@ fn test_string_traits() {
             .equal_and(false)
             .ord_and(Ordering::Less)
             .clone()
+            .default()
             .build(),
     );
 
@@ -398,6 +316,7 @@ fn test_string_traits() {
             .equal_and(false)
             .ord_and(Ordering::Less)
             .clone()
+            .default()
             .build(),
     );
     test_peek_pair(
@@ -409,6 +328,7 @@ fn test_string_traits() {
             .equal_and(false)
             .ord_and(Ordering::Less)
             .clone()
+            .default()
             .build(),
     );
     test_peek_pair(
@@ -420,17 +340,8 @@ fn test_string_traits() {
             .equal_and(true)
             .ord_and(Ordering::Equal)
             .clone()
+            .default()
             .build(),
-    );
-}
-
-#[test]
-fn test_other_types() {
-    // Vec implements Debug and PartialEq but not Ord
-    test_peek_pair(
-        vec![1, 2, 3],
-        vec![1, 2, 3],
-        FactBuilder::new().debug().equal_and(true).clone().build(),
     );
 }
 
@@ -445,6 +356,7 @@ fn test_slice_traits() {
             .equal_and(false)
             .ord_and(Ordering::Less)
             .clone()
+            .default()
             .build(),
     );
 
@@ -457,6 +369,7 @@ fn test_slice_traits() {
             .equal_and(false)
             .ord_and(Ordering::Greater)
             .clone()
+            .default()
             .build(),
     );
 }

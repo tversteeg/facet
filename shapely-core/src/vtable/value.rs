@@ -308,8 +308,8 @@ pub struct ValueVTable {
     /// cf. [`EqFn`]
     pub eq: Option<EqFn>,
 
-    /// cf. [`CmpFn`]
-    pub cmp: Option<OrdFn>,
+    /// cf. [`OrdFn`]
+    pub ord: Option<OrdFn>,
 
     /// cf. [`HashFn`]
     pub hash: Option<HashFn>,

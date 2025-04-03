@@ -63,13 +63,13 @@ where
                 } else {
                     None
                 },
-                cmp: if T::SHAPE.vtable.cmp.is_some() {
+                ord: if T::SHAPE.vtable.ord.is_some() {
                     Some(|a, b| {
                         let a = unsafe { a.as_ref::<&[T]>() };
                         let b = unsafe { b.as_ref::<&[T]>() };
                         for (x, y) in a.iter().zip(b.iter()) {
                             let cmp = unsafe {
-                                (T::SHAPE.vtable.cmp.unwrap_unchecked())(
+                                (T::SHAPE.vtable.ord.unwrap_unchecked())(
                                     OpaqueConst::from_ref(x),
                                     OpaqueConst::from_ref(y),
                                 )
@@ -106,7 +106,7 @@ where
                 }),
                 parse: None,
                 try_from: None,
-                default_in_place: None,
+                default_in_place: Some(|ptr| unsafe { Some(ptr.write(&[] as &[T])) }),
                 clone_into: Some(|src, dst| unsafe { Some(dst.write(src.as_ref::<&[T]>())) }),
             },
             def: Def::List(ListDef {

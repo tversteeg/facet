@@ -36,7 +36,7 @@ impl<'mem> PeekValue<'mem> {
         unsafe {
             self.shape
                 .vtable
-                .cmp
+                .ord
                 .map(|cmp_fn| cmp_fn(self.data, other.data))
         }
     }

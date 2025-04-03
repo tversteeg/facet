@@ -61,7 +61,6 @@ where
                         let a = a.as_ref::<HashMap<K, V>>();
                         let b = b.as_ref::<HashMap<K, V>>();
 
-                        let k_eq = K::SHAPE.vtable.eq.unwrap_unchecked();
                         let v_eq = V::SHAPE.vtable.eq.unwrap_unchecked();
 
                         if a.len() != b.len() {
@@ -85,7 +84,7 @@ where
                     None
                 }
             },
-            cmp: None,
+            ord: None,
             hash: const {
                 if K::SHAPE.vtable.hash.is_some() && V::SHAPE.vtable.hash.is_some() {
                     Some(|value, hasher_this, hasher_write_fn| unsafe {
@@ -94,7 +93,7 @@ where
 
                         let k_hash = K::SHAPE.vtable.hash.unwrap_unchecked();
                         let v_hash = V::SHAPE.vtable.hash.unwrap_unchecked();
-                        let k_cmp = K::SHAPE.vtable.cmp.unwrap_unchecked();
+                        let k_cmp = K::SHAPE.vtable.ord.unwrap_unchecked();
 
                         let mut hasher = HasherProxy::new(hasher_this, hasher_write_fn);
 
@@ -118,9 +117,7 @@ where
             drop_in_place: Some(|value| unsafe {
                 std::ptr::drop_in_place(value.as_mut_ptr::<HashMap<K, V>>());
             }),
-            clone_into: Some(|src, dst| unsafe {
-                Some(dst.write(src.as_ref::<HashMap<K, V>>()))
-            }),
+            clone_into: Some(|src, dst| unsafe { Some(dst.write(src.as_ref::<HashMap<K, V>>())) }),
             parse: None,
             try_from: None,
         },

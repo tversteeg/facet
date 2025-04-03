@@ -65,7 +65,7 @@ where
                     }
                 },
                 // TODO: specialize these
-                cmp: None,
+                ord: None,
                 // TODO: specialize these
                 hash: None,
                 drop_in_place: Some(|value| unsafe {

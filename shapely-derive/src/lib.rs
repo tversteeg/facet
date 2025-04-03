@@ -299,7 +299,7 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                cmp: if shapely_core::impls!(Self: std::cmp::Ord) {{
+                ord: if shapely_core::impls!(Self: std::cmp::Ord) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ left.as_ref::<Self>() }}))
@@ -407,7 +407,7 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                cmp: if shapely_core::impls!(Self: std::cmp::Ord) {{
+                ord: if shapely_core::impls!(Self: std::cmp::Ord) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ left.as_ref::<Self>() }}))
@@ -588,7 +588,7 @@ impl shapely::Shapely for {enum_name} {{
                 }} else {{
                     None
                 }},
-                cmp: if shapely_core::impls!(Self: std::cmp::Ord) {{
+                ord: if shapely_core::impls!(Self: std::cmp::Ord) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ left.as_ref::<Self>() }}))
