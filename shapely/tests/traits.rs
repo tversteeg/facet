@@ -1,146 +1,214 @@
 use std::fmt::Debug;
 
-use owo_colors::OwoColorize;
+use owo_colors::{OwoColorize, Style};
 use shapely::{Peek, Shapely};
 
-#[test]
-fn debug_or_not() {
-    eprintln!("{}", "=================== i32".yellow());
-    let v: i32 = 42;
-    let peek = Peek::new(&v);
-    eprintln!("{}", format!("{peek:?}").green());
+fn test_peek_pair<T>(name: &str, val1: T, val2: T)
+where
+    T: Shapely + 'static,
+{
+    let name = format!("{}", T::SHAPE);
 
-    eprintln!("{}", "=================== Vec<i32>".yellow());
-    let v: Vec<i32> = vec![1, 2, 3];
-    let peek = Peek::new(&v);
-    eprintln!("{}", format!("{peek:?}").blue());
+    eprintln!(
+        "{}",
+        format!("== {name} ==========================").yellow()
+    );
+    let peek1 = Peek::new(&val1);
+    let peek2 = Peek::new(&val2);
 
-    eprintln!("{}", "=================== StructDebugNo".yellow());
-    #[derive(Shapely)]
-    struct StructDebugNo {
-        blah: i32,
-    }
-    let peek = Peek::new(&StructDebugNo { blah: 42 });
-    eprintln!("{}", format!("{peek:?}").red());
+    let good = Style::new().green();
+    let bad = Style::new().red();
 
-    eprintln!("{}", "=================== StructDebugYes".yellow());
-    #[derive(Shapely, Debug)]
-    struct StructDebugYes {
-        blah: i32,
-    }
-    let peek = Peek::new(&StructDebugYes { blah: 42 });
-    eprintln!("{}", format!("{peek:?}").green());
+    // Format debug representation
+    let style1 = if peek1.as_value().shape().vtable.debug.is_some() {
+        good
+    } else {
+        bad
+    };
+    let style2 = if peek2.as_value().shape().vtable.debug.is_some() {
+        good
+    } else {
+        bad
+    };
+    let debug_str = format!("{:?} vs {:?}", peek1.style(style1), peek2.style(style2));
+    eprintln!("Debug:     {}", debug_str);
 
-    eprintln!("{}", "=================== TupleStructDebugNo".yellow());
-    #[derive(Shapely)]
-    struct TupleStructDebugNo(i32, String);
-    let tuple_struct_no = TupleStructDebugNo(42, "Hello".to_string());
-    let peek_no = Peek::new(&tuple_struct_no);
-    eprintln!("{}", format!("{peek_no:?}").red());
+    // Test equality
+    let eq_result = peek1.as_value().eq(&peek2.as_value());
+    let style = if eq_result.is_some() { good } else { bad };
+    let eq_str = match eq_result {
+        Some(result) => format!(
+            "{:?} {} {:?} is {:?}",
+            peek1,
+            "==".style(style),
+            peek2,
+            result
+        ),
+        None => "unsupported!".style(bad).to_string(),
+    };
+    eprintln!("Equality:  {}", eq_str);
 
-    eprintln!("{}", "=================== TupleStructDebugYes".yellow());
-    #[derive(Shapely, Debug)]
-    struct TupleStructDebugYes(i32, String);
-    let tuple_struct_yes = TupleStructDebugYes(42, "Hello".to_string());
-    let peek_yes = Peek::new(&tuple_struct_yes);
-    eprintln!("{}", format!("{peek_yes:?}").green());
-
-    // eprintln!();
-    // eprintln!("{}", "=================== Enum".yellow());
-    // #[derive(Shapely, Debug)]
-    // enum MyEnum {
-    //     Variant1,
-    //     Variant2(i32),
-    //     Variant3 { field: String },
-    // }
-    // let peek1 = Peek::new(&MyEnum::Variant1);
-    // let peek2 = Peek::new(&MyEnum::Variant2(42));
-    // let peek3 = Peek::new(&MyEnum::Variant3 {
-    //     field: "Hello".to_string(),
-    // });
-    // println!("Enum Peek (Variant1): {}", format!("{peek1:?}").green());
-    // println!("Enum Peek (Variant2): {}", format!("{peek2:?}").green());
-    // println!("Enum Peek (Variant3): {}", format!("{peek3:?}").green());
+    // Test ordering
+    let cmp_result = peek1.as_value().cmp(&peek2.as_value());
+    let style = if cmp_result.is_some() { good } else { bad };
+    let cmp_str = match cmp_result {
+        Some(result) => format!(
+            "{:?} {} {:?} is {:?}",
+            peek1,
+            "cmp".style(style),
+            peek2,
+            result
+        ),
+        None => "unsupported!".style(bad).to_string(),
+    };
+    eprintln!("Ordering:  {}", cmp_str);
 }
 
 #[test]
-fn eq_or_not() {
-    eprintln!("{}", "=================== i32 (PartialEq)".yellow());
-    let v1: i32 = 42;
-    let v2: i32 = 42;
-    let peek1 = Peek::new(&v1);
-    let peek2 = Peek::new(&v2);
-    println!(
-        "i32 Equality: {}",
-        format!("{:?}", peek1.as_value().eq(&peek2.as_value())).green()
-    );
+fn test_primitive_types() {
+    // i32 implements Debug, PartialEq, and Ord
+    test_peek_pair("i32", 42, 24);
 
-    eprintln!("{}", "=================== StructEqNo".yellow());
+    // Vec implements Debug and PartialEq but not Ord
+    test_peek_pair("Vec<i32>", vec![1, 2, 3], vec![1, 2, 3]);
+}
+
+#[test]
+fn test_custom_structs() {
+    // Struct with no trait implementations
     #[derive(Shapely)]
-    struct StructEqNo {
-        blah: i32,
+    struct StructNoTraits {
+        value: i32,
     }
-    let s1 = StructEqNo { blah: 42 };
-    let s2 = StructEqNo { blah: 42 };
-    let peek1 = Peek::new(&s1);
-    let peek2 = Peek::new(&s2);
-    println!(
-        "StructEqNo Equality: {}",
-        format!("{:?}", peek1.as_value().eq(&peek2.as_value())).red()
+    test_peek_pair(
+        "StructNoTraits",
+        StructNoTraits { value: 42 },
+        StructNoTraits { value: 24 },
     );
 
-    eprintln!("{}", "=================== StructEqYes".yellow());
+    // Struct with Debug only
+    #[derive(Shapely, Debug)]
+    struct StructDebug {
+        value: i32,
+    }
+    test_peek_pair(
+        "StructDebug",
+        StructDebug { value: 42 },
+        StructDebug { value: 24 },
+    );
+
+    // Struct with Debug and PartialEq
+    #[derive(Shapely, Debug, PartialEq)]
+    struct StructDebugEq {
+        value: i32,
+    }
+    test_peek_pair(
+        "StructDebugEq",
+        StructDebugEq { value: 42 },
+        StructDebugEq { value: 24 },
+    );
+
+    // Struct with all traits
+    #[derive(Shapely, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    struct StructAll {
+        value: i32,
+    }
+    test_peek_pair(
+        "StructAll",
+        StructAll { value: 42 },
+        StructAll { value: 24 },
+    );
+    test_peek_pair(
+        "StructAll",
+        StructAll { value: 10 },
+        StructAll { value: 90 },
+    );
+    test_peek_pair(
+        "StructAll",
+        StructAll { value: 69 },
+        StructAll { value: 69 },
+    );
+}
+
+#[test]
+fn test_tuple_structs() {
+    // Tuple struct with no trait implementations
+    #[derive(Shapely)]
+    struct TupleNoTraits(i32, String);
+    test_peek_pair(
+        "TupleNoTraits",
+        TupleNoTraits(42, "Hello".to_string()),
+        TupleNoTraits(24, "World".to_string()),
+    );
+
+    // Tuple struct with Debug only
+    #[derive(Shapely, Debug)]
+    struct TupleDebug(i32, String);
+    test_peek_pair(
+        "TupleDebug",
+        TupleDebug(42, "Hello".to_string()),
+        TupleDebug(24, "World".to_string()),
+    );
+
+    // Tuple struct with EQ only
     #[derive(Shapely, PartialEq)]
-    struct StructEqYes {
-        blah: i32,
-    }
-    let s1 = StructEqYes { blah: 42 };
-    let s2 = StructEqYes { blah: 42 };
-    let peek1 = Peek::new(&s1);
-    let peek2 = Peek::new(&s2);
-    println!(
-        "StructEqYes Equality: {}",
-        format!("{:?}", peek1.as_value().eq(&peek2.as_value())).green()
+    struct TupleEq(i32, String);
+    test_peek_pair(
+        "TupleEq",
+        TupleEq(42, "Hello".to_string()),
+        TupleEq(24, "World".to_string()),
+    );
+
+    // Tuple struct with all traits
+    #[derive(Shapely, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    struct TupleAll(i32, String);
+    test_peek_pair(
+        "TupleAll",
+        TupleAll(42, "Hello".to_string()),
+        TupleAll(24, "World".to_string()),
     );
 }
 
+// Commented out enum tests for now as they may need special handling
+/*
 #[test]
-fn cmp_or_not() {
-    eprintln!("{}", "=================== i32 (Ord)".yellow());
-    let v1: i32 = 42;
-    let v2: i32 = 24;
-    let peek1 = Peek::new(&v1);
-    let peek2 = Peek::new(&v2);
-    println!(
-        "i32 Comparison: {}",
-        format!("{:?}", peek1.as_value().cmp(&peek2.as_value())).green()
+fn test_enums() {
+    #[derive(Shapely, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    enum TestEnum {
+        Variant1,
+        Variant2(i32),
+        Variant3 { field: String },
+    }
+
+    test_peek_pair(
+        "Enum-Unit",
+        TestEnum::Variant1,
+        TestEnum::Variant1,
+        true,
+        true,
+        true,
     );
 
-    eprintln!("{}", "=================== StructOrdNo".yellow());
-    #[derive(Shapely)]
-    struct StructOrdNo {
-        blah: i32,
-    }
-    let s1 = StructOrdNo { blah: 42 };
-    let s2 = StructOrdNo { blah: 24 };
-    let peek1 = Peek::new(&s1);
-    let peek2 = Peek::new(&s2);
-    println!(
-        "StructOrdNo Comparison: {}",
-        format!("{:?}", peek1.as_value().cmp(&peek2.as_value())).red()
+    test_peek_pair(
+        "Enum-Tuple",
+        TestEnum::Variant2(42),
+        TestEnum::Variant2(24),
+        true,
+        true,
+        true,
     );
 
-    eprintln!("{}", "=================== StructOrdYes".yellow());
-    #[derive(Shapely, PartialOrd, Ord, PartialEq, Eq)]
-    struct StructOrdYes {
-        blah: i32,
-    }
-    let s1 = StructOrdYes { blah: 42 };
-    let s2 = StructOrdYes { blah: 24 };
-    let peek1 = Peek::new(&s1);
-    let peek2 = Peek::new(&s2);
-    println!(
-        "StructOrdYes Comparison: {}",
-        format!("{:?}", peek1.as_value().cmp(&peek2.as_value())).green()
+    test_peek_pair(
+        "Enum-Struct",
+        TestEnum::Variant3 {
+            field: "Hello".to_string(),
+        },
+        TestEnum::Variant3 {
+            field: "World".to_string(),
+        },
+        true,
+        true,
+        true,
     );
 }
+*/

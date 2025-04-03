@@ -152,4 +152,10 @@ impl<'mem> PeekValue<'mem> {
     ) -> std::fmt::Result {
         (self.shape.vtable.type_name)(f, opts)
     }
+
+    /// Returns the shape
+    #[inline(always)]
+    pub const fn shape(&self) -> &'static Shape {
+        self.shape
+    }
 }
