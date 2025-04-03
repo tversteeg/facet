@@ -6,6 +6,7 @@ impl<T0> Shapely for (T0,)
 where
     T0: Shapely,
 {
+    const DUMMY: Self = (T0::DUMMY,);
     const SHAPE: &'static Shape = &const {
         use std::fmt;
 
@@ -48,6 +49,7 @@ where
     T0: Shapely,
     T1: Shapely,
 {
+    const DUMMY: Self = (T0::DUMMY, T1::DUMMY);
     const SHAPE: &'static Shape = &const {
         use std::fmt;
 
@@ -94,6 +96,7 @@ where
     T1: Shapely,
     T2: Shapely,
 {
+    const DUMMY: Self = (T0::DUMMY, T1::DUMMY, T2::DUMMY);
     const SHAPE: &'static Shape = &const {
         use std::fmt;
 
@@ -144,6 +147,7 @@ where
     T2: Shapely,
     T3: Shapely,
 {
+    const DUMMY: Self = (T0::DUMMY, T1::DUMMY, T2::DUMMY, T3::DUMMY);
     const SHAPE: &'static Shape = &const {
         use std::fmt;
 
@@ -198,6 +202,7 @@ where
     T3: Shapely,
     T4: Shapely,
 {
+    const DUMMY: Self = (T0::DUMMY, T1::DUMMY, T2::DUMMY, T3::DUMMY, T4::DUMMY);
     const SHAPE: &'static Shape = &const {
         use std::fmt;
 
@@ -264,6 +269,14 @@ where
     T4: Shapely,
     T5: Shapely,
 {
+    const DUMMY: Self = (
+        T0::DUMMY,
+        T1::DUMMY,
+        T2::DUMMY,
+        T3::DUMMY,
+        T4::DUMMY,
+        T5::DUMMY,
+    );
     const SHAPE: &'static Shape = &const {
         use std::fmt;
 
@@ -341,6 +354,15 @@ where
     T5: Shapely,
     T6: Shapely,
 {
+    const DUMMY: Self = (
+        T0::DUMMY,
+        T1::DUMMY,
+        T2::DUMMY,
+        T3::DUMMY,
+        T4::DUMMY,
+        T5::DUMMY,
+        T6::DUMMY,
+    );
     const SHAPE: &'static Shape = &const {
         use std::fmt;
 
@@ -423,6 +445,16 @@ where
     T6: Shapely,
     T7: Shapely,
 {
+    const DUMMY: Self = (
+        T0::DUMMY,
+        T1::DUMMY,
+        T2::DUMMY,
+        T3::DUMMY,
+        T4::DUMMY,
+        T5::DUMMY,
+        T6::DUMMY,
+        T7::DUMMY,
+    );
     const SHAPE: &'static Shape = &const {
         use std::fmt;
 
@@ -510,6 +542,17 @@ where
     T7: Shapely,
     T8: Shapely,
 {
+    const DUMMY: Self = (
+        T0::DUMMY,
+        T1::DUMMY,
+        T2::DUMMY,
+        T3::DUMMY,
+        T4::DUMMY,
+        T5::DUMMY,
+        T6::DUMMY,
+        T7::DUMMY,
+        T8::DUMMY,
+    );
     const SHAPE: &'static Shape = &const {
         use std::fmt;
 
@@ -602,6 +645,18 @@ where
     T8: Shapely,
     T9: Shapely,
 {
+    const DUMMY: Self = (
+        T0::DUMMY,
+        T1::DUMMY,
+        T2::DUMMY,
+        T3::DUMMY,
+        T4::DUMMY,
+        T5::DUMMY,
+        T6::DUMMY,
+        T7::DUMMY,
+        T8::DUMMY,
+        T9::DUMMY,
+    );
     const SHAPE: &'static Shape = &const {
         use std::fmt;
 
@@ -700,6 +755,19 @@ where
     T9: Shapely,
     T10: Shapely,
 {
+    const DUMMY: Self = (
+        T0::DUMMY,
+        T1::DUMMY,
+        T2::DUMMY,
+        T3::DUMMY,
+        T4::DUMMY,
+        T5::DUMMY,
+        T6::DUMMY,
+        T7::DUMMY,
+        T8::DUMMY,
+        T9::DUMMY,
+        T10::DUMMY,
+    );
     const SHAPE: &'static Shape = &const {
         use std::fmt;
 
@@ -806,6 +874,20 @@ where
     T10: Shapely,
     T11: Shapely,
 {
+    const DUMMY: Self = (
+        T0::DUMMY,
+        T1::DUMMY,
+        T2::DUMMY,
+        T3::DUMMY,
+        T4::DUMMY,
+        T5::DUMMY,
+        T6::DUMMY,
+        T7::DUMMY,
+        T8::DUMMY,
+        T9::DUMMY,
+        T10::DUMMY,
+        T11::DUMMY,
+    );
     const SHAPE: &'static Shape = &const {
         use std::fmt;
 

@@ -99,11 +99,20 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
                 .join(",")
         );
 
+        let dummy = format!(
+            "({},)",
+            (0..n)
+                .map(|i| format!("T{}::DUMMY", i))
+                .collect::<Vec<_>>()
+                .join(",")
+        );
+
         writeln!(
             w,
             r#"
             impl<{type_params}> Shapely for {tuple} where {where_clause}
             {{
+                const DUMMY: Self = {dummy};
                 const SHAPE: &'static Shape = &const {{
                     use std::fmt;
 

@@ -1,21 +1,28 @@
 use std::{
     alloc::Layout,
     collections::{HashMap, VecDeque},
-    hash::Hash,
+    hash::{Hash, RandomState},
 };
 
-use crate::{Def, MapDef, MapIterVTable, MapVTable, OpaqueConst, Shape, Shapely, ValueVTable};
+use crate::{
+    Def, MapDef, MapIterVTable, MapVTable, OpaqueConst, ScalarDef, Shape, Shapely, ValueVTable,
+    value_vtable,
+};
 
 struct HashMapIterator<'mem, K> {
     map: OpaqueConst<'mem>,
     keys: VecDeque<&'mem K>,
 }
 
-impl<K, V> Shapely for HashMap<K, V>
+struct DummyHasher;
+
+impl<K, V, S> Shapely for HashMap<K, V, S>
 where
     K: Shapely + std::cmp::Eq + std::hash::Hash + 'static,
     V: Shapely + 'static,
+    S: Shapely + Default,
 {
+    const DUMMY: Self = HashMap::with_hasher(S::DUMMY);
     const SHAPE: &'static Shape = &Shape {
         layout: Layout::new::<HashMap<K, V>>(),
         vtable: &ValueVTable {
@@ -126,7 +133,7 @@ where
             v: V::SHAPE,
             vtable: &MapVTable {
                 init_in_place_with_capacity: |uninit, capacity| unsafe {
-                    Ok(uninit.write(Self::with_capacity(capacity)))
+                    Ok(uninit.write(Self::with_capacity_and_hasher(capacity, S::default())))
                 },
                 insert: |ptr, key, value| unsafe {
                     let map = ptr.as_mut_ptr::<HashMap<K, V>>();
@@ -176,5 +183,21 @@ where
                 },
             },
         }),
+    };
+}
+
+struct RandomStateInnards {
+    k0: u64,
+    k1: u64,
+}
+
+impl Shapely for RandomState {
+    const DUMMY: Self = unsafe { std::mem::transmute(RandomStateInnards { k0: 0, k1: 0 }) };
+    const SHAPE: &'static Shape = &const {
+        Shape {
+            layout: Layout::new::<Self>(),
+            def: Def::Scalar(ScalarDef::of::<Self>()),
+            vtable: value_vtable!((), |f, _opts| write!(f, "RandomState")),
+        }
     };
 }

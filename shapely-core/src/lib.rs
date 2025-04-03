@@ -40,8 +40,13 @@ mod tests;
 /// Allows querying the [Shape] of a type, which in turn lets us inspect any fields, build a value of
 /// this type progressively, etc.
 pub trait Shapely: Sized {
-    /// Returns the shape function of this type
+    /// The shape of this type
     const SHAPE: &'static Shape;
+
+    /// An instance of this type — which doesn't have to be valid, but it has to
+    /// "not be UB". We never actually read from it, or even actually use it for
+    /// dynamic dispatch, we only use it for inference tricks.
+    const DUMMY: Self;
 
     /// Returns true if the type of `self` is equal to the type of `other`
     fn type_eq<Other: Shapely>() -> bool {

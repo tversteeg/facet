@@ -5,6 +5,7 @@ impl<T> Shapely for Vec<T>
 where
     T: Shapely,
 {
+    const DUMMY: Self = Vec::new(); // oh this is const, fantastic
     const SHAPE: &'static Shape = &const {
         Shape {
             layout: Layout::new::<Vec<T>>(),

@@ -4,6 +4,7 @@ use std::alloc::Layout;
 use std::borrow::Cow;
 
 impl Shapely for () {
+    const DUMMY: Self = ();
     const SHAPE: &'static Shape = &const {
         Shape {
             layout: Layout::new::<Self>(),
@@ -14,6 +15,7 @@ impl Shapely for () {
 }
 
 impl Shapely for String {
+    const DUMMY: Self = String::new();
     const SHAPE: &'static Shape = &Shape {
         layout: Layout::new::<Self>(),
         def: Def::Scalar(ScalarDef::of::<Self>()),
@@ -22,6 +24,7 @@ impl Shapely for String {
 }
 
 impl Shapely for &str {
+    const DUMMY: Self = "";
     const SHAPE: &'static Shape = &Shape {
         layout: Layout::new::<Self>(),
         def: Def::Scalar(ScalarDef::of::<Self>()),
@@ -30,6 +33,7 @@ impl Shapely for &str {
 }
 
 impl Shapely for Cow<'_, str> {
+    const DUMMY: Self = Cow::Borrowed("");
     const SHAPE: &'static Shape = &Shape {
         layout: Layout::new::<Self>(),
         def: Def::Scalar(ScalarDef::of::<Self>()),
@@ -38,6 +42,7 @@ impl Shapely for Cow<'_, str> {
 }
 
 impl Shapely for bool {
+    const DUMMY: Self = false;
     const SHAPE: &'static Shape = &Shape {
         layout: Layout::new::<Self>(),
         def: Def::Scalar(ScalarDef::of::<Self>()),
@@ -48,6 +53,7 @@ impl Shapely for bool {
 macro_rules! impl_shapely_for_integer {
     ($type:ty) => {
         impl Shapely for $type {
+            const DUMMY: Self = 0;
             const SHAPE: &'static Shape = &Shape {
                 layout: Layout::new::<Self>(),
                 def: Def::Scalar(ScalarDef::of::<Self>()),
@@ -71,6 +77,7 @@ impl_shapely_for_integer!(i128);
 macro_rules! impl_shapely_for_float {
     ($type:ty) => {
         impl Shapely for $type {
+            const DUMMY: Self = 0.0;
             const SHAPE: &'static Shape = &Shape {
                 layout: Layout::new::<Self>(),
                 def: Def::Scalar(ScalarDef::of::<Self>()),

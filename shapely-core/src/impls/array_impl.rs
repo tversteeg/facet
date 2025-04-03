@@ -5,6 +5,7 @@ impl<T> Shapely for [T; 1]
 where
     T: Shapely,
 {
+    const DUMMY: Self = [T::DUMMY; 1];
     const SHAPE: &'static Shape = &const {
         Shape {
             layout: Layout::new::<[T; 1]>(),
