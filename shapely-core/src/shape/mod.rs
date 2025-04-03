@@ -21,6 +21,18 @@ pub struct Shape {
     pub def: Def,
 }
 
+impl Shape {
+    /// Create a new shape for a type
+    pub fn of_type<T: Shapely>() -> &'static Self {
+        T::SHAPE
+    }
+
+    /// Create a new shape for a type
+    pub fn of_val<T: Shapely>(_: &T) -> &'static Self {
+        T::SHAPE
+    }
+}
+
 impl PartialEq for Shape {
     fn eq(&self, other: &Self) -> bool {
         self.def == other.def && self.layout == other.layout
