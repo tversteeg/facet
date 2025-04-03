@@ -91,17 +91,57 @@ fn vec_can_be_debug_or_not() {
     let peek = Peek::new(&v);
     println!("Vector Peek: {}", format!("{peek:#?}").blue());
 
+    eprintln!();
+    eprintln!("{}", "=================== StructDebugNo".yellow());
     #[derive(Shapely)]
-    struct NotDebug {
+    struct StructDebugNo {
         blah: i32,
     }
-    let peek = Peek::new(&NotDebug { blah: 42 });
-    println!("NotDebug Peek: {}", format!("{peek:#?}").red());
+    let peek = Peek::new(&StructDebugNo { blah: 42 });
+    println!("StructDebugNo Peek: {}", format!("{peek:#?}").red());
 
+    eprintln!();
+    eprintln!("{}", "=================== StructDebugYes".yellow());
     #[derive(Shapely, Debug)]
-    struct YesDebug {
+    struct StructDebugYes {
         blah: i32,
     }
-    let peek = Peek::new(&YesDebug { blah: 42 });
-    println!("YesDebug Peek: {}", format!("{peek:#?}").green());
+    let peek = Peek::new(&StructDebugYes { blah: 42 });
+    println!("StructDebugYes Peek: {}", format!("{peek:#?}").green());
+
+    eprintln!();
+    eprintln!("{}", "=================== TupleStructDebugNo".yellow());
+    #[derive(Shapely)]
+    struct TupleStructDebugNo(i32, String);
+    let tuple_struct_no = TupleStructDebugNo(42, "Hello".to_string());
+    let peek_no = Peek::new(&tuple_struct_no);
+    println!("TupleStructDebugNo Peek: {}", format!("{peek_no:#?}").red());
+
+    eprintln!();
+    eprintln!("{}", "=================== TupleStructDebugYes".yellow());
+    #[derive(Shapely, Debug)]
+    struct TupleStructDebugYes(i32, String);
+    let tuple_struct_yes = TupleStructDebugYes(42, "Hello".to_string());
+    let peek_yes = Peek::new(&tuple_struct_yes);
+    println!(
+        "TupleStructDebugYes Peek: {}",
+        format!("{peek_yes:#?}").green()
+    );
+
+    // eprintln!();
+    // eprintln!("{}", "=================== Enum".yellow());
+    // #[derive(Shapely, Debug)]
+    // enum MyEnum {
+    //     Variant1,
+    //     Variant2(i32),
+    //     Variant3 { field: String },
+    // }
+    // let peek1 = Peek::new(&MyEnum::Variant1);
+    // let peek2 = Peek::new(&MyEnum::Variant2(42));
+    // let peek3 = Peek::new(&MyEnum::Variant3 {
+    //     field: "Hello".to_string(),
+    // });
+    // println!("Enum Peek (Variant1): {}", format!("{peek1:#?}").green());
+    // println!("Enum Peek (Variant2): {}", format!("{peek2:#?}").green());
+    // println!("Enum Peek (Variant3): {}", format!("{peek3:#?}").green());
 }

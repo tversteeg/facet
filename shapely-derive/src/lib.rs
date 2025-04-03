@@ -257,10 +257,16 @@ impl shapely::Shapely for {struct_name} {{
             layout: std::alloc::Layout::new::<Self>(),
             vtable: &shapely::ValueVTable {{
                 type_name: |f, _opts| std::fmt::Write::write_str(f, "{struct_name}"),
-                display: None,
+                display: if shapely_core::impls!(Self: std::fmt::Display) {{
+                    Some(|data, f| {{
+                        use shapely::spez::*;
+                        (&&Spez(unsafe {{ data.as_ref::<Self>() }})).spez_display(f)
+                    }})
+                }} else {{
+                    None
+                }},
                 debug: if shapely_core::impls!(Self: std::fmt::Debug) {{
                     Some(|data, f| {{
-                        // we need all the traits in scope
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ data.as_ref::<Self>() }})).spez_debug(f)
                     }})
@@ -318,8 +324,22 @@ impl shapely::Shapely for {struct_name} {{
             layout: std::alloc::Layout::new::<Self>(),
             vtable: &shapely::ValueVTable {{
                 type_name: |f, _opts| std::fmt::Write::write_str(f, "{struct_name}"),
-                display: None,
-                debug: None,
+                display: if shapely_core::impls!(Self: std::fmt::Display) {{
+                    Some(|data, f| {{
+                        use shapely::spez::*;
+                        (&&Spez(unsafe {{ data.as_ref::<Self>() }})).spez_display(f)
+                    }})
+                }} else {{
+                    None
+                }},
+                debug: if shapely_core::impls!(Self: std::fmt::Debug) {{
+                    Some(|data, f| {{
+                        use shapely::spez::*;
+                        (&&Spez(unsafe {{ data.as_ref::<Self>() }})).spez_debug(f)
+                    }})
+                }} else {{
+                    None
+                }},
                 default_in_place: None,
                 eq: None,
                 cmp: None,
@@ -444,8 +464,22 @@ impl shapely::Shapely for {enum_name} {{
             layout: std::alloc::Layout::new::<Self>(),
             vtable: &shapely::ValueVTable {{
                 type_name: |f, _opts| std::fmt::Write::write_str(f, "{enum_name}"),
-                display: None,
-                debug: None,
+                display: if shapely_core::impls!(Self: std::fmt::Display) {{
+                    Some(|data, f| {{
+                        use shapely::spez::*;
+                        (&&Spez(unsafe {{ data.as_ref::<Self>() }})).spez_display(f)
+                    }})
+                }} else {{
+                    None
+                }},
+                debug: if shapely_core::impls!(Self: std::fmt::Debug) {{
+                    Some(|data, f| {{
+                        use shapely::spez::*;
+                        (&&Spez(unsafe {{ data.as_ref::<Self>() }})).spez_debug(f)
+                    }})
+                }} else {{
+                    None
+                }},
                 default_in_place: None,
                 eq: None,
                 cmp: None,

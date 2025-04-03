@@ -25,10 +25,10 @@ impl<T: Debug> SpezDebugYes for &Spez<T> {
 }
 
 pub trait SpezDebugNo {
-    fn spez_debug(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error>;
+    fn spez_debug(&self, _f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error>;
 }
 impl<T> SpezDebugNo for Spez<T> {
-    fn spez_debug(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+    fn spez_debug(&self, _f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         unreachable!()
     }
 }
@@ -47,10 +47,10 @@ impl<T: fmt::Display> SpezDisplayYes for &Spez<T> {
 }
 
 pub trait SpezDisplayNo {
-    fn spez_display(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error>;
+    fn spez_display(&self, _f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error>;
 }
 impl<T> SpezDisplayNo for Spez<T> {
-    fn spez_display(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+    fn spez_display(&self, _f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         unreachable!()
     }
 }
@@ -69,10 +69,10 @@ impl<T: Default> SpezDefaultInPlaceYes for Spez<T> {
 }
 
 pub trait SpezDefaultInPlaceNo {
-    fn spez_default_in_place(&self, target: OpaqueUninit);
+    fn spez_default_in_place(&self, _target: OpaqueUninit);
 }
 impl<T> SpezDefaultInPlaceNo for Spez<T> {
-    fn spez_default_in_place(&self, target: OpaqueUninit) {
+    fn spez_default_in_place(&self, _target: OpaqueUninit) {
         unreachable!()
     }
 }
@@ -81,26 +81,29 @@ impl<T> SpezDefaultInPlaceNo for Spez<T> {
 // Parse
 ////////////////////////////////////////////////////////////////////////////////////////
 
+#[derive(Debug)]
+pub struct ParseError;
+
 pub trait SpezParseYes {
-    fn spez_parse(&self, s: &str, target: OpaqueUninit) -> Result<(), ()>;
+    fn spez_parse(&self, s: &str, target: OpaqueUninit) -> Result<(), ParseError>;
 }
 impl<T: core::str::FromStr> SpezParseYes for Spez<T> {
-    fn spez_parse(&self, s: &str, target: OpaqueUninit) -> Result<(), ()> {
+    fn spez_parse(&self, s: &str, target: OpaqueUninit) -> Result<(), ParseError> {
         match <T as core::str::FromStr>::from_str(s) {
             Ok(value) => {
                 unsafe { target.write(value) };
                 Ok(())
             }
-            Err(_) => Err(()),
+            Err(_) => Err(ParseError),
         }
     }
 }
 
 pub trait SpezParseNo {
-    fn spez_parse(&self, s: &str, target: OpaqueUninit) -> Result<(), ()>;
+    fn spez_parse(&self, _s: &str, _target: OpaqueUninit) -> Result<(), ParseError>;
 }
 impl<T> SpezParseNo for Spez<T> {
-    fn spez_parse(&self, _s: &str, _target: OpaqueUninit) -> Result<(), ()> {
+    fn spez_parse(&self, _s: &str, _target: OpaqueUninit) -> Result<(), ParseError> {
         unreachable!()
     }
 }

@@ -70,6 +70,13 @@ impl TypeNameOpts {
 pub type DisplayFn =
     for<'mem> unsafe fn(value: OpaqueConst<'mem>, f: &mut std::fmt::Formatter) -> std::fmt::Result;
 
+pub const fn display_fn_for<T: std::fmt::Display>() -> DisplayFn {
+    |value: OpaqueConst<'_>, f: &mut std::fmt::Formatter| -> std::fmt::Result {
+        let val = unsafe { value.as_ref::<T>() };
+        write!(f, "{val}")
+    }
+}
+
 /// Function to format a value for debug.
 /// If this returns None, the shape did not implement Debug.
 ///
