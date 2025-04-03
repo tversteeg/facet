@@ -75,9 +75,7 @@ where
                 // TODO: specialize these
                 try_from: None,
                 default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
-                clone_in_place: Some(|src, dst| unsafe {
-                    Some(dst.write(src.as_ref::<Vec<T>>()))
-                }),
+                clone_in_place: Some(|src, dst| unsafe { Some(dst.write(src.as_ref::<Vec<T>>())) }),
             },
             def: Def::List(ListDef {
                 vtable: &ListVTable {

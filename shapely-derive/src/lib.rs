@@ -274,15 +274,18 @@ impl shapely::Shapely for {struct_name} {{
                     None
                 }},
                 default_in_place: if shapely_core::impls!(Self: std::default::Default) {{
-                    Some(|data| unsafe {{
-                        Some(data.write(<Self as std::default::Default>::default()))
+                    Some(|target| {{
+                        use shapely::spez::*;
+                        let dummy_val: std::mem::MaybeUninit<Self> = std::mem::MaybeUninit::zeroed();
+                        Some((&&Spez(unsafe {{ dummy_val.assume_init() }})).spez_default_in_place(target))
                     }})
                 }} else {{
                     None
                 }},
                 clone_in_place: if shapely_core::impls!(Self: std::clone::Clone) {{
-                    Some(|src, dst| unsafe {{
-                        Some(dst.write(<Self as std::clone::Clone>::clone(src.as_ref::<Self>())))
+                    Some(|src, dst| {{
+                        use shapely::spez::*;
+                        Some((&&Spez(unsafe {{ src.as_ref::<Self>() }})).spez_clone_in_place(dst))
                     }})
                 }} else {{
                     None
@@ -379,15 +382,18 @@ impl shapely::Shapely for {struct_name} {{
                     None
                 }},
                 default_in_place: if shapely_core::impls!(Self: std::default::Default) {{
-                    Some(|data| unsafe {{
-                        Some(data.write(<Self as std::default::Default>::default()))
+                    Some(|target| {{
+                        use shapely::spez::*;
+                        let dummy_val: std::mem::MaybeUninit<Self> = std::mem::MaybeUninit::zeroed();
+                        Some((&&Spez(unsafe {{ dummy_val.assume_init() }})).spez_default_in_place(target))
                     }})
                 }} else {{
                     None
                 }},
                 clone_in_place: if shapely_core::impls!(Self: std::clone::Clone) {{
-                    Some(|src, dst| unsafe {{
-                        Some(dst.write(<Self as std::clone::Clone>::clone(src.as_ref::<Self>())))
+                    Some(|src, dst| {{
+                        use shapely::spez::*;
+                        Some((&&Spez(unsafe {{ src.as_ref::<Self>() }})).spez_clone_in_place(dst))
                     }})
                 }} else {{
                     None
@@ -557,15 +563,18 @@ impl shapely::Shapely for {enum_name} {{
                     None
                 }},
                 default_in_place: if shapely_core::impls!(Self: std::default::Default) {{
-                    Some(|data| unsafe {{
-                        Some(data.write(<Self as std::default::Default>::default()))
+                    Some(|target| {{
+                        use shapely::spez::*;
+                        let dummy_val: std::mem::MaybeUninit<Self> = std::mem::MaybeUninit::zeroed();
+                        Some((&&Spez(unsafe {{ dummy_val.assume_init() }})).spez_default_in_place(target))
                     }})
                 }} else {{
                     None
                 }},
                 clone_in_place: if shapely_core::impls!(Self: std::clone::Clone) {{
-                    Some(|src, dst| unsafe {{
-                        Some(dst.write(<Self as std::clone::Clone>::clone(src.as_ref::<Self>())))
+                    Some(|src, dst| {{
+                        use shapely::spez::*;
+                        Some((&&Spez(unsafe {{ src.as_ref::<Self>() }})).spez_clone_in_place(dst))
                     }})
                 }} else {{
                     None
