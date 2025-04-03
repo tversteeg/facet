@@ -2,7 +2,7 @@ use crate::{MapDef, MapVTable, Opaque, OpaqueConst, OpaqueUninit, PokeValue, Sha
 
 /// Allows initializing an uninitialized map
 pub struct PokeMapUninit<'mem> {
-    data: OpaqueUninit<'mem>,
+    pub(crate) data: OpaqueUninit<'mem>,
     pub(crate) shape: &'static Shape,
     def: MapDef,
 }

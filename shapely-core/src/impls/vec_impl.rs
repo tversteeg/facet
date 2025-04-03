@@ -1,11 +1,11 @@
+use crate::*;
 use std::alloc::Layout;
-
-use crate::{Def, ListDef, ListVTable, OpaqueConst, Shape, Shapely, ValueVTable};
 
 impl<T> Shapely for Vec<T>
 where
     T: Shapely,
 {
+    const DUMMY: Self = Vec::new(); // oh this is const, fantastic
     const SHAPE: &'static Shape = &const {
         Shape {
             layout: Layout::new::<Vec<T>>(),
@@ -19,12 +19,13 @@ where
                         write!(f, "Vec<⋯>")
                     }
                 },
+                // vecs don't have display in the shapeless cinematic universe
                 display: None,
                 debug: const {
                     if T::SHAPE.vtable.debug.is_some() {
                         Some(|value, f| {
                             let value = unsafe { value.as_ref::<Vec<T>>() };
-                            write!(f, "vec![")?;
+                            write!(f, "[")?;
                             for (i, item) in value.iter().enumerate() {
                                 if i > 0 {
                                     write!(f, ", ")?;
@@ -42,10 +43,30 @@ where
                         None
                     }
                 },
+                eq: const {
+                    if T::SHAPE.vtable.eq.is_some() {
+                        Some(|a, b| unsafe {
+                            let a = a.as_ref::<Vec<T>>();
+                            let b = b.as_ref::<Vec<T>>();
+                            if a.len() != b.len() {
+                                return false;
+                            }
+                            for (item_a, item_b) in a.iter().zip(b.iter()) {
+                                if !(T::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::from_ref(item_a),
+                                    OpaqueConst::from_ref(item_b),
+                                ) {
+                                    return false;
+                                }
+                            }
+                            true
+                        })
+                    } else {
+                        None
+                    }
+                },
                 // TODO: specialize these
-                eq: None,
-                // TODO: specialize these
-                cmp: None,
+                ord: None,
                 // TODO: specialize these
                 hash: None,
                 drop_in_place: Some(|value| unsafe {
@@ -55,6 +76,7 @@ where
                 // TODO: specialize these
                 try_from: None,
                 default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
+                clone_into: Some(|src, dst| unsafe { Some(dst.write(src.as_ref::<Vec<T>>())) }),
             },
             def: Def::List(ListDef {
                 vtable: &ListVTable {

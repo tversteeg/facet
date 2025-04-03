@@ -1,5 +1,7 @@
 use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek, Shape, ShapeDebug, ValueVTable};
 
+use super::Poke;
+
 /// Lets you write to a value (implements write-only [`ValueVTable`] proxies)
 pub struct PokeValue<'mem> {
     data: OpaqueUninit<'mem>,
@@ -96,5 +98,26 @@ impl<'mem> PokeValue<'mem> {
         } else {
             Err(self)
         }
+    }
+
+    /// Attempts to clone `source` into this value
+    ///
+    /// Returns `Ok(Peek)` if cloning was successful, `Err(Self)` otherwise.
+    pub fn clone_from<'src>(self, source: Peek<'src>) -> Result<Peek<'mem>, Self> {
+        if let Some(cloned_val) = self
+            .vtable()
+            .clone_into
+            .and_then(|clone_fn| unsafe { clone_fn(source.as_value().data, self.data) })
+        {
+            // Safe because the function will initialize our data if it returns Some
+            Ok(unsafe { Peek::unchecked_new(cloned_val.as_const(), self.shape) })
+        } else {
+            Err(self)
+        }
+    }
+
+    /// Unwrap back into a poke
+    pub fn unwrap(self) -> Poke<'mem> {
+        unsafe { Poke::from_opaque_uninit(self.data, self.shape) }
     }
 }

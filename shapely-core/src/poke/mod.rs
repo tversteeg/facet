@@ -45,7 +45,6 @@ pub struct Guard {
 impl Drop for Guard {
     fn drop(&mut self) {
         unsafe {
-            eprintln!("Dropping guard for shape: {}", self.shape);
             std::alloc::dealloc(self.ptr, self.layout);
         }
     }
@@ -136,6 +135,17 @@ impl<'mem> Poke<'mem> {
         match self {
             Poke::Enum(e) => e,
             _ => panic!("expected Enum variant"),
+        }
+    }
+
+    /// Converts into a value, so we can manipulate it
+    pub fn into_value(self) -> PokeValue<'mem> {
+        match self {
+            Poke::Scalar(s) => s,
+            Poke::List(l) => unsafe { PokeValue::new(l.data, l.shape) },
+            Poke::Map(m) => unsafe { PokeValue::new(m.data, m.shape) },
+            Poke::Struct(s) => unsafe { PokeValue::new(s.data, s.shape) },
+            Poke::Enum(e) => unsafe { PokeValue::new(e.data, e.shape) },
         }
     }
 

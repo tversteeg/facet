@@ -7,7 +7,7 @@
 
 use core::fmt::{self, Debug};
 
-use crate::OpaqueUninit;
+use crate::{Opaque, OpaqueUninit};
 
 pub struct Spez<T>(pub T);
 
@@ -60,19 +60,41 @@ impl<T> SpezDisplayNo for Spez<T> {
 ////////////////////////////////////////////////////////////////////////////////////////
 
 pub trait SpezDefaultInPlaceYes {
-    fn spez_default_in_place(&self, target: OpaqueUninit);
+    fn spez_default_in_place<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem>;
 }
-impl<T: Default> SpezDefaultInPlaceYes for Spez<T> {
-    fn spez_default_in_place(&self, target: OpaqueUninit) {
-        unsafe { target.write(<T as Default>::default()) };
+impl<T: Default> SpezDefaultInPlaceYes for &Spez<T> {
+    fn spez_default_in_place<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem> {
+        unsafe { target.write(<T as Default>::default()) }
     }
 }
 
 pub trait SpezDefaultInPlaceNo {
-    fn spez_default_in_place(&self, _target: OpaqueUninit);
+    fn spez_default_in_place<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem>;
 }
 impl<T> SpezDefaultInPlaceNo for Spez<T> {
-    fn spez_default_in_place(&self, _target: OpaqueUninit) {
+    fn spez_default_in_place<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem> {
+        unreachable!()
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+// Clone into
+////////////////////////////////////////////////////////////////////////////////////////
+
+pub trait SpezCloneIntoYes {
+    fn spez_clone_into<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem>;
+}
+impl<T: Clone> SpezCloneIntoYes for &Spez<T> {
+    fn spez_clone_into<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem> {
+        unsafe { target.write(self.0.clone()) }
+    }
+}
+
+pub trait SpezCloneIntoNo {
+    fn spez_clone_into<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem>;
+}
+impl<T> SpezCloneIntoNo for Spez<T> {
+    fn spez_clone_into<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem> {
         unreachable!()
     }
 }

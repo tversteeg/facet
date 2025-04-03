@@ -36,7 +36,7 @@ impl<'mem> PeekValue<'mem> {
         unsafe {
             self.shape
                 .vtable
-                .cmp
+                .ord
                 .map(|cmp_fn| cmp_fn(self.data, other.data))
         }
     }
@@ -151,5 +151,11 @@ impl<'mem> PeekValue<'mem> {
         opts: TypeNameOpts,
     ) -> std::fmt::Result {
         (self.shape.vtable.type_name)(f, opts)
+    }
+
+    /// Returns the shape
+    #[inline(always)]
+    pub const fn shape(&self) -> &'static Shape {
+        self.shape
     }
 }

@@ -71,11 +71,13 @@ pub type DisplayFn =
     for<'mem> unsafe fn(value: OpaqueConst<'mem>, f: &mut std::fmt::Formatter) -> std::fmt::Result;
 
 /// Generates a [`DisplayFn`] for a concrete type
-pub const fn display_fn_for<T: std::fmt::Display>() -> DisplayFn {
-    |value: OpaqueConst<'_>, f: &mut std::fmt::Formatter| -> std::fmt::Result {
-        let val = unsafe { value.as_ref::<T>() };
-        write!(f, "{val}")
-    }
+pub const fn display_fn_for<T: std::fmt::Display>() -> Option<DisplayFn> {
+    Some(
+        |value: OpaqueConst<'_>, f: &mut std::fmt::Formatter| -> std::fmt::Result {
+            let val = unsafe { value.as_ref::<T>() };
+            write!(f, "{val}")
+        },
+    )
 }
 
 /// Function to format a value for debug.
@@ -88,11 +90,13 @@ pub type DebugFn =
     for<'mem> unsafe fn(value: OpaqueConst<'mem>, f: &mut std::fmt::Formatter) -> std::fmt::Result;
 
 /// Generates a [`DebugFn`] for a concrete type
-pub const fn debug_fn_for<T: std::fmt::Debug>() -> DebugFn {
-    |value: OpaqueConst<'_>, f: &mut std::fmt::Formatter| -> std::fmt::Result {
-        let val = unsafe { value.as_ref::<T>() };
-        write!(f, "{val:?}")
-    }
+pub const fn debug_fn_for<T: std::fmt::Debug>() -> Option<DebugFn> {
+    Some(
+        |value: OpaqueConst<'_>, f: &mut std::fmt::Formatter| -> std::fmt::Result {
+            let val = unsafe { value.as_ref::<T>() };
+            write!(f, "{val:?}")
+        },
+    )
 }
 
 /// Function to set a value to its default in-place
@@ -104,6 +108,11 @@ pub const fn debug_fn_for<T: std::fmt::Debug>() -> DebugFn {
 /// same pointer wrapped in an [`Opaque`].
 pub type DefaultInPlaceFn = for<'mem> unsafe fn(target: OpaqueUninit<'mem>) -> Option<Opaque<'mem>>;
 
+/// Generates a [`DefaultInPlaceFn`] for a concrete type
+pub const fn default_in_place_fn_for<T: Default>() -> Option<DefaultInPlaceFn> {
+    Some(|target: OpaqueUninit<'_>| unsafe { Some(target.write(T::default())) })
+}
+
 /// Function to parse a value from a string.
 ///
 /// If both [`DisplayFn`] and [`ParseFn`] are set, we should be able to round-trip the value.
@@ -114,6 +123,16 @@ pub type DefaultInPlaceFn = for<'mem> unsafe fn(target: OpaqueUninit<'mem>) -> O
 /// uninitialized memory. If this function succeeds, it should return `Some` with the
 /// same pointer wrapped in an [`Opaque`].
 pub type ParseFn = for<'mem> unsafe fn(s: &str, target: OpaqueUninit<'mem>) -> Option<Opaque<'mem>>;
+
+/// Generates a [`ParseFn`] for a concrete type
+pub const fn parse_fn_for<T: std::str::FromStr>() -> Option<ParseFn> {
+    Some(|s: &str, target: OpaqueUninit<'_>| unsafe {
+        match s.parse::<T>() {
+            Ok(value) => Some(target.write(value)),
+            Err(_) => None,
+        }
+    })
+}
 
 /// Function to try converting from another type
 ///
@@ -134,12 +153,33 @@ pub type TryFromFn = for<'src, 'mem> unsafe fn(
 /// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
 pub type EqFn = for<'l, 'r> unsafe fn(left: OpaqueConst<'l>, right: OpaqueConst<'r>) -> bool;
 
+/// Generates an [`EqFn`] for a concrete type
+pub const fn eq_fn_for<T: Eq>() -> Option<EqFn> {
+    Some(|left: OpaqueConst<'_>, right: OpaqueConst<'_>| -> bool {
+        let left_val = unsafe { left.as_ref::<T>() };
+        let right_val = unsafe { right.as_ref::<T>() };
+        left_val == right_val
+    })
+}
+
 /// Function to compare two values and return their ordering
 ///
 /// # Safety
 ///
 /// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
-pub type CmpFn = for<'l, 'r> unsafe fn(left: OpaqueConst<'l>, right: OpaqueConst<'r>) -> Ordering;
+pub type OrdFn = for<'l, 'r> unsafe fn(left: OpaqueConst<'l>, right: OpaqueConst<'r>) -> Ordering;
+
+///
+/// Generates a [`OrdFn`] for a concrete type
+pub const fn ord_fn_for<T: Ord>() -> Option<OrdFn> {
+    Some(
+        |left: OpaqueConst<'_>, right: OpaqueConst<'_>| -> Ordering {
+            let left_val = unsafe { left.as_ref::<T>() };
+            let right_val = unsafe { right.as_ref::<T>() };
+            left_val.cmp(right_val)
+        },
+    )
+}
 
 /// Function to hash a value
 ///
@@ -152,6 +192,16 @@ pub type HashFn = for<'mem> unsafe fn(
     hasher_this: Opaque<'mem>,
     hasher_write_fn: HasherWriteFn,
 );
+
+/// Generates a [`HashFn`] for a concrete type
+pub const fn hash_fn_for<T: std::hash::Hash>() -> Option<HashFn> {
+    Some(
+        |value: OpaqueConst<'_>, hasher_this: Opaque<'_>, hasher_write_fn: HasherWriteFn| unsafe {
+            let val = value.as_ref::<T>();
+            val.hash(&mut HasherProxy::new(hasher_this, hasher_write_fn));
+        },
+    )
+}
 
 /// Provides an implementation of [`std::hash::Hasher`] for a given hasher pointer and write function
 ///
@@ -209,6 +259,34 @@ pub type HasherWriteFn = for<'mem> unsafe fn(hasher_self: Opaque<'mem>, bytes: &
 /// The `value` parameter must point to aligned, initialized memory of the correct type.
 pub type DropInPlaceFn = for<'mem> unsafe fn(value: Opaque<'mem>);
 
+/// Generates a [`DropInPlaceFn`] for a concrete type
+pub const fn drop_in_place_fn_for<T>() -> Option<DropInPlaceFn> {
+    Some(|value: Opaque<'_>| unsafe {
+        value.drop_in_place::<T>();
+    })
+}
+
+/// Function to clone a value into another already-allocated value
+///
+/// # Safety
+///
+/// The `source` parameter must point to aligned, initialized memory of the correct type.
+/// The `target` parameter has the correct layout and alignment, but points to
+/// uninitialized memory. If this function succeeds, it should return `Some` with the
+/// same pointer wrapped in an [`Opaque`].
+pub type CloneIntoFn = for<'src, 'dst> unsafe fn(
+    source: OpaqueConst<'src>,
+    target: OpaqueUninit<'dst>,
+) -> Option<Opaque<'dst>>;
+
+/// Generates a [`CloneInPlaceFn`] for a concrete type
+pub const fn clone_into_fn_for<T: Clone>() -> Option<CloneIntoFn> {
+    Some(|source: OpaqueConst<'_>, target: OpaqueUninit<'_>| unsafe {
+        let source_val = source.as_ref::<T>();
+        Some(target.write(source_val.clone()))
+    })
+}
+
 /// VTable for common operations that can be performed on any shape
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ValueVTable {
@@ -224,11 +302,14 @@ pub struct ValueVTable {
     /// cf. [`DefaultInPlaceFn`]
     pub default_in_place: Option<DefaultInPlaceFn>,
 
+    /// cf. [`CloneInPlaceFn`]
+    pub clone_into: Option<CloneIntoFn>,
+
     /// cf. [`EqFn`]
     pub eq: Option<EqFn>,
 
-    /// cf. [`CmpFn`]
-    pub cmp: Option<CmpFn>,
+    /// cf. [`OrdFn`]
+    pub ord: Option<OrdFn>,
 
     /// cf. [`HashFn`]
     pub hash: Option<HashFn>,

@@ -34,7 +34,7 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
     writeln!(w)?;
     writeln!(
         w,
-        "use crate::{{Field, FieldFlags, Def, StructDef, Shape, Shapely, TypeNameOpts, ValueVTable}};"
+        "use crate::{{Field, FieldFlags, Def, StructDef, Shape, Shapely, TypeNameOpts, value_vtable}};"
     )?;
 
     // Generate implementations for tuples of size 1 to 12
@@ -99,11 +99,20 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
                 .join(",")
         );
 
+        let dummy = format!(
+            "({},)",
+            (0..n)
+                .map(|i| format!("T{}::DUMMY", i))
+                .collect::<Vec<_>>()
+                .join(",")
+        );
+
         writeln!(
             w,
             r#"
             impl<{type_params}> Shapely for {tuple} where {where_clause}
             {{
+                const DUMMY: Self = {dummy};
                 const SHAPE: &'static Shape = &const {{
                     use std::fmt;
 
@@ -113,20 +122,7 @@ fn codegen_tuple_impls(w: &mut dyn Write) -> std::fmt::Result {
 
                     Shape {{
                         layout: Layout::new::<{tuple}>(),
-                        vtable: &ValueVTable {{
-                            type_name: type_name::<{type_params}> as _,
-                            display: None,
-                            debug: None,
-                            default_in_place: None,
-                            eq: None,
-                            cmp: None,
-                            hash: None,
-                            drop_in_place: Some(|value| unsafe {{
-                                std::ptr::drop_in_place(value.as_mut_ptr::<{tuple}>());
-                            }}),
-                            parse: None,
-                            try_from: None,
-                        }},
+                        vtable: value_vtable!({tuple}, type_name::<{type_params}> as _),
                         def: Def::Tuple(StructDef {{
                             fields: {fields}
                         }}),

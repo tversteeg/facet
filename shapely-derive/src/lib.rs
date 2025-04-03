@@ -247,11 +247,25 @@ fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
         .collect::<Vec<String>>()
         .join(", ");
 
+    // Generate dummy fields
+    let dummy_fields = parsed
+        .body
+        .content
+        .0
+        .iter()
+        .map(|field| field.value.name.to_string())
+        .map(|field| format!("{field}: Shapely::DUMMY"))
+        .collect::<Vec<String>>()
+        .join(", ");
+
     // Generate the impl
     let output = format!(
         r#"
 #[automatically_derived]
 impl shapely::Shapely for {struct_name} {{
+    const DUMMY: Self = Self {{
+        {dummy_fields}
+    }};
     const SHAPE: &'static shapely::Shape = &const {{
         shapely::Shape {{
             layout: std::alloc::Layout::new::<Self>(),
@@ -273,7 +287,22 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                default_in_place: None,
+                default_in_place: if shapely_core::impls!(Self: std::default::Default) {{
+                    Some(|target| {{
+                        use shapely::spez::*;
+                        Some((&&Spez(<Self as shapely_core::Shapely>::DUMMY)).spez_default_in_place(target))
+                    }})
+                }} else {{
+                    None
+                }},
+                clone_into: if shapely_core::impls!(Self: std::clone::Clone) {{
+                    Some(|src, dst| {{
+                        use shapely::spez::*;
+                        Some((&&Spez(unsafe {{ src.as_ref::<Self>() }})).spez_clone_into(dst))
+                    }})
+                }} else {{
+                    None
+                }},
                 eq: if shapely_core::impls!(Self: std::cmp::PartialEq) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
@@ -283,7 +312,7 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                cmp: if shapely_core::impls!(Self: std::cmp::Ord) {{
+                ord: if shapely_core::impls!(Self: std::cmp::Ord) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ left.as_ref::<Self>() }}))
@@ -339,11 +368,17 @@ fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStream {
     // Create the fields string for struct_fields! macro
     let fields_str = fields.join(", ");
 
+    let dummy_fields = (0..parsed.body.content.0.len())
+        .map(|_| String::from("Shapely::DUMMY"))
+        .collect::<Vec<String>>()
+        .join(", ");
+
     // Generate the impl
     let output = format!(
         r#"
 #[automatically_derived]
 impl shapely::Shapely for {struct_name} {{
+    const DUMMY: Self = Self({dummy_fields});
     const SHAPE: &'static shapely::Shape = &const {{
         shapely::Shape {{
             layout: std::alloc::Layout::new::<Self>(),
@@ -365,7 +400,22 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                default_in_place: None,
+                default_in_place: if shapely_core::impls!(Self: std::default::Default) {{
+                    Some(|target| {{
+                        use shapely::spez::*;
+                        Some((&&Spez(<Self as shapely_core::Shapely>::DUMMY)).spez_default_in_place(target))
+                    }})
+                }} else {{
+                    None
+                }},
+                clone_into: if shapely_core::impls!(Self: std::clone::Clone) {{
+                    Some(|src, dst| {{
+                        use shapely::spez::*;
+                        Some((&&Spez(unsafe {{ src.as_ref::<Self>() }})).spez_clone_into(dst))
+                    }})
+                }} else {{
+                    None
+                }},
                 eq: if shapely_core::impls!(Self: std::cmp::PartialEq) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
@@ -375,7 +425,7 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                cmp: if shapely_core::impls!(Self: std::cmp::Ord) {{
+                ord: if shapely_core::impls!(Self: std::cmp::Ord) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ left.as_ref::<Self>() }}))
@@ -530,7 +580,22 @@ impl shapely::Shapely for {enum_name} {{
                 }} else {{
                     None
                 }},
-                default_in_place: None,
+                default_in_place: if shapely_core::impls!(Self: std::default::Default) {{
+                    Some(|target| {{
+                        use shapely::spez::*;
+                        Some((&&Spez(<Self as shapely_core::Shapely>::DUMMY)).spez_default_in_place(target))
+                    }})
+                }} else {{
+                    None
+                }},
+                clone_into: if shapely_core::impls!(Self: std::clone::Clone) {{
+                    Some(|src, dst| {{
+                        use shapely::spez::*;
+                        Some((&&Spez(unsafe {{ src.as_ref::<Self>() }})).spez_clone_into(dst))
+                    }})
+                }} else {{
+                    None
+                }},
                 eq: if shapely_core::impls!(Self: std::cmp::PartialEq) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
@@ -540,7 +605,7 @@ impl shapely::Shapely for {enum_name} {{
                 }} else {{
                     None
                 }},
-                cmp: if shapely_core::impls!(Self: std::cmp::Ord) {{
+                ord: if shapely_core::impls!(Self: std::cmp::Ord) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ left.as_ref::<Self>() }}))

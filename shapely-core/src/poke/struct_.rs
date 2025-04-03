@@ -5,10 +5,11 @@ use super::{Guard, ISet};
 
 /// Allows poking a struct (setting fields, etc.)
 pub struct PokeStruct<'mem> {
-    data: OpaqueUninit<'mem>,
+    pub(crate) data: OpaqueUninit<'mem>,
     iset: ISet,
     pub(crate) shape: &'static Shape,
     def: StructDef,
+    guard_for_build: Option<Guard>,
 }
 
 impl<'mem> PokeStruct<'mem> {
@@ -23,6 +24,7 @@ impl<'mem> PokeStruct<'mem> {
             iset: Default::default(),
             shape,
             def,
+            guard_for_build: None,
         }
     }
 
@@ -64,10 +66,11 @@ impl<'mem> PokeStruct<'mem> {
     /// This function will panic if:
     /// - Not all the fields have been initialized.
     /// - The generic type parameter T does not match the shape that this PokeStruct is building.
-    pub fn build<T: crate::Shapely>(self, guard: Option<Guard>) -> T {
+    pub fn build<T: crate::Shapely>(mut self, guard: Option<Guard>) -> T {
+        self.guard_for_build = guard;
         self.assert_all_fields_initialized();
         self.shape.assert_type::<T>();
-        if let Some(guard) = &guard {
+        if let Some(guard) = &self.guard_for_build {
             guard.shape.assert_type::<T>();
         }
 
@@ -76,6 +79,7 @@ impl<'mem> PokeStruct<'mem> {
             std::ptr::read(ptr)
         };
         crate::trace!("Built \x1b[1;33m{}\x1b[0m successfully", T::SHAPE);
+        self.guard_for_build.take(); // dealloc
         std::mem::forget(self);
         result
     }

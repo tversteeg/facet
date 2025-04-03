@@ -1,20 +1,26 @@
 use std::{
     alloc::Layout,
     collections::{HashMap, VecDeque},
+    hash::{Hash, RandomState},
 };
 
-use crate::{Def, MapDef, MapIterVTable, MapVTable, OpaqueConst, Shape, Shapely, ValueVTable};
+use crate::{
+    Def, MapDef, MapIterVTable, MapVTable, OpaqueConst, ScalarDef, Shape, Shapely, ValueVTable,
+    value_vtable,
+};
 
 struct HashMapIterator<'mem, K> {
     map: OpaqueConst<'mem>,
     keys: VecDeque<&'mem K>,
 }
 
-impl<K, V> Shapely for HashMap<K, V>
+impl<K, V, S> Shapely for HashMap<K, V, S>
 where
     K: Shapely + std::cmp::Eq + std::hash::Hash + 'static,
     V: Shapely + 'static,
+    S: Shapely + Default,
 {
+    const DUMMY: Self = HashMap::with_hasher(S::DUMMY);
     const SHAPE: &'static Shape = &Shape {
         layout: Layout::new::<HashMap<K, V>>(),
         vtable: &ValueVTable {
@@ -30,14 +36,93 @@ where
                 }
             },
             display: None,
-            debug: None,
+            debug: const {
+                if K::SHAPE.vtable.debug.is_some() && V::SHAPE.vtable.debug.is_some() {
+                    Some(|value, f| unsafe {
+                        let value = value.as_ref::<HashMap<K, V>>();
+
+                        let k_debug = K::SHAPE.vtable.debug.unwrap_unchecked();
+                        let v_debug = V::SHAPE.vtable.debug.unwrap_unchecked();
+
+                        write!(f, "{{")?;
+                        for (i, (key, val)) in value.iter().enumerate() {
+                            if i > 0 {
+                                write!(f, ", ")?;
+                            }
+                            (k_debug)(OpaqueConst::from_ref(key), f)?;
+                            write!(f, ": ")?;
+                            (v_debug)(OpaqueConst::from_ref(val), f)?;
+                        }
+                        write!(f, "}}")
+                    })
+                } else {
+                    None
+                }
+            },
             default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
-            eq: None,
-            cmp: None,
-            hash: None,
+            eq: const {
+                if K::SHAPE.vtable.eq.is_some() && V::SHAPE.vtable.eq.is_some() {
+                    Some(|a, b| unsafe {
+                        let a = a.as_ref::<HashMap<K, V>>();
+                        let b = b.as_ref::<HashMap<K, V>>();
+
+                        let v_eq = V::SHAPE.vtable.eq.unwrap_unchecked();
+
+                        if a.len() != b.len() {
+                            return false;
+                        }
+                        for (key_a, val_a) in a.iter() {
+                            if let Some(val_b) = b.get(key_a) {
+                                if !(v_eq)(
+                                    OpaqueConst::from_ref(val_a),
+                                    OpaqueConst::from_ref(val_b),
+                                ) {
+                                    return false;
+                                }
+                            } else {
+                                return false;
+                            }
+                        }
+                        true
+                    })
+                } else {
+                    None
+                }
+            },
+            ord: None,
+            hash: const {
+                if K::SHAPE.vtable.hash.is_some() && V::SHAPE.vtable.hash.is_some() {
+                    Some(|value, hasher_this, hasher_write_fn| unsafe {
+                        use crate::vtable::HasherProxy;
+                        let map = value.as_ref::<HashMap<K, V>>();
+
+                        let k_hash = K::SHAPE.vtable.hash.unwrap_unchecked();
+                        let v_hash = V::SHAPE.vtable.hash.unwrap_unchecked();
+                        let k_cmp = K::SHAPE.vtable.ord.unwrap_unchecked();
+
+                        let mut hasher = HasherProxy::new(hasher_this, hasher_write_fn);
+
+                        // Sort entries by key to ensure consistent hash
+                        let mut entries: Vec<_> = map.iter().collect();
+                        entries.sort_by(|(k1, _), (k2, _)| {
+                            (k_cmp)(OpaqueConst::from_ref(*k1), OpaqueConst::from_ref(*k2))
+                        });
+
+                        // Hash length and sorted entries
+                        map.len().hash(&mut hasher);
+                        for (k, v) in entries {
+                            (k_hash)(OpaqueConst::from_ref(k), hasher_this, hasher_write_fn);
+                            (v_hash)(OpaqueConst::from_ref(v), hasher_this, hasher_write_fn);
+                        }
+                    })
+                } else {
+                    None
+                }
+            },
             drop_in_place: Some(|value| unsafe {
                 std::ptr::drop_in_place(value.as_mut_ptr::<HashMap<K, V>>());
             }),
+            clone_into: Some(|src, dst| unsafe { Some(dst.write(src.as_ref::<HashMap<K, V>>())) }),
             parse: None,
             try_from: None,
         },
@@ -46,7 +131,7 @@ where
             v: V::SHAPE,
             vtable: &MapVTable {
                 init_in_place_with_capacity: |uninit, capacity| unsafe {
-                    Ok(uninit.write(Self::with_capacity(capacity)))
+                    Ok(uninit.write(Self::with_capacity_and_hasher(capacity, S::default())))
                 },
                 insert: |ptr, key, value| unsafe {
                     let map = ptr.as_mut_ptr::<HashMap<K, V>>();
@@ -96,5 +181,22 @@ where
                 },
             },
         }),
+    };
+}
+
+#[allow(dead_code)]
+struct RandomStateInnards {
+    k0: u64,
+    k1: u64,
+}
+
+impl Shapely for RandomState {
+    const DUMMY: Self = unsafe { std::mem::transmute(RandomStateInnards { k0: 0, k1: 0 }) };
+    const SHAPE: &'static Shape = &const {
+        Shape {
+            layout: Layout::new::<Self>(),
+            def: Def::Scalar(ScalarDef::of::<Self>()),
+            vtable: value_vtable!((), |f, _opts| write!(f, "RandomState")),
+        }
     };
 }

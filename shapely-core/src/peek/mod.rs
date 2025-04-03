@@ -1,6 +1,6 @@
 //! Allows peeking (reading from) shapes
 
-use crate::Shapely;
+use crate::{Shapely, vtable::TypeNameOpts};
 
 mod value;
 pub use value::*;
@@ -10,6 +10,9 @@ pub use struct_::*;
 
 mod list;
 pub use list::*;
+
+mod map;
+pub use map::*;
 
 use super::{Def, OpaqueConst, Shape};
 
@@ -24,6 +27,9 @@ pub enum Peek<'mem> {
 
     /// cf. [`PeekList`]
     List(PeekList<'mem>),
+
+    /// cf. [`PeekMap`]
+    Map(PeekMap<'mem>),
 
     /// cf. [`PeekStruct`]
     Struct(PeekStruct<'mem>),
@@ -49,7 +55,7 @@ impl<'mem> Peek<'mem> {
             Def::Struct(def) | Def::TupleStruct(def) | Def::Tuple(def) => {
                 Peek::Struct(PeekStruct { data, shape, def })
             }
-            Def::Map { .. } => todo!(),
+            Def::Map(def) => Peek::Map(PeekMap { data, shape, def }),
             Def::List(def) => Peek::List(PeekList { data, shape, def }),
             Def::Scalar { .. } => Peek::Scalar(PeekValue { data, shape }),
             Def::Enum { .. } => todo!(),
@@ -61,6 +67,7 @@ impl<'mem> Peek<'mem> {
         match self {
             Self::Scalar(v) => v,
             Self::List(l) => l.as_value(),
+            Self::Map(m) => m.as_value(),
             Self::Struct(s) => s.as_value(),
         }
     }
@@ -70,7 +77,18 @@ impl std::fmt::Debug for Peek<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let value = self.as_value();
         if value.debug(f).is_none() {
-            value.type_name(f, crate::vtable::TypeNameOpts::infinite())?;
+            value.type_name(f, TypeNameOpts::infinite())?;
+            write!(f, "(⋯)")?;
+        }
+        Ok(())
+    }
+}
+
+impl std::fmt::Display for Peek<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let value = self.as_value();
+        if value.display(f).is_none() {
+            value.type_name(f, TypeNameOpts::infinite())?;
             write!(f, "(⋯)")?;
         }
         Ok(())

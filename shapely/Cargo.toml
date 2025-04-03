@@ -17,9 +17,13 @@ shapely-core.workspace = true
 shapely-derive.workspace = true
 
 [dev-dependencies]
+color-backtrace = { version = "0.7.0", default-features = false, features = [
+    "use-btparse-crate",
+] }
 cargo-husky = { version = "1", default-features = false, features = [
     "user-hooks",
 ] }
+ctor = "0.4.1"
 owo-colors = "4.2.0"
 
 [features]
