@@ -135,6 +135,7 @@ fn test_integer_traits() {
             .equal_and(false)
             .ord_and(Ordering::Greater)
             .default()
+            .clone()
             .build(),
     );
 
@@ -148,6 +149,7 @@ fn test_integer_traits() {
             .equal_and(true)
             .ord_and(Ordering::Equal)
             .default()
+            .clone()
             .build(),
     );
 
@@ -161,6 +163,7 @@ fn test_integer_traits() {
             .equal_and(false)
             .ord_and(Ordering::Less)
             .default()
+            .clone()
             .build(),
     );
 
@@ -174,6 +177,7 @@ fn test_integer_traits() {
             .equal_and(false)
             .ord_and(Ordering::Less)
             .default()
+            .clone()
             .build(),
     );
 
@@ -187,6 +191,7 @@ fn test_integer_traits() {
             .equal_and(false)
             .ord_and(Ordering::Less)
             .default()
+            .clone()
             .build(),
     );
 }
@@ -203,6 +208,7 @@ fn test_boolean_traits() {
             .equal_and(false)
             .ord_and(Ordering::Greater)
             .default()
+            .clone()
             .build(),
     );
 
@@ -215,6 +221,7 @@ fn test_boolean_traits() {
             .equal_and(true)
             .ord_and(Ordering::Equal)
             .default()
+            .clone()
             .build(),
     );
 
@@ -227,6 +234,7 @@ fn test_boolean_traits() {
             .equal_and(false)
             .ord_and(Ordering::Less)
             .default()
+            .clone()
             .build(),
     );
 
@@ -239,6 +247,7 @@ fn test_boolean_traits() {
             .equal_and(true)
             .ord_and(Ordering::Equal)
             .default()
+            .clone()
             .build(),
     );
 }
@@ -255,6 +264,7 @@ fn test_floating_traits() {
             .equal_and(false)
             .ord_and(Ordering::Greater)
             .default()
+            .clone()
             .build(),
     );
 
@@ -268,6 +278,7 @@ fn test_floating_traits() {
             .equal_and(true)
             .ord_and(Ordering::Equal)
             .default()
+            .clone()
             .build(),
     );
 
@@ -281,6 +292,7 @@ fn test_floating_traits() {
             .equal_and(false)
             .ord_and(Ordering::Less)
             .default()
+            .clone()
             .build(),
     );
 
@@ -294,6 +306,7 @@ fn test_floating_traits() {
             .equal_and(false)
             .ord_and(Ordering::Greater)
             .default()
+            .clone()
             .build(),
     );
 
@@ -307,6 +320,7 @@ fn test_floating_traits() {
             .equal_and(false)
             .ord_and(Ordering::Greater)
             .default()
+            .clone()
             .build(),
     );
 
@@ -319,6 +333,7 @@ fn test_floating_traits() {
             .display()
             .equal_and(false)
             .default()
+            .clone()
             .build(),
     );
 
@@ -331,6 +346,7 @@ fn test_floating_traits() {
             .display()
             .equal_and(false)
             .default()
+            .clone()
             .build(),
     );
 }
@@ -347,6 +363,7 @@ fn test_string_traits() {
             .equal_and(false)
             .ord_and(Ordering::Less)
             .default()
+            .clone()
             .build(),
     );
 
@@ -359,6 +376,7 @@ fn test_string_traits() {
             .display()
             .equal_and(false)
             .ord_and(Ordering::Less)
+            .clone()
             .build(),
     );
 
@@ -372,6 +390,7 @@ fn test_string_traits() {
             .display()
             .equal_and(false)
             .ord_and(Ordering::Less)
+            .clone()
             .build(),
     );
     test_peek_pair(
@@ -382,6 +401,7 @@ fn test_string_traits() {
             .display()
             .equal_and(false)
             .ord_and(Ordering::Less)
+            .clone()
             .build(),
     );
     test_peek_pair(
@@ -392,6 +412,7 @@ fn test_string_traits() {
             .display()
             .equal_and(true)
             .ord_and(Ordering::Equal)
+            .clone()
             .build(),
     );
 }
@@ -402,7 +423,7 @@ fn test_other_types() {
     test_peek_pair(
         vec![1, 2, 3],
         vec![1, 2, 3],
-        FactBuilder::new().debug().equal_and(true).build(),
+        FactBuilder::new().debug().equal_and(true).clone().build(),
     );
 }
 
@@ -416,6 +437,7 @@ fn test_slice_traits() {
             .debug()
             .equal_and(false)
             .ord_and(Ordering::Less)
+            .clone()
             .build(),
     );
 
@@ -427,13 +449,14 @@ fn test_slice_traits() {
             .debug()
             .equal_and(false)
             .ord_and(Ordering::Greater)
+            .clone()
             .build(),
     );
 }
 
 #[test]
 fn test_array_traits() {
-    // [i32; 1] implements Debug, PartialEq, and Ord
+    // [i32; 1] implements Debug, PartialEq, Ord, Default, and Clone
     test_peek_pair(
         [42],
         [24],
@@ -442,10 +465,11 @@ fn test_array_traits() {
             .equal_and(false)
             .ord_and(Ordering::Greater)
             .default()
+            .clone()
             .build(),
     );
 
-    // [&str; 1] implements Debug, PartialEq, and Ord
+    // [&str; 1] implements Debug, PartialEq, Ord, Default, and Clone
     test_peek_pair(
         ["hello"],
         ["world"],
@@ -453,6 +477,8 @@ fn test_array_traits() {
             .debug()
             .equal_and(false)
             .ord_and(Ordering::Less)
+            .default()
+            .clone()
             .build(),
     );
 }
@@ -467,6 +493,7 @@ fn test_vecs() {
             .debug()
             .equal_and(false)
             .default()
+            .clone()
             .build(),
     );
 
@@ -478,6 +505,7 @@ fn test_vecs() {
             .debug()
             .equal_and(false)
             .default()
+            .clone()
             .build(),
     );
 
@@ -485,17 +513,27 @@ fn test_vecs() {
     let vec1 = vec![1, 2, 3];
     let vec2 = vec![1, 2, 3];
     test_peek_pair(
-        vec1,
-        vec2,
-        FactBuilder::new().debug().equal_and(true).default().build(),
+        vec1.clone(),
+        vec2.clone(),
+        FactBuilder::new()
+            .debug()
+            .equal_and(true)
+            .default()
+            .clone()
+            .build(),
     );
 
     let vec3 = vec!["hello".to_string(), "world".to_string()];
     let vec4 = vec!["hello".to_string(), "world".to_string()];
     test_peek_pair(
-        vec3,
-        vec4,
-        FactBuilder::new().debug().equal_and(true).default().build(),
+        vec3.clone(),
+        vec4.clone(),
+        FactBuilder::new()
+            .debug()
+            .equal_and(true)
+            .default()
+            .clone()
+            .build(),
     );
 }
 
@@ -513,12 +551,13 @@ fn test_hashmaps() {
     map2.insert("key4".to_string(), 200);
 
     test_peek_pair(
-        map1,
-        map2,
+        map1.clone(),
+        map2.clone(),
         FactBuilder::new()
             .debug()
             .equal_and(false)
             .default()
+            .clone()
             .build(),
     );
 
@@ -532,9 +571,14 @@ fn test_hashmaps() {
     map4.insert("key2".to_string(), 20);
 
     test_peek_pair(
-        map3,
-        map4,
-        FactBuilder::new().debug().equal_and(true).default().build(),
+        map3.clone(),
+        map4.clone(),
+        FactBuilder::new()
+            .debug()
+            .equal_and(true)
+            .default()
+            .clone()
+            .build(),
     );
 }
 
@@ -574,7 +618,7 @@ fn test_custom_structs() {
     );
 
     // Struct with all traits
-    #[derive(Shapely, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    #[derive(Shapely, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
     struct StructAll {
         value: i32,
     }
@@ -585,6 +629,7 @@ fn test_custom_structs() {
             .debug()
             .equal_and(false)
             .ord_and(Ordering::Greater)
+            .clone()
             .build(),
     );
     test_peek_pair(
@@ -594,6 +639,7 @@ fn test_custom_structs() {
             .debug()
             .equal_and(false)
             .ord_and(Ordering::Less)
+            .clone()
             .build(),
     );
     test_peek_pair(
@@ -603,6 +649,7 @@ fn test_custom_structs() {
             .debug()
             .equal_and(true)
             .ord_and(Ordering::Equal)
+            .clone()
             .build(),
     );
 }
@@ -637,7 +684,7 @@ fn test_tuple_structs() {
     );
 
     // Tuple struct with all traits
-    #[derive(Shapely, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    #[derive(Shapely, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
     struct TupleAll(i32, String);
     test_peek_pair(
         TupleAll(42, "Hello".to_string()),
@@ -646,6 +693,7 @@ fn test_tuple_structs() {
             .debug()
             .equal_and(false)
             .ord_and(Ordering::Greater)
+            .clone()
             .build(),
     );
 }
@@ -701,6 +749,7 @@ pub enum Fact {
     HasEqualAnd { l_eq_r: bool },
     HasOrdAnd { l_ord_r: Ordering },
     HasDefault,
+    HasClone,
 }
 
 use std::fmt::{Display, Formatter, Result};
@@ -724,6 +773,7 @@ impl Display for Fact {
                 write!(f, "impl Ord and l {} r", ord_str)
             }
             Fact::HasDefault => write!(f, "impl Default"),
+            Fact::HasClone => write!(f, "impl Clone"),
         }
     }
 }
@@ -741,6 +791,7 @@ pub struct FactBuilder {
     has_equal_and: Option<bool>,
     has_ord_and: Option<Ordering>,
     has_default: bool,
+    has_clone: bool,
 }
 
 impl FactBuilder {
@@ -773,6 +824,11 @@ impl FactBuilder {
         self
     }
 
+    pub fn clone(mut self) -> Self {
+        self.has_clone = true;
+        self
+    }
+
     pub fn build(self) -> HashSet<Fact> {
         let mut facts = HashSet::new();
         if self.has_debug {
@@ -789,6 +845,9 @@ impl FactBuilder {
         }
         if self.has_default {
             facts.insert(Fact::HasDefault);
+        }
+        if self.has_clone {
+            facts.insert(Fact::HasClone);
         }
         facts
     }
