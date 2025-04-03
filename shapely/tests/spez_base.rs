@@ -1,6 +1,5 @@
 use std::fmt::{Debug, Display};
 
-
 #[test]
 fn test_spez1() {
     struct Wrap<T>(T);
@@ -42,35 +41,27 @@ fn test_spez1() {
 fn test_spez2() {
     struct Wrap<T>(T);
 
-    trait ViaString {
+    trait DefaultNo {
         fn foo(&self);
     }
-    impl ViaString for &&Wrap<String> {
+    impl<T> DefaultNo for &&Wrap<T> {
         fn foo(&self) {
-            println!("String: {}", self.0);
+            println!("DefaultNo");
         }
     }
 
-    trait ViaDisplay {
+    trait DefaultYes {
         fn foo(&self);
     }
-    impl<T: Display> ViaDisplay for &Wrap<T> {
+    impl<T: Default> DefaultYes for &Wrap<T> {
         fn foo(&self) {
-            println!("Display: {}", self.0);
+            println!("DefaultYes");
         }
     }
 
-    trait ViaDebug {
-        fn foo(&self);
-    }
-    impl<T: Debug> ViaDebug for Wrap<T> {
-        fn foo(&self) {
-            println!("Debug: {:?}", self.0);
-        }
-    }
+    struct NoDefaultHere;
 
-    // Test method calls
-    (&&&Wrap(String::from("hi"))).foo();
-    (&&Wrap(3)).foo();
-    Wrap(['a', 'b']).foo();
+    (&&Wrap(String::from("hi"))).foo();
+    #[allow(clippy::needless_borrow)]
+    (&&Wrap(NoDefaultHere)).foo();
 }
