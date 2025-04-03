@@ -258,10 +258,74 @@ fn test_floating_traits() {
             .build(),
     );
 
+    // Test equal values
+    test_peek_pair(
+        3.14,
+        3.14,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(true)
+            .ord_and(Ordering::Equal)
+            .default()
+            .build(),
+    );
+
+    // Test less than
+    test_peek_pair(
+        1.5,
+        2.5,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .default()
+            .build(),
+    );
+
+    // Test zero and negative
+    test_peek_pair(
+        0.0,
+        -1.5,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Greater)
+            .default()
+            .build(),
+    );
+
+    // Test infinity
+    test_peek_pair(
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Greater)
+            .default()
+            .build(),
+    );
+
     // Test NaN behavior
     test_peek_pair(
         f64::NAN,
         f64::NAN,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .default()
+            .build(),
+    );
+
+    // Test NaN with regular number
+    test_peek_pair(
+        f64::NAN,
+        1.0,
         FactBuilder::new()
             .debug()
             .display()
