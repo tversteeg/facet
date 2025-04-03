@@ -36,9 +36,9 @@ clippy:
     echo -e "\033[1;35m🔍 Running Clippy on all targets...\033[0m"
     cargo clippy --all-targets -- -D warnings
 
-nextest:
+test *args:
     echo -e "\033[1;33m🏃 Running all but doc-tests with nextest...\033[0m"
-    cargo nextest run
+    cargo nextest run {{args}}
 
 doc-tests:
     echo -e "\033[1;36m📚 Running documentation tests...\033[0m"

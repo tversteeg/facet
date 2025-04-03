@@ -1,6 +1,6 @@
 //! Allows peeking (reading from) shapes
 
-use crate::Shapely;
+use crate::{Shapely, vtable::TypeNameOpts};
 
 mod value;
 pub use value::*;
@@ -70,7 +70,18 @@ impl std::fmt::Debug for Peek<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let value = self.as_value();
         if value.debug(f).is_none() {
-            value.type_name(f, crate::vtable::TypeNameOpts::infinite())?;
+            value.type_name(f, TypeNameOpts::infinite())?;
+            write!(f, "(⋯)")?;
+        }
+        Ok(())
+    }
+}
+
+impl std::fmt::Display for Peek<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let value = self.as_value();
+        if value.display(f).is_none() {
+            value.type_name(f, TypeNameOpts::infinite())?;
             write!(f, "(⋯)")?;
         }
         Ok(())

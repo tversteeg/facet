@@ -45,7 +45,6 @@ pub struct Guard {
 impl Drop for Guard {
     fn drop(&mut self) {
         unsafe {
-            eprintln!("Dropping guard for shape: {}", self.shape);
             std::alloc::dealloc(self.ptr, self.layout);
         }
     }

@@ -36,6 +36,12 @@ where
 
     let good = Style::new().green();
 
+    // Format display representation
+    if peek1.as_value().shape().vtable.display.is_some() {
+        let display_str = format!("{} vs {}", peek1.style(good), peek2.style(good));
+        eprintln!("Display:   {}", display_str);
+    }
+
     // Format debug representation
     if peek1.as_value().shape().vtable.debug.is_some() {
         let debug_str = format!("{:?} vs {:?}", peek1.style(good), peek2.style(good));
@@ -82,6 +88,15 @@ fn test_primitive_types() {
 
     // Vec implements Debug and PartialEq but not Ord
     test_peek_pair(vec![1, 2, 3], vec![1, 2, 3]);
+
+    // String implements Debug, PartialEq, and Ord
+    test_peek_pair(String::from("hello"), String::from("world"));
+
+    // bool implements Debug, PartialEq, and Ord
+    test_peek_pair(true, false);
+
+    // &str implements Debug, PartialEq, and Ord
+    test_peek_pair("hello", "world");
 }
 
 #[test]

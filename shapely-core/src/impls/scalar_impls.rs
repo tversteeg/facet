@@ -20,6 +20,14 @@ impl Shapely for String {
     };
 }
 
+impl Shapely for &str {
+    const SHAPE: &'static Shape = &Shape {
+        layout: Layout::new::<Self>(),
+        def: Def::Scalar(ScalarDef::of::<Self>()),
+        vtable: value_vtable!(&str, |f, _opts| write!(f, "&str")),
+    };
+}
+
 impl Shapely for bool {
     const SHAPE: &'static Shape = &Shape {
         layout: Layout::new::<Self>(),
