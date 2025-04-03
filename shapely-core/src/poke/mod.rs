@@ -54,7 +54,7 @@ impl Drop for Guard {
 impl<'mem> Poke<'mem> {
     /// Allocates a new poke of a type that implements shapely
     pub fn alloc<S: Shapely>() -> (Self, Guard) {
-        let data = S::allocate();
+        let data = S::SHAPE.allocate();
         let layout = Layout::new::<S>();
         let guard = Guard {
             ptr: data.as_mut_ptr(),
@@ -92,7 +92,7 @@ impl<'mem> Poke<'mem> {
                 let plu = unsafe { PokeListUninit::new(data, shape, list_def) };
                 Poke::List(plu)
             }
-            Def::Scalar => Poke::Scalar(unsafe { PokeValue::new(data, shape) }),
+            Def::Scalar { .. } => Poke::Scalar(unsafe { PokeValue::new(data, shape) }),
             Def::Enum(enum_def) => {
                 Poke::Enum(unsafe { PokeEnumNoVariant::new(data, shape, enum_def) })
             }

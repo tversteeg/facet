@@ -1,4 +1,4 @@
-use crate::{FieldError, OpaqueUninit, Shape, StructDef};
+use crate::{FieldError, OpaqueUninit, Shape, ShapeDebug, StructDef};
 use std::ptr::NonNull;
 
 use super::{Guard, ISet};
@@ -33,7 +33,8 @@ impl<'mem> PokeStruct<'mem> {
             if !self.iset.has(i) {
                 panic!(
                     "Field '{}' was not initialized. Complete schema:\n{:?}",
-                    field.name, self.shape
+                    field.name,
+                    ShapeDebug(self.shape)
                 );
             }
         }
@@ -65,9 +66,9 @@ impl<'mem> PokeStruct<'mem> {
     /// - The generic type parameter T does not match the shape that this PokeStruct is building.
     pub fn build<T: crate::Shapely>(self, guard: Option<Guard>) -> T {
         self.assert_all_fields_initialized();
-        assert_eq!(self.shape, T::SHAPE, "Shape mismatch");
+        self.shape.assert_type::<T>();
         if let Some(guard) = &guard {
-            assert_eq!(guard.shape, self.shape, "Shape mismatch");
+            guard.shape.assert_type::<T>();
         }
 
         let result = unsafe {
@@ -88,7 +89,7 @@ impl<'mem> PokeStruct<'mem> {
     /// - The generic type parameter T does not match the shape that this PokeStruct is building.
     pub fn build_boxed<T: crate::Shapely>(self) -> Box<T> {
         self.assert_all_fields_initialized();
-        assert_eq!(self.shape, T::SHAPE, "Shape mismatch");
+        self.shape.assert_type::<T>();
 
         let boxed = unsafe { Box::from_raw(self.data.as_mut_ptr() as *mut T) };
         std::mem::forget(self);
@@ -106,7 +107,7 @@ impl<'mem> PokeStruct<'mem> {
     pub unsafe fn move_into(self, target: NonNull<u8>, guard: Option<Guard>) {
         self.assert_all_fields_initialized();
         if let Some(guard) = &guard {
-            assert_eq!(guard.shape, self.shape, "Shape mismatch");
+            guard.shape.assert_shape(self.shape);
         }
 
         unsafe {

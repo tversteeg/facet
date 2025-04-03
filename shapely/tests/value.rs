@@ -1,9 +1,9 @@
-use shapely::{OpaqueConst, Poke, Shapely};
+use shapely::{OpaqueConst, Poke, ShapeDebug, Shapely};
 
 #[test]
 fn build_u64_properly() {
     let shape = u64::SHAPE;
-    eprintln!("{shape:#?}");
+    eprintln!("{:#?}", ShapeDebug(shape));
 
     let (poke, _guard) = Poke::alloc::<u64>();
     let poke = poke.into_scalar();

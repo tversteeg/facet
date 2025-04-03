@@ -1,5 +1,5 @@
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
-use shapely::{Def, OpaqueConst, OpaqueUninit, Poke, Shapely as _, trace};
+use shapely::{Def, OpaqueConst, OpaqueUninit, Poke, ShapeDebug, trace};
 
 /// Deserialize a `Poke` object from a JSON string.
 pub fn from_json<'input>(
@@ -14,25 +14,25 @@ pub fn from_json<'input>(
         poke: Poke<'_>,
     ) -> Result<(), JsonParseErrorWithContext<'input>> {
         let shape = poke.shape();
-        trace!("Deserializing value with shape:\n{:?}", shape);
+        trace!("Deserializing value with shape:\n{:?}", ShapeDebug(shape));
 
         match &shape.def {
-            Def::Scalar => {
+            Def::Scalar { .. } => {
                 let pv = poke.into_scalar();
                 trace!("Deserializing \x1b[1;36mscalar\x1b[0m");
 
                 trace!(
-                    "pv.shape == *String::SHAPE: {}",
-                    *pv.shape == *String::SHAPE
+                    "pv.shape.is_type::<String>() = {}",
+                    pv.shape.is_type::<String>()
                 );
-                trace!("pv.shape == *u64::SHAPE: {}", *pv.shape == *u64::SHAPE);
+                trace!("pv.shape.is_type::<u64>() = {}", pv.shape.is_type::<u64>());
 
-                if *pv.shape == *String::SHAPE {
+                if pv.shape.is_type::<String>() {
                     trace!("Deserializing string (pv shape = {})", pv.shape);
                     let s = parser.parse_string()?;
                     unsafe { pv.put(OpaqueConst::from_ref(&s)) };
                     std::mem::forget(s);
-                } else if *pv.shape == *u64::SHAPE {
+                } else if pv.shape.is_type::<u64>() {
                     trace!("Deserializing u64 (pv shape = {})", pv.shape);
                     let n = parser.parse_u64()?;
                     unsafe { pv.put(OpaqueConst::from_ref(&n)) };

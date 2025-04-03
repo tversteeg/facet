@@ -6,7 +6,7 @@ impl Shapely for () {
     const SHAPE: &'static Shape = &const {
         Shape {
             layout: Layout::new::<Self>(),
-            def: Def::Scalar,
+            def: Def::Scalar(ScalarDef::of::<Self>()),
             vtable: &ValueVTable {
                 type_name: |f, _opts| write!(f, "()"),
                 display: Some(|_value, mut f| write!(f, "()")),
@@ -32,7 +32,7 @@ impl Shapely for () {
 impl Shapely for String {
     const SHAPE: &'static Shape = &Shape {
         layout: Layout::new::<Self>(),
-        def: Def::Scalar,
+        def: Def::Scalar(ScalarDef::of::<Self>()),
         vtable: &ValueVTable {
             type_name: |f, _opts| write!(f, "String"),
             display: Some(|value, mut f| {
@@ -64,7 +64,7 @@ impl Shapely for String {
 impl Shapely for bool {
     const SHAPE: &'static Shape = &Shape {
         layout: Layout::new::<Self>(),
-        def: Def::Scalar,
+        def: Def::Scalar(ScalarDef::of::<Self>()),
         vtable: &ValueVTable {
             type_name: |f, _opts| write!(f, "bool"),
             display: Some(|value, mut f| {
@@ -100,7 +100,7 @@ macro_rules! impl_shapely_for_integer {
         impl Shapely for $type {
             const SHAPE: &'static Shape = &Shape {
                 layout: Layout::new::<Self>(),
-                def: Def::Scalar,
+                def: Def::Scalar(ScalarDef::of::<Self>()),
                 vtable: &ValueVTable {
                     type_name: |f, _opts| write!(f, stringify!($type)),
                     display: Some(|value, mut f| {
@@ -153,7 +153,7 @@ macro_rules! impl_shapely_for_float {
         impl Shapely for $type {
             const SHAPE: &'static Shape = &Shape {
                 layout: Layout::new::<Self>(),
-                def: Def::Scalar,
+                def: Def::Scalar(ScalarDef::of::<Self>()),
                 vtable: &ValueVTable {
                     type_name: |f, _opts| write!(f, stringify!($type)),
                     display: Some(|value, mut f| {

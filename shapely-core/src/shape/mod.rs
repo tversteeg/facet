@@ -1,6 +1,8 @@
 use std::alloc::Layout;
 
-use crate::{ListVTable, MapVTable, TypeNameOpts, ValueVTable};
+use typeid::ConstTypeId;
+
+use crate::{ListVTable, MapVTable, OpaqueUninit, Shapely, TypeNameOpts, ValueVTable};
 
 mod pretty_print;
 
@@ -19,25 +21,9 @@ pub struct Shape {
     pub def: Def,
 }
 
-// Helper struct to format the name for display
-impl std::fmt::Display for Shape {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        (self.vtable.type_name)(f, TypeNameOpts::default())
-    }
-}
-
 impl PartialEq for Shape {
     fn eq(&self, other: &Self) -> bool {
-        if self.def != other.def {
-            return false;
-        }
-
-        // FIXME: big hack for now
-        if self.to_string() != other.to_string() {
-            return false;
-        }
-
-        true
+        self.def == other.def && self.layout == other.layout
     }
 }
 
@@ -46,6 +32,54 @@ impl Eq for Shape {}
 impl std::hash::Hash for Shape {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.def.hash(state);
+        self.layout.hash(state);
+    }
+}
+
+impl Shape {
+    /// Check if this shape is of the given type
+    pub fn is_type<Other: Shapely>(&'static self) -> bool {
+        self == Other::SHAPE
+    }
+
+    /// Check if this shape is of the given type
+    pub fn is_shape(&'static self, other: &'static Shape) -> bool {
+        self == other
+    }
+
+    /// Assert that this shape is of the given type, panicking if it's not
+    pub fn assert_type<Other: Shapely>(&'static self) {
+        assert!(
+            self.is_type::<Other>(),
+            "Type mismatch: expected {:?}, found {:?}",
+            ShapeDebug(Other::SHAPE),
+            ShapeDebug(self)
+        );
+    }
+
+    /// Assert that this shape is equal to the given shape, panicking if it's not
+    pub fn assert_shape(&'static self, other: &'static Shape) {
+        assert!(
+            self.is_shape(other),
+            "Shape mismatch: expected {:?}, found {:?}",
+            ShapeDebug(other),
+            ShapeDebug(self)
+        );
+    }
+}
+
+// Helper struct to format the name for display
+impl std::fmt::Display for Shape {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        (self.vtable.type_name)(f, TypeNameOpts::default())
+    }
+}
+
+impl Shape {
+    /// Heap-allocate a value of this shape
+    #[inline]
+    pub fn allocate(&self) -> OpaqueUninit<'static> {
+        OpaqueUninit::new(unsafe { std::alloc::alloc(self.layout) })
     }
 }
 
@@ -82,21 +116,24 @@ impl std::fmt::Display for FieldError {
     }
 }
 
-impl std::fmt::Debug for Shape {
+/// Debug wrapper implementation for Shape
+pub struct ShapeDebug(pub &'static Shape);
+
+impl std::fmt::Debug for ShapeDebug {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.pretty_print_recursive(f)
+        self.0.pretty_print_recursive(f)
     }
 }
 
 /// Common fields for struct-like types
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct StructDef {
     /// all fields, in declaration order (not necessarily in memory order)
     pub fields: &'static [Field],
 }
 
 /// Describes a field in a struct or tuple
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Field {
     /// key for the struct field (for tuples and tuple-structs, this is the 0-based index)
     pub name: &'static str,
@@ -214,7 +251,7 @@ impl std::fmt::Display for FieldFlags {
 }
 
 /// Fields for map types
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MapDef {
     /// vtable for interacting with the map
     pub vtable: &'static MapVTable,
@@ -225,7 +262,7 @@ pub struct MapDef {
 }
 
 /// Fields for list types
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ListDef {
     /// vtable for interacting with the list
     pub vtable: &'static ListVTable,
@@ -234,7 +271,7 @@ pub struct ListDef {
 }
 
 /// Fields for enum types
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EnumDef {
     /// representation of the enum (u8, u16, etc.)
     pub repr: EnumRepr,
@@ -243,7 +280,7 @@ pub struct EnumDef {
 }
 
 /// Describes a variant of an enum
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Variant {
     /// Name of the variant
     pub name: &'static str,
@@ -256,7 +293,7 @@ pub struct Variant {
 }
 
 /// Represents the different kinds of variants that can exist in a Rust enum
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum VariantKind {
     /// Unit variant (e.g., `None` in Option)
     Unit,
@@ -275,7 +312,7 @@ pub enum VariantKind {
 }
 
 /// All possible representations for Rust enums
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EnumRepr {
     /// Default representation (compiler-dependent)
     Default,
@@ -307,14 +344,30 @@ impl Default for EnumRepr {
     }
 }
 
+/// Definition for scalar types
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ScalarDef {
+    /// The TypeId of the scalar type
+    pub type_id: ConstTypeId,
+}
+
+impl ScalarDef {
+    /// Create a new ScalarDef with the given TypeId
+    pub const fn of<T>() -> Self {
+        Self {
+            type_id: ConstTypeId::of::<T>(),
+        }
+    }
+}
+
 /// The definition of a shape: is it more like a struct, a map, a list?
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Def {
     /// Scalar — those don't have a def, they're not composed of other things.
     /// You can interact with them through [`ValueVTable`].
     ///
     /// e.g. `u32`, `String`, `bool`, `SocketAddr`, etc.
-    Scalar,
+    Scalar(ScalarDef),
 
     /// Struct with statically-known, named fields
     ///

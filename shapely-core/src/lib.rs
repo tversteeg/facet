@@ -34,9 +34,9 @@ pub trait Shapely: Sized {
     /// Returns the shape function of this type
     const SHAPE: &'static Shape;
 
-    /// Heap-allocate a value of this shape
-    fn allocate() -> OpaqueUninit<'static> {
-        OpaqueUninit::new(unsafe { std::alloc::alloc(Self::SHAPE.layout) })
+    /// Returns true if the type of `self` is equal to the type of `other`
+    fn type_eq<Other: Shapely>() -> bool {
+        Self::SHAPE == Other::SHAPE
     }
 }
 
