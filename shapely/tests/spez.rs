@@ -78,55 +78,46 @@ fn test_spez2() {
 }
 
 #[test]
-fn vec_can_be_debug_or_not() {
-    eprintln!();
+fn debug_or_not() {
     eprintln!("{}", "=================== i32".yellow());
     let v: i32 = 42;
     let peek = Peek::new(&v);
-    println!("Integer Peek: {}", format!("{peek:#?}").green());
+    eprintln!("{}", format!("{peek:?}").green());
 
-    eprintln!();
     eprintln!("{}", "=================== Vec<i32>".yellow());
     let v: Vec<i32> = vec![1, 2, 3];
     let peek = Peek::new(&v);
-    println!("Vector Peek: {}", format!("{peek:#?}").blue());
+    eprintln!("{}", format!("{peek:?}").blue());
 
-    eprintln!();
     eprintln!("{}", "=================== StructDebugNo".yellow());
     #[derive(Shapely)]
     struct StructDebugNo {
         blah: i32,
     }
     let peek = Peek::new(&StructDebugNo { blah: 42 });
-    println!("StructDebugNo Peek: {}", format!("{peek:#?}").red());
+    eprintln!("{}", format!("{peek:?}").red());
 
-    eprintln!();
     eprintln!("{}", "=================== StructDebugYes".yellow());
     #[derive(Shapely, Debug)]
     struct StructDebugYes {
         blah: i32,
     }
     let peek = Peek::new(&StructDebugYes { blah: 42 });
-    println!("StructDebugYes Peek: {}", format!("{peek:#?}").green());
+    eprintln!("{}", format!("{peek:?}").green());
 
-    eprintln!();
     eprintln!("{}", "=================== TupleStructDebugNo".yellow());
     #[derive(Shapely)]
     struct TupleStructDebugNo(i32, String);
     let tuple_struct_no = TupleStructDebugNo(42, "Hello".to_string());
     let peek_no = Peek::new(&tuple_struct_no);
-    println!("TupleStructDebugNo Peek: {}", format!("{peek_no:#?}").red());
+    eprintln!("{}", format!("{peek_no:?}").red());
 
-    eprintln!();
     eprintln!("{}", "=================== TupleStructDebugYes".yellow());
     #[derive(Shapely, Debug)]
     struct TupleStructDebugYes(i32, String);
     let tuple_struct_yes = TupleStructDebugYes(42, "Hello".to_string());
     let peek_yes = Peek::new(&tuple_struct_yes);
-    println!(
-        "TupleStructDebugYes Peek: {}",
-        format!("{peek_yes:#?}").green()
-    );
+    eprintln!("{}", format!("{peek_yes:?}").green());
 
     // eprintln!();
     // eprintln!("{}", "=================== Enum".yellow());
@@ -141,7 +132,89 @@ fn vec_can_be_debug_or_not() {
     // let peek3 = Peek::new(&MyEnum::Variant3 {
     //     field: "Hello".to_string(),
     // });
-    // println!("Enum Peek (Variant1): {}", format!("{peek1:#?}").green());
-    // println!("Enum Peek (Variant2): {}", format!("{peek2:#?}").green());
-    // println!("Enum Peek (Variant3): {}", format!("{peek3:#?}").green());
+    // println!("Enum Peek (Variant1): {}", format!("{peek1:?}").green());
+    // println!("Enum Peek (Variant2): {}", format!("{peek2:?}").green());
+    // println!("Enum Peek (Variant3): {}", format!("{peek3:?}").green());
+}
+
+#[test]
+fn eq_or_not() {
+    eprintln!("{}", "=================== i32 (PartialEq)".yellow());
+    let v1: i32 = 42;
+    let v2: i32 = 42;
+    let peek1 = Peek::new(&v1);
+    let peek2 = Peek::new(&v2);
+    println!(
+        "i32 Equality: {}",
+        format!("{:?}", peek1.as_value().eq(&peek2.as_value())).green()
+    );
+
+    eprintln!("{}", "=================== StructEqNo".yellow());
+    #[derive(Shapely)]
+    struct StructEqNo {
+        blah: i32,
+    }
+    let s1 = StructEqNo { blah: 42 };
+    let s2 = StructEqNo { blah: 42 };
+    let peek1 = Peek::new(&s1);
+    let peek2 = Peek::new(&s2);
+    println!(
+        "StructEqNo Equality: {}",
+        format!("{:?}", peek1.as_value().eq(&peek2.as_value())).red()
+    );
+
+    eprintln!("{}", "=================== StructEqYes".yellow());
+    #[derive(Shapely, PartialEq)]
+    struct StructEqYes {
+        blah: i32,
+    }
+    let s1 = StructEqYes { blah: 42 };
+    let s2 = StructEqYes { blah: 42 };
+    let peek1 = Peek::new(&s1);
+    let peek2 = Peek::new(&s2);
+    println!(
+        "StructEqYes Equality: {}",
+        format!("{:?}", peek1.as_value().eq(&peek2.as_value())).green()
+    );
+}
+
+#[test]
+fn cmp_or_not() {
+    eprintln!("{}", "=================== i32 (Ord)".yellow());
+    let v1: i32 = 42;
+    let v2: i32 = 24;
+    let peek1 = Peek::new(&v1);
+    let peek2 = Peek::new(&v2);
+    println!(
+        "i32 Comparison: {}",
+        format!("{:?}", peek1.as_value().cmp(&peek2.as_value())).green()
+    );
+
+    eprintln!("{}", "=================== StructOrdNo".yellow());
+    #[derive(Shapely)]
+    struct StructOrdNo {
+        blah: i32,
+    }
+    let s1 = StructOrdNo { blah: 42 };
+    let s2 = StructOrdNo { blah: 24 };
+    let peek1 = Peek::new(&s1);
+    let peek2 = Peek::new(&s2);
+    println!(
+        "StructOrdNo Comparison: {}",
+        format!("{:?}", peek1.as_value().cmp(&peek2.as_value())).red()
+    );
+
+    eprintln!("{}", "=================== StructOrdYes".yellow());
+    #[derive(Shapely, PartialOrd, Ord, PartialEq, Eq)]
+    struct StructOrdYes {
+        blah: i32,
+    }
+    let s1 = StructOrdYes { blah: 42 };
+    let s2 = StructOrdYes { blah: 24 };
+    let peek1 = Peek::new(&s1);
+    let peek2 = Peek::new(&s2);
+    println!(
+        "StructOrdYes Comparison: {}",
+        format!("{:?}", peek1.as_value().cmp(&peek2.as_value())).green()
+    );
 }
