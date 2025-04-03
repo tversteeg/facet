@@ -103,7 +103,7 @@ where
 }
 
 #[test]
-fn test_primitive_types() {
+fn test_number_traits() {
     // i32 implements Debug, PartialEq, and Ord
     test_peek_pair(
         42,
@@ -117,13 +117,21 @@ fn test_primitive_types() {
             .build(),
     );
 
-    // Vec implements Debug and PartialEq but not Ord
+    // bool implements Debug, PartialEq, and Ord
     test_peek_pair(
-        vec![1, 2, 3],
-        vec![1, 2, 3],
-        FactBuilder::new().debug().equal_and(true).build(),
+        true,
+        false,
+        FactBuilder::new()
+            .debug()
+            .equal_and(false)
+            .ord_and(Ordering::Greater)
+            .default()
+            .build(),
     );
+}
 
+#[test]
+fn test_string_traits() {
     // String implements Debug, PartialEq, and Ord
     test_peek_pair(
         String::from("hello"),
@@ -133,18 +141,6 @@ fn test_primitive_types() {
             .display()
             .equal_and(false)
             .ord_and(Ordering::Less)
-            .default()
-            .build(),
-    );
-
-    // bool implements Debug, PartialEq, and Ord
-    test_peek_pair(
-        true,
-        false,
-        FactBuilder::new()
-            .debug()
-            .equal_and(false)
-            .ord_and(Ordering::Greater)
             .default()
             .build(),
     );
@@ -192,6 +188,16 @@ fn test_primitive_types() {
             .equal_and(true)
             .ord_and(Ordering::Equal)
             .build(),
+    );
+}
+
+#[test]
+fn test_other_types() {
+    // Vec implements Debug and PartialEq but not Ord
+    test_peek_pair(
+        vec![1, 2, 3],
+        vec![1, 2, 3],
+        FactBuilder::new().debug().equal_and(true).build(),
     );
 }
 
