@@ -16,26 +16,17 @@ fn deserialize_value<'input, 'mem>(
     poke: Poke<'mem>,
 ) -> Result<Opaque<'mem>, JsonParseErrorWithContext<'input>> {
     let shape = poke.shape();
-    trace!("Deserializing value with shape:\n{:?}", ShapeDebug(shape));
+    trace!("Deserializing {:?}", ShapeDebug(shape));
 
     let opaque = match poke {
         Poke::Scalar(pv) => {
             trace!("Deserializing \x1b[1;36mscalar\x1b[0m");
-
-            trace!(
-                "pv.shape.is_type::<String>() = {}",
-                pv.shape.is_type::<String>()
-            );
-            trace!("pv.shape.is_type::<u64>() = {}", pv.shape.is_type::<u64>());
-
             if pv.shape.is_type::<String>() {
-                trace!("Deserializing string (pv shape = {})", pv.shape);
                 let s = parser.parse_string()?;
                 let data = unsafe { pv.put(OpaqueConst::from_ref(&s)) };
                 std::mem::forget(s);
                 data
             } else if pv.shape.is_type::<u64>() {
-                trace!("Deserializing u64 (pv shape = {})", pv.shape);
                 let n = parser.parse_u64()?;
                 unsafe { pv.put(OpaqueConst::from_ref(&n)) }
             } else {
@@ -53,14 +44,16 @@ fn deserialize_value<'input, 'mem>(
                 parser.parse_object_key()?
             } {
                 trace!("Processing struct key: \x1b[1;33m{}\x1b[0m", key);
-                match ps.field_by_name(&key) {
-                    Ok(field_poke) => {
+                let index = match ps.field_by_name(&key) {
+                    Ok((index, field_poke)) => {
                         deserialize_value(parser, field_poke)?;
+                        index
                     }
                     Err(_) => {
                         return Err(parser.make_error(JsonParseErrorKind::UnknownField(key)));
                     }
-                }
+                };
+                unsafe { ps.mark_initialized(index) };
             }
             trace!("Finished deserializing \x1b[1;36mstruct\x1b[0m");
             ps.build_in_place()

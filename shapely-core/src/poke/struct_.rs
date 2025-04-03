@@ -129,14 +129,17 @@ impl<'mem> PokeStruct<'mem> {
     }
 
     /// Gets a field, by name
-    pub fn field_by_name<'s>(&'s mut self, name: &str) -> Result<crate::Poke<'s>, FieldError> {
+    pub fn field_by_name<'s>(
+        &'s mut self,
+        name: &str,
+    ) -> Result<(usize, crate::Poke<'s>), FieldError> {
         let index = self
             .def
             .fields
             .iter()
             .position(|f| f.name == name)
             .ok_or(FieldError::NoSuchStaticField)?;
-        self.field(index)
+        Ok((index, self.field(index)?))
     }
 
     /// Get a field writer for a field by index.
