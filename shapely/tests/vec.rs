@@ -41,6 +41,54 @@ fn test_spez() {
 }
 
 #[test]
+fn test_spez_const() {
+    struct Wrap<T>(T);
+
+    trait ViaString {
+        const VALUE: &'static str;
+
+        fn value(&self) -> &'static str {
+            Self::VALUE
+        }
+    }
+    impl ViaString for &&Wrap<String> {
+        const VALUE: &'static str = "String";
+
+        fn value(&self) -> &'static str {
+            Self::VALUE
+        }
+    }
+
+    trait ViaDisplay {
+        const VALUE: &'static str;
+
+        fn value(&self) -> &'static str {
+            Self::VALUE
+        }
+    }
+    impl<T: Display> ViaDisplay for &Wrap<T> {
+        const VALUE: &'static str = "Display";
+    }
+
+    trait ViaDebug {
+        const VALUE: &'static str;
+
+        fn value(&self) -> &'static str {
+            Self::VALUE
+        }
+    }
+
+    impl<T: Debug> ViaDebug for Wrap<T> {
+        const VALUE: &'static str = "Debug";
+    }
+
+    // Test method calls
+    eprintln!("{}", (&&&Wrap(String::from("hi"))).value());
+    eprintln!("{}", (&&Wrap(3)).value());
+    eprintln!("{}", Wrap(['a', 'b']).value());
+}
+
+#[test]
 fn vec_can_be_debug_or_not() {
     eprintln!();
     eprintln!("{}", "=================== i32".yellow());
