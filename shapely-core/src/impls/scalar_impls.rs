@@ -9,7 +9,7 @@ impl Shapely for () {
             vtable: &ValueVTable {
                 type_name: |f, _opts| write!(f, "()"),
                 display: Some(|_value, f| write!(f, "()")),
-                debug: None,
+                debug: Some(|_value, f| write!(f, "()")),
                 default_in_place: Some(|target| unsafe {
                     Some({
                         Self::default();
