@@ -22,12 +22,12 @@ pub struct Shape {
 impl Shape {
     /// Check if this shape is of the given type
     pub fn is_type<Other: Shapely>(&'static self) -> bool {
-        ShapeId::of(self) == Other::shape_id()
+        dbg!(dbg!(ShapeId::of(self)) == dbg!(Other::shape_id()))
     }
 
     /// Check if this shape is of the given type
     pub fn eq_type(&'static self, other: &'static Shape) -> bool {
-        ShapeId::of(self) == ShapeId::of(other)
+        dbg!(dbg!(ShapeId::of(self)) == dbg!(ShapeId::of(other)))
     }
 }
 

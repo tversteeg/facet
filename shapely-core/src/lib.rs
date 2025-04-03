@@ -29,13 +29,20 @@ pub use log::*;
 mod tests;
 
 /// A unique identifier for a type's shape
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Default, PartialOrd, Ord)]
+#[derive(Clone, PartialEq, Eq, Hash, Default, PartialOrd, Ord)]
 pub struct ShapeId(u64, u64);
+
+impl std::fmt::Debug for ShapeId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:016x}{:016x}", self.0, self.1)
+    }
+}
 
 impl ShapeId {
     /// Returns a unique identifier for the given shape
     #[inline(always)]
     pub fn of(shape: &'static Shape) -> ShapeId {
+        dbg!("getting ShapeId of", shape as *const _);
         ShapeId(shape as *const _ as u64, 0)
     }
 }
