@@ -186,10 +186,10 @@ macro_rules! value_vtable {
             } else {
                 None
             },
-            clone_in_place: if $crate::impls!($type_name: std::clone::Clone) {
+            clone_into: if $crate::impls!($type_name: std::clone::Clone) {
                 Some(|src, dst| {
                     use $crate::spez::*;
-                    Some((&&Spez(unsafe { src.as_ref::<$type_name>() })).spez_clone_in_place(dst))
+                    Some((&&Spez(unsafe { src.as_ref::<$type_name>() })).spez_clone_into(dst))
                 })
             } else {
                 None

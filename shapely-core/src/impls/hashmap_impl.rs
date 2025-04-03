@@ -38,9 +38,7 @@ where
             drop_in_place: Some(|value| unsafe {
                 std::ptr::drop_in_place(value.as_mut_ptr::<HashMap<K, V>>());
             }),
-            clone_in_place: Some(|src, dst| unsafe {
-                Some(dst.write(src.as_ref::<HashMap<K, V>>()))
-            }),
+            clone_into: Some(|src, dst| unsafe { Some(dst.write(src.as_ref::<HashMap<K, V>>())) }),
             parse: None,
             try_from: None,
         },

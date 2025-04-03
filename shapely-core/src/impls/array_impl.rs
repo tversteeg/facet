@@ -97,9 +97,9 @@ where
                 } else {
                     None
                 },
-                clone_in_place: if T::SHAPE.vtable.clone_in_place.is_some() {
+                clone_into: if T::SHAPE.vtable.clone_into.is_some() {
                     Some(|src, dst| unsafe {
-                        let t_cip = T::SHAPE.vtable.clone_in_place.unwrap_unchecked();
+                        let t_cip = T::SHAPE.vtable.clone_into.unwrap_unchecked();
                         (t_cip)(
                             OpaqueConst::from_ref(&src.as_ref::<[T; 1]>()[0]),
                             dst.field_uninit(0),

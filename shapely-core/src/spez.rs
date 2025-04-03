@@ -78,23 +78,23 @@ impl<T> SpezDefaultInPlaceNo for Spez<T> {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
-// Clone (in place)
+// Clone into
 ////////////////////////////////////////////////////////////////////////////////////////
 
-pub trait SpezCloneInPlaceYes {
-    fn spez_clone_in_place<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem>;
+pub trait SpezCloneIntoYes {
+    fn spez_clone_into<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem>;
 }
-impl<T: Clone> SpezCloneInPlaceYes for &Spez<T> {
-    fn spez_clone_in_place<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem> {
+impl<T: Clone> SpezCloneIntoYes for &Spez<T> {
+    fn spez_clone_into<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem> {
         unsafe { target.write(self.0.clone()) }
     }
 }
 
-pub trait SpezCloneInPlaceNo {
-    fn spez_clone_in_place<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem>;
+pub trait SpezCloneIntoNo {
+    fn spez_clone_into<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem>;
 }
-impl<T> SpezCloneInPlaceNo for Spez<T> {
-    fn spez_clone_in_place<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem> {
+impl<T> SpezCloneIntoNo for Spez<T> {
+    fn spez_clone_into<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem> {
         unreachable!()
     }
 }

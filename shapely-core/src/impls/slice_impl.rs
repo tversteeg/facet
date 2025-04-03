@@ -107,7 +107,7 @@ where
                 parse: None,
                 try_from: None,
                 default_in_place: None,
-                clone_in_place: Some(|src, dst| unsafe { Some(dst.write(src.as_ref::<&[T]>())) }),
+                clone_into: Some(|src, dst| unsafe { Some(dst.write(src.as_ref::<&[T]>())) }),
             },
             def: Def::List(ListDef {
                 vtable: &ListVTable {

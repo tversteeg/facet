@@ -25,6 +25,7 @@ where
         ("Default", value_vtable.default_in_place.is_some()),
         ("Eq", value_vtable.eq.is_some()),
         ("Ord", value_vtable.cmp.is_some()),
+        ("Clone", value_vtable.clone.is_some()),
     ];
     let trait_str = traits
         .iter()
@@ -96,6 +97,12 @@ where
         facts.insert(Fact::HasDefault);
         let peek = unsafe { Peek::unchecked_new(value.as_const(), T::SHAPE) };
         eprintln!("Default:   {}", format!("{:?}", peek).style(remarkable));
+    }
+
+    // Test clone
+    if l.as_value().shape().vtable.clone_into.is_some() {
+        facts.insert(Fact::HasClone);
+        eprintln!("Clone:     Implemented");
     }
 
     let expected_minus_actual: HashSet<_> = expected_facts.difference(&facts).collect();

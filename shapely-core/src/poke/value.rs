@@ -100,6 +100,22 @@ impl<'mem> PokeValue<'mem> {
         }
     }
 
+    /// Attempts to clone `source` into this value
+    ///
+    /// Returns `Some(Opaque)` if cloning was successful, `None` otherwise.
+    pub fn clone_into<'src>(self, source: Peek<'src>) -> Result<Opaque<'mem>, Self> {
+        if let Some(cloned_val) = self
+            .vtable()
+            .clone_into
+            .and_then(|clone_fn| unsafe { clone_fn(source, self.data) })
+        {
+            // Safe because the function will initialize our data if it returns Some
+            Ok(cloned_val)
+        } else {
+            Err(self)
+        }
+    }
+
     /// Unwrap back into a poke
     pub fn unwrap(self) -> Poke<'mem> {
         unsafe { Poke::from_opaque_uninit(self.data, self.shape) }

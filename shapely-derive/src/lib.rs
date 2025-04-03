@@ -282,10 +282,10 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                clone_in_place: if shapely_core::impls!(Self: std::clone::Clone) {{
+                clone_into: if shapely_core::impls!(Self: std::clone::Clone) {{
                     Some(|src, dst| {{
                         use shapely::spez::*;
-                        Some((&&Spez(unsafe {{ src.as_ref::<Self>() }})).spez_clone_in_place(dst))
+                        Some((&&Spez(unsafe {{ src.as_ref::<Self>() }})).spez_clone_into(dst))
                     }})
                 }} else {{
                     None
@@ -390,10 +390,10 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                clone_in_place: if shapely_core::impls!(Self: std::clone::Clone) {{
+                clone_into: if shapely_core::impls!(Self: std::clone::Clone) {{
                     Some(|src, dst| {{
                         use shapely::spez::*;
-                        Some((&&Spez(unsafe {{ src.as_ref::<Self>() }})).spez_clone_in_place(dst))
+                        Some((&&Spez(unsafe {{ src.as_ref::<Self>() }})).spez_clone_into(dst))
                     }})
                 }} else {{
                     None
@@ -571,10 +571,10 @@ impl shapely::Shapely for {enum_name} {{
                 }} else {{
                     None
                 }},
-                clone_in_place: if shapely_core::impls!(Self: std::clone::Clone) {{
+                clone_into: if shapely_core::impls!(Self: std::clone::Clone) {{
                     Some(|src, dst| {{
                         use shapely::spez::*;
-                        Some((&&Spez(unsafe {{ src.as_ref::<Self>() }})).spez_clone_in_place(dst))
+                        Some((&&Spez(unsafe {{ src.as_ref::<Self>() }})).spez_clone_into(dst))
                     }})
                 }} else {{
                     None
