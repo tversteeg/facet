@@ -1,6 +1,6 @@
 //! Allows poking (writing to) shapes
 
-use std::mem::MaybeUninit;
+use std::{alloc::Layout, mem::MaybeUninit};
 
 use crate::{Shape, Shapely};
 
@@ -35,11 +35,33 @@ pub enum Poke<'mem> {
     Enum(PokeEnumNoVariant<'mem>),
 }
 
+pub struct Guard {
+    ptr: *mut u8,
+    layout: Layout,
+    shape: &'static Shape,
+}
+
+impl Drop for Guard {
+    fn drop(&mut self) {
+        unsafe {
+            eprintln!("Dropping guard for shape: {}", self.shape);
+            std::alloc::dealloc(self.ptr, self.layout);
+        }
+    }
+}
+
 impl<'mem> Poke<'mem> {
     /// Allocates a new poke of a type that implements shapely
-    pub fn alloc<S: Shapely>() -> Self {
+    pub fn alloc<S: Shapely>() -> (Self, Guard) {
         let data = S::allocate();
-        unsafe { Self::from_opaque_uninit(data, S::SHAPE) }
+        let layout = Layout::new::<S>();
+        let guard = Guard {
+            ptr: data.as_mut_ptr(),
+            layout,
+            shape: S::SHAPE,
+        };
+        let poke = unsafe { Self::from_opaque_uninit(data, S::SHAPE) };
+        (poke, guard)
     }
 
     /// Creates a new poke from a mutable reference to a MaybeUninit of a type that implements shapely

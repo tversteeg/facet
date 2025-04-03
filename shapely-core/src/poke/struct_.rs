@@ -1,7 +1,7 @@
 use crate::{FieldError, OpaqueUninit, Shape, StructDef};
 use std::ptr::NonNull;
 
-use super::ISet;
+use super::{Guard, ISet};
 
 /// Allows poking a struct (setting fields, etc.)
 pub struct PokeStruct<'mem> {
@@ -63,20 +63,18 @@ impl<'mem> PokeStruct<'mem> {
     /// This function will panic if:
     /// - Not all the fields have been initialized.
     /// - The generic type parameter T does not match the shape that this PokeStruct is building.
-    pub fn build<T: crate::Shapely>(self) -> T {
+    pub fn build<T: crate::Shapely>(self, guard: Option<Guard>) -> T {
         self.assert_all_fields_initialized();
         assert_eq!(self.shape, T::SHAPE, "Shape mismatch");
+        if let Some(guard) = &guard {
+            assert_eq!(guard.shape, self.shape, "Shape mismatch");
+        }
 
         let result = unsafe {
             let ptr = self.data.as_mut_ptr() as *const T;
             std::ptr::read(ptr)
         };
         crate::trace!("Built \x1b[1;33m{}\x1b[0m successfully", T::SHAPE);
-
-        // Deallocate the memory
-        unsafe {
-            std::alloc::dealloc(self.data.as_mut_ptr(), self.shape.layout);
-        };
         std::mem::forget(self);
         result
     }
@@ -105,8 +103,12 @@ impl<'mem> PokeStruct<'mem> {
     /// and must be large enough to hold the value.
     /// The caller is responsible for ensuring that the target memory is properly deallocated
     /// when it's no longer needed.
-    pub unsafe fn move_into(self, target: NonNull<u8>) {
+    pub unsafe fn move_into(self, target: NonNull<u8>, guard: Option<Guard>) {
         self.assert_all_fields_initialized();
+        if let Some(guard) = &guard {
+            assert_eq!(guard.shape, self.shape, "Shape mismatch");
+        }
+
         unsafe {
             std::ptr::copy_nonoverlapping(
                 self.data.as_mut_ptr(),
