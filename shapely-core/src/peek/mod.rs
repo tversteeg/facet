@@ -15,6 +15,17 @@ pub enum Peek<'mem> {
     Scalar(PeekValue<'mem>),
 }
 
+impl std::fmt::Debug for Peek<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Scalar(v) => match v.debug(f) {
+                Some(res) => res,
+                None => write!(f, "({:?})", v.shape),
+            },
+        }
+    }
+}
+
 /// Lets you read from a value (implements read-only [`ValueVTable`] proxies)
 #[derive(Clone, Copy)]
 pub struct PeekValue<'mem> {
@@ -131,7 +142,7 @@ impl<'mem> PeekValue<'mem> {
     ///
     /// `None` if display formatting is not supported for this scalar type
     #[inline(always)]
-    pub fn display(&self, f: std::fmt::Formatter<'_>) -> Option<std::fmt::Result> {
+    pub fn display(&self, f: &mut std::fmt::Formatter<'_>) -> Option<std::fmt::Result> {
         unsafe {
             self.shape
                 .vtable
@@ -146,13 +157,8 @@ impl<'mem> PeekValue<'mem> {
     ///
     /// `None` if debug formatting is not supported for this scalar type
     #[inline(always)]
-    pub fn debug(&self, f: std::fmt::Formatter<'_>) -> Option<std::fmt::Result> {
-        unsafe {
-            self.shape
-                .vtable
-                .debug
-                .map(|debug_fn| debug_fn(self.data, f))
-        }
+    pub fn debug(&self, f: &mut std::fmt::Formatter<'_>) -> Option<std::fmt::Result> {
+        unsafe { (self.shape.vtable.debug)(self.data, f) }
     }
 
     /// Hashes this scalar

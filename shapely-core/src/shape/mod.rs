@@ -7,7 +7,7 @@ use crate::{ListVTable, MapVTable, OpaqueUninit, Shapely, TypeNameOpts, ValueVTa
 mod pretty_print;
 
 /// Schema for reflection of a type
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Shape {
     /// Size, alignment
     pub layout: Layout,
@@ -138,14 +138,14 @@ impl std::fmt::Debug for ShapeDebug {
 }
 
 /// Common fields for struct-like types
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct StructDef {
     /// all fields, in declaration order (not necessarily in memory order)
     pub fields: &'static [Field],
 }
 
 /// Describes a field in a struct or tuple
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct Field {
     /// key for the struct field (for tuples and tuple-structs, this is the 0-based index)
     pub name: &'static str,
@@ -263,7 +263,7 @@ impl std::fmt::Display for FieldFlags {
 }
 
 /// Fields for map types
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct MapDef {
     /// vtable for interacting with the map
     pub vtable: &'static MapVTable,
@@ -274,7 +274,7 @@ pub struct MapDef {
 }
 
 /// Fields for list types
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct ListDef {
     /// vtable for interacting with the list
     pub vtable: &'static ListVTable,
@@ -283,7 +283,7 @@ pub struct ListDef {
 }
 
 /// Fields for enum types
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct EnumDef {
     /// representation of the enum (u8, u16, etc.)
     pub repr: EnumRepr,
@@ -292,7 +292,7 @@ pub struct EnumDef {
 }
 
 /// Describes a variant of an enum
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct Variant {
     /// Name of the variant
     pub name: &'static str,
@@ -305,7 +305,7 @@ pub struct Variant {
 }
 
 /// Represents the different kinds of variants that can exist in a Rust enum
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum VariantKind {
     /// Unit variant (e.g., `None` in Option)
     Unit,
@@ -324,7 +324,7 @@ pub enum VariantKind {
 }
 
 /// All possible representations for Rust enums
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum EnumRepr {
     /// Default representation (compiler-dependent)
     Default,
@@ -357,7 +357,7 @@ impl Default for EnumRepr {
 }
 
 /// Definition for scalar types
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct ScalarDef {
     /// The TypeId of the scalar type
     pub type_id: ConstTypeId,
@@ -373,7 +373,7 @@ impl ScalarDef {
 }
 
 /// The definition of a shape: is it more like a struct, a map, a list?
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Def {
     /// Scalar — those don't have a def, they're not composed of other things.
     /// You can interact with them through [`ValueVTable`].

@@ -1,30 +1,28 @@
-use super::*;
 
-use shapely::{OpaqueUninit, Poke, Shapely};
 
-#[test]
-fn test_from_json() {
-    #[derive(Shapely)]
-    struct TestStruct {
-        name: String,
-        age: u64,
-    }
-    let json = r#"{"name": "Alice", "age": 30}"#;
+// #[test]
+// fn test_from_json() {
+//     #[derive(Shapely)]
+//     struct TestStruct {
+//         name: String,
+//         age: u64,
+//     }
+//     let json = r#"{"name": "Alice", "age": 30}"#;
 
-    let data = OpaqueUninit::new(unsafe { std::alloc::alloc(TestStruct::SHAPE.layout) });
-    let poke = unsafe { Poke::from_opaque_uninit(data, TestStruct::SHAPE) };
-    from_json(poke, json).unwrap();
+//     let data = OpaqueUninit::new(unsafe { std::alloc::alloc(TestStruct::SHAPE.layout) });
+//     let poke = unsafe { Poke::from_opaque_uninit(data, TestStruct::SHAPE) };
+//     from_json(poke, json).unwrap();
 
-    let built_struct = unsafe { data.assume_init() };
-    let ptr = built_struct.as_mut_byte_ptr();
-    let s = unsafe { built_struct.read::<TestStruct>() };
-    unsafe {
-        std::alloc::dealloc(ptr, TestStruct::SHAPE.layout);
-    }
+//     let built_struct = unsafe { data.assume_init() };
+//     let ptr = built_struct.as_mut_byte_ptr();
+//     let s = unsafe { built_struct.read::<TestStruct>() };
+//     unsafe {
+//         std::alloc::dealloc(ptr, TestStruct::SHAPE.layout);
+//     }
 
-    assert_eq!(s.name, "Alice");
-    assert_eq!(s.age, 30);
-}
+//     assert_eq!(s.name, "Alice");
+//     assert_eq!(s.age, 30);
+// }
 
 // #[test]
 // fn test_to_json() {

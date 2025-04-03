@@ -1,6 +1,5 @@
-use std::alloc::Layout;
-
 use crate::*;
+use std::alloc::Layout;
 
 impl Shapely for () {
     const SHAPE: &'static Shape = &const {
@@ -9,8 +8,8 @@ impl Shapely for () {
             def: Def::Scalar(ScalarDef::of::<Self>()),
             vtable: &ValueVTable {
                 type_name: |f, _opts| write!(f, "()"),
-                display: Some(|_value, mut f| write!(f, "()")),
-                debug: Some(|_value, mut f| write!(f, "()")),
+                display: Some(|_value, f| write!(f, "()")),
+                debug: debug_fn_for::<Self>(),
                 default_in_place: Some(|target| unsafe { Some(target.write(())) }),
                 eq: Some(|_left, _right| true), // () == () is always true
                 cmp: Some(|_left, _right| std::cmp::Ordering::Equal), // () cmp () is always Equal
@@ -35,14 +34,11 @@ impl Shapely for String {
         def: Def::Scalar(ScalarDef::of::<Self>()),
         vtable: &ValueVTable {
             type_name: |f, _opts| write!(f, "String"),
-            display: Some(|value, mut f| {
+            display: Some(|value, f| {
                 let val = unsafe { value.as_ref::<Self>() };
                 write!(f, "{val}")
             }),
-            debug: Some(|value, mut f| {
-                let val = unsafe { value.as_ref::<Self>() };
-                write!(f, "{val:?}")
-            }),
+            debug: debug_fn_for::<Self>(),
             default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
             eq: Some(|left, right| unsafe { left.as_ref::<Self>() == right.as_ref::<Self>() }),
             cmp: Some(|left, right| unsafe { left.as_ref::<Self>().cmp(right.as_ref::<Self>()) }),
@@ -67,14 +63,11 @@ impl Shapely for bool {
         def: Def::Scalar(ScalarDef::of::<Self>()),
         vtable: &ValueVTable {
             type_name: |f, _opts| write!(f, "bool"),
-            display: Some(|value, mut f| {
+            display: Some(|value, f| {
                 let val = unsafe { value.as_ref::<Self>() };
                 write!(f, "{val}")
             }),
-            debug: Some(|value, mut f| {
-                let val = unsafe { value.as_ref::<Self>() };
-                write!(f, "{val:?}")
-            }),
+            debug: debug_fn_for::<Self>(),
             default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
             eq: Some(|left, right| unsafe { left.as_ref::<Self>() == right.as_ref::<Self>() }),
             cmp: Some(|left, right| unsafe { left.as_ref::<Self>().cmp(right.as_ref::<Self>()) }),
@@ -103,14 +96,16 @@ macro_rules! impl_shapely_for_integer {
                 def: Def::Scalar(ScalarDef::of::<Self>()),
                 vtable: &ValueVTable {
                     type_name: |f, _opts| write!(f, stringify!($type)),
-                    display: Some(|value, mut f| {
+                    display: Some(|value, f| {
                         let val = unsafe { *value.as_ptr::<Self>() };
                         write!(f, "{val}")
                     }),
-                    debug: Some(|value, mut f| {
-                        let val = unsafe { *value.as_ptr::<Self>() };
-                        write!(f, "{val:?}")
-                    }),
+                    debug: |value, f| {
+                        Some(<Self as std::fmt::Debug>::fmt(
+                            unsafe { value.as_ref::<Self>() },
+                            f,
+                        ))
+                    },
                     default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
                     eq: Some(|left, right| unsafe {
                         left.as_ref::<Self>() == right.as_ref::<Self>()
@@ -156,14 +151,11 @@ macro_rules! impl_shapely_for_float {
                 def: Def::Scalar(ScalarDef::of::<Self>()),
                 vtable: &ValueVTable {
                     type_name: |f, _opts| write!(f, stringify!($type)),
-                    display: Some(|value, mut f| {
+                    display: Some(|value, f| {
                         let val = unsafe { *value.as_ptr::<Self>() };
                         write!(f, "{val}")
                     }),
-                    debug: Some(|value, mut f| {
-                        let val = unsafe { *value.as_ptr::<Self>() };
-                        write!(f, "{val:?}")
-                    }),
+                    debug: debug_fn_for::<Self>(),
                     default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
                     eq: Some(|left, right| unsafe {
                         left.as_ref::<Self>() == right.as_ref::<Self>()

@@ -1,27 +1,15 @@
 use std::alloc::Layout;
 
-use crate::{DebugFn, Def, ListDef, ListVTable, OpaqueConst, Shape, Shapely, ValueVTable};
+use crate::{
+    DebugFnProxy as _, Def, ListDef, ListVTable, OpaqueConst, Shape, Shapely, Spez,
+    ValueVTable,
+};
 
 impl<T> Shapely for Vec<T>
 where
     T: Shapely,
 {
     const SHAPE: &'static Shape = &const {
-        struct Wrap<T>(T);
-
-        trait HasDebugFn {
-            const DEBUG: Option<DebugFn>;
-        }
-
-        impl<T> HasDebugFn for &Wrap<Vec<T>> {
-            const DEBUG: Option<DebugFn> = None;
-        }
-
-        impl<T: std::fmt::Debug> HasDebugFn for Wrap<Vec<T>> {
-            const DEBUG: Option<DebugFn> =
-                Some(|data, mut f| write!(f, "{:?}", unsafe { data.as_ref::<Vec<T>>() }));
-        }
-
         Shape {
             layout: Layout::new::<Vec<T>>(),
             vtable: &ValueVTable {
@@ -36,8 +24,7 @@ where
                 },
                 // TODO: specialize these
                 display: None,
-                debug: <&Wrap<Vec<T>> as HasDebugFn>::DEBUG,
-                default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
+                debug: |value, f| unsafe { Spez::<&Vec<T>>::from_opaque_const(value).debug_fn(f) },
                 // TODO: specialize these
                 eq: None,
                 // TODO: specialize these
@@ -50,6 +37,7 @@ where
                 parse: None,
                 // TODO: specialize these
                 try_from: None,
+                default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
             },
             def: Def::List(ListDef {
                 vtable: &ListVTable {

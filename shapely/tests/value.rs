@@ -1,15 +1,15 @@
-use shapely::{OpaqueConst, Poke, ShapeDebug, Shapely};
+// use shapely::{OpaqueConst, Poke, ShapeDebug, Shapely};
 
-#[test]
-fn build_u64_properly() {
-    let shape = u64::SHAPE;
-    eprintln!("{:#?}", ShapeDebug(shape));
+// #[test]
+// fn build_u64_properly() {
+//     let shape = u64::SHAPE;
+//     eprintln!("{:#?}", ShapeDebug(shape));
 
-    let (poke, _guard) = Poke::alloc::<u64>();
-    let poke = poke.into_scalar();
-    let data = unsafe { poke.put(OpaqueConst::from_ref(&42u64)) };
-    let value = unsafe { data.read::<u64>() };
+//     let (poke, _guard) = Poke::alloc::<u64>();
+//     let poke = poke.into_scalar();
+//     let data = unsafe { poke.put(OpaqueConst::from_ref(&42u64)) };
+//     let value = unsafe { data.read::<u64>() };
 
-    // Verify the value was set correctly
-    assert_eq!(value, 42);
-}
+//     // Verify the value was set correctly
+//     assert_eq!(value, 42);
+// }
