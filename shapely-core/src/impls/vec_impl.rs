@@ -1,38 +1,10 @@
-use std::{
-    alloc::Layout,
-    fmt::{self},
-};
+use std::alloc::Layout;
 
-use crate::{Def, ListDef, ListVTable, OpaqueConst, Shape, Shapely, ValueVTable};
-
-/// proxies, using the <https://docs.rs/spez> trick, kind of:
-pub struct Wrap<T>(T);
-
-pub trait ViaDebug {
-    fn debug_fn(&self, f: &mut fmt::Formatter<'_>) -> Option<Result<(), fmt::Error>>;
-}
-
-pub trait ViaNone {
-    fn debug_fn(&self, f: &mut fmt::Formatter<'_>) -> Option<Result<(), fmt::Error>>;
-}
-
-impl<T: fmt::Debug> ViaDebug for &Wrap<T> {
-    fn debug_fn(&self, f: &mut fmt::Formatter<'_>) -> Option<Result<(), fmt::Error>> {
-        eprintln!("yes Debug");
-        Some(fmt::Debug::fmt(&self.0, f))
-    }
-}
-
-impl<T> ViaNone for Wrap<T> {
-    fn debug_fn(&self, _f: &mut fmt::Formatter<'_>) -> Option<Result<(), fmt::Error>> {
-        eprintln!("no Debug");
-        None
-    }
-}
+use crate::{DEFAULT_DEBUG_FN, Def, ListDef, ListVTable, OpaqueConst, Shape, Shapely, ValueVTable};
 
 impl<T> Shapely for Vec<T>
 where
-    T: Shapely + fmt::Debug,
+    T: Shapely,
 {
     const SHAPE: &'static Shape = &const {
         Shape {
@@ -49,11 +21,7 @@ where
                 },
                 // TODO: specialize these
                 display: None,
-                debug: |value, f| {
-                    let v: &Vec<T> = unsafe { value.as_ref() };
-                    let val = Wrap(v);
-                    (&&val).debug_fn(f)
-                },
+                debug: DEFAULT_DEBUG_FN,
                 // TODO: specialize these
                 eq: None,
                 // TODO: specialize these

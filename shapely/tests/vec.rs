@@ -1,22 +1,10 @@
 use std::fmt::{Debug, Display};
 
 use owo_colors::OwoColorize;
-use shapely::Peek;
+use shapely::{Peek, Shapely};
 
 #[test]
-fn vec_can_be_debug_or_not() {
-    eprintln!();
-    eprintln!("{}", "=================== i32".yellow());
-    let v: i32 = 42;
-    let peek = Peek::new(&v);
-    println!("Integer Peek: {}", format!("{peek:#?}").green());
-
-    eprintln!();
-    eprintln!("{}", "=================== Vec<i32>".yellow());
-    let v: Vec<i32> = vec![1, 2, 3];
-    let peek = Peek::new(&v);
-    println!("Vector Peek: {}", format!("{peek:#?}").blue());
-
+fn test_spez() {
     struct Wrap<T>(T);
 
     trait ViaString {
@@ -50,12 +38,26 @@ fn vec_can_be_debug_or_not() {
     (&&&Wrap(String::from("hi"))).foo();
     (&&Wrap(3)).foo();
     Wrap(['a', 'b']).foo();
+}
 
-    // #[derive(Shapely)]
-    // struct NotDebug {
-    //     blah: i32,
-    // }
-    // let v = vec![NotDebug { blah: 42 }];
-    // let shape = Shape::of_val(&v);
-    // assert!(shape.vtable.debug.is_none());
+#[test]
+fn vec_can_be_debug_or_not() {
+    eprintln!();
+    eprintln!("{}", "=================== i32".yellow());
+    let v: i32 = 42;
+    let peek = Peek::new(&v);
+    println!("Integer Peek: {}", format!("{peek:#?}").green());
+
+    eprintln!();
+    eprintln!("{}", "=================== Vec<i32>".yellow());
+    let v: Vec<i32> = vec![1, 2, 3];
+    let peek = Peek::new(&v);
+    println!("Vector Peek: {}", format!("{peek:#?}").blue());
+
+    #[derive(Shapely)]
+    struct NotDebug {
+        blah: i32,
+    }
+    let peek = Peek::new(&NotDebug { blah: 42 });
+    println!("NotDebug Peek: {}", format!("{peek:#?}").red());
 }

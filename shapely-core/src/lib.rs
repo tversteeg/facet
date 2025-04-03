@@ -1,6 +1,8 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
+pub mod spez;
+
 mod opaque;
 pub use opaque::*;
 

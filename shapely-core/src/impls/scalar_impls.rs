@@ -9,7 +9,7 @@ impl Shapely for () {
             vtable: &ValueVTable {
                 type_name: |f, _opts| write!(f, "()"),
                 display: Some(|_value, f| write!(f, "()")),
-                debug: debug_fn_for::<Self>(),
+                debug: DEFAULT_DEBUG_FN,
                 default_in_place: Some(|target| unsafe { Some(target.write(())) }),
                 eq: Some(|_left, _right| true), // () == () is always true
                 cmp: Some(|_left, _right| std::cmp::Ordering::Equal), // () cmp () is always Equal
