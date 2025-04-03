@@ -36,7 +36,8 @@ pub struct PokeMap<'mem> {
     data: Opaque<'mem>,
     #[allow(dead_code)]
     shape: &'static Shape,
-    def: MapDef,
+    /// The definition of the map
+    pub def: MapDef,
 }
 
 impl<'mem> PokeMap<'mem> {
@@ -91,5 +92,10 @@ impl<'mem> PokeMap<'mem> {
     #[inline]
     pub fn get_value_ptr<'key>(&self, key: OpaqueConst<'key>) -> Option<OpaqueConst<'mem>> {
         unsafe { (self.map_vtable().get_value_ptr)(self.data.as_const(), key) }
+    }
+
+    /// Takes ownership of this `PokeList` and returns the underlying data.
+    pub fn build_in_place(self) -> Opaque<'mem> {
+        self.data
     }
 }

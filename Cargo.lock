@@ -124,6 +124,8 @@ dependencies = [
 name = "shapely-json"
 version = "3.1.0"
 dependencies = [
+ "color-backtrace",
+ "ctor",
  "shapely",
 ]
 

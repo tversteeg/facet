@@ -1,4 +1,4 @@
-use crate::{FieldError, OpaqueUninit, Shape, ShapeDebug, StructDef};
+use crate::{FieldError, Opaque, OpaqueUninit, Shape, ShapeDebug, StructDef};
 use std::ptr::NonNull;
 
 use super::{Guard, ISet};
@@ -50,12 +50,16 @@ impl<'mem> PokeStruct<'mem> {
     /// # Panics
     ///
     /// This function will panic if any field is not initialized.
-    pub fn build_in_place(self) {
+    pub fn build_in_place(self) -> Opaque<'mem> {
         // ensure all fields are initialized
         self.assert_all_fields_initialized();
 
+        let data = unsafe { self.data.assume_init() };
+
         // prevent field drops when the PokeStruct is dropped
         std::mem::forget(self);
+
+        data
     }
 
     /// Builds a value of type `T` from the PokeStruct, then deallocates the memory

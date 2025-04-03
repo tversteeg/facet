@@ -3,9 +3,6 @@
 
 mod parser;
 
-#[cfg(test)]
-mod tests;
-
 mod from_json;
 pub use from_json::*;
 

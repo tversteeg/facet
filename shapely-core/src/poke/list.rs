@@ -87,4 +87,9 @@ impl<'mem> PokeList<'mem> {
     pub fn get_item_ptr(&self, index: usize) -> crate::OpaqueConst {
         unsafe { (self.list_vtable().get_item_ptr)(self.data.as_const(), index) }
     }
+
+    /// Takes ownership of this `PokeList` and returns the underlying data.
+    pub fn build_in_place(self) -> Opaque<'mem> {
+        self.data
+    }
 }
