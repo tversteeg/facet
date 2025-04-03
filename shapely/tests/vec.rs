@@ -4,7 +4,7 @@ use owo_colors::OwoColorize;
 use shapely::{Peek, Shapely};
 
 #[test]
-fn test_spez() {
+fn test_spez1() {
     struct Wrap<T>(T);
 
     trait ViaString {
@@ -41,51 +41,40 @@ fn test_spez() {
 }
 
 #[test]
-fn test_spez_const() {
+fn test_spez2() {
     struct Wrap<T>(T);
 
     trait ViaString {
-        const VALUE: &'static str;
-
-        fn value(&self) -> &'static str {
-            Self::VALUE
-        }
+        fn foo(&self);
     }
     impl ViaString for &&Wrap<String> {
-        const VALUE: &'static str = "String";
-
-        fn value(&self) -> &'static str {
-            Self::VALUE
+        fn foo(&self) {
+            println!("String: {}", self.0);
         }
     }
 
     trait ViaDisplay {
-        const VALUE: &'static str;
-
-        fn value(&self) -> &'static str {
-            Self::VALUE
-        }
+        fn foo(&self);
     }
     impl<T: Display> ViaDisplay for &Wrap<T> {
-        const VALUE: &'static str = "Display";
+        fn foo(&self) {
+            println!("Display: {}", self.0);
+        }
     }
 
     trait ViaDebug {
-        const VALUE: &'static str;
-
-        fn value(&self) -> &'static str {
-            Self::VALUE
+        fn foo(&self);
+    }
+    impl<T: Debug> ViaDebug for Wrap<T> {
+        fn foo(&self) {
+            println!("Debug: {:?}", self.0);
         }
     }
 
-    impl<T: Debug> ViaDebug for Wrap<T> {
-        const VALUE: &'static str = "Debug";
-    }
-
     // Test method calls
-    eprintln!("{}", (&&&Wrap(String::from("hi"))).value());
-    eprintln!("{}", (&&Wrap(3)).value());
-    eprintln!("{}", Wrap(['a', 'b']).value());
+    (&&&Wrap(String::from("hi"))).foo();
+    (&&Wrap(3)).foo();
+    Wrap(['a', 'b']).foo();
 }
 
 #[test]

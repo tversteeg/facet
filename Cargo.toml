@@ -32,6 +32,4 @@ categories = ["encoding", "parsing", "development-tools", "data-structures"]
 shapely = { version = "3.1.0", path = "shapely" }
 shapely-core = { version = "3.1.0", path = "shapely-core" }
 shapely-derive = { version = "3.1.0", path = "shapely-derive" }
-shapely-pretty = { version = "3.1.0", path = "shapely-pretty" }
 unsynn = "0.0.25"
-form_urlencoded = "1.2.1"

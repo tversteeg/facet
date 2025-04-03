@@ -1,5 +1,3 @@
-
-
 // #[test]
 // fn test_from_json() {
 //     #[derive(Shapely)]
