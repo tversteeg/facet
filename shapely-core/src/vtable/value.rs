@@ -241,35 +241,3 @@ pub struct ValueVTable {
     /// cf. [`TryFromFn`]
     pub try_from: Option<TryFromFn>,
 }
-
-/// proxies, using the <https://docs.rs/spez> trick, kind of:
-pub struct Spez<T>(T);
-
-impl<T> Spez<&T> {
-    /// Create a new `Spez` from an `OpaqueConst`.
-    ///
-    /// # Safety
-    ///
-    /// `T` must match the type of the `OpaqueConst`.
-    pub unsafe fn from_opaque_const(data: OpaqueConst<'_>) -> Self {
-        Spez(unsafe { data.as_ref() })
-    }
-}
-
-/// Proxy for the `DebugFn` trait, doing autederef specialization
-pub trait DebugFnProxy: Sized {
-    /// Call the debug impl, if `Self` implements `Debug`.
-    fn debug_fn(self, f: &mut std::fmt::Formatter<'_>) -> Option<Result<(), std::fmt::Error>>;
-}
-
-impl<T> DebugFnProxy for Spez<&T> {
-    fn debug_fn(self, _f: &mut std::fmt::Formatter<'_>) -> Option<Result<(), std::fmt::Error>> {
-        None
-    }
-}
-
-impl<T: std::fmt::Debug> DebugFnProxy for &Spez<&T> {
-    fn debug_fn(self, f: &mut std::fmt::Formatter<'_>) -> Option<Result<(), std::fmt::Error>> {
-        Some(std::fmt::Debug::fmt(&self.0, f))
-    }
-}
