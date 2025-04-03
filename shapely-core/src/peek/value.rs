@@ -106,7 +106,12 @@ impl<'mem> PeekValue<'mem> {
     /// `None` if debug formatting is not supported for this scalar type
     #[inline(always)]
     pub fn debug(&self, f: &mut std::fmt::Formatter<'_>) -> Option<std::fmt::Result> {
-        unsafe { (self.shape.vtable.debug)(self.data, f) }
+        unsafe {
+            self.shape
+                .vtable
+                .debug
+                .map(|debug_fn| debug_fn(self.data, f))
+        }
     }
 
     /// Hashes this scalar

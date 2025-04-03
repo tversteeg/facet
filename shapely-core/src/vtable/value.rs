@@ -76,21 +76,13 @@ pub type DisplayFn =
 /// # Safety
 ///
 /// The `value` parameter must point to aligned, initialized memory of the correct type.
-pub type DebugFn = for<'mem> unsafe fn(
-    value: OpaqueConst<'mem>,
-    f: &mut std::fmt::Formatter,
-) -> Option<std::fmt::Result>;
+pub type DebugFn =
+    for<'mem> unsafe fn(value: OpaqueConst<'mem>, f: &mut std::fmt::Formatter) -> std::fmt::Result;
 
-/// Default debug fn, just returns None
-pub const DEFAULT_DEBUG_FN: DebugFn = |_value, _f| None;
-
-/// Builds a `DebugFn` for a type that implements it (useful when implementing on scalars)
 pub const fn debug_fn_for<T: std::fmt::Debug>() -> DebugFn {
-    |value, f| {
-        Some(<T as std::fmt::Debug>::fmt(
-            unsafe { value.as_ref::<T>() },
-            f,
-        ))
+    |value: OpaqueConst<'_>, f: &mut std::fmt::Formatter| -> std::fmt::Result {
+        let val = unsafe { value.as_ref::<T>() };
+        write!(f, "{val:?}")
     }
 }
 
@@ -218,7 +210,7 @@ pub struct ValueVTable {
     pub display: Option<DisplayFn>,
 
     /// cf. [`DebugFn`]
-    pub debug: DebugFn,
+    pub debug: Option<DebugFn>,
 
     /// cf. [`DefaultInPlaceFn`]
     pub default_in_place: Option<DefaultInPlaceFn>,

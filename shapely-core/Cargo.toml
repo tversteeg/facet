@@ -13,4 +13,5 @@ keywords = ["reflection", "introspection", "serialization", "deserialization"]
 categories = ["development-tools", "encoding"]
 
 [dependencies]
+impls = "1.0.3"
 typeid = "1.0.3"

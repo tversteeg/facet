@@ -3,10 +3,7 @@ use std::{
     collections::{HashMap, VecDeque},
 };
 
-use crate::{
-    DEFAULT_DEBUG_FN, Def, MapDef, MapIterVTable, MapVTable, OpaqueConst, Shape, Shapely,
-    ValueVTable,
-};
+use crate::{Def, MapDef, MapIterVTable, MapVTable, OpaqueConst, Shape, Shapely, ValueVTable};
 
 struct HashMapIterator<'mem, K> {
     map: OpaqueConst<'mem>,
@@ -33,7 +30,7 @@ where
                 }
             },
             display: None,
-            debug: DEFAULT_DEBUG_FN,
+            debug: None,
             default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
             eq: None,
             cmp: None,

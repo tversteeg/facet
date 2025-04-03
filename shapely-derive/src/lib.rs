@@ -258,10 +258,14 @@ impl shapely::Shapely for {struct_name} {{
             vtable: &shapely::ValueVTable {{
                 type_name: |f, _opts| std::fmt::Write::write_str(f, "{struct_name}"),
                 display: None,
-                debug: |data, f| {{
-                    // we need all the traits in scope
-                    use shapely::spez::*;
-                    (&&Spez(unsafe {{ data.as_ref::<Self>() }})).spez_debug(f)
+                debug: if shapely_core::impls!(Self: std::fmt::Debug) {{
+                    Some(|data, f| {{
+                        // we need all the traits in scope
+                        use shapely::spez::*;
+                        (&&Spez(unsafe {{ data.as_ref::<Self>() }})).spez_debug(f)
+                    }})
+                }} else {{
+                    None
                 }},
                 default_in_place: None,
                 eq: None,

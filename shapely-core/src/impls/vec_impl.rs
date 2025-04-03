@@ -1,6 +1,6 @@
 use std::alloc::Layout;
 
-use crate::{DEFAULT_DEBUG_FN, Def, ListDef, ListVTable, OpaqueConst, Shape, Shapely, ValueVTable};
+use crate::{Def, ListDef, ListVTable, OpaqueConst, Shape, Shapely, ValueVTable};
 
 impl<T> Shapely for Vec<T>
 where
@@ -21,7 +21,7 @@ where
                 },
                 // TODO: specialize these
                 display: None,
-                debug: DEFAULT_DEBUG_FN,
+                debug: None,
                 // TODO: specialize these
                 eq: None,
                 // TODO: specialize these

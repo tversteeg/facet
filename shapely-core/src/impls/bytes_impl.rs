@@ -1,6 +1,6 @@
 use std::hash::Hash as _;
 
-use crate::{Bytes, DEFAULT_DEBUG_FN, Def, HasherProxy, ScalarDef, Shape, Shapely, ValueVTable};
+use crate::{Bytes, Def, HasherProxy, ScalarDef, Shape, Shapely, ValueVTable};
 
 impl Shapely for Bytes {
     const SHAPE: &'static Shape = &Shape {
@@ -9,7 +9,7 @@ impl Shapely for Bytes {
         vtable: &ValueVTable {
             type_name: |f, _opts| write!(f, "Bytes"),
             display: None,
-            debug: DEFAULT_DEBUG_FN,
+            debug: None,
             default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
             eq: Some(|left, right| unsafe { left.as_ref::<Self>() == right.as_ref::<Self>() }),
             cmp: Some(|left, right| unsafe { left.as_ref::<Self>().cmp(right.as_ref::<Self>()) }),

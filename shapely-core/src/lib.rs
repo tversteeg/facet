@@ -1,6 +1,8 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
+pub use ::impls::impls;
+
 pub mod spez;
 
 mod opaque;
