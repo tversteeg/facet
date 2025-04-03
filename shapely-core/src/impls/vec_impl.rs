@@ -18,28 +18,8 @@ where
                         write!(f, "Vec<⋯>")
                     }
                 },
-                display: const {
-                    if T::SHAPE.vtable.display.is_some() {
-                        Some(|value, f| {
-                            let value = unsafe { value.as_ref::<Vec<T>>() };
-                            write!(f, "[")?;
-                            for (i, item) in value.iter().enumerate() {
-                                if i > 0 {
-                                    write!(f, ", ")?;
-                                }
-                                unsafe {
-                                    (T::SHAPE.vtable.display.unwrap_unchecked())(
-                                        OpaqueConst::from_ref(item),
-                                        f,
-                                    )?;
-                                }
-                            }
-                            write!(f, "]")
-                        })
-                    } else {
-                        None
-                    }
-                },
+                // vecs don't have display in the shapeless cinematic universe
+                display: None,
                 debug: const {
                     if T::SHAPE.vtable.debug.is_some() {
                         Some(|value, f| {
