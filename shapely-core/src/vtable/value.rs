@@ -33,6 +33,11 @@ impl TypeNameOpts {
         Self { recurse_ttl: 1 }
     }
 
+    /// Create a new `NameOpts` for which all type parameters are formatted
+    pub fn infinite() -> Self {
+        Self { recurse_ttl: -1 }
+    }
+
     /// Decrease the `recurse_ttl` — if it's != 0, returns options to pass when
     /// formatting children type parameters.
     ///
@@ -44,6 +49,10 @@ impl TypeNameOpts {
         if self.recurse_ttl > 0 {
             Some(Self {
                 recurse_ttl: self.recurse_ttl - 1,
+            })
+        } else if self.recurse_ttl < 0 {
+            Some(Self {
+                recurse_ttl: self.recurse_ttl,
             })
         } else {
             None
@@ -233,8 +242,7 @@ pub struct ValueVTable {
     pub try_from: Option<TryFromFn>,
 }
 
-// proxies, using the spez trick, kind of:
-
+/// proxies, using the <https://docs.rs/spez> trick, kind of:
 pub struct Spez<T>(T);
 
 impl<T> Spez<&T> {

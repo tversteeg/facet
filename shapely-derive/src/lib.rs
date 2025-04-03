@@ -258,7 +258,7 @@ impl shapely::Shapely for {struct_name} {{
             vtable: &shapely::ValueVTable {{
                 type_name: |f, _opts| std::fmt::Write::write_str(f, "{struct_name}"),
                 display: None,
-                debug: None,
+                debug: shapely::debug_fn_for::<Self>(),
                 default_in_place: None,
                 eq: None,
                 cmp: None,

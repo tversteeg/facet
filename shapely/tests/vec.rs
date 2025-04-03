@@ -2,6 +2,10 @@ use shapely::Peek;
 
 #[test]
 fn vec_can_be_debug_or_not() {
+    let v: i32 = 42;
+    let peek = Peek::new(&v);
+    println!("{peek:#?}");
+
     let v: Vec<i32> = vec![1, 2, 3];
     let peek = Peek::new(&v);
     println!("{peek:#?}");
