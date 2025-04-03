@@ -1,3 +1,10 @@
+use ctor::ctor;
+
+#[ctor]
+fn init_backtrace() {
+    color_backtrace::install();
+}
+
 use std::{cmp::Ordering, collections::HashSet, fmt::Debug};
 
 use owo_colors::{OwoColorize, Style};
@@ -96,9 +103,11 @@ where
 
     assert!(
         expected_facts == facts,
-        "Facts mismatch:\nExpected but not found: {:?}\nFound but not expected: {:?}",
-        expected_minus_actual,
-        actual_minus_expected
+        "{}\nExpected but not found: {:?}\n{}\nFound but not expected: {:?}",
+        "Facts mismatch:".red().bold(),
+        expected_minus_actual.yellow(),
+        "Found but not expected:".red().bold(),
+        actual_minus_expected.yellow()
     );
 }
 

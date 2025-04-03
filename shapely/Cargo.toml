@@ -20,6 +20,8 @@ shapely-derive.workspace = true
 cargo-husky = { version = "1", default-features = false, features = [
     "user-hooks",
 ] }
+color-backtrace = "0.7.0"
+ctor = "0.4.1"
 owo-colors = "4.2.0"
 
 [features]
