@@ -102,15 +102,15 @@ impl<'mem> PokeValue<'mem> {
 
     /// Attempts to clone `source` into this value
     ///
-    /// Returns `Some(Opaque)` if cloning was successful, `None` otherwise.
-    pub fn clone_into<'src>(self, source: Peek<'src>) -> Result<Opaque<'mem>, Self> {
+    /// Returns `Ok(Peek)` if cloning was successful, `Err(Self)` otherwise.
+    pub fn clone_from<'src>(self, source: Peek<'src>) -> Result<Peek<'mem>, Self> {
         if let Some(cloned_val) = self
             .vtable()
             .clone_into
-            .and_then(|clone_fn| unsafe { clone_fn(source, self.data) })
+            .and_then(|clone_fn| unsafe { clone_fn(source.as_value().data, self.data) })
         {
             // Safe because the function will initialize our data if it returns Some
-            Ok(cloned_val)
+            Ok(unsafe { Peek::unchecked_new(cloned_val.as_const(), self.shape) })
         } else {
             Err(self)
         }

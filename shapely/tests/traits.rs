@@ -25,7 +25,7 @@ where
         ("Default", value_vtable.default_in_place.is_some()),
         ("Eq", value_vtable.eq.is_some()),
         ("Ord", value_vtable.cmp.is_some()),
-        ("Clone", value_vtable.clone.is_some()),
+        ("Clone", value_vtable.clone_into.is_some()),
     ];
     let trait_str = traits
         .iter()
