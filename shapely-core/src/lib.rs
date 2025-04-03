@@ -42,7 +42,6 @@ impl ShapeId {
     /// Returns a unique identifier for the given shape
     #[inline(always)]
     pub fn of(shape: &'static Shape) -> ShapeId {
-        dbg!("getting ShapeId of", shape as *const _);
         ShapeId(shape as *const _ as u64, 0)
     }
 }

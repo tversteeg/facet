@@ -19,6 +19,8 @@ impl Default for FooBar {
 
 #[test]
 fn build_foobar_through_reflection() {
+    eprintln!("At this point, FooBar ShapeId is {:?}", FooBar::shape_id());
+
     eprintln!("Allocating FooBar");
     let (poke, guard) = Poke::alloc::<FooBar>();
     eprintln!("Converting poke to struct");
@@ -40,6 +42,7 @@ fn build_foobar_through_reflection() {
     }
 
     eprintln!("Building FooBar");
+    eprintln!("At this point, FooBar ShapeId is {:?}", FooBar::shape_id());
     let foo_bar = poke.build::<FooBar>(Some(guard));
 
     eprintln!("Verifying fields");

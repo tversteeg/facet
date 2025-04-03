@@ -22,12 +22,32 @@ pub struct Shape {
 impl Shape {
     /// Check if this shape is of the given type
     pub fn is_type<Other: Shapely>(&'static self) -> bool {
-        dbg!(dbg!(ShapeId::of(self)) == dbg!(Other::shape_id()))
+        ShapeId::of(self) == Other::shape_id()
     }
 
     /// Check if this shape is of the given type
-    pub fn eq_type(&'static self, other: &'static Shape) -> bool {
-        dbg!(dbg!(ShapeId::of(self)) == dbg!(ShapeId::of(other)))
+    pub fn is_shape(&'static self, other: &'static Shape) -> bool {
+        ShapeId::of(self) == ShapeId::of(other)
+    }
+
+    /// Assert that this shape is of the given type, panicking if it's not
+    pub fn assert_type<Other: Shapely>(&'static self) {
+        assert!(
+            self.is_type::<Other>(),
+            "Type mismatch: expected {:?}, found {:?}",
+            ShapeDebug(Other::SHAPE),
+            ShapeDebug(self)
+        );
+    }
+
+    /// Assert that this shape is equal to the given shape, panicking if it's not
+    pub fn assert_shape(&'static self, other: &'static Shape) {
+        assert!(
+            self.is_shape(other),
+            "Shape mismatch: expected {:?}, found {:?}",
+            ShapeDebug(other),
+            ShapeDebug(self)
+        );
     }
 }
 

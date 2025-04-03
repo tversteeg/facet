@@ -66,9 +66,9 @@ impl<'mem> PokeStruct<'mem> {
     /// - The generic type parameter T does not match the shape that this PokeStruct is building.
     pub fn build<T: crate::Shapely>(self, guard: Option<Guard>) -> T {
         self.assert_all_fields_initialized();
-        assert!(self.shape.is_type::<T>(), "Built shape mismatch");
+        self.shape.assert_type::<T>();
         if let Some(guard) = &guard {
-            assert!(guard.shape.is_type::<T>(), "Guard shape mismatch");
+            guard.shape.assert_type::<T>();
         }
 
         let result = unsafe {
@@ -89,7 +89,7 @@ impl<'mem> PokeStruct<'mem> {
     /// - The generic type parameter T does not match the shape that this PokeStruct is building.
     pub fn build_boxed<T: crate::Shapely>(self) -> Box<T> {
         self.assert_all_fields_initialized();
-        assert!(self.shape.is_type::<T>(), "Shape mismatch");
+        self.shape.assert_type::<T>();
 
         let boxed = unsafe { Box::from_raw(self.data.as_mut_ptr() as *mut T) };
         std::mem::forget(self);
@@ -107,7 +107,7 @@ impl<'mem> PokeStruct<'mem> {
     pub unsafe fn move_into(self, target: NonNull<u8>, guard: Option<Guard>) {
         self.assert_all_fields_initialized();
         if let Some(guard) = &guard {
-            assert!(guard.shape.eq_type(self.shape), "Shape mismatch");
+            guard.shape.assert_shape(self.shape);
         }
 
         unsafe {
