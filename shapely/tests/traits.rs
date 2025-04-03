@@ -103,16 +103,28 @@ where
 
     assert!(
         expected_facts == facts,
-        "{}\nExpected but not found: {:?}\n{}\nFound but not expected: {:?}",
-        "Facts mismatch:".red().bold(),
-        expected_minus_actual.yellow(),
-        "Found but not expected:".red().bold(),
-        actual_minus_expected.yellow()
+        "{} for {}: ({:?} vs {:?})\n{}\n{}",
+        "Facts mismatch".red().bold(),
+        name.style(remarkable),
+        l.red(),
+        r.blue(),
+        expected_minus_actual
+            .iter()
+            .map(|f| format!("- {}", f))
+            .collect::<Vec<_>>()
+            .join("\n")
+            .yellow(),
+        actual_minus_expected
+            .iter()
+            .map(|f| format!("+ {}", f))
+            .collect::<Vec<_>>()
+            .join("\n")
+            .yellow(),
     );
 }
 
 #[test]
-fn test_number_traits() {
+fn test_integer_traits() {
     // i32 implements Debug, PartialEq, and Ord
     test_peek_pair(
         42,
@@ -126,14 +138,134 @@ fn test_number_traits() {
             .build(),
     );
 
-    // bool implements Debug, PartialEq, and Ord
+    // Test equal i32 values
+    test_peek_pair(
+        42,
+        42,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(true)
+            .ord_and(Ordering::Equal)
+            .default()
+            .build(),
+    );
+
+    // Test i32::MIN and i32::MAX
+    test_peek_pair(
+        i32::MIN,
+        i32::MAX,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .default()
+            .build(),
+    );
+
+    // Test i32 with 0
+    test_peek_pair(
+        0,
+        42,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .default()
+            .build(),
+    );
+
+    // Test negative i32 values
+    test_peek_pair(
+        -10,
+        10,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .default()
+            .build(),
+    );
+}
+
+#[test]
+fn test_boolean_traits() {
+    // bool implements Debug, PartialEq, Ord, and Display
     test_peek_pair(
         true,
         false,
         FactBuilder::new()
             .debug()
+            .display()
             .equal_and(false)
             .ord_and(Ordering::Greater)
+            .default()
+            .build(),
+    );
+
+    test_peek_pair(
+        true,
+        true,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(true)
+            .ord_and(Ordering::Equal)
+            .default()
+            .build(),
+    );
+
+    test_peek_pair(
+        false,
+        true,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .default()
+            .build(),
+    );
+
+    test_peek_pair(
+        false,
+        false,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(true)
+            .ord_and(Ordering::Equal)
+            .default()
+            .build(),
+    );
+}
+
+#[test]
+fn test_floating_traits() {
+    // f64 implements Debug, PartialEq, and PartialOrd
+    test_peek_pair(
+        3.18,
+        2.71,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Greater)
+            .default()
+            .build(),
+    );
+
+    // Test NaN behavior
+    test_peek_pair(
+        f64::NAN,
+        f64::NAN,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
             .default()
             .build(),
     );
@@ -505,6 +637,31 @@ pub enum Fact {
     HasEqualAnd { l_eq_r: bool },
     HasOrdAnd { l_ord_r: Ordering },
     HasDefault,
+}
+
+use std::fmt::{Display, Formatter, Result};
+
+impl Display for Fact {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        match self {
+            Fact::HasDebug => write!(f, "impl Debug"),
+            Fact::HasDisplay => write!(f, "impl Display"),
+            Fact::HasEqualAnd { l_eq_r } => write!(
+                f,
+                "impl Equal and l {} r",
+                if *l_eq_r { "==" } else { "!=" }
+            ),
+            Fact::HasOrdAnd { l_ord_r } => {
+                let ord_str = match l_ord_r {
+                    Ordering::Less => "<",
+                    Ordering::Equal => "==",
+                    Ordering::Greater => ">",
+                };
+                write!(f, "impl Ord and l {} r", ord_str)
+            }
+            Fact::HasDefault => write!(f, "impl Default"),
+        }
+    }
 }
 
 impl Fact {
