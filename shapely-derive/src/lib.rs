@@ -290,8 +290,7 @@ impl shapely::Shapely for {struct_name} {{
                 default_in_place: if shapely_core::impls!(Self: std::default::Default) {{
                     Some(|target| {{
                         use shapely::spez::*;
-                        let dummy_val: std::mem::MaybeUninit<Self> = std::mem::MaybeUninit::zeroed();
-                        Some((&&Spez(unsafe {{ dummy_val.assume_init() }})).spez_default_in_place(target))
+                        Some((&&Spez(<Self as shapely_core::Shapely>::DUMMY)).spez_default_in_place(target))
                     }})
                 }} else {{
                     None
@@ -404,8 +403,7 @@ impl shapely::Shapely for {struct_name} {{
                 default_in_place: if shapely_core::impls!(Self: std::default::Default) {{
                     Some(|target| {{
                         use shapely::spez::*;
-                        let dummy_val: std::mem::MaybeUninit<Self> = std::mem::MaybeUninit::zeroed();
-                        Some((&&Spez(unsafe {{ dummy_val.assume_init() }})).spez_default_in_place(target))
+                        Some((&&Spez(<Self as shapely_core::Shapely>::DUMMY)).spez_default_in_place(target))
                     }})
                 }} else {{
                     None
@@ -585,8 +583,7 @@ impl shapely::Shapely for {enum_name} {{
                 default_in_place: if shapely_core::impls!(Self: std::default::Default) {{
                     Some(|target| {{
                         use shapely::spez::*;
-                        let dummy_val: std::mem::MaybeUninit<Self> = std::mem::MaybeUninit::zeroed();
-                        Some((&&Spez(unsafe {{ dummy_val.assume_init() }})).spez_default_in_place(target))
+                        Some((&&Spez(<Self as shapely_core::Shapely>::DUMMY)).spez_default_in_place(target))
                     }})
                 }} else {{
                     None
