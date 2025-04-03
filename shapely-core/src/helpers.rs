@@ -179,10 +179,9 @@ macro_rules! value_vtable {
             },
             default_in_place: if $crate::impls!($type_name: std::default::Default) {
                 Some(|target| {
-                    eprintln!("in some because {} implements Default", stringify!($type_name));
                     use $crate::spez::*;
                     let dummy_val: std::mem::MaybeUninit<$type_name> = std::mem::MaybeUninit::zeroed();
-                    Some((&Spez(unsafe { dummy_val.assume_init() })).spez_default_in_place(target))
+                    Some((&&Spez(unsafe { dummy_val.assume_init() })).spez_default_in_place(target))
                 })
             } else {
                 None
