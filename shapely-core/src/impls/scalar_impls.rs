@@ -1,6 +1,7 @@
 use crate::value_vtable;
 use crate::*;
 use std::alloc::Layout;
+use std::borrow::Cow;
 
 impl Shapely for () {
     const SHAPE: &'static Shape = &const {
@@ -25,6 +26,14 @@ impl Shapely for &str {
         layout: Layout::new::<Self>(),
         def: Def::Scalar(ScalarDef::of::<Self>()),
         vtable: value_vtable!(&str, |f, _opts| write!(f, "&str")),
+    };
+}
+
+impl Shapely for Cow<'_, str> {
+    const SHAPE: &'static Shape = &Shape {
+        layout: Layout::new::<Self>(),
+        def: Def::Scalar(ScalarDef::of::<Self>()),
+        vtable: value_vtable!(Cow<'_, str>, |f, _opts| write!(f, "Cow<'_, str>")),
     };
 }
 

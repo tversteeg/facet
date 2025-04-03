@@ -97,6 +97,15 @@ fn test_primitive_types() {
 
     // &str implements Debug, PartialEq, and Ord
     test_peek_pair("hello", "world");
+
+    // Cow<'a, str> implements Debug, PartialEq, and Ord
+    use std::borrow::Cow;
+    test_peek_pair(Cow::Borrowed("hello"), Cow::Borrowed("world"));
+    test_peek_pair(
+        Cow::Owned("hello".to_string()),
+        Cow::Owned("world".to_string()),
+    );
+    test_peek_pair(Cow::Borrowed("same"), Cow::Owned("same".to_string()));
 }
 
 #[test]
