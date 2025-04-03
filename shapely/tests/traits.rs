@@ -124,6 +124,34 @@ fn test_multis() {
 }
 
 #[test]
+fn test_vecs() {
+    // Vec<i32> implements Debug, PartialEq, but not Ord
+    test_peek_pair(vec![1, 2, 3], vec![4, 5, 6]);
+
+    // Vec<String> implements Debug, PartialEq, but not Ord
+    test_peek_pair(
+        vec!["hello".to_string(), "world".to_string()],
+        vec!["foo".to_string(), "bar".to_string()],
+    );
+}
+
+#[test]
+fn test_hashmaps() {
+    use std::collections::HashMap;
+
+    // HashMap<String, i32> implements Debug, PartialEq, but not Ord
+    let mut map1 = HashMap::new();
+    map1.insert("key1".to_string(), 42);
+    map1.insert("key2".to_string(), 24);
+
+    let mut map2 = HashMap::new();
+    map2.insert("key3".to_string(), 100);
+    map2.insert("key4".to_string(), 200);
+
+    test_peek_pair(map1, map2);
+}
+
+#[test]
 fn test_custom_structs() {
     // Struct with no trait implementations
     #[derive(Shapely)]
