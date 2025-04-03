@@ -151,9 +151,10 @@ macro_rules! enum_variants {
 ///
 /// ```
 /// use shapely_core::value_vtable;
-/// use std::fmt::Write;
+/// use std::fmt::{self, Formatter};
+/// use shapely_core::vtable::TypeNameOpts;
 ///
-/// let vtable = value_vtable!(String, |f: &mut dyn Write, _opts| write!(f, "String"));
+/// let vtable = value_vtable!(String, |f: &mut Formatter<'_>, _opts: TypeNameOpts| write!(f, "String"));
 /// ```
 #[macro_export]
 macro_rules! value_vtable {
