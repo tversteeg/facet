@@ -1,4 +1,4 @@
-use crate::{EnumDef, FieldError, OpaqueUninit, Shape, ShapeDebug, Shapely, trace};
+use crate::{EnumDef, FieldError, Opaque, OpaqueUninit, Shape, ShapeDebug, Shapely, trace};
 use std::ptr::NonNull;
 
 use super::{ISet, Poke};
@@ -260,12 +260,13 @@ impl<'mem> PokeEnum<'mem> {
     /// # Panics
     ///
     /// This function will panic if any required field is not initialized.
-    pub fn build_in_place(self) {
+    pub fn build_in_place(self) -> Opaque<'mem> {
         // ensure all fields are initialized
         self.assert_all_fields_initialized();
-
+        let data = unsafe { self.data.assume_init() };
         // prevent field drops when the PokeEnum is dropped
         std::mem::forget(self);
+        data
     }
 
     /// Builds a value of type `T` from the PokeEnum.

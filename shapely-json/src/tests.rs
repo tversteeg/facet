@@ -1,26 +1,23 @@
-// #[test]
-// fn test_from_json() {
-//     #[derive(Shapely)]
-//     struct TestStruct {
-//         name: String,
-//         age: u64,
-//     }
-//     let json = r#"{"name": "Alice", "age": 30}"#;
+use shapely::{Poke, Shapely};
 
-//     let data = OpaqueUninit::new(unsafe { std::alloc::alloc(TestStruct::SHAPE.layout) });
-//     let poke = unsafe { Poke::from_opaque_uninit(data, TestStruct::SHAPE) };
-//     from_json(poke, json).unwrap();
+use crate::from_json;
 
-//     let built_struct = unsafe { data.assume_init() };
-//     let ptr = built_struct.as_mut_byte_ptr();
-//     let s = unsafe { built_struct.read::<TestStruct>() };
-//     unsafe {
-//         std::alloc::dealloc(ptr, TestStruct::SHAPE.layout);
-//     }
+#[test]
+fn test_from_json() {
+    #[derive(Shapely)]
+    struct TestStruct {
+        name: String,
+        age: u64,
+    }
+    let json = r#"{"name": "Alice", "age": 30}"#;
 
-//     assert_eq!(s.name, "Alice");
-//     assert_eq!(s.age, 30);
-// }
+    let (poke, _guard) = Poke::alloc::<TestStruct>();
+    let opaque = from_json(poke, json).unwrap();
+    let s = unsafe { opaque.read::<TestStruct>() };
+
+    assert_eq!(s.name, "Alice");
+    assert_eq!(s.age, 30);
+}
 
 // #[test]
 // fn test_to_json() {

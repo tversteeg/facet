@@ -271,7 +271,7 @@ impl shapely::Shapely for {struct_name} {{
             layout: std::alloc::Layout::new::<Self>(),
             vtable: &shapely::ValueVTable {{
                 type_name: |f, _opts| std::fmt::Write::write_str(f, "{struct_name}"),
-                display: if shapely_core::impls!(Self: std::fmt::Display) {{
+                display: if shapely::impls!(Self: std::fmt::Display) {{
                     Some(|data, f| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ data.as_ref::<Self>() }})).spez_display(f)
@@ -279,7 +279,7 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                debug: if shapely_core::impls!(Self: std::fmt::Debug) {{
+                debug: if shapely::impls!(Self: std::fmt::Debug) {{
                     Some(|data, f| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ data.as_ref::<Self>() }})).spez_debug(f)
@@ -287,15 +287,15 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                default_in_place: if shapely_core::impls!(Self: std::default::Default) {{
+                default_in_place: if shapely::impls!(Self: std::default::Default) {{
                     Some(|target| {{
                         use shapely::spez::*;
-                        Some((&&Spez(<Self as shapely_core::Shapely>::DUMMY)).spez_default_in_place(target))
+                        Some((&&Spez(<Self as shapely::Shapely>::DUMMY)).spez_default_in_place(target))
                     }})
                 }} else {{
                     None
                 }},
-                clone_into: if shapely_core::impls!(Self: std::clone::Clone) {{
+                clone_into: if shapely::impls!(Self: std::clone::Clone) {{
                     Some(|src, dst| {{
                         use shapely::spez::*;
                         Some((&&Spez(unsafe {{ src.as_ref::<Self>() }})).spez_clone_into(dst))
@@ -303,7 +303,7 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                eq: if shapely_core::impls!(Self: std::cmp::PartialEq) {{
+                eq: if shapely::impls!(Self: std::cmp::PartialEq) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ left.as_ref::<Self>() }}))
@@ -312,7 +312,7 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                ord: if shapely_core::impls!(Self: std::cmp::Ord) {{
+                ord: if shapely::impls!(Self: std::cmp::Ord) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ left.as_ref::<Self>() }}))
@@ -321,7 +321,7 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                hash: if shapely_core::impls!(Self: std::hash::Hash) {{
+                hash: if shapely::impls!(Self: std::hash::Hash) {{
                     Some(|value, hasher_this, hasher_write_fn| {{
                         use shapely::spez::*;
                         use shapely::vtable::HasherProxy;
@@ -384,7 +384,7 @@ impl shapely::Shapely for {struct_name} {{
             layout: std::alloc::Layout::new::<Self>(),
             vtable: &shapely::ValueVTable {{
                 type_name: |f, _opts| std::fmt::Write::write_str(f, "{struct_name}"),
-                display: if shapely_core::impls!(Self: std::fmt::Display) {{
+                display: if shapely::impls!(Self: std::fmt::Display) {{
                     Some(|data, f| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ data.as_ref::<Self>() }})).spez_display(f)
@@ -392,7 +392,7 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                debug: if shapely_core::impls!(Self: std::fmt::Debug) {{
+                debug: if shapely::impls!(Self: std::fmt::Debug) {{
                     Some(|data, f| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ data.as_ref::<Self>() }})).spez_debug(f)
@@ -400,15 +400,15 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                default_in_place: if shapely_core::impls!(Self: std::default::Default) {{
+                default_in_place: if shapely::impls!(Self: std::default::Default) {{
                     Some(|target| {{
                         use shapely::spez::*;
-                        Some((&&Spez(<Self as shapely_core::Shapely>::DUMMY)).spez_default_in_place(target))
+                        Some((&&Spez(<Self as shapely::Shapely>::DUMMY)).spez_default_in_place(target))
                     }})
                 }} else {{
                     None
                 }},
-                clone_into: if shapely_core::impls!(Self: std::clone::Clone) {{
+                clone_into: if shapely::impls!(Self: std::clone::Clone) {{
                     Some(|src, dst| {{
                         use shapely::spez::*;
                         Some((&&Spez(unsafe {{ src.as_ref::<Self>() }})).spez_clone_into(dst))
@@ -416,7 +416,7 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                eq: if shapely_core::impls!(Self: std::cmp::PartialEq) {{
+                eq: if shapely::impls!(Self: std::cmp::PartialEq) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ left.as_ref::<Self>() }}))
@@ -425,7 +425,7 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                ord: if shapely_core::impls!(Self: std::cmp::Ord) {{
+                ord: if shapely::impls!(Self: std::cmp::Ord) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ left.as_ref::<Self>() }}))
@@ -434,7 +434,7 @@ impl shapely::Shapely for {struct_name} {{
                 }} else {{
                     None
                 }},
-                hash: if shapely_core::impls!(Self: std::hash::Hash) {{
+                hash: if shapely::impls!(Self: std::hash::Hash) {{
                     Some(|value, hasher_this, hasher_write_fn| {{
                         use shapely::spez::*;
                         use shapely::vtable::HasherProxy;
@@ -564,7 +564,7 @@ impl shapely::Shapely for {enum_name} {{
             layout: std::alloc::Layout::new::<Self>(),
             vtable: &shapely::ValueVTable {{
                 type_name: |f, _opts| std::fmt::Write::write_str(f, "{enum_name}"),
-                display: if shapely_core::impls!(Self: std::fmt::Display) {{
+                display: if shapely::impls!(Self: std::fmt::Display) {{
                     Some(|data, f| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ data.as_ref::<Self>() }})).spez_display(f)
@@ -572,7 +572,7 @@ impl shapely::Shapely for {enum_name} {{
                 }} else {{
                     None
                 }},
-                debug: if shapely_core::impls!(Self: std::fmt::Debug) {{
+                debug: if shapely::impls!(Self: std::fmt::Debug) {{
                     Some(|data, f| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ data.as_ref::<Self>() }})).spez_debug(f)
@@ -580,15 +580,15 @@ impl shapely::Shapely for {enum_name} {{
                 }} else {{
                     None
                 }},
-                default_in_place: if shapely_core::impls!(Self: std::default::Default) {{
+                default_in_place: if shapely::impls!(Self: std::default::Default) {{
                     Some(|target| {{
                         use shapely::spez::*;
-                        Some((&&Spez(<Self as shapely_core::Shapely>::DUMMY)).spez_default_in_place(target))
+                        Some((&&Spez(<Self as shapely::Shapely>::DUMMY)).spez_default_in_place(target))
                     }})
                 }} else {{
                     None
                 }},
-                clone_into: if shapely_core::impls!(Self: std::clone::Clone) {{
+                clone_into: if shapely::impls!(Self: std::clone::Clone) {{
                     Some(|src, dst| {{
                         use shapely::spez::*;
                         Some((&&Spez(unsafe {{ src.as_ref::<Self>() }})).spez_clone_into(dst))
@@ -596,7 +596,7 @@ impl shapely::Shapely for {enum_name} {{
                 }} else {{
                     None
                 }},
-                eq: if shapely_core::impls!(Self: std::cmp::PartialEq) {{
+                eq: if shapely::impls!(Self: std::cmp::PartialEq) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ left.as_ref::<Self>() }}))
@@ -605,7 +605,7 @@ impl shapely::Shapely for {enum_name} {{
                 }} else {{
                     None
                 }},
-                ord: if shapely_core::impls!(Self: std::cmp::Ord) {{
+                ord: if shapely::impls!(Self: std::cmp::Ord) {{
                     Some(|left, right| {{
                         use shapely::spez::*;
                         (&&Spez(unsafe {{ left.as_ref::<Self>() }}))
@@ -614,7 +614,7 @@ impl shapely::Shapely for {enum_name} {{
                 }} else {{
                     None
                 }},
-                hash: if shapely_core::impls!(Self: std::hash::Hash) {{
+                hash: if shapely::impls!(Self: std::hash::Hash) {{
                     Some(|value, hasher_this, hasher_write_fn| {{
                         use shapely::spez::*;
                         use shapely::vtable::HasherProxy;
