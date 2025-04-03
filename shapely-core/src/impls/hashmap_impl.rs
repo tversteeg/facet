@@ -14,8 +14,6 @@ struct HashMapIterator<'mem, K> {
     keys: VecDeque<&'mem K>,
 }
 
-struct DummyHasher;
-
 impl<K, V, S> Shapely for HashMap<K, V, S>
 where
     K: Shapely + std::cmp::Eq + std::hash::Hash + 'static,
@@ -186,6 +184,7 @@ where
     };
 }
 
+#[allow(dead_code)]
 struct RandomStateInnards {
     k0: u64,
     k1: u64,

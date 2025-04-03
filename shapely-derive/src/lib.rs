@@ -247,11 +247,25 @@ fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
         .collect::<Vec<String>>()
         .join(", ");
 
+    // Generate dummy fields
+    let dummy_fields = parsed
+        .body
+        .content
+        .0
+        .iter()
+        .map(|field| field.value.name.to_string())
+        .map(|field| format!("{field}: Shapely::DUMMY"))
+        .collect::<Vec<String>>()
+        .join(", ");
+
     // Generate the impl
     let output = format!(
         r#"
 #[automatically_derived]
 impl shapely::Shapely for {struct_name} {{
+    const DUMMY: Self = Self {{
+        {dummy_fields}
+    }};
     const SHAPE: &'static shapely::Shape = &const {{
         shapely::Shape {{
             layout: std::alloc::Layout::new::<Self>(),
@@ -355,11 +369,17 @@ fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStream {
     // Create the fields string for struct_fields! macro
     let fields_str = fields.join(", ");
 
+    let dummy_fields = (0..parsed.body.content.0.len())
+        .map(|_| String::from("Shapely::DUMMY"))
+        .collect::<Vec<String>>()
+        .join(", ");
+
     // Generate the impl
     let output = format!(
         r#"
 #[automatically_derived]
 impl shapely::Shapely for {struct_name} {{
+    const DUMMY: Self = Self({dummy_fields});
     const SHAPE: &'static shapely::Shape = &const {{
         shapely::Shape {{
             layout: std::alloc::Layout::new::<Self>(),
