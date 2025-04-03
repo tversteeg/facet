@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use owo_colors::{OwoColorize, Style};
 use shapely::{Peek, Shapely};
 
-fn test_peek_pair<T>(name: &str, val1: T, val2: T)
+fn test_peek_pair<T>(val1: T, val2: T)
 where
     T: Shapely + 'static,
 {
@@ -67,10 +67,10 @@ where
 #[test]
 fn test_primitive_types() {
     // i32 implements Debug, PartialEq, and Ord
-    test_peek_pair("i32", 42, 24);
+    test_peek_pair(42, 24);
 
     // Vec implements Debug and PartialEq but not Ord
-    test_peek_pair("Vec<i32>", vec![1, 2, 3], vec![1, 2, 3]);
+    test_peek_pair(vec![1, 2, 3], vec![1, 2, 3]);
 }
 
 #[test]
@@ -80,54 +80,30 @@ fn test_custom_structs() {
     struct StructNoTraits {
         value: i32,
     }
-    test_peek_pair(
-        "StructNoTraits",
-        StructNoTraits { value: 42 },
-        StructNoTraits { value: 24 },
-    );
+    test_peek_pair(StructNoTraits { value: 42 }, StructNoTraits { value: 24 });
 
     // Struct with Debug only
     #[derive(Shapely, Debug)]
     struct StructDebug {
         value: i32,
     }
-    test_peek_pair(
-        "StructDebug",
-        StructDebug { value: 42 },
-        StructDebug { value: 24 },
-    );
+    test_peek_pair(StructDebug { value: 42 }, StructDebug { value: 24 });
 
     // Struct with Debug and PartialEq
     #[derive(Shapely, Debug, PartialEq)]
     struct StructDebugEq {
         value: i32,
     }
-    test_peek_pair(
-        "StructDebugEq",
-        StructDebugEq { value: 42 },
-        StructDebugEq { value: 24 },
-    );
+    test_peek_pair(StructDebugEq { value: 42 }, StructDebugEq { value: 24 });
 
     // Struct with all traits
     #[derive(Shapely, Debug, PartialEq, Eq, PartialOrd, Ord)]
     struct StructAll {
         value: i32,
     }
-    test_peek_pair(
-        "StructAll",
-        StructAll { value: 42 },
-        StructAll { value: 24 },
-    );
-    test_peek_pair(
-        "StructAll",
-        StructAll { value: 10 },
-        StructAll { value: 90 },
-    );
-    test_peek_pair(
-        "StructAll",
-        StructAll { value: 69 },
-        StructAll { value: 69 },
-    );
+    test_peek_pair(StructAll { value: 42 }, StructAll { value: 24 });
+    test_peek_pair(StructAll { value: 10 }, StructAll { value: 90 });
+    test_peek_pair(StructAll { value: 69 }, StructAll { value: 69 });
 }
 
 #[test]
@@ -136,7 +112,6 @@ fn test_tuple_structs() {
     #[derive(Shapely)]
     struct TupleNoTraits(i32, String);
     test_peek_pair(
-        "TupleNoTraits",
         TupleNoTraits(42, "Hello".to_string()),
         TupleNoTraits(24, "World".to_string()),
     );
@@ -145,7 +120,6 @@ fn test_tuple_structs() {
     #[derive(Shapely, Debug)]
     struct TupleDebug(i32, String);
     test_peek_pair(
-        "TupleDebug",
         TupleDebug(42, "Hello".to_string()),
         TupleDebug(24, "World".to_string()),
     );
@@ -154,7 +128,6 @@ fn test_tuple_structs() {
     #[derive(Shapely, PartialEq)]
     struct TupleEq(i32, String);
     test_peek_pair(
-        "TupleEq",
         TupleEq(42, "Hello".to_string()),
         TupleEq(24, "World".to_string()),
     );
@@ -163,7 +136,6 @@ fn test_tuple_structs() {
     #[derive(Shapely, Debug, PartialEq, Eq, PartialOrd, Ord)]
     struct TupleAll(i32, String);
     test_peek_pair(
-        "TupleAll",
         TupleAll(42, "Hello".to_string()),
         TupleAll(24, "World".to_string()),
     );
