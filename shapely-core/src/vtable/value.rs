@@ -1,6 +1,8 @@
 use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek};
 use std::cmp::Ordering;
 
+//======== Type Information ========
+
 /// A function that formats the name of a type.
 ///
 /// This helps avoid allocations, and it takes options.
@@ -60,43 +62,41 @@ impl TypeNameOpts {
     }
 }
 
-/// Function to format a value for display
-///
-/// If both [`DisplayFn`] and [`ParseFn`] are set, we should be able to round-trip the value.
+//======== Memory Management ========
+
+/// Function to drop a value
 ///
 /// # Safety
 ///
 /// The `value` parameter must point to aligned, initialized memory of the correct type.
-pub type DisplayFn =
-    for<'mem> unsafe fn(value: OpaqueConst<'mem>, f: &mut std::fmt::Formatter) -> std::fmt::Result;
+pub type DropInPlaceFn = for<'mem> unsafe fn(value: Opaque<'mem>);
 
-/// Generates a [`DisplayFn`] for a concrete type
-pub const fn display_fn_for<T: std::fmt::Display>() -> Option<DisplayFn> {
-    Some(
-        |value: OpaqueConst<'_>, f: &mut std::fmt::Formatter| -> std::fmt::Result {
-            let val = unsafe { value.as_ref::<T>() };
-            write!(f, "{val}")
-        },
-    )
+/// Generates a [`DropInPlaceFn`] for a concrete type
+pub const fn drop_in_place_fn_for<T>() -> Option<DropInPlaceFn> {
+    Some(|value: Opaque<'_>| unsafe {
+        value.drop_in_place::<T>();
+    })
 }
 
-/// Function to format a value for debug.
-/// If this returns None, the shape did not implement Debug.
+/// Function to clone a value into another already-allocated value
 ///
 /// # Safety
 ///
-/// The `value` parameter must point to aligned, initialized memory of the correct type.
-pub type DebugFn =
-    for<'mem> unsafe fn(value: OpaqueConst<'mem>, f: &mut std::fmt::Formatter) -> std::fmt::Result;
+/// The `source` parameter must point to aligned, initialized memory of the correct type.
+/// The `target` parameter has the correct layout and alignment, but points to
+/// uninitialized memory. If this function succeeds, it should return `Some` with the
+/// same pointer wrapped in an [`Opaque`].
+pub type CloneIntoFn = for<'src, 'dst> unsafe fn(
+    source: OpaqueConst<'src>,
+    target: OpaqueUninit<'dst>,
+) -> Option<Opaque<'dst>>;
 
-/// Generates a [`DebugFn`] for a concrete type
-pub const fn debug_fn_for<T: std::fmt::Debug>() -> Option<DebugFn> {
-    Some(
-        |value: OpaqueConst<'_>, f: &mut std::fmt::Formatter| -> std::fmt::Result {
-            let val = unsafe { value.as_ref::<T>() };
-            write!(f, "{val:?}")
-        },
-    )
+/// Generates a [`CloneInPlaceFn`] for a concrete type
+pub const fn clone_into_fn_for<T: Clone>() -> Option<CloneIntoFn> {
+    Some(|source: OpaqueConst<'_>, target: OpaqueUninit<'_>| unsafe {
+        let source_val = source.as_ref::<T>();
+        Some(target.write(source_val.clone()))
+    })
 }
 
 /// Function to set a value to its default in-place
@@ -112,6 +112,8 @@ pub type DefaultInPlaceFn = for<'mem> unsafe fn(target: OpaqueUninit<'mem>) -> O
 pub const fn default_in_place_fn_for<T: Default>() -> Option<DefaultInPlaceFn> {
     Some(|target: OpaqueUninit<'_>| unsafe { Some(target.write(T::default())) })
 }
+
+//======== Conversion ========
 
 /// Function to parse a value from a string.
 ///
@@ -146,6 +148,8 @@ pub type TryFromFn = for<'src, 'mem> unsafe fn(
     target: OpaqueUninit<'mem>,
 ) -> Option<Opaque<'mem>>;
 
+//======== Comparison ========
+
 /// Function to check if two values are partially equal
 ///
 /// # Safety
@@ -160,6 +164,25 @@ pub const fn partial_eq_fn_for<T: PartialEq>() -> Option<PartialEqFn> {
         let right_val = unsafe { right.as_ref::<T>() };
         left_val == right_val
     })
+}
+
+/// Function to compare two values and return their ordering if comparable
+///
+/// # Safety
+///
+/// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
+pub type PartialOrdFn =
+    for<'l, 'r> unsafe fn(left: OpaqueConst<'l>, right: OpaqueConst<'r>) -> Option<Ordering>;
+
+/// Generates a [`PartialOrdFn`] for a concrete type
+pub const fn partial_ord_fn_for<T: PartialOrd>() -> Option<PartialOrdFn> {
+    Some(
+        |left: OpaqueConst<'_>, right: OpaqueConst<'_>| -> Option<Ordering> {
+            let left_val = unsafe { left.as_ref::<T>() };
+            let right_val = unsafe { right.as_ref::<T>() };
+            left_val.partial_cmp(right_val)
+        },
+    )
 }
 
 /// Function to compare two values and return their ordering
@@ -179,6 +202,8 @@ pub const fn cmp_fn_for<T: Ord>() -> Option<CmpFn> {
         },
     )
 }
+
+//======== Hashing ========
 
 /// Function to hash a value
 ///
@@ -201,6 +226,13 @@ pub const fn hash_fn_for<T: std::hash::Hash>() -> Option<HashFn> {
         },
     )
 }
+
+/// Function to write bytes to a hasher
+///
+/// # Safety
+///
+/// The `hasher_self` parameter must be a valid pointer to a hasher
+pub type HasherWriteFn = for<'mem> unsafe fn(hasher_self: Opaque<'mem>, bytes: &[u8]);
 
 /// Provides an implementation of [`std::hash::Hasher`] for a given hasher pointer and write function
 ///
@@ -244,63 +276,43 @@ impl<'a> std::hash::Hasher for HasherProxy<'a> {
     }
 }
 
-/// Function to write bytes to a hasher
-///
-/// # Safety
-///
-/// The `hasher_self` parameter must be a valid pointer to a hasher
-pub type HasherWriteFn = for<'mem> unsafe fn(hasher_self: Opaque<'mem>, bytes: &[u8]);
+//======== Display and Debug ========
 
-/// Function to drop a value
+/// Function to format a value for display
+///
+/// If both [`DisplayFn`] and [`ParseFn`] are set, we should be able to round-trip the value.
 ///
 /// # Safety
 ///
 /// The `value` parameter must point to aligned, initialized memory of the correct type.
-pub type DropInPlaceFn = for<'mem> unsafe fn(value: Opaque<'mem>);
+pub type DisplayFn =
+    for<'mem> unsafe fn(value: OpaqueConst<'mem>, f: &mut std::fmt::Formatter) -> std::fmt::Result;
 
-/// Generates a [`DropInPlaceFn`] for a concrete type
-pub const fn drop_in_place_fn_for<T>() -> Option<DropInPlaceFn> {
-    Some(|value: Opaque<'_>| unsafe {
-        value.drop_in_place::<T>();
-    })
-}
-
-/// Function to clone a value into another already-allocated value
-///
-/// # Safety
-///
-/// The `source` parameter must point to aligned, initialized memory of the correct type.
-/// The `target` parameter has the correct layout and alignment, but points to
-/// uninitialized memory. If this function succeeds, it should return `Some` with the
-/// same pointer wrapped in an [`Opaque`].
-pub type CloneIntoFn = for<'src, 'dst> unsafe fn(
-    source: OpaqueConst<'src>,
-    target: OpaqueUninit<'dst>,
-) -> Option<Opaque<'dst>>;
-
-/// Generates a [`CloneInPlaceFn`] for a concrete type
-pub const fn clone_into_fn_for<T: Clone>() -> Option<CloneIntoFn> {
-    Some(|source: OpaqueConst<'_>, target: OpaqueUninit<'_>| unsafe {
-        let source_val = source.as_ref::<T>();
-        Some(target.write(source_val.clone()))
-    })
-}
-
-/// Function to compare two values and return their ordering if comparable
-///
-/// # Safety
-///
-/// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
-pub type PartialOrdFn =
-    for<'l, 'r> unsafe fn(left: OpaqueConst<'l>, right: OpaqueConst<'r>) -> Option<Ordering>;
-
-/// Generates a [`PartialOrdFn`] for a concrete type
-pub const fn partial_ord_fn_for<T: PartialOrd>() -> Option<PartialOrdFn> {
+/// Generates a [`DisplayFn`] for a concrete type
+pub const fn display_fn_for<T: std::fmt::Display>() -> Option<DisplayFn> {
     Some(
-        |left: OpaqueConst<'_>, right: OpaqueConst<'_>| -> Option<Ordering> {
-            let left_val = unsafe { left.as_ref::<T>() };
-            let right_val = unsafe { right.as_ref::<T>() };
-            left_val.partial_cmp(right_val)
+        |value: OpaqueConst<'_>, f: &mut std::fmt::Formatter| -> std::fmt::Result {
+            let val = unsafe { value.as_ref::<T>() };
+            write!(f, "{val}")
+        },
+    )
+}
+
+/// Function to format a value for debug.
+/// If this returns None, the shape did not implement Debug.
+///
+/// # Safety
+///
+/// The `value` parameter must point to aligned, initialized memory of the correct type.
+pub type DebugFn =
+    for<'mem> unsafe fn(value: OpaqueConst<'mem>, f: &mut std::fmt::Formatter) -> std::fmt::Result;
+
+/// Generates a [`DebugFn`] for a concrete type
+pub const fn debug_fn_for<T: std::fmt::Debug>() -> Option<DebugFn> {
+    Some(
+        |value: OpaqueConst<'_>, f: &mut std::fmt::Formatter| -> std::fmt::Result {
+            let val = unsafe { value.as_ref::<T>() };
+            write!(f, "{val:?}")
         },
     )
 }

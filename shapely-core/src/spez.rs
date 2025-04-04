@@ -194,20 +194,20 @@ impl<T> SpezPartialOrdNo for Spez<T> {
 
 /// Specialization proxy for [`std::cmp::Ord`]
 pub trait SpezOrdYes {
-    fn spez_ord(&self, other: &Self) -> std::cmp::Ordering;
+    fn spez_cmp(&self, other: &Self) -> std::cmp::Ordering;
 }
 impl<T: Ord> SpezOrdYes for &Spez<T> {
-    fn spez_ord(&self, other: &Self) -> std::cmp::Ordering {
+    fn spez_cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.0.cmp(&other.0)
     }
 }
 
 /// Specialization proxy for [`std::cmp::Ord`]
 pub trait SpezOrdNo {
-    fn spez_ord(&self, _other: &Self) -> std::cmp::Ordering;
+    fn spez_cmp(&self, _other: &Self) -> std::cmp::Ordering;
 }
 impl<T> SpezOrdNo for Spez<T> {
-    fn spez_ord(&self, _other: &Self) -> std::cmp::Ordering {
+    fn spez_cmp(&self, _other: &Self) -> std::cmp::Ordering {
         unreachable!()
     }
 }

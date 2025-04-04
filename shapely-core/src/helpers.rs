@@ -203,12 +203,20 @@ macro_rules! value_vtable {
             } else {
                 None
             },
-            ord: $crate::impls!($type_name: std::cmp::Ord),
-            cmp: if $crate::impls!($type_name: std::cmp::Ord) {
+            ord: if $crate::impls!($type_name: std::cmp::Ord) {
                 Some(|left, right| {
                     use $crate::spez::*;
                     (&&Spez(unsafe { left.as_ref::<$type_name>() }))
                         .spez_cmp(&&Spez(unsafe { right.as_ref::<$type_name>() }))
+                })
+            } else {
+                None
+            },
+            partial_ord: if $crate::impls!($type_name: std::cmp::PartialOrd) {
+                Some(|left, right| {
+                    use $crate::spez::*;
+                    (&&Spez(unsafe { left.as_ref::<$type_name>() }))
+                        .spez_partial_cmp(&&Spez(unsafe { right.as_ref::<$type_name>() }))
                 })
             } else {
                 None
