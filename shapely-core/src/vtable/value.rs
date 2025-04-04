@@ -1,7 +1,7 @@
 // FIXME: most of these shoudl take `Peek` rather than `OpaqueConst` — so we can assert that
 // the shapes even match.
 
-use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek};
+use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek, Shape};
 use bitflags::bitflags;
 use std::cmp::Ordering;
 
@@ -173,12 +173,31 @@ pub type TryFromFn = for<'src, 'mem> unsafe fn(
 pub enum TryFromError {
     /// Generic conversion error
     Generic(&'static str),
+    /// The target shape doesn't implement conversion from any source shape (no try_from in vtable)
+    Unimplemented(&'static Shape),
+    /// The target shape has a conversion implementation, but it doesn't support converting from this specific source shape
+    Incompatible {
+        /// The source shape that we tried to convert from
+        source: &'static Shape,
+        /// The target shape that we tried to convert to
+        target: &'static Shape,
+    },
 }
 
 impl std::fmt::Display for TryFromError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             TryFromError::Generic(msg) => write!(f, "Conversion failed: {}", msg),
+            TryFromError::Unimplemented(shape) => write!(
+                f,
+                "Conversion failed: Shape {} doesn't implement any conversions (no try_from function)",
+                shape
+            ),
+            TryFromError::Incompatible { source, target } => write!(
+                f,
+                "Conversion failed: Cannot convert from shape {} to shape {}",
+                source, target
+            ),
         }
     }
 }

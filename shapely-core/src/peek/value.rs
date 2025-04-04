@@ -47,10 +47,7 @@ impl std::cmp::PartialOrd for PeekValue<'_> {
         if self.shape != other.shape {
             return None;
         }
-        let partial_ord_fn = match self.shape.vtable.partial_ord {
-            Some(partial_ord_fn) => partial_ord_fn,
-            None => return None,
-        };
+        let partial_ord_fn = self.shape.vtable.partial_ord?;
         unsafe { partial_ord_fn(self.data, other.data) }
     }
 }
@@ -95,8 +92,7 @@ impl<'mem> PeekValue<'mem> {
             self.shape
                 .vtable
                 .partial_ord
-                .map(|partial_ord_fn| partial_ord_fn(self.data, other.data))
-                .flatten()
+                .and_then(|partial_ord_fn| partial_ord_fn(self.data, other.data))
         }
     }
 

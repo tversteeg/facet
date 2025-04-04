@@ -125,11 +125,11 @@ where
                 drop_in_place: None,
                 parse: None,
                 try_from: None,
-                default_in_place: Some(|ptr| unsafe { Some(ptr.write(&[] as &[T])) }),
+                default_in_place: Some(|ptr| unsafe { ptr.write(&[] as &[T]) }),
                 clone_into: Some(|src, dst| unsafe {
                     // This works because we're cloning a shared reference (&[T]), not the actual slice data.
                     // We're just copying the fat pointer (ptr + length) that makes up the slice reference.
-                    Some(dst.write(src.as_ref::<&[T]>()))
+                    dst.write(src.as_ref::<&[T]>())
                 }),
                 marker_traits: T::SHAPE.vtable.marker_traits,
             },

@@ -84,8 +84,8 @@ where
                 }),
                 parse: None,
                 try_from: None,
-                default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
-                clone_into: Some(|src, dst| unsafe { Some(dst.write(src.as_ref::<Vec<T>>())) }),
+                default_in_place: Some(|target| unsafe { target.write(Self::default()) }),
+                clone_into: Some(|src, dst| unsafe { dst.write(src.as_ref::<Vec<T>>()) }),
                 marker_traits: {
                     let mut traits = MarkerTraits::empty();
                     if T::SHAPE.vtable.marker_traits.contains(MarkerTraits::SEND) {

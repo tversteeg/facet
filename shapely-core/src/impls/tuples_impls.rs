@@ -161,34 +161,27 @@ where
                 }),
                 parse: None,
                 try_from: None,
-                default_in_place: Some(|ptr| unsafe { Some(ptr.write((T0::DUMMY, T1::DUMMY))) }),
+                default_in_place: Some(|ptr| unsafe { ptr.write((T0::DUMMY, T1::DUMMY)) }),
                 clone_into: if T0::SHAPE.vtable.clone_into.is_some()
                     && T1::SHAPE.vtable.clone_into.is_some()
                 {
                     Some(|src, dst| unsafe {
                         let src_tuple = src.as_ref::<(T0, T1)>();
 
-                        // Create a new tuple by cloning each component
-                        let t0_ptr = OpaqueConst::from_ref(&src_tuple.0);
-                        let t1_ptr = OpaqueConst::from_ref(&src_tuple.1);
+                        let refs = (
+                            OpaqueConst::from_ref(&src_tuple.0),
+                            OpaqueConst::from_ref(&src_tuple.1),
+                        );
 
-                        // Clone the first element
-                        let mut dst_0 = dst.field::<T0>(0);
-                        if (T0::SHAPE.vtable.clone_into.unwrap_unchecked())(t0_ptr, &mut dst_0)
-                            .is_none()
-                        {
-                            return None;
-                        }
+                        let clone_into = (
+                            T0::SHAPE.vtable.clone_into.unwrap_unchecked(),
+                            T1::SHAPE.vtable.clone_into.unwrap_unchecked(),
+                        );
 
-                        // Clone the second element
-                        let mut dst_1 = dst.field::<T1>(1);
-                        if (T1::SHAPE.vtable.clone_into.unwrap_unchecked())(t1_ptr, &mut dst_1)
-                            .is_none()
-                        {
-                            return None;
-                        }
+                        (clone_into.0)(refs.0, dst.field_uninit(0));
+                        (clone_into.1)(refs.1, dst.field_uninit(1));
 
-                        Some(dst.as_mut_ptr())
+                        unsafe { dst.assume_init() }
                     })
                 } else {
                     None

@@ -57,8 +57,8 @@ where
             } else {
                 None
             },
-            default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
-            clone_into: Some(|src, dst| unsafe { Some(dst.write(src.as_ref::<HashMap<K, V>>())) }),
+            default_in_place: Some(|target| unsafe { target.write(Self::default()) }),
+            clone_into: Some(|src, dst| unsafe { dst.write(src.as_ref::<HashMap<K, V>>()) }),
             marker_traits: {
                 let mut traits = MarkerTraits::empty();
                 if K::SHAPE.vtable.marker_traits.contains(MarkerTraits::SEND)
@@ -88,7 +88,7 @@ where
 
                     a.len() == b.len()
                         && a.iter().all(|(key_a, val_a)| {
-                            b.get(key_a).map_or(false, |val_b| {
+                            b.get(key_a).is_some_and(|val_b| {
                                 (k_eq)(OpaqueConst::from_ref(key_a), OpaqueConst::from_ref(key_a))
                                     && (v_eq)(
                                         OpaqueConst::from_ref(val_a),

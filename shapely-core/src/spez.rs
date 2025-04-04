@@ -123,7 +123,7 @@ impl<T: core::str::FromStr> SpezParseYes for &Spez<T> {
                 Ok(())
             }
             Err(_) => Err(ParseError::Generic(
-                &(const { concat!("parse error for ", stringify!(T)) }),
+                const { concat!("parse error for ", stringify!(T)) },
             )),
         }
     }

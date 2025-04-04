@@ -184,7 +184,7 @@ macro_rules! value_vtable {
             default_in_place: if $crate::impls!($type_name: std::default::Default) {
                 Some(|target| {
                     use $crate::spez::*;
-                    Some((&&Spez(<$type_name as $crate::Shapely>::DUMMY)).spez_default_in_place(target))
+                    (&&Spez(<$type_name as $crate::Shapely>::DUMMY)).spez_default_in_place(target)
                 })
             } else {
                 None
@@ -192,7 +192,7 @@ macro_rules! value_vtable {
             clone_into: if $crate::impls!($type_name: std::clone::Clone) {
                 Some(|src, dst| {
                     use $crate::spez::*;
-                    Some((&&Spez(unsafe { src.as_ref::<$type_name>() })).spez_clone_into(dst))
+                    (&&Spez(unsafe { src.as_ref::<$type_name>() })).spez_clone_into(dst)
                 })
             } else {
                 None

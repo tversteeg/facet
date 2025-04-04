@@ -1,3 +1,4 @@
+use crate::TryFromError;
 use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek, Shape, ShapeDebug, ValueVTable};
 
 /// Lets you write to a value (implements write-only [`ValueVTable`] proxies)
@@ -41,31 +42,28 @@ impl<'mem> PokeValue<'mem> {
 
     /// Attempts to convert a value from another type into this one
     ///
-    /// Returns `Some(Opaque)` if the conversion was successful, `None` otherwise.
-    pub fn try_from<'src>(self, source: Peek<'src>) -> Result<Opaque<'mem>, Self> {
-        if let Some(built_val) = self
-            .vtable()
-            .try_from
-            .and_then(|try_from_fn| unsafe { try_from_fn(source, self.data) })
-        {
-            // Safe because the function will initialize our data if it returns Some
-            Ok(built_val)
+    /// Returns `Ok(Opaque)` if the conversion was successful, `Err((Self, TryFromError))` otherwise.
+    pub fn try_from<'src>(self, source: Peek<'src>) -> Result<Opaque<'mem>, (Self, TryFromError)> {
+        if let Some(try_from_fn) = self.vtable().try_from {
+            match unsafe { try_from_fn(source, self.data) } {
+                Ok(built_val) => Ok(built_val),
+                Err(err) => Err((self, err)),
+            }
         } else {
-            Err(self)
+            let shape = self.shape;
+            Err((self, TryFromError::Unimplemented(shape)))
         }
     }
 
     /// Attempts to parse a string into this value
     ///
-    /// Returns `Some(Opaque)` if parsing was successful, `None` otherwise.
+    /// Returns `Ok(Opaque)` if parsing was successful, `Err(Self)` otherwise.
     pub fn parse(self, s: &str) -> Result<Opaque<'mem>, Self> {
-        if let Some(parsed_val) = self
-            .vtable()
-            .parse
-            .and_then(|parse_fn| unsafe { parse_fn(s, self.data) })
-        {
-            // Safe because the function will initialize our data if it returns Some
-            Ok(parsed_val)
+        if let Some(parse_fn) = self.vtable().parse {
+            match unsafe { parse_fn(s, self.data) } {
+                Ok(parsed_val) => Ok(parsed_val),
+                Err(_) => Err(self),
+            }
         } else {
             Err(self)
         }
@@ -93,13 +91,10 @@ impl<'mem> PokeValue<'mem> {
 
     /// Attempts to set the value to its default
     ///
-    /// Returns `Some(Opaque)` if setting to default was successful, `None` otherwise.
+    /// Returns `Ok(Opaque)` if setting to default was successful, `Err(Self)` otherwise.
     pub fn default_in_place(self) -> Result<Opaque<'mem>, Self> {
-        if let Some(default_val) = self
-            .vtable()
-            .default_in_place
-            .and_then(|default_fn| unsafe { default_fn(self.data) })
-        {
+        if let Some(default_in_place_fn) = self.vtable().default_in_place {
+            let default_val = unsafe { default_in_place_fn(self.data) };
             Ok(default_val)
         } else {
             Err(self)
@@ -110,11 +105,8 @@ impl<'mem> PokeValue<'mem> {
     ///
     /// Returns `Ok(Peek)` if cloning was successful, `Err(Self)` otherwise.
     pub fn clone_from<'src>(self, source: Peek<'src>) -> Result<Peek<'mem>, Self> {
-        if let Some(cloned_val) = self
-            .vtable()
-            .clone_into
-            .and_then(|clone_fn| unsafe { clone_fn(source.data(), self.data) })
-        {
+        if let Some(clone_fn) = self.vtable().clone_into {
+            let cloned_val = unsafe { clone_fn(source.data(), self.data) };
             // Safe because the function will initialize our data if it returns Some
             Ok(unsafe { Peek::unchecked_new(cloned_val.as_const(), self.shape) })
         } else {
