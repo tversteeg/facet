@@ -42,8 +42,7 @@ where
                         None
                     }
                 },
-                eq: T::SHAPE.vtable.eq,
-                partial_eq: if T::SHAPE.vtable.partial_eq.is_some() {
+                eq: if T::SHAPE.vtable.eq.is_some() {
                     Some(|a, b| {
                         let a = unsafe { a.as_ref::<&[T]>() };
                         let b = unsafe { b.as_ref::<&[T]>() };
@@ -52,7 +51,7 @@ where
                         }
                         for (x, y) in a.iter().zip(b.iter()) {
                             if !unsafe {
-                                (T::SHAPE.vtable.partial_eq.unwrap_unchecked())(
+                                (T::SHAPE.vtable.eq.unwrap_unchecked())(
                                     OpaqueConst::from_ref(x),
                                     OpaqueConst::from_ref(y),
                                 )
@@ -65,23 +64,25 @@ where
                 } else {
                     None
                 },
-                ord: T::SHAPE.vtable.ord,
-                cmp: if T::SHAPE.vtable.cmp.is_some() {
+                ord: None,
+                partial_ord: if T::SHAPE.vtable.partial_ord.is_some() {
                     Some(|a, b| {
                         let a = unsafe { a.as_ref::<&[T]>() };
                         let b = unsafe { b.as_ref::<&[T]>() };
                         for (x, y) in a.iter().zip(b.iter()) {
-                            let cmp = unsafe {
-                                (T::SHAPE.vtable.cmp.unwrap_unchecked())(
+                            let ord = unsafe {
+                                (T::SHAPE.vtable.partial_ord.unwrap_unchecked())(
                                     OpaqueConst::from_ref(x),
                                     OpaqueConst::from_ref(y),
                                 )
                             };
-                            if cmp != std::cmp::Ordering::Equal {
-                                return cmp;
+                            match ord {
+                                Some(std::cmp::Ordering::Equal) => continue,
+                                Some(order) => return Some(order),
+                                None => return None,
                             }
                         }
-                        a.len().cmp(&b.len())
+                        a.len().partial_cmp(&b.len())
                     })
                 } else {
                     None
@@ -111,6 +112,19 @@ where
                 try_from: None,
                 default_in_place: Some(|ptr| unsafe { Some(ptr.write(&[] as &[T])) }),
                 clone_into: Some(|src, dst| unsafe { Some(dst.write(src.as_ref::<&[T]>())) }),
+                marker_traits: {
+                    let mut traits = MarkerTraits::empty();
+                    if T::SHAPE.vtable.marker_traits.contains(MarkerTraits::SEND) {
+                        traits = traits.union(MarkerTraits::SEND);
+                    }
+                    if T::SHAPE.vtable.marker_traits.contains(MarkerTraits::SYNC) {
+                        traits = traits.union(MarkerTraits::SYNC);
+                    }
+                    if T::SHAPE.vtable.marker_traits.contains(MarkerTraits::EQ) {
+                        traits = traits.union(MarkerTraits::EQ);
+                    }
+                    traits
+                },
             },
             def: Def::List(ListDef {
                 vtable: &ListVTable {

@@ -35,6 +35,19 @@ pub enum Peek<'mem> {
     Struct(PeekStruct<'mem>),
 }
 
+impl<'mem> std::ops::Deref for Peek<'mem> {
+    type Target = PeekValue<'mem>;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Peek::Scalar(value) => value,
+            Peek::List(list) => list,
+            Peek::Map(map) => map,
+            Peek::Struct(struct_) => struct_,
+        }
+    }
+}
+
 impl<'mem> Peek<'mem> {
     /// Creates a new peek from a reference to some initialized value that implements `Shapely`
     pub fn new<S: Shapely>(s: &'mem S) -> Self {

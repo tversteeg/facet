@@ -1,7 +1,7 @@
 use crate::{EnumDef, FieldError, Opaque, OpaqueUninit, Shape, ShapeDebug, Shapely, trace};
 use std::ptr::NonNull;
 
-use super::{ISet, Poke};
+use super::{ISet, Poke, PokeValue};
 
 /// Represents an enum before a variant has been selected
 pub struct PokeEnumNoVariant<'mem> {

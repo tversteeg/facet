@@ -113,7 +113,7 @@ impl<'mem> PokeValue<'mem> {
         if let Some(cloned_val) = self
             .vtable()
             .clone_into
-            .and_then(|clone_fn| unsafe { clone_fn(source.as_opaque_const(), self.data) })
+            .and_then(|clone_fn| unsafe { clone_fn(source.data(), self.data) })
         {
             // Safe because the function will initialize our data if it returns Some
             Ok(unsafe { Peek::unchecked_new(cloned_val.as_const(), self.shape) })

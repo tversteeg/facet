@@ -1,5 +1,5 @@
 use crate::*;
-use std::alloc::Layout;
+use std::{alloc::Layout, hash::Hash as _};
 
 impl<T> Shapely for Vec<T>
 where
@@ -43,42 +43,62 @@ where
                         None
                     }
                 },
-                eq: T::SHAPE.vtable.eq,
-                partial_eq: const {
-                    if T::SHAPE.vtable.partial_eq.is_some() {
-                        Some(|a, b| unsafe {
-                            let a = a.as_ref::<Vec<T>>();
-                            let b = b.as_ref::<Vec<T>>();
-                            if a.len() != b.len() {
+                eq: if T::SHAPE.vtable.eq.is_some() {
+                    Some(|a, b| unsafe {
+                        let a = a.as_ref::<Vec<T>>();
+                        let b = b.as_ref::<Vec<T>>();
+                        if a.len() != b.len() {
+                            return false;
+                        }
+                        for (item_a, item_b) in a.iter().zip(b.iter()) {
+                            if !(T::SHAPE.vtable.eq.unwrap_unchecked())(
+                                OpaqueConst::from_ref(item_a),
+                                OpaqueConst::from_ref(item_b),
+                            ) {
                                 return false;
                             }
-                            for (item_a, item_b) in a.iter().zip(b.iter()) {
-                                if !(T::SHAPE.vtable.partial_eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(item_a),
-                                    OpaqueConst::from_ref(item_b),
-                                ) {
-                                    return false;
-                                }
-                            }
-                            true
-                        })
-                    } else {
-                        None
-                    }
+                        }
+                        true
+                    })
+                } else {
+                    None
                 },
-                // TODO: specialize these
-                ord: false,
-                cmp: None,
-                // TODO: specialize these
-                hash: None,
+                ord: None,
+                partial_ord: None,
+                hash: if T::SHAPE.vtable.hash.is_some() {
+                    Some(|value, hasher_this, hasher_write_fn| unsafe {
+                        use crate::vtable::HasherProxy;
+                        let vec = value.as_ref::<Vec<T>>();
+                        let t_hash = T::SHAPE.vtable.hash.unwrap_unchecked();
+                        let mut hasher = HasherProxy::new(hasher_this, hasher_write_fn);
+                        vec.len().hash(&mut hasher);
+                        for item in vec {
+                            (t_hash)(OpaqueConst::from_ref(item), hasher_this, hasher_write_fn);
+                        }
+                    })
+                } else {
+                    None
+                },
                 drop_in_place: Some(|value| unsafe {
                     std::ptr::drop_in_place(value.as_mut_ptr::<Vec<T>>());
                 }),
                 parse: None,
-                // TODO: specialize these
                 try_from: None,
                 default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
                 clone_into: Some(|src, dst| unsafe { Some(dst.write(src.as_ref::<Vec<T>>())) }),
+                marker_traits: {
+                    let mut traits = MarkerTraits::empty();
+                    if T::SHAPE.vtable.marker_traits.contains(MarkerTraits::SEND) {
+                        traits = traits.union(MarkerTraits::SEND);
+                    }
+                    if T::SHAPE.vtable.marker_traits.contains(MarkerTraits::SYNC) {
+                        traits = traits.union(MarkerTraits::SYNC);
+                    }
+                    if T::SHAPE.vtable.marker_traits.contains(MarkerTraits::EQ) {
+                        traits = traits.union(MarkerTraits::EQ);
+                    }
+                    traits
+                },
             },
             def: Def::List(ListDef {
                 vtable: &ListVTable {

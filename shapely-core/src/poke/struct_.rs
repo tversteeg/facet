@@ -1,7 +1,7 @@
 use crate::{FieldError, Opaque, OpaqueUninit, Shape, ShapeDebug, StructDef};
 use std::ptr::NonNull;
 
-use super::{Guard, ISet};
+use super::{Guard, ISet, PokeValue};
 
 /// Allows poking a struct (setting fields, etc.)
 pub struct PokeStruct<'mem> {
