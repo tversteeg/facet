@@ -193,7 +193,25 @@ macro_rules! value_vtable {
             } else {
                 None
             },
-            marked_eq: $crate::impls!($type_name: std::cmp::Eq),
+            marker_traits: {
+                const fn combine_traits() -> $crate::MarkerTraits {
+                    let mut traits = $crate::MarkerTraits::empty();
+                    if $crate::impls!($type_name: std::cmp::Eq) {
+                        traits = traits.union($crate::MarkerTraits::EQ);
+                    }
+                    if $crate::impls!($type_name: std::marker::Send) {
+                        traits = traits.union($crate::MarkerTraits::SEND);
+                    }
+                    if $crate::impls!($type_name: std::marker::Sync) {
+                        traits = traits.union($crate::MarkerTraits::SYNC);
+                    }
+                    if $crate::impls!($type_name: std::marker::Copy) {
+                        traits = traits.union($crate::MarkerTraits::COPY);
+                    }
+                    traits
+                }
+                combine_traits()
+            },
             eq: if $crate::impls!($type_name: std::cmp::PartialEq) {
                 Some(|left, right| {
                     use $crate::spez::*;
@@ -203,20 +221,20 @@ macro_rules! value_vtable {
             } else {
                 None
             },
-            ord: if $crate::impls!($type_name: std::cmp::Ord) {
-                Some(|left, right| {
-                    use $crate::spez::*;
-                    (&&Spez(unsafe { left.as_ref::<$type_name>() }))
-                        .spez_cmp(&&Spez(unsafe { right.as_ref::<$type_name>() }))
-                })
-            } else {
-                None
-            },
             partial_ord: if $crate::impls!($type_name: std::cmp::PartialOrd) {
                 Some(|left, right| {
                     use $crate::spez::*;
                     (&&Spez(unsafe { left.as_ref::<$type_name>() }))
                         .spez_partial_cmp(&&Spez(unsafe { right.as_ref::<$type_name>() }))
+                })
+            } else {
+                None
+            },
+            ord: if $crate::impls!($type_name: std::cmp::Ord) {
+                Some(|left, right| {
+                    use $crate::spez::*;
+                    (&&Spez(unsafe { left.as_ref::<$type_name>() }))
+                        .spez_cmp(&&Spez(unsafe { right.as_ref::<$type_name>() }))
                 })
             } else {
                 None

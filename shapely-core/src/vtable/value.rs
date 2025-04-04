@@ -1,4 +1,5 @@
 use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek};
+use bitflags::bitflags;
 use std::cmp::Ordering;
 
 //======== Type Information ========
@@ -276,6 +277,23 @@ impl<'a> std::hash::Hasher for HasherProxy<'a> {
     }
 }
 
+//======== Marker Traits ========
+
+bitflags! {
+    /// Bitflags for common marker traits that a type may implement
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    pub struct MarkerTraits: u8 {
+        /// Indicates that the type implements the [`Eq`] marker trait
+        const EQ = 1 << 0;
+        /// Indicates that the type implements the [`Send`] marker trait
+        const SEND = 1 << 1;
+        /// Indicates that the type implements the [`Sync`] marker trait
+        const SYNC = 1 << 2;
+        /// Indicates that the type implements the [`Copy`] marker trait
+        const COPY = 1 << 3;
+    }
+}
+
 //======== Display and Debug ========
 
 /// Function to format a value for display
@@ -335,8 +353,8 @@ pub struct ValueVTable {
     /// cf. [`CloneInPlaceFn`]
     pub clone_into: Option<CloneIntoFn>,
 
-    /// Marker traits as a bitset
-    pub marker_traits: u8,
+    /// Marker traits implemented by the type
+    pub marker_traits: MarkerTraits,
 
     /// cf. [`PartialEqFn`] for equality comparison
     pub eq: Option<PartialEqFn>,
@@ -361,33 +379,24 @@ pub struct ValueVTable {
 }
 
 impl ValueVTable {
-    /// Bit flag for types that implement the [`Eq`] marker trait
-    pub const MARKER_EQ: u8 = 1 << 0; // 0b0000_0001
-    /// Bit flag for types that implement the [`Send`] marker trait
-    pub const MARKER_SEND: u8 = 1 << 1; // 0b0000_0010
-    /// Bit flag for types that implement the [`Sync`] marker trait
-    pub const MARKER_SYNC: u8 = 1 << 2; // 0b0000_0100
-    /// Bit flag for types that implement the [`Copy`] marker trait
-    pub const MARKER_COPY: u8 = 1 << 3; // 0b0000_1000
-
     /// Check if the type implements the [`Eq`] marker trait
     pub fn is_eq(&self) -> bool {
-        (self.marker_traits & Self::MARKER_EQ) != 0
+        self.marker_traits.contains(MarkerTraits::EQ)
     }
 
     /// Check if the type implements the [`Send`] marker trait
     pub fn is_send(&self) -> bool {
-        (self.marker_traits & Self::MARKER_SEND) != 0
+        self.marker_traits.contains(MarkerTraits::SEND)
     }
 
     /// Check if the type implements the [`Sync`] marker trait
     pub fn is_sync(&self) -> bool {
-        (self.marker_traits & Self::MARKER_SYNC) != 0
+        self.marker_traits.contains(MarkerTraits::SYNC)
     }
 
     /// Check if the type implements the [`Copy`] marker trait
     pub fn is_copy(&self) -> bool {
-        (self.marker_traits & Self::MARKER_COPY) != 0
+        self.marker_traits.contains(MarkerTraits::COPY)
     }
 }
 
@@ -396,7 +405,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
+    #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
     fn test_vtable_size() {
         assert_eq!(std::mem::size_of::<ValueVTable>(), 104);
     }
