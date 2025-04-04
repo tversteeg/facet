@@ -335,17 +335,8 @@ pub struct ValueVTable {
     /// cf. [`CloneInPlaceFn`]
     pub clone_into: Option<CloneIntoFn>,
 
-    /// Whether the type implements the [`Eq`] marker trait
-    pub marked_eq: bool,
-
-    /// Whether the type implements the [`Send`] marker trait
-    pub marked_send: bool,
-
-    /// Whether the type implements the [`Sync`] marker trait
-    pub marked_sync: bool,
-
-    /// Whether the type implements the [`Copy`] marker trait
-    pub marked_copy: bool,
+    /// Marker traits as a bitset
+    pub marker_traits: u8,
 
     /// cf. [`PartialEqFn`] for equality comparison
     pub eq: Option<PartialEqFn>,
@@ -367,4 +358,46 @@ pub struct ValueVTable {
 
     /// cf. [`TryFromFn`]
     pub try_from: Option<TryFromFn>,
+}
+
+impl ValueVTable {
+    /// Bit flag for types that implement the [`Eq`] marker trait
+    pub const MARKER_EQ: u8 = 1 << 0; // 0b0000_0001
+    /// Bit flag for types that implement the [`Send`] marker trait
+    pub const MARKER_SEND: u8 = 1 << 1; // 0b0000_0010
+    /// Bit flag for types that implement the [`Sync`] marker trait
+    pub const MARKER_SYNC: u8 = 1 << 2; // 0b0000_0100
+    /// Bit flag for types that implement the [`Copy`] marker trait
+    pub const MARKER_COPY: u8 = 1 << 3; // 0b0000_1000
+
+    /// Check if the type implements the [`Eq`] marker trait
+    pub fn is_eq(&self) -> bool {
+        (self.marker_traits & Self::MARKER_EQ) != 0
+    }
+
+    /// Check if the type implements the [`Send`] marker trait
+    pub fn is_send(&self) -> bool {
+        (self.marker_traits & Self::MARKER_SEND) != 0
+    }
+
+    /// Check if the type implements the [`Sync`] marker trait
+    pub fn is_sync(&self) -> bool {
+        (self.marker_traits & Self::MARKER_SYNC) != 0
+    }
+
+    /// Check if the type implements the [`Copy`] marker trait
+    pub fn is_copy(&self) -> bool {
+        (self.marker_traits & Self::MARKER_COPY) != 0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
+    fn test_vtable_size() {
+        assert_eq!(std::mem::size_of::<ValueVTable>(), 104);
+    }
 }
