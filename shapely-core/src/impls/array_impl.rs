@@ -37,13 +37,14 @@ where
                         None
                     }
                 },
-                eq: const {
-                    if T::SHAPE.vtable.eq.is_some() {
+                eq: T::SHAPE.vtable.eq,
+                partial_eq: const {
+                    if T::SHAPE.vtable.partial_eq.is_some() {
                         Some(|a, b| {
                             let a = unsafe { a.as_ref::<[T; 1]>() };
                             let b = unsafe { b.as_ref::<[T; 1]>() };
                             unsafe {
-                                (T::SHAPE.vtable.eq.unwrap_unchecked())(
+                                (T::SHAPE.vtable.partial_eq.unwrap_unchecked())(
                                     OpaqueConst::from_ref(&a[0]),
                                     OpaqueConst::from_ref(&b[0]),
                                 )
@@ -53,13 +54,14 @@ where
                         None
                     }
                 },
-                ord: const {
-                    if T::SHAPE.vtable.ord.is_some() {
+                ord: T::SHAPE.vtable.ord,
+                cmp: const {
+                    if T::SHAPE.vtable.cmp.is_some() {
                         Some(|a, b| {
                             let a = unsafe { a.as_ref::<[T; 1]>() };
                             let b = unsafe { b.as_ref::<[T; 1]>() };
                             unsafe {
-                                (T::SHAPE.vtable.ord.unwrap_unchecked())(
+                                (T::SHAPE.vtable.cmp.unwrap_unchecked())(
                                     OpaqueConst::from_ref(&a[0]),
                                     OpaqueConst::from_ref(&b[0]),
                                 )

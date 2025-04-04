@@ -1,5 +1,4 @@
-use shapely::Peek;
-use std::fmt::Write as _;
+use shapely::{Peek, Shapely};
 use std::io::{self, Write};
 
 /// Serializes any Shapely type to JSON
@@ -12,30 +11,20 @@ pub fn to_json<W: Write>(peek: Peek<'_>, writer: &mut W, indent: bool) -> io::Re
     ) -> io::Result<()> {
         match peek {
             Peek::Scalar(pv) => {
-                // For scalar values, use debug or display based on type
-                if let Some(debug) = pv.debug() {
-                    let mut buf = String::new();
-                    write!(&mut buf, "{:?}", debug).map_err(|_| {
-                        io::Error::new(io::ErrorKind::InvalidData, "failed to format value")
-                    })?;
-
-                    // Handle special cases for JSON formatting
-                    let s = if buf.starts_with('"') {
-                        // String values are already quoted
-                        buf
-                    } else if buf == "true" || buf == "false" {
-                        buf
-                    } else if buf == "()" {
-                        "null".to_string()
-                    } else {
-                        buf
-                    };
-                    write!(writer, "{}", s)
+                if pv.shape.is_type::<()>() {
+                    write!(writer, "null")
+                } else if pv.shape.is_type::<bool>() {
+                    let value = unsafe { pv.data.as_ref::<bool>() };
+                    write!(writer, "{}", value)
+                } else if pv.shape.is_type::<u64>() {
+                    let value = unsafe { pv.data.as_ref::<u64>() };
+                    write!(writer, "{}", value)
+                } else if pv.shape.is_type::<String>() {
+                    let value = unsafe { pv.data.as_ref::<String>() };
+                    write!(writer, "\"{}\"", value.escape_debug())
                 } else {
-                    Err(io::Error::new(
-                        io::ErrorKind::InvalidData,
-                        "value must implement Debug",
-                    ))
+                    // For other types, we'll use a placeholder
+                    write!(writer, "\"<unsupported type>\"")
                 }
             }
             Peek::Struct(ps) => {
@@ -45,8 +34,7 @@ pub fn to_json<W: Write>(peek: Peek<'_>, writer: &mut W, indent: bool) -> io::Re
                 }
 
                 let mut first = true;
-                let mut i = 0;
-                while let Some(field) = ps.field_at(i) {
+                for field in ps.fields() {
                     if !first {
                         write!(writer, ",")?;
                         if indent {
@@ -58,13 +46,12 @@ pub fn to_json<W: Write>(peek: Peek<'_>, writer: &mut W, indent: bool) -> io::Re
                     if indent {
                         write!(writer, "{:indent$}", "", indent = (level + 1) * 2)?;
                     }
-                    write!(writer, "\"{}\":", field.name())?;
+                    write!(writer, "\"{}\":", field.0)?;
                     if indent {
                         write!(writer, " ")?;
                     }
 
-                    serialize_value(field.peek(), writer, indent, level + 1)?;
-                    i += 1;
+                    serialize_value(Peek::Scalar(field.1), writer, indent, level + 1)?;
                 }
 
                 if !first && indent {
@@ -74,29 +61,31 @@ pub fn to_json<W: Write>(peek: Peek<'_>, writer: &mut W, indent: bool) -> io::Re
                 write!(writer, "}}")
             }
             Peek::List(pl) => {
+                todo!("list");
+
                 write!(writer, "[")?;
                 if indent {
                     writeln!(writer)?;
                 }
 
                 let mut first = true;
-                let mut i = 0;
-                while let Some(item) = pl.next_item() {
-                    if !first {
-                        write!(writer, ",")?;
-                        if indent {
-                            writeln!(writer)?;
-                        }
-                    }
-                    first = false;
+                let mut index = 0;
+                // while let Some(item) = pl.item_at(index) {
+                //     if !first {
+                //         write!(writer, ",")?;
+                //         if indent {
+                //             writeln!(writer)?;
+                //         }
+                //     }
+                //     first = false;
 
-                    if indent {
-                        write!(writer, "{:indent$}", "", indent = (level + 1) * 2)?;
-                    }
+                //     if indent {
+                //         write!(writer, "{:indent$}", "", indent = (level + 1) * 2)?;
+                //     }
 
-                    serialize_value(item, writer, indent, level + 1)?;
-                    i += 1;
-                }
+                //     serialize_value(item, writer, indent, level + 1)?;
+                //     index += 1;
+                // }
 
                 if !first && indent {
                     writeln!(writer)?;
@@ -105,53 +94,39 @@ pub fn to_json<W: Write>(peek: Peek<'_>, writer: &mut W, indent: bool) -> io::Re
                 write!(writer, "]")
             }
             Peek::Map(pm) => {
+                todo!("map");
+
                 write!(writer, "{{")?;
                 if indent {
                     writeln!(writer)?;
                 }
 
                 let mut first = true;
-                let mut i = 0;
-                while let Some((key, value)) = pm.next_entry() {
-                    if !first {
-                        write!(writer, ",")?;
-                        if indent {
-                            writeln!(writer)?;
-                        }
-                    }
-                    first = false;
+                let mut index = 0;
+                // while let Some((key, value)) = pm.entry_at(index) {
+                //     if !first {
+                //         write!(writer, ",")?;
+                //         if indent {
+                //             writeln!(writer)?;
+                //         }
+                //     }
+                //     first = false;
 
-                    if indent {
-                        write!(writer, "{:indent$}", "", indent = (level + 1) * 2)?;
-                    }
+                //     if indent {
+                //         write!(writer, "{:indent$}", "", indent = (level + 1) * 2)?;
+                //     }
 
-                    // Handle key serialization using debug
-                    if let Some(debug) = key.as_value().debug() {
-                        let mut buf = String::new();
-                        write!(&mut buf, "{:?}", debug).map_err(|_| {
-                            io::Error::new(io::ErrorKind::InvalidData, "failed to format key")
-                        })?;
-                        // Remove surrounding quotes if present
-                        let key_str = if buf.starts_with('"') && buf.ends_with('"') {
-                            &buf[1..buf.len() - 1]
-                        } else {
-                            &buf
-                        };
-                        write!(writer, "\"{}\":", key_str)?;
-                    } else {
-                        return Err(io::Error::new(
-                            io::ErrorKind::InvalidData,
-                            "Map key must implement Debug",
-                        ));
-                    };
+                //     // Handle key serialization
+                //     serialize_value(Peek::Scalar(key), writer, false, 0)?;
+                //     write!(writer, ":")?;
 
-                    if indent {
-                        write!(writer, " ")?;
-                    }
+                //     if indent {
+                //         write!(writer, " ")?;
+                //     }
 
-                    serialize_value(value, writer, indent, level + 1)?;
-                    i += 1;
-                }
+                //     serialize_value(value, writer, indent, level + 1)?;
+                //     index += 1;
+                // }
 
                 if !first && indent {
                     writeln!(writer)?;

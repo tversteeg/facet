@@ -60,13 +60,14 @@ where
                 }
             },
             default_in_place: Some(|target| unsafe { Some(target.write(Self::default())) }),
-            eq: const {
-                if K::SHAPE.vtable.eq.is_some() && V::SHAPE.vtable.eq.is_some() {
+            eq: K::SHAPE.vtable.eq && V::SHAPE.vtable.eq,
+            partial_eq: const {
+                if K::SHAPE.vtable.partial_eq.is_some() && V::SHAPE.vtable.partial_eq.is_some() {
                     Some(|a, b| unsafe {
                         let a = a.as_ref::<HashMap<K, V>>();
                         let b = b.as_ref::<HashMap<K, V>>();
 
-                        let v_eq = V::SHAPE.vtable.eq.unwrap_unchecked();
+                        let v_eq = V::SHAPE.vtable.partial_eq.unwrap_unchecked();
 
                         if a.len() != b.len() {
                             return false;
@@ -89,7 +90,8 @@ where
                     None
                 }
             },
-            ord: None,
+            ord: false,
+            cmp: None,
             hash: const {
                 if K::SHAPE.vtable.hash.is_some() && V::SHAPE.vtable.hash.is_some() {
                     Some(|value, hasher_this, hasher_write_fn| unsafe {
@@ -98,7 +100,7 @@ where
 
                         let k_hash = K::SHAPE.vtable.hash.unwrap_unchecked();
                         let v_hash = V::SHAPE.vtable.hash.unwrap_unchecked();
-                        let k_cmp = K::SHAPE.vtable.ord.unwrap_unchecked();
+                        let k_cmp = K::SHAPE.vtable.cmp.unwrap_unchecked();
 
                         let mut hasher = HasherProxy::new(hasher_this, hasher_write_fn);
 

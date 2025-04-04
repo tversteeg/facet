@@ -2,12 +2,16 @@ use crate::{MapDef, MapVTable, Opaque, OpaqueConst, OpaqueUninit, PokeValue, Sha
 
 /// Allows initializing an uninitialized map
 pub struct PokeMapUninit<'mem> {
-    pub(crate) data: OpaqueUninit<'mem>,
-    pub(crate) shape: &'static Shape,
+    data: OpaqueUninit<'mem>,
+    shape: &'static Shape,
     def: MapDef,
 }
 
 impl<'mem> PokeMapUninit<'mem> {
+    #[inline(always)]
+    pub fn into_value(self) -> PokeValue<'mem> {
+        unsafe { PokeValue::new(self.data, self.shape) }
+    }
     /// Creates a new uninitialized map write-proxy
     ///
     /// # Safety

@@ -5,12 +5,16 @@ use super::{ISet, Poke};
 
 /// Represents an enum before a variant has been selected
 pub struct PokeEnumNoVariant<'mem> {
-    pub(crate) data: OpaqueUninit<'mem>,
-    pub(crate) shape: &'static Shape,
+    data: OpaqueUninit<'mem>,
+    shape: &'static Shape,
     def: EnumDef,
 }
 
 impl<'mem> PokeEnumNoVariant<'mem> {
+    #[inline(always)]
+    pub fn into_value(self) -> PokeValue<'mem> {
+        unsafe { PokeValue::new(self.data, self.shape) }
+    }
     /// Creates a new PokeEnumNoVariant from raw data
     ///
     /// # Safety

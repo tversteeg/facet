@@ -5,9 +5,9 @@ fn init_backtrace() {
     color_backtrace::install();
 }
 
-use shapely::{Poke, Shapely};
+use shapely::{Peek, Poke, Shapely};
 
-use shapely_json::from_json;
+use shapely_json::{from_json, to_json};
 
 #[test]
 fn test_from_json() {
@@ -26,68 +26,44 @@ fn test_from_json() {
     assert_eq!(s.age, 30);
 }
 
-// #[test]
-// fn test_to_json() {
-//     #[derive(Debug, PartialEq)]
-//     struct TestStruct {
-//         name: String,
-//         age: u64,
-//     }
+#[test]
+fn test_to_json() {
+    #[derive(Debug, PartialEq, Clone, Shapely)]
+    struct TestStruct {
+        name: String,
+        age: u64,
+    }
 
-//     impl Shapely for TestStruct {
-//         fn shape() -> shapely::Shape {
-//             shapely::Shape {
-//                 name: |f, _opts| write!(f, "TestStruct"),
-//                 layout: std::alloc::Layout::new::<Self>(),
-//                 def: shapely::Def::Struct {
-//                     fields: shapely::struct_fields!(TestStruct, (name, age)),
-//                 },
-//                 set_to_default: None,
-//                 drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
-//                 typeid: std::any::TypeId::of::<Self>(),
-//             }
-//         }
-//     }
+    let test_struct = TestStruct {
+        name: "Alice".to_string(),
+        age: 30,
+    };
 
-//     let test_struct = TestStruct {
-//         name: "Alice".to_string(),
-//         age: 30,
-//     };
+    let expected_json = r#"{"name":"Alice","age":30}"#;
+    let expected_json_indented = r#"{
+  "name": "Alice",
+  "age": 30
+}"#;
 
-//     let expected_json = r#"{"name":"Alice","age":30}"#;
-//     let expected_json_indented = r#"{
-//   "name": "Alice",
-//   "age": 30
-// }"#;
+    let mut buffer = Vec::new();
+    let peek = Peek::new(&test_struct);
+    to_json(peek, &mut buffer, true).unwrap();
+    let json = String::from_utf8(buffer).unwrap();
+    assert_eq!(json, expected_json);
 
-//     let mut buffer = Vec::new();
-//     to_json(
-//         &test_struct as *const _ as *mut u8,
-//         TestStruct::SHAPE_FN,
-//         &mut buffer,
-//         false,
-//     )
-//     .unwrap();
-//     let json = String::from_utf8(buffer).unwrap();
-//     assert_eq!(json, expected_json);
+    // let mut buffer = Vec::new();
+    // let (poke, _guard) = Poke::alloc::<TestStruct>();
+    // unsafe { std::ptr::write(poke.as_mut_ptr(), test_struct.clone()) };
+    // to_json(&poke, &mut buffer, true).unwrap();
+    // let json_indented = String::from_utf8(buffer).unwrap();
+    // assert_eq!(json_indented, expected_json_indented.trim());
 
-//     let mut buffer = Vec::new();
-//     to_json(
-//         &test_struct as *const _ as *mut u8,
-//         TestStruct::SHAPE_FN,
-//         &mut buffer,
-//         true,
-//     )
-//     .unwrap();
-//     let json_indented = String::from_utf8(buffer).unwrap();
-//     assert_eq!(json_indented, expected_json_indented.trim());
-
-//     // Test roundtrip
-//     let mut deserialized = TestStruct::partial();
-//     from_json(&mut deserialized, expected_json).unwrap();
-//     let deserialized_struct = deserialized.build::<TestStruct>();
-//     assert_eq!(deserialized_struct, test_struct);
-// }
+    // // Test roundtrip
+    // let (poke, _guard) = Poke::alloc::<TestStruct>();
+    // from_json(poke, expected_json).unwrap();
+    // let deserialized_struct = unsafe { (*poke.as_mut_ptr()).clone() };
+    // assert_eq!(deserialized_struct, test_struct);
+}
 
 // #[test]
 // fn test_from_json_with_more_types() {

@@ -1,22 +1,27 @@
-use crate::{ListDef, OpaqueConst, Shape};
+use crate::ListDef;
 
 use super::PeekValue;
 
-/// Lets you read from a value (implements read-only [`ListVTable`] proxies)
+/// Lets you read from a list (implements read-only [`ListVTable`] proxies)
 #[derive(Clone, Copy)]
 pub struct PeekList<'mem> {
-    pub(crate) data: OpaqueConst<'mem>,
-    pub(crate) shape: &'static Shape,
+    value: PeekValue<'mem>,
     #[expect(dead_code)]
-    pub(crate) def: ListDef,
+    def: ListDef,
+}
+
+impl<'mem> std::ops::Deref for PeekList<'mem> {
+    type Target = PeekValue<'mem>;
+
+    #[inline(always)]
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
 }
 
 impl<'mem> PeekList<'mem> {
-    /// Coerce to a value
-    pub fn as_value(self) -> PeekValue<'mem> {
-        PeekValue {
-            data: self.data,
-            shape: self.shape,
-        }
+    /// Creates a new peek list
+    pub fn new(value: PeekValue<'mem>, def: ListDef) -> Self {
+        Self { value, def }
     }
 }

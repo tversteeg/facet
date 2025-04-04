@@ -1,16 +1,29 @@
+use crate::StructDef;
 use crate::peek::PeekValue;
-use crate::{OpaqueConst, Shape, StructDef};
 
 /// Lets you read from a struct (implements read-only struct operations)
 #[derive(Clone, Copy)]
 pub struct PeekStruct<'mem> {
-    pub(crate) data: OpaqueConst<'mem>,
-    pub(crate) shape: &'static Shape,
+    value: PeekValue<'mem>,
     // I suppose this could be a `&'static` as well, idk
-    pub(crate) def: StructDef,
+    def: StructDef,
+}
+
+impl<'mem> std::ops::Deref for PeekStruct<'mem> {
+    type Target = PeekValue<'mem>;
+
+    #[inline(always)]
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
 }
 
 impl<'mem> PeekStruct<'mem> {
+    /// Create a new peek struct
+    pub(crate) fn new(value: PeekValue<'mem>, def: StructDef) -> Self {
+        Self { value, def }
+    }
+
     /// Returns the number of fields in this struct
     #[inline(always)]
     pub fn field_count(&self) -> usize {
@@ -27,11 +40,8 @@ impl<'mem> PeekStruct<'mem> {
     #[inline(always)]
     pub fn field_value(&self, index: usize) -> Option<PeekValue<'mem>> {
         self.def.fields.get(index).map(|field| unsafe {
-            let field_data = self.data.field(field.offset);
-            PeekValue {
-                data: field_data,
-                shape: field.shape,
-            }
+            let field_data = self.data().field(field.offset);
+            PeekValue::new(field_data, field.shape)
         })
     }
 
@@ -53,13 +63,5 @@ impl<'mem> PeekStruct<'mem> {
             let value = self.field_value(i)?;
             Some((name, value))
         })
-    }
-
-    /// Coerce to a value
-    pub fn as_value(self) -> PeekValue<'mem> {
-        PeekValue {
-            data: self.data,
-            shape: self.shape,
-        }
     }
 }

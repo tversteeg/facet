@@ -140,7 +140,7 @@ macro_rules! enum_variants {
 /// Creates a `ValueVTable` for a given type.
 ///
 /// This macro generates a `ValueVTable` with implementations for various traits
-/// (Display, Debug, PartialEq, Ord, Hash) if they are implemented for the given type.
+/// (Display, Debug, PartialEq, Eq, PartialOrd, Ord, Hash) if they are implemented for the given type.
 ///
 /// # Arguments
 ///
@@ -193,7 +193,8 @@ macro_rules! value_vtable {
             } else {
                 None
             },
-            eq: if $crate::impls!($type_name: std::cmp::PartialEq) {
+            eq: $crate::impls!($type_name: std::cmp::Eq),
+            partial_eq: if $crate::impls!($type_name: std::cmp::PartialEq) {
                 Some(|left, right| {
                     use $crate::spez::*;
                     (&&Spez(unsafe { left.as_ref::<$type_name>() }))
@@ -202,7 +203,8 @@ macro_rules! value_vtable {
             } else {
                 None
             },
-            ord: if $crate::impls!($type_name: std::cmp::Ord) {
+            ord: $crate::impls!($type_name: std::cmp::Ord),
+            cmp: if $crate::impls!($type_name: std::cmp::Ord) {
                 Some(|left, right| {
                     use $crate::spez::*;
                     (&&Spez(unsafe { left.as_ref::<$type_name>() }))

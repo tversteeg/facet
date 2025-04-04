@@ -43,8 +43,9 @@ where
                         None
                     }
                 },
-                eq: const {
-                    if T::SHAPE.vtable.eq.is_some() {
+                eq: T::SHAPE.vtable.eq,
+                partial_eq: const {
+                    if T::SHAPE.vtable.partial_eq.is_some() {
                         Some(|a, b| unsafe {
                             let a = a.as_ref::<Vec<T>>();
                             let b = b.as_ref::<Vec<T>>();
@@ -52,7 +53,7 @@ where
                                 return false;
                             }
                             for (item_a, item_b) in a.iter().zip(b.iter()) {
-                                if !(T::SHAPE.vtable.eq.unwrap_unchecked())(
+                                if !(T::SHAPE.vtable.partial_eq.unwrap_unchecked())(
                                     OpaqueConst::from_ref(item_a),
                                     OpaqueConst::from_ref(item_b),
                                 ) {
@@ -66,7 +67,8 @@ where
                     }
                 },
                 // TODO: specialize these
-                ord: None,
+                ord: false,
+                cmp: None,
                 // TODO: specialize these
                 hash: None,
                 drop_in_place: Some(|value| unsafe {

@@ -3,8 +3,7 @@ use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek, Shape, ShapeDebug, ValueVTa
 /// Lets you write to a value (implements write-only [`ValueVTable`] proxies)
 pub struct PokeValue<'mem> {
     data: OpaqueUninit<'mem>,
-    /// The shape of the value
-    pub shape: &'static Shape,
+    shape: &'static Shape,
 }
 
 impl std::fmt::Debug for PokeValue<'_> {
@@ -16,6 +15,10 @@ impl std::fmt::Debug for PokeValue<'_> {
 }
 
 impl<'mem> PokeValue<'mem> {
+    #[inline(always)]
+    pub fn into_value(self) -> Self {
+        self
+    }
     /// Creates a value write-proxy from its essential components
     ///
     /// # Safety
@@ -105,7 +108,7 @@ impl<'mem> PokeValue<'mem> {
         if let Some(cloned_val) = self
             .vtable()
             .clone_into
-            .and_then(|clone_fn| unsafe { clone_fn(source.as_value().data, self.data) })
+            .and_then(|clone_fn| unsafe { clone_fn(source.as_opaque_const(), self.data) })
         {
             // Safe because the function will initialize our data if it returns Some
             Ok(unsafe { Peek::unchecked_new(cloned_val.as_const(), self.shape) })

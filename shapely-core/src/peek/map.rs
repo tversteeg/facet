@@ -1,22 +1,26 @@
-use crate::{MapDef, OpaqueConst, Shape};
+use crate::MapDef;
 
 use super::PeekValue;
 
-/// Lets you read from a value (implements read-only [`MapVTable`] proxies)
+/// Lets you read from a map (implements read-only [`MapVTable`] proxies)
 #[derive(Clone, Copy)]
 pub struct PeekMap<'mem> {
-    pub(crate) data: OpaqueConst<'mem>,
-    pub(crate) shape: &'static Shape,
+    value: PeekValue<'mem>,
     #[expect(dead_code)]
-    pub(crate) def: MapDef,
+    def: MapDef,
+}
+
+impl<'mem> std::ops::Deref for PeekMap<'mem> {
+    type Target = PeekValue<'mem>;
+
+    #[inline(always)]
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
 }
 
 impl<'mem> PeekMap<'mem> {
-    /// Coerce to a value
-    pub fn as_value(self) -> PeekValue<'mem> {
-        PeekValue {
-            data: self.data,
-            shape: self.shape,
-        }
+    pub fn new(value: PeekValue<'mem>, def: MapDef) -> Self {
+        Self { value, def }
     }
 }

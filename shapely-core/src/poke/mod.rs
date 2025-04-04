@@ -139,13 +139,14 @@ impl<'mem> Poke<'mem> {
     }
 
     /// Converts into a value, so we can manipulate it
+    #[inline(always)]
     pub fn into_value(self) -> PokeValue<'mem> {
         match self {
-            Poke::Scalar(s) => s,
-            Poke::List(l) => unsafe { PokeValue::new(l.data, l.shape) },
-            Poke::Map(m) => unsafe { PokeValue::new(m.data, m.shape) },
-            Poke::Struct(s) => unsafe { PokeValue::new(s.data, s.shape) },
-            Poke::Enum(e) => unsafe { PokeValue::new(e.data, e.shape) },
+            Poke::Scalar(s) => s.into_value(),
+            Poke::List(l) => l.into_value(),
+            Poke::Map(m) => m.into_value(),
+            Poke::Struct(s) => s.into_value(),
+            Poke::Enum(e) => e.into_value(),
         }
     }
 

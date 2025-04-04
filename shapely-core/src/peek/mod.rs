@@ -51,13 +51,14 @@ impl<'mem> Peek<'mem> {
     /// `data` must be initialized and well-aligned, and point to a value
     /// of the type described by `shape`.
     pub unsafe fn unchecked_new(data: OpaqueConst<'mem>, shape: &'static Shape) -> Self {
+        let value = PeekValue::new(data, shape);
         match shape.def {
             Def::Struct(def) | Def::TupleStruct(def) | Def::Tuple(def) => {
-                Peek::Struct(PeekStruct { data, shape, def })
+                Peek::Struct(PeekStruct::new(value, def))
             }
-            Def::Map(def) => Peek::Map(PeekMap { data, shape, def }),
-            Def::List(def) => Peek::List(PeekList { data, shape, def }),
-            Def::Scalar { .. } => Peek::Scalar(PeekValue { data, shape }),
+            Def::Map(def) => Peek::Map(PeekMap::new(value, def)),
+            Def::List(def) => Peek::List(PeekList::new(value, def)),
+            Def::Scalar { .. } => Peek::Scalar(value),
             Def::Enum { .. } => todo!(),
         }
     }
@@ -66,9 +67,9 @@ impl<'mem> Peek<'mem> {
     pub fn as_value(self) -> PeekValue<'mem> {
         match self {
             Self::Scalar(v) => v,
-            Self::List(l) => l.as_value(),
-            Self::Map(m) => m.as_value(),
-            Self::Struct(s) => s.as_value(),
+            Self::List(l) => *l,
+            Self::Map(m) => *m,
+            Self::Struct(s) => *s,
         }
     }
 }

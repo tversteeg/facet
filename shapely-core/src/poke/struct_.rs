@@ -5,14 +5,19 @@ use super::{Guard, ISet};
 
 /// Allows poking a struct (setting fields, etc.)
 pub struct PokeStruct<'mem> {
-    pub(crate) data: OpaqueUninit<'mem>,
-    iset: ISet,
-    pub(crate) shape: &'static Shape,
+    data: OpaqueUninit<'mem>,
+    shape: &'static Shape,
     def: StructDef,
+
+    iset: ISet,
     guard_for_build: Option<Guard>,
 }
 
 impl<'mem> PokeStruct<'mem> {
+    #[inline(always)]
+    pub fn into_value(self) -> PokeValue<'mem> {
+        unsafe { PokeValue::new(self.data, self.shape) }
+    }
     /// Creates a new PokeStruct
     ///
     /// # Safety

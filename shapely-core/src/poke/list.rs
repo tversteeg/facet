@@ -2,12 +2,16 @@ use crate::{ListDef, ListVTable, Opaque, OpaqueUninit, PokeValue, Shape};
 
 /// Allows initializing an uninitialized list
 pub struct PokeListUninit<'mem> {
-    pub(crate) data: OpaqueUninit<'mem>,
-    pub(crate) shape: &'static Shape,
+    data: OpaqueUninit<'mem>,
+    shape: &'static Shape,
     def: ListDef,
 }
 
 impl<'mem> PokeListUninit<'mem> {
+    #[inline(always)]
+    pub fn into_value(self) -> PokeValue<'mem> {
+        unsafe { PokeValue::new(self.data, self.shape) }
+    }
     /// Creates a new uninitialized list write-proxy
     ///
     /// # Safety

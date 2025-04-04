@@ -146,15 +146,15 @@ pub type TryFromFn = for<'src, 'mem> unsafe fn(
     target: OpaqueUninit<'mem>,
 ) -> Option<Opaque<'mem>>;
 
-/// Function to check if two values are equal
+/// Function to check if two values are partially equal
 ///
 /// # Safety
 ///
 /// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
-pub type EqFn = for<'l, 'r> unsafe fn(left: OpaqueConst<'l>, right: OpaqueConst<'r>) -> bool;
+pub type PartialEqFn = for<'l, 'r> unsafe fn(left: OpaqueConst<'l>, right: OpaqueConst<'r>) -> bool;
 
-/// Generates an [`EqFn`] for a concrete type
-pub const fn eq_fn_for<T: Eq>() -> Option<EqFn> {
+/// Generates a [`PartialEqFn`] for a concrete type
+pub const fn partial_eq_fn_for<T: PartialEq>() -> Option<PartialEqFn> {
     Some(|left: OpaqueConst<'_>, right: OpaqueConst<'_>| -> bool {
         let left_val = unsafe { left.as_ref::<T>() };
         let right_val = unsafe { right.as_ref::<T>() };
@@ -167,11 +167,10 @@ pub const fn eq_fn_for<T: Eq>() -> Option<EqFn> {
 /// # Safety
 ///
 /// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
-pub type OrdFn = for<'l, 'r> unsafe fn(left: OpaqueConst<'l>, right: OpaqueConst<'r>) -> Ordering;
+pub type CmpFn = for<'l, 'r> unsafe fn(left: OpaqueConst<'l>, right: OpaqueConst<'r>) -> Ordering;
 
-///
-/// Generates a [`OrdFn`] for a concrete type
-pub const fn ord_fn_for<T: Ord>() -> Option<OrdFn> {
+/// Generates a [`CmpFn`] for a concrete type
+pub const fn cmp_fn_for<T: Ord>() -> Option<CmpFn> {
     Some(
         |left: OpaqueConst<'_>, right: OpaqueConst<'_>| -> Ordering {
             let left_val = unsafe { left.as_ref::<T>() };
@@ -305,11 +304,17 @@ pub struct ValueVTable {
     /// cf. [`CloneInPlaceFn`]
     pub clone_into: Option<CloneIntoFn>,
 
-    /// cf. [`EqFn`]
-    pub eq: Option<EqFn>,
+    /// Whether the type implements [`Eq`]
+    pub eq: bool,
 
-    /// cf. [`OrdFn`]
-    pub ord: Option<OrdFn>,
+    /// cf. [`PartialEqFn`]
+    pub partial_eq: Option<PartialEqFn>,
+
+    /// Whether the type implements [`Ord`]
+    pub ord: bool,
+
+    /// cf. [`CmpFn`]
+    pub cmp: Option<CmpFn>,
 
     /// cf. [`HashFn`]
     pub hash: Option<HashFn>,
