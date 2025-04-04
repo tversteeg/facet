@@ -66,8 +66,74 @@ It's important to understand when this specialization technique can and cannot b
 
 2. **Not suitable for generic types**: For types with generic parameters (like `HashMap<K, V>`), this approach doesn't work well because the specialization cannot be done based on properties of the generic parameters.
 
-3. **Alternative for generic types**: For generic types, we instead leverage the fact that `SHAPE` is a `const` associated value that can be queried in const contexts. This allows us to perform compile-time checks and conditional logic based on properties of the generic parameters.
+3. **Alternative for generic types**: For generic types, we instead leverage the fact that `SHAPE` is a `const` associated value that can be queried in `const` contexts. This allows us to perform compile-time checks and conditional logic based on properties of the generic parameters.
 
 For example, in a generic implementation like `HashMap<K, V>`, we directly access the marker traits of `K::SHAPE` and `V::SHAPE` at compile time to determine what traits to implement for the containing type.
 
 This pattern is used throughout the codebase for various traits like `Debug`, `Display`, `Clone`, `Hash`, and more, with different specialization approaches depending on whether we're dealing with non-generic or generic types.
+
+## Concrete Example: PartialOrd Specialization
+
+Let's examine how the `PartialOrd` trait is conditionally implemented using both approaches:
+
+### Generic Type Example: Array Implementation
+
+For arrays like `[T; 1]`, we need to check if the inner type `T` implements `PartialOrd`. Since this is a generic type, we use compile-time evaluation of `SHAPE`:
+
+```rust
+partial_ord: if T::SHAPE.vtable.partial_ord.is_some() {
+    Some(|a, b| {
+        let a = unsafe { a.as_ref::<[T; 1]>() };
+        let b = unsafe { b.as_ref::<[T; 1]>() };
+        unsafe {
+            (T::SHAPE.vtable.partial_ord.unwrap_unchecked())(
+                OpaqueConst::from_ref(&a[0]),
+                OpaqueConst::from_ref(&b[0]),
+            )
+        }
+    })
+} else {
+    None
+}
+```
+
+Here's what's happening:
+1. We check if `T::SHAPE.vtable.partial_ord` is `Some`, which tells us if `T` implements `PartialOrd`
+2. If it does, we provide a `partial_ord` implementation that:
+   - Extracts arrays from opaque pointers
+   - Gets the first element from each array
+   - Delegates to the inner type's `partial_ord` implementation
+3. If `T` doesn't implement `PartialOrd`, we set `partial_ord` to `None`
+
+### Non-Generic Type: Using `value_vtable` Macro
+
+For non-generic types, we use the `value_vtable` macro which leverages auto-deref specialization:
+
+```rust
+partial_ord: if $crate::impls!($type_name: std::cmp::PartialOrd) {
+    Some(|left, right| {
+        use $crate::spez::*;
+        (&&Spez(unsafe { left.as_ref::<$type_name>() }))
+            .spez_partial_cmp(&&Spez(unsafe { right.as_ref::<$type_name>() }))
+    })
+} else {
+    None
+}
+```
+
+Here's what's happening:
+1. The `impls!` macro uses auto-deref specialization to check if `$type_name` implements `PartialOrd`
+2. If it does, we create a function that:
+   - Extracts the values from opaque pointers
+   - Wraps them in `Spez` (specialization helper)
+   - Calls `spez_partial_cmp` which uses method resolution to pick the right implementation
+3. If it doesn't implement `PartialOrd`, we set `partial_ord` to `None`
+
+### Key Differences
+
+These examples highlight the two approaches to specialization in the Shapely codebase:
+
+1. **Generic approach**: Directly inspects `T::SHAPE` at compile time for trait information
+2. **Non-generic approach**: Uses the `impls!` macro with auto-deref trick for specialization
+
+Both approaches have the same goal: conditionally implement functionality based on trait implementations, but they use different mechanisms based on whether we're dealing with generic or non-generic types.
