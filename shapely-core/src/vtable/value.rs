@@ -1,3 +1,6 @@
+// FIXME: most of these shoudl take `Peek` rather than `OpaqueConst` — so we can assert that
+// the shapes even match.
+
 use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek};
 use bitflags::bitflags;
 use std::cmp::Ordering;
@@ -85,18 +88,17 @@ pub const fn drop_in_place_fn_for<T>() -> Option<DropInPlaceFn> {
 ///
 /// The `source` parameter must point to aligned, initialized memory of the correct type.
 /// The `target` parameter has the correct layout and alignment, but points to
-/// uninitialized memory. If this function succeeds, it should return `Some` with the
-/// same pointer wrapped in an [`Opaque`].
+/// uninitialized memory. The function returns the same pointer wrapped in an [`Opaque`].
 pub type CloneIntoFn = for<'src, 'dst> unsafe fn(
     source: OpaqueConst<'src>,
     target: OpaqueUninit<'dst>,
-) -> Option<Opaque<'dst>>;
+) -> Opaque<'dst>;
 
 /// Generates a [`CloneInPlaceFn`] for a concrete type
 pub const fn clone_into_fn_for<T: Clone>() -> Option<CloneIntoFn> {
     Some(|source: OpaqueConst<'_>, target: OpaqueUninit<'_>| unsafe {
         let source_val = source.as_ref::<T>();
-        Some(target.write(source_val.clone()))
+        target.write(source_val.clone())
     })
 }
 
@@ -105,13 +107,12 @@ pub const fn clone_into_fn_for<T: Clone>() -> Option<CloneIntoFn> {
 /// # Safety
 ///
 /// The `target` parameter has the correct layout and alignment, but points to
-/// uninitialized memory. If this function succeeds, it should return `Some` with the
-/// same pointer wrapped in an [`Opaque`].
-pub type DefaultInPlaceFn = for<'mem> unsafe fn(target: OpaqueUninit<'mem>) -> Option<Opaque<'mem>>;
+/// uninitialized memory. The function returns the same pointer wrapped in an [`Opaque`].
+pub type DefaultInPlaceFn = for<'mem> unsafe fn(target: OpaqueUninit<'mem>) -> Opaque<'mem>;
 
 /// Generates a [`DefaultInPlaceFn`] for a concrete type
 pub const fn default_in_place_fn_for<T: Default>() -> Option<DefaultInPlaceFn> {
-    Some(|target: OpaqueUninit<'_>| unsafe { Some(target.write(T::default())) })
+    Some(|target: OpaqueUninit<'_>| unsafe { target.write(T::default()) })
 }
 
 //======== Conversion ========
@@ -123,31 +124,66 @@ pub const fn default_in_place_fn_for<T: Default>() -> Option<DefaultInPlaceFn> {
 /// # Safety
 ///
 /// The `target` parameter has the correct layout and alignment, but points to
-/// uninitialized memory. If this function succeeds, it should return `Some` with the
-/// same pointer wrapped in an [`Opaque`].
-pub type ParseFn = for<'mem> unsafe fn(s: &str, target: OpaqueUninit<'mem>) -> Option<Opaque<'mem>>;
+/// uninitialized memory. If this function succeeds, it should return `Ok` with the
+/// same pointer wrapped in an [`Opaque`]. If parsing fails, it returns `Err` with an error.
+pub type ParseFn =
+    for<'mem> unsafe fn(s: &str, target: OpaqueUninit<'mem>) -> Result<Opaque<'mem>, ParseError>;
 
 /// Generates a [`ParseFn`] for a concrete type
 pub const fn parse_fn_for<T: std::str::FromStr>() -> Option<ParseFn> {
     Some(|s: &str, target: OpaqueUninit<'_>| unsafe {
         match s.parse::<T>() {
-            Ok(value) => Some(target.write(value)),
-            Err(_) => None,
+            Ok(value) => Ok(target.write(value)),
+            Err(_) => Err(ParseError::Generic("failed to parse string")),
         }
     })
 }
+
+#[non_exhaustive]
+#[derive(Debug)]
+pub enum ParseError {
+    Generic(&'static str),
+}
+
+impl std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ParseError::Generic(msg) => write!(f, "Parse failed: {}", msg),
+        }
+    }
+}
+
+impl std::error::Error for ParseError {}
 
 /// Function to try converting from another type
 ///
 /// # Safety
 ///
 /// The `target` parameter has the correct layout and alignment, but points to
-/// uninitialized memory. If this function succeeds, it should return `Some` with the
-/// same pointer wrapped in an [`Opaque`].
+/// uninitialized memory. If this function succeeds, it should return `Ok` with the
+/// same pointer wrapped in an [`Opaque`]. If conversion fails, it returns `Err` with an error.
 pub type TryFromFn = for<'src, 'mem> unsafe fn(
     source: Peek<'src>,
     target: OpaqueUninit<'mem>,
-) -> Option<Opaque<'mem>>;
+) -> Result<Opaque<'mem>, TryFromError>;
+
+/// Error type for TryFrom conversion failures
+#[non_exhaustive]
+#[derive(Debug)]
+pub enum TryFromError {
+    /// Generic conversion error
+    Generic(&'static str),
+}
+
+impl std::fmt::Display for TryFromError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TryFromError::Generic(msg) => write!(f, "Conversion failed: {}", msg),
+        }
+    }
+}
+
+impl std::error::Error for TryFromError {}
 
 //======== Comparison ========
 
@@ -354,6 +390,8 @@ pub struct ValueVTable {
     pub clone_into: Option<CloneIntoFn>,
 
     /// Marker traits implemented by the type
+    // FIXME: move out of vtable, it's not really... functions.
+    // Belongs in Shape directly.
     pub marker_traits: MarkerTraits,
 
     /// cf. [`PartialEqFn`] for equality comparison

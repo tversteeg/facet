@@ -64,7 +64,26 @@ where
                 } else {
                     None
                 },
-                ord: None,
+                ord: if T::SHAPE.vtable.ord.is_some() {
+                    Some(|a, b| {
+                        let a = unsafe { a.as_ref::<&[T]>() };
+                        let b = unsafe { b.as_ref::<&[T]>() };
+                        for (x, y) in a.iter().zip(b.iter()) {
+                            let ord = unsafe {
+                                (T::SHAPE.vtable.ord.unwrap_unchecked())(
+                                    OpaqueConst::from_ref(x),
+                                    OpaqueConst::from_ref(y),
+                                )
+                            };
+                            if ord != std::cmp::Ordering::Equal {
+                                return ord;
+                            }
+                        }
+                        a.len().cmp(&b.len())
+                    })
+                } else {
+                    None
+                },
                 partial_ord: if T::SHAPE.vtable.partial_ord.is_some() {
                     Some(|a, b| {
                         let a = unsafe { a.as_ref::<&[T]>() };
@@ -103,28 +122,16 @@ where
                 } else {
                     None
                 },
-                drop_in_place: Some(|ptr| {
-                    // No need to drop a &[T] as it's just a reference
-                    // The actual slice data is not owned by this reference
-                    let _ = unsafe { ptr.as_ref::<&[T]>() };
-                }),
+                drop_in_place: None,
                 parse: None,
                 try_from: None,
                 default_in_place: Some(|ptr| unsafe { Some(ptr.write(&[] as &[T])) }),
-                clone_into: Some(|src, dst| unsafe { Some(dst.write(src.as_ref::<&[T]>())) }),
-                marker_traits: {
-                    let mut traits = MarkerTraits::empty();
-                    if T::SHAPE.vtable.marker_traits.contains(MarkerTraits::SEND) {
-                        traits = traits.union(MarkerTraits::SEND);
-                    }
-                    if T::SHAPE.vtable.marker_traits.contains(MarkerTraits::SYNC) {
-                        traits = traits.union(MarkerTraits::SYNC);
-                    }
-                    if T::SHAPE.vtable.marker_traits.contains(MarkerTraits::EQ) {
-                        traits = traits.union(MarkerTraits::EQ);
-                    }
-                    traits
-                },
+                clone_into: Some(|src, dst| unsafe {
+                    // This works because we're cloning a shared reference (&[T]), not the actual slice data.
+                    // We're just copying the fat pointer (ptr + length) that makes up the slice reference.
+                    Some(dst.write(src.as_ref::<&[T]>()))
+                }),
+                marker_traits: T::SHAPE.vtable.marker_traits,
             },
             def: Def::List(ListDef {
                 vtable: &ListVTable {

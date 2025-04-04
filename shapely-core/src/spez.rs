@@ -7,7 +7,7 @@
 
 use core::fmt::{self, Debug};
 
-use crate::{Opaque, OpaqueUninit};
+use crate::{Opaque, OpaqueUninit, ParseError};
 
 pub struct Spez<T>(pub T);
 
@@ -111,21 +111,20 @@ impl<T> SpezCloneIntoNo for Spez<T> {
 // Parse 📝🔍
 //////////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug)]
-pub struct ParseError;
-
 /// Specialization proxy for [`std::str::FromStr`]
 pub trait SpezParseYes {
     fn spez_parse(&self, s: &str, target: OpaqueUninit) -> Result<(), ParseError>;
 }
-impl<T: core::str::FromStr> SpezParseYes for Spez<T> {
+impl<T: core::str::FromStr> SpezParseYes for &Spez<T> {
     fn spez_parse(&self, s: &str, target: OpaqueUninit) -> Result<(), ParseError> {
         match <T as core::str::FromStr>::from_str(s) {
             Ok(value) => {
                 unsafe { target.write(value) };
                 Ok(())
             }
-            Err(_) => Err(ParseError),
+            Err(_) => Err(ParseError::Generic(
+                &(const { concat!("parse error for ", stringify!(T)) }),
+            )),
         }
     }
 }

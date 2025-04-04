@@ -156,6 +156,10 @@ macro_rules! enum_variants {
 ///
 /// let vtable = value_vtable!(String, |f: &mut Formatter<'_>, _opts: TypeNameOpts| write!(f, "String"));
 /// ```
+///
+/// This cannot be used for a generic type because the `impls!` thing depends on type bounds.
+/// If you have a generic type, you need to do specialization yourself, like we do for slices,
+/// arrays, etc. — essentially, this macro is only useful for 1) scalars, 2) inside a derive macro
 #[macro_export]
 macro_rules! value_vtable {
     ($type_name:ty, $type_name_fn:expr) => {
