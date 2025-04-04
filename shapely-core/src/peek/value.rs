@@ -47,11 +47,11 @@ impl std::cmp::PartialOrd for PeekValue<'_> {
         if self.shape != other.shape {
             return None;
         }
-        let ord_fn = match self.shape.vtable.partial_cmp {
-            Some(ord_fn) => ord_fn,
+        let partial_ord_fn = match self.shape.vtable.partial_ord {
+            Some(partial_ord_fn) => partial_ord_fn,
             None => return None,
         };
-        unsafe { ord_fn(self.data, other.data) }
+        unsafe { partial_ord_fn(self.data, other.data) }
     }
 }
 
@@ -71,14 +71,15 @@ impl<'mem> PeekValue<'mem> {
     ///
     /// # Returns
     ///
-    /// `None` if equality comparison is not supported for this scalar type
+    /// `false` if equality comparison is not supported for this scalar type
     #[inline]
-    pub fn eq(&self, other: &PeekValue<'_>) -> Option<bool> {
+    pub fn eq(&self, other: &PeekValue<'_>) -> bool {
         unsafe {
             self.shape
                 .vtable
                 .eq
                 .map(|eq_fn| eq_fn(self.data, other.data))
+                .unwrap_or(false)
         }
     }
 
@@ -89,12 +90,28 @@ impl<'mem> PeekValue<'mem> {
     /// `None` if comparison is not supported for this scalar type
     #[inline]
     #[expect(clippy::should_implement_trait)]
+    pub fn partial_cmp(&self, other: &PeekValue<'_>) -> Option<Ordering> {
+        unsafe {
+            self.shape
+                .vtable
+                .partial_ord
+                .map(|partial_ord_fn| partial_ord_fn(self.data, other.data))
+                .flatten()
+        }
+    }
+
+    /// Compares this scalar with another and returns their ordering
+    ///
+    /// # Returns
+    ///
+    /// `None` if comparison is not supported for this scalar type
+    #[inline]
     pub fn cmp(&self, other: &PeekValue<'_>) -> Option<Ordering> {
         unsafe {
             self.shape
                 .vtable
                 .ord
-                .map(|cmp_fn| cmp_fn(self.data, other.data))
+                .map(|ord_fn| ord_fn(self.data, other.data))
         }
     }
 
@@ -102,43 +119,48 @@ impl<'mem> PeekValue<'mem> {
     ///
     /// # Returns
     ///
-    /// `None` if comparison is not supported for this scalar type
+    /// `false` if comparison is not supported for this scalar type
     #[inline]
-    pub fn gt(&self, other: &PeekValue<'_>) -> Option<bool> {
+    pub fn gt(&self, other: &PeekValue<'_>) -> bool {
         self.cmp(other)
             .map(|ordering| ordering == Ordering::Greater)
+            .unwrap_or(false)
     }
 
     /// Returns true if this scalar is greater than or equal to the other scalar
     ///
     /// # Returns
     ///
-    /// `None` if comparison is not supported for this scalar type
+    /// `false` if comparison is not supported for this scalar type
     #[inline]
-    pub fn gte(&self, other: &PeekValue<'_>) -> Option<bool> {
+    pub fn gte(&self, other: &PeekValue<'_>) -> bool {
         self.cmp(other)
             .map(|ordering| ordering == Ordering::Greater || ordering == Ordering::Equal)
+            .unwrap_or(false)
     }
 
     /// Returns true if this scalar is less than the other scalar
     ///
     /// # Returns
     ///
-    /// `None` if comparison is not supported for this scalar type
+    /// `false` if comparison is not supported for this scalar type
     #[inline]
-    pub fn lt(&self, other: &PeekValue<'_>) -> Option<bool> {
-        self.cmp(other).map(|ordering| ordering == Ordering::Less)
+    pub fn lt(&self, other: &PeekValue<'_>) -> bool {
+        self.cmp(other)
+            .map(|ordering| ordering == Ordering::Less)
+            .unwrap_or(false)
     }
 
     /// Returns true if this scalar is less than or equal to the other scalar
     ///
     /// # Returns
     ///
-    /// `None` if comparison is not supported for this scalar type
+    /// `false` if comparison is not supported for this scalar type
     #[inline(always)]
-    pub fn lte(&self, other: &PeekValue<'_>) -> Option<bool> {
+    pub fn lte(&self, other: &PeekValue<'_>) -> bool {
         self.cmp(other)
             .map(|ordering| ordering == Ordering::Less || ordering == Ordering::Equal)
+            .unwrap_or(false)
     }
 
     /// Formats this scalar for display

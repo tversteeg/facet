@@ -193,8 +193,8 @@ macro_rules! value_vtable {
             } else {
                 None
             },
-            eq: $crate::impls!($type_name: std::cmp::Eq),
-            partial_eq: if $crate::impls!($type_name: std::cmp::PartialEq) {
+            marked_eq: $crate::impls!($type_name: std::cmp::Eq),
+            eq: if $crate::impls!($type_name: std::cmp::PartialEq) {
                 Some(|left, right| {
                     use $crate::spez::*;
                     (&&Spez(unsafe { left.as_ref::<$type_name>() }))

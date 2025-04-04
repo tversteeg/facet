@@ -18,6 +18,11 @@ impl<'mem> PokeStruct<'mem> {
     pub fn into_value(self) -> PokeValue<'mem> {
         unsafe { PokeValue::new(self.data, self.shape) }
     }
+
+    #[inline(always)]
+    pub fn shape(&self) -> &'static Shape {
+        self.shape
+    }
     /// Creates a new PokeStruct
     ///
     /// # Safety

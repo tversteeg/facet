@@ -286,6 +286,25 @@ pub const fn clone_into_fn_for<T: Clone>() -> Option<CloneIntoFn> {
     })
 }
 
+/// Function to compare two values and return their ordering if comparable
+///
+/// # Safety
+///
+/// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
+pub type PartialOrdFn =
+    for<'l, 'r> unsafe fn(left: OpaqueConst<'l>, right: OpaqueConst<'r>) -> Option<Ordering>;
+
+/// Generates a [`PartialOrdFn`] for a concrete type
+pub const fn partial_ord_fn_for<T: PartialOrd>() -> Option<PartialOrdFn> {
+    Some(
+        |left: OpaqueConst<'_>, right: OpaqueConst<'_>| -> Option<Ordering> {
+            let left_val = unsafe { left.as_ref::<T>() };
+            let right_val = unsafe { right.as_ref::<T>() };
+            left_val.partial_cmp(right_val)
+        },
+    )
+}
+
 /// VTable for common operations that can be performed on any shape
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ValueVTable {
@@ -304,17 +323,26 @@ pub struct ValueVTable {
     /// cf. [`CloneInPlaceFn`]
     pub clone_into: Option<CloneIntoFn>,
 
-    /// Whether the type implements [`Eq`]
-    pub eq: bool,
+    /// Whether the type implements the [`Eq`] marker trait
+    pub marked_eq: bool,
 
-    /// cf. [`PartialEqFn`]
-    pub partial_eq: Option<PartialEqFn>,
+    /// Whether the type implements the [`Send`] marker trait
+    pub marked_send: bool,
 
-    /// Whether the type implements [`Ord`]
-    pub ord: bool,
+    /// Whether the type implements the [`Sync`] marker trait
+    pub marked_sync: bool,
 
-    /// cf. [`CmpFn`]
-    pub cmp: Option<CmpFn>,
+    /// Whether the type implements the [`Copy`] marker trait
+    pub marked_copy: bool,
+
+    /// cf. [`PartialEqFn`] for equality comparison
+    pub eq: Option<PartialEqFn>,
+
+    /// cf. [`PartialOrdFn`] for partial ordering comparison
+    pub partial_ord: Option<PartialOrdFn>,
+
+    /// cf. [`CmpFn`] for total ordering
+    pub ord: Option<CmpFn>,
 
     /// cf. [`HashFn`]
     pub hash: Option<HashFn>,

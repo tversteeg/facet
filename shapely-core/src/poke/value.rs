@@ -19,6 +19,11 @@ impl<'mem> PokeValue<'mem> {
     pub fn into_value(self) -> Self {
         self
     }
+
+    #[inline(always)]
+    pub fn shape(&self) -> &'static Shape {
+        self.shape
+    }
     /// Creates a value write-proxy from its essential components
     ///
     /// # Safety
