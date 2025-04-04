@@ -137,3 +137,107 @@ These examples highlight the two approaches to specialization in the Shapely cod
 2. **Non-generic approach**: Uses the `impls!` macro with auto-deref trick for specialization
 
 Both approaches have the same goal: conditionally implement functionality based on trait implementations, but they use different mechanisms based on whether we're dealing with generic or non-generic types.
+
+## Working with Characteristics and MarkerTraits
+
+The `Characteristic` enum represents various traits that a type can implement, including both marker traits (like `Send`, `Sync`, `Copy`) and functionality traits (like `Debug`, `Clone`, `PartialEq`).
+
+```rust
+pub enum Characteristic {
+    // Marker traits
+    Send,
+    Sync,
+    Copy,
+    Eq,
+    // Functionality traits
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Default,
+}
+```
+
+### BitFlags Integration
+
+Internally, these characteristics are represented using the `bitflags` crate, which provides an efficient way to store and manipulate sets of flags. The `MarkerTraits` type is a BitFlags representation that allows us to perform operations on sets of characteristics.
+
+While you could manually use bitwise operations to manipulate these flags, `Characteristic` provides several helper methods that make working with them more ergonomic:
+
+```rust
+// Instead of manually combining flags like this:
+let combined = MarkerTraits::from(Characteristic::Send) | MarkerTraits::from(Characteristic::Sync);
+
+// You can use the `all` method:
+let combined = Characteristic::all(&[Characteristic::Send, Characteristic::Sync]);
+```
+
+### Helper Methods
+
+The `Characteristic` type provides several helper methods for working with sets of characteristics:
+
+1. **Creating Sets**:
+   ```rust
+   // Create a set containing all specified characteristics
+   let traits = Characteristic::all(&[Characteristic::Copy, Characteristic::Send, Characteristic::Sync]);
+   ```
+
+2. **Testing for Characteristics**:
+   ```rust
+   // Check if a set contains ANY of the specified characteristics
+   if traits.any(&[Characteristic::Send, Characteristic::Sync]) {
+       // At least one of Send or Sync is implemented
+   }
+   
+   // Check if a set contains ALL of the specified characteristics
+   if traits.all(&[Characteristic::Send, Characteristic::Sync]) {
+       // Both Send and Sync are implemented
+   }
+   
+   // Check if NONE of the specified characteristics are present
+   if traits.none(&[Characteristic::Debug, Characteristic::Display]) {
+       // Neither Debug nor Display is implemented
+   }
+   ```
+
+3. **Operations on Sets**:
+   ```rust
+   // Union of two sets of characteristics
+   let combined = traits1.union(traits2);
+   
+   // Intersection of two sets
+   let common = traits1.intersection(traits2);
+   ```
+
+### Example: Improving HashMapImpl
+
+The `HashMap<K, V>` implementation checks if keys and values implement various traits. This can be simplified using the helper methods:
+
+```rust
+// Instead of manually checking each trait like this:
+if (K::SHAPE.marker_traits.contains(Characteristic::Copy) &&
+    K::SHAPE.marker_traits.contains(Characteristic::Eq) &&
+    K::SHAPE.marker_traits.contains(Characteristic::Hash)) {
+    // ...
+}
+
+// You can use the `all` method:
+if K::SHAPE.marker_traits.all(&[Characteristic::Copy, Characteristic::Eq, Characteristic::Hash]) {
+    // Key type implements all required traits
+}
+```
+
+Similarly, when combining marker traits from two types:
+
+```rust
+// Instead of manual union:
+let combined_traits = K::SHAPE.marker_traits | V::SHAPE.marker_traits;
+
+// You can use the union method:
+let combined_traits = K::SHAPE.marker_traits.union(V::SHAPE.marker_traits);
+```
+
+These helper methods make the code more readable and less error-prone, especially when dealing with multiple characteristics at once.
+
