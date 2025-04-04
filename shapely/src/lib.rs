@@ -3,3 +3,5 @@
 
 pub use shapely_core::*;
 pub use shapely_derive::*;
+
+pub mod hacking;

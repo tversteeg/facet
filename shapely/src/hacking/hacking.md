@@ -1,4 +1,4 @@
-# Hacking Guide to Shapely
+## Hacking Guide to Shapely
 
 ## The Shapely Trait and Its Purpose
 
@@ -8,7 +8,7 @@ The `Shapely` trait is the cornerstone of our reflection system. It provides a w
 pub trait Shapely: 'static {
     /// A dummy value of this type, used for compile-time type information
     const DUMMY: Self;
-    
+
     /// A static reference to a Shape describing this type
     const SHAPE: &'static Shape;
 }
@@ -190,12 +190,12 @@ The `Characteristic` type provides several helper methods for working with sets 
    if traits.any(&[Characteristic::Send, Characteristic::Sync]) {
        // At least one of Send or Sync is implemented
    }
-   
+
    // Check if a set contains ALL of the specified characteristics
    if traits.all(&[Characteristic::Send, Characteristic::Sync]) {
        // Both Send and Sync are implemented
    }
-   
+
    // Check if NONE of the specified characteristics are present
    if traits.none(&[Characteristic::Debug, Characteristic::Display]) {
        // Neither Debug nor Display is implemented
@@ -206,7 +206,7 @@ The `Characteristic` type provides several helper methods for working with sets 
    ```rust
    // Union of two sets of characteristics
    let combined = traits1.union(traits2);
-   
+
    // Intersection of two sets
    let common = traits1.intersection(traits2);
    ```
@@ -241,3 +241,125 @@ let combined_traits = K::SHAPE.marker_traits.union(V::SHAPE.marker_traits);
 
 These helper methods make the code more readable and less error-prone, especially when dealing with multiple characteristics at once.
 
+## Peek and Poke: Reflection-Based Access
+
+Shapely provides two powerful abstractions for working with values in a generic, reflection-based way:
+
+1. **Peek**: Read-only access to inspect values
+2. **Poke**: Write access to build or modify values
+
+These APIs allow you to work with values of any type that implements `Shapely` in a uniform way, without having to write type-specific code.
+
+### Peek: Reading Values
+
+The `Peek` enum and related types provide a way to inspect any value that implements `Shapely`. This is useful for serialization, debug printing, and other operations that need to read data.
+
+```rust
+pub enum Peek<'mem> {
+    Scalar(PeekValue<'mem>),
+    List(PeekList<'mem>),
+    Map(PeekMap<'mem>),
+    Struct(PeekStruct<'mem>),
+}
+```
+
+Each variant corresponds to a different kind of value:
+
+- **Scalar**: Basic types like numbers, strings, booleans
+- **List**: Sequential collections like arrays, vectors
+- **Map**: Key-value collections like HashMaps
+- **Struct**: Structs, tuple structs, and tuples
+
+You can use `Peek` to traverse a value's structure and read its contents safely, with the borrow checker ensuring that the underlying data remains valid:
+
+```rust
+// Example: Reading a struct field
+if let Peek::Struct(peek_struct) = my_peek {
+    // Get field by name
+    if let Some(field) = peek_struct.field("name") {
+        // Process the field value
+        if let Peek::Scalar(value) = field {
+            // Do something with the scalar value
+        }
+    }
+}
+```
+
+### Poke: Building Values
+
+The `Poke` enum and related types provide a way to build or modify values of any type that implements `Shapely`. This is useful for deserialization, cloning, and other operations that need to create or modify data.
+
+```rust
+pub enum Poke<'mem> {
+    Scalar(PokeValue<'mem>),
+    List(PokeListUninit<'mem>),
+    Map(PokeMapUninit<'mem>),
+    Struct(PokeStruct<'mem>),
+    Enum(PokeEnumNoVariant<'mem>),
+}
+```
+
+The variants correspond to the same kinds of values as `Peek`, with the addition of `Enum` for working with enum variants.
+
+Poke provides a safe abstraction for building values incrementally, ensuring that all required fields or elements are initialized:
+
+```rust
+// Example: Building a struct
+let (poke, guard) = Poke::alloc::<MyStruct>();
+let mut poke = poke.into_struct();
+
+// Set field values by name
+poke.set_by_name("foo", OpaqueConst::from_ref(&42u64))
+    .unwrap();
+
+// Set string field (needs proper lifetime management)
+{
+    let bar = String::from("Hello, World!");
+    poke.set_by_name("bar", OpaqueConst::from_ref(&bar))
+        .unwrap();
+    // String has been moved, forget it to prevent double-free
+    std::mem::forget(bar);
+}
+
+// Build the final value
+let my_struct = poke.build::<MyStruct>(Some(guard));
+```
+
+#### Alternative: Building In-Place
+
+```rust
+// Initialize with default value first
+let mut value: MyStruct = Default::default();
+
+// Create a Poke instance from existing value
+let mut poke = unsafe {
+    Poke::from_opaque_uninit(OpaqueUninit::new(&mut value as *mut _), MyStruct::SHAPE)
+}.into_struct();
+
+// Mark fields as initialized (if they're valid from Default)
+unsafe {
+    poke.mark_initialized(0);
+    poke.mark_initialized(1);
+}
+
+// Modify specific fields
+poke.set_by_name("bar", OpaqueConst::from_ref(&String::from("New Value")))
+    .unwrap();
+std::mem::forget(String::from("New Value"));
+
+// Complete the build in-place
+poke.build_in_place();
+```
+
+### Memory Safety
+
+Both Peek and Poke use a lifetime parameter `'mem` to ensure memory safety. This lifetime is tied to the lifetime of the underlying data, preventing use-after-free and other memory issues.
+
+In rare cases, you might see `'mem` set to `'static`, but this should be used with extreme caution as it bypasses some of the borrow checker's safety guarantees.
+
+### Common Uses
+
+- **Serialization/Deserialization**: Convert between Shapely values and other formats
+- **Cloning**: Create copies of values with potential modifications
+- **Debug Printing**: Generate string representations of complex values
+- **Generic Algorithms**: Write code that works with any Shapely type
