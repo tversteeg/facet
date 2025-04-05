@@ -13,3 +13,4 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
+minijinja = { version = "2.9.0", default-features = false }
