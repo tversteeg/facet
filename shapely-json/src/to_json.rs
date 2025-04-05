@@ -11,16 +11,16 @@ pub fn to_json<W: Write>(peek: Peek<'_>, writer: &mut W, indent: bool) -> io::Re
     ) -> io::Result<()> {
         match peek {
             Peek::Scalar(pv) => {
-                if pv.shape.is_type::<()>() {
+                if pv.shape().is_type::<()>() {
                     write!(writer, "null")
-                } else if pv.shape.is_type::<bool>() {
-                    let value = unsafe { pv.data.as_ref::<bool>() };
+                } else if pv.shape().is_type::<bool>() {
+                    let value = unsafe { pv.data().as_ref::<bool>() };
                     write!(writer, "{}", value)
-                } else if pv.shape.is_type::<u64>() {
-                    let value = unsafe { pv.data.as_ref::<u64>() };
+                } else if pv.shape().is_type::<u64>() {
+                    let value = unsafe { pv.data().as_ref::<u64>() };
                     write!(writer, "{}", value)
-                } else if pv.shape.is_type::<String>() {
-                    let value = unsafe { pv.data.as_ref::<String>() };
+                } else if pv.shape().is_type::<String>() {
+                    let value = unsafe { pv.data().as_ref::<String>() };
                     write!(writer, "\"{}\"", value.escape_debug())
                 } else {
                     // For other types, we'll use a placeholder

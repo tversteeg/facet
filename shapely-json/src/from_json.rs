@@ -21,16 +21,16 @@ fn deserialize_value<'input, 'mem>(
     let opaque = match poke {
         Poke::Scalar(pv) => {
             trace!("Deserializing \x1b[1;36mscalar\x1b[0m");
-            if pv.shape.is_type::<String>() {
+            if pv.shape().is_type::<String>() {
                 let s = parser.parse_string()?;
                 let data = unsafe { pv.put(OpaqueConst::from_ref(&s)) };
                 std::mem::forget(s);
                 data
-            } else if pv.shape.is_type::<u64>() {
+            } else if pv.shape().is_type::<u64>() {
                 let n = parser.parse_u64()?;
                 unsafe { pv.put(OpaqueConst::from_ref(&n)) }
             } else {
-                panic!("Unknown scalar shape: {}", pv.shape);
+                panic!("Unknown scalar shape: {}", pv.shape());
             }
         }
         Poke::Struct(mut ps) => {
