@@ -5,7 +5,7 @@ use crate::{
     ValueVTable,
 };
 
-impl<T0, T1> Shapely for (T0, T1)
+unsafe impl<T0, T1> Shapely for (T0, T1)
 where
     T0: Shapely,
     T1: Shapely,

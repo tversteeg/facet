@@ -262,7 +262,7 @@ fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
     let output = format!(
         r#"
 #[automatically_derived]
-impl shapely::Shapely for {struct_name} {{
+unsafe impl shapely::Shapely for {struct_name} {{
     const DUMMY: Self = Self {{
         {dummy_fields}
     }};
@@ -315,7 +315,7 @@ fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStream {
     let output = format!(
         r#"
 #[automatically_derived]
-impl shapely::Shapely for {struct_name} {{
+unsafe impl shapely::Shapely for {struct_name} {{
     const DUMMY: Self = Self({dummy_fields});
     const SHAPE: &'static shapely::Shape = &const {{
         shapely::Shape {{
@@ -434,7 +434,7 @@ fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
     let output = format!(
         r#"
 #[automatically_derived]
-impl shapely::Shapely for {enum_name} {{
+unsafe impl shapely::Shapely for {enum_name} {{
     const SHAPE: &'static shapely::Shape = &const {{
         shapely::Shape {{
             layout: std::alloc::Layout::new::<Self>(),

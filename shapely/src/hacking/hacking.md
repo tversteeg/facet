@@ -5,7 +5,7 @@
 The `Shapely` trait is the cornerstone of our reflection system. It provides a way to access type information at both compile time and runtime, enabling powerful meta-programming capabilities while maintaining Rust's safety guarantees.
 
 ```rust,ignore
-pub trait Shapely: 'static {
+pub unsafe trait Shapely: 'static {
     /// A dummy value of this type, used for compile-time type information
     const DUMMY: Self;
 

@@ -11,9 +11,16 @@ mod impls;
 mod macros;
 pub use macros::*;
 
-/// Allows querying the [Shape] of a type, which in turn lets us inspect any fields, build a value of
+/// Allows querying the [`Shape`] of a type, which in turn lets us inspect any fields, build a value of
 /// this type progressively, etc.
-pub trait Shapely: Sized {
+///
+/// # Safety
+///
+/// If you implement this wrong, all the safe abstractions in `shapely-peek`, `shapely-poke`,
+/// all the serializers, deserializers, the entire ecosystem is unsafe.
+///
+/// You're responsible for describing the type layout properly, and annotating all the invariants.
+pub unsafe trait Shapely: Sized {
     /// The shape of this type
     const SHAPE: &'static Shape;
 

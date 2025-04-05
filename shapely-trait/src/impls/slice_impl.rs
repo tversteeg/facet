@@ -1,7 +1,7 @@
 use crate::*;
 use std::alloc::Layout;
 
-impl<T> Shapely for &[T]
+unsafe impl<T> Shapely for &[T]
 where
     T: Shapely,
 {

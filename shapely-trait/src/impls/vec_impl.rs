@@ -1,7 +1,7 @@
 use crate::*;
 use std::{alloc::Layout, hash::Hash as _};
 
-impl<T> Shapely for Vec<T>
+unsafe impl<T> Shapely for Vec<T>
 where
     T: Shapely,
 {
