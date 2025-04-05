@@ -41,16 +41,20 @@ mod tests {
 
     #[test]
     fn message() {
-        let msg = unsafe { get_library_message() };
-        let c_str = unsafe { std::ffi::CStr::from_ptr(msg) };
-        let rust_str = c_str.to_string_lossy();
-        println!("{}", rust_str);
+        if !cfg!(miri) {
+            let msg = unsafe { get_library_message() };
+            let c_str = unsafe { std::ffi::CStr::from_ptr(msg) };
+            let rust_str = c_str.to_string_lossy();
+            println!("{}", rust_str);
 
-        assert_eq!(rust_str, "IAMA C lib AMA")
+            assert_eq!(rust_str, "IAMA C lib AMA")
+        }
     }
 
     #[test]
     fn foo() {
-        print_global_foo();
+        if !cfg!(miri) {
+            print_global_foo();
+        }
     }
 }

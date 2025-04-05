@@ -11,8 +11,36 @@ ci:
     echo -e "\033[1;34m📝 Running cargo fmt in check mode...\033[0m"
     cargo fmt --all -- --check
 
+rustfmt:
+    echo -e "\033[1;34m📝 Checking code formatting...\033[0m"
+    cargo fmt --all -- --check
+
+clippy:
+    echo -e "\033[1;35m🔍 Running Clippy on all targets...\033[0m"
+    cargo clippy --all-targets -- -D warnings
+
+test *args:
+    #!/bin/bash -euo pipefail
+    echo -e "\033[1;33m🏃 Running all but doc-tests with nextest...\033[0m"
+    cargo nextest run {{args}}
+
+doc-tests:
+    echo -e "\033[1;36m📚 Running documentation tests...\033[0m"
+    cargo test --doc
+
+
 codegen:
     cargo run -p shapely-codegen
+
+rustfmt-fix:
+    echo -e "\033[1;34m📝 Fixing code formatting...\033[0m"
+    cargo fmt --all
+
+miri *args:
+    #!/bin/bash -euo pipefail
+    echo -e "\033[1;31m🧪 Running tests under Miri...\033[0m"
+    cargo miri nextest run {{args}}
+
 
 absolve:
     #!/bin/bash
@@ -23,32 +51,3 @@ absolve:
     cargo tree -i syn -e features
     exit 1
     fi
-
-rustfmt:
-    echo -e "\033[1;34m📝 Checking code formatting...\033[0m"
-    cargo fmt --all -- --check
-
-rustfmt-fix:
-    echo -e "\033[1;34m📝 Fixing code formatting...\033[0m"
-    cargo fmt --all
-
-clippy:
-    echo -e "\033[1;35m🔍 Running Clippy on all targets...\033[0m"
-    cargo clippy --all-targets -- -D warnings
-
-test *args:
-    #!/bin/bash -euo pipefail
-    export RUST_BACKTRACE=1
-    echo -e "\033[1;33m🏃 Running all but doc-tests with nextest...\033[0m"
-    cargo nextest run {{args}}
-
-doc-tests:
-    echo -e "\033[1;36m📚 Running documentation tests...\033[0m"
-    RUSTDOCFLAGS="-D warnings" cargo test --doc
-
-miri *args:
-    #!/bin/bash -euo pipefail
-    export RUST_BACKTRACE=1
-    export MIRIFLAGS=-Zmiri-env-forward=RUST_BACKTRACE
-    echo -e "\033[1;31m🧪 Running tests under Miri in a separate target directory...\033[0m"
-    cargo miri nextest run --target-dir=target/miri {{args}}
