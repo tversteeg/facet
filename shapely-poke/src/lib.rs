@@ -1,6 +1,6 @@
 //! Allows poking (writing to) shapes
 
-use std::{alloc::Layout, mem::MaybeUninit};
+use std::alloc::Layout;
 
 pub use shapely_peek::*;
 
@@ -60,16 +60,8 @@ impl<'mem> Poke<'mem> {
             layout,
             shape: S::SHAPE,
         };
-        let poke = unsafe { Self::from_opaque_uninit(data, S::SHAPE) };
+        let poke = unsafe { Self::unchecked_new(data, S::SHAPE) };
         (poke, guard)
-    }
-
-    /// Creates a new poke from a mutable reference to a MaybeUninit of a type that implements shapely
-    pub fn from_maybe_uninit<S: Shapely>(borrow: &'mem mut MaybeUninit<S>) -> Self {
-        // This is safe because we're creating an Opaque pointer to read-only data
-        // The pointer will be valid for the lifetime 'mem
-        let data = OpaqueUninit::from_maybe_uninit(borrow);
-        unsafe { Self::from_opaque_uninit(data, S::SHAPE) }
     }
 
     /// Creates a new peek, for easy manipulation of some opaque data.
@@ -78,7 +70,7 @@ impl<'mem> Poke<'mem> {
     ///
     /// `data` must be initialized and well-aligned, and point to a value
     /// of the type described by `shape`.
-    pub unsafe fn from_opaque_uninit(data: OpaqueUninit<'mem>, shape: &'static Shape) -> Self {
+    pub unsafe fn unchecked_new(data: OpaqueUninit<'mem>, shape: &'static Shape) -> Self {
         match shape.def {
             Def::Struct(struct_def) | Def::TupleStruct(struct_def) | Def::Tuple(struct_def) => {
                 Poke::Struct(unsafe { PokeStruct::new(data, shape, struct_def) })

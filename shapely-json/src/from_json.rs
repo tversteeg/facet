@@ -81,7 +81,7 @@ fn deserialize_value<'input, 'mem>(
                 trace!("Processing array item at index: \x1b[1;33m{}\x1b[0m", index);
 
                 let data = OpaqueUninit::new(unsafe { std::alloc::alloc(shape.layout) });
-                let item_poke = unsafe { Poke::from_opaque_uninit(data, shape) };
+                let item_poke = unsafe { Poke::unchecked_new(data, shape) };
 
                 // Deserialize the item
                 deserialize_value(parser, item_poke)?;
@@ -118,13 +118,13 @@ fn deserialize_value<'input, 'mem>(
 
                 // Create a poke for the key (string type)
                 let key_data = OpaqueUninit::new(unsafe { std::alloc::alloc(pm.def.k.layout) });
-                let key_poke = unsafe { Poke::from_opaque_uninit(key_data, pm.def.k) };
+                let key_poke = unsafe { Poke::unchecked_new(key_data, pm.def.k) };
                 let scalar_key_poke = key_poke.into_scalar();
                 scalar_key_poke.parse(&key).unwrap(); // TODO: map errors
 
                 // Create a poke for the value based on map def
                 let value_data = OpaqueUninit::new(unsafe { std::alloc::alloc(pm.def.v.layout) });
-                let value_poke = unsafe { Poke::from_opaque_uninit(value_data, pm.def.v) };
+                let value_poke = unsafe { Poke::unchecked_new(value_data, pm.def.v) };
 
                 // Deserialize the value
                 deserialize_value(parser, value_poke)?;

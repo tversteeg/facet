@@ -164,6 +164,7 @@ dependencies = [
  "owo-colors",
  "shapely-derive",
  "shapely-peek",
+ "shapely-samplelibc",
  "shapely-trait",
 ]
 

@@ -196,7 +196,7 @@ impl<'mem> PokeEnum<'mem> {
 
                 // Get the field's address
                 let field_data = unsafe { self.data.field_uninit(field.offset) };
-                let poke = unsafe { Poke::from_opaque_uninit(field_data, field.shape) };
+                let poke = unsafe { Poke::unchecked_new(field_data, field.shape) };
                 Ok(poke)
             }
             VariantKind::Struct { fields } => {
@@ -208,7 +208,7 @@ impl<'mem> PokeEnum<'mem> {
 
                 // Get the field's address
                 let field_data = unsafe { self.data.field_uninit(field.offset) };
-                let poke = unsafe { Poke::from_opaque_uninit(field_data, field.shape) };
+                let poke = unsafe { Poke::unchecked_new(field_data, field.shape) };
                 Ok(poke)
             }
         }

@@ -172,7 +172,7 @@ impl<'mem> PokeStruct<'mem> {
         let field_addr = unsafe { self.data.field_uninit(field.offset) };
         let field_shape = field.shape;
 
-        let poke = unsafe { crate::Poke::from_opaque_uninit(field_addr, field_shape) };
+        let poke = unsafe { crate::Poke::unchecked_new(field_addr, field_shape) };
         Ok(poke)
     }
 

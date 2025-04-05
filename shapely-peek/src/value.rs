@@ -1,6 +1,8 @@
 use shapely_trait::{Opaque, OpaqueConst, Shape, TypeNameOpts, ValueVTable};
 use std::cmp::Ordering;
 
+use crate::Peek;
+
 /// Lets you read from a value (implements read-only [`ValueVTable`] proxies)
 #[derive(Clone, Copy)]
 pub struct PeekValue<'mem> {
@@ -239,5 +241,11 @@ impl<'mem> PeekValue<'mem> {
     #[inline(always)]
     pub const fn data(&self) -> OpaqueConst<'mem> {
         self.data
+    }
+
+    /// Wraps this scalar back into a `Peek`
+    #[inline(always)]
+    pub fn wrap(self) -> Peek<'mem> {
+        unsafe { Peek::unchecked_new(self.data, self.shape) }
     }
 }

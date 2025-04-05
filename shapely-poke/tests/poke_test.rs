@@ -81,10 +81,9 @@ fn build_foobar_incomplete() {
 fn build_foobar_after_default() {
     let mut foo_bar: FooBar = Default::default();
 
-    let mut poke = unsafe {
-        Poke::from_opaque_uninit(OpaqueUninit::new(&mut foo_bar as *mut _), FooBar::SHAPE)
-    }
-    .into_struct();
+    let mut poke =
+        unsafe { Poke::unchecked_new(OpaqueUninit::new(&mut foo_bar as *mut _), FooBar::SHAPE) }
+            .into_struct();
     unsafe {
         poke.mark_initialized(0);
         poke.mark_initialized(1);

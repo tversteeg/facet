@@ -1,11 +1,26 @@
-use shapely::Shapely;
+#![allow(clippy::disallowed_names)]
+
+use shapely::{Opaque, Shape, Shapely};
 
 unsafe extern "C" {
     pub unsafe fn get_library_message() -> *const std::ffi::c_char;
-    pub unsafe fn get_foo() -> *const Foo;
+    pub unsafe fn get_foo() -> *mut Foo;
 }
 
-#[derive(Shapely)]
+pub fn get_foo_and_shape() -> (Opaque<'static>, &'static Shape) {
+    (unsafe { Opaque::new_unchecked(get_foo()) }, Foo::SHAPE)
+}
+
+pub fn print_global_foo() {
+    let foo = unsafe { get_foo() };
+    let bar = unsafe { &(*foo).bar };
+    let x = unsafe { (*foo).x };
+    let y = unsafe { (*foo).y };
+
+    println!("Foo: x={}, bar.a={}, bar.b={}, y={}", x, bar.a, bar.b, y);
+}
+
+#[derive(Shapely, Debug)]
 #[repr(C)]
 pub struct Foo {
     pub x: i64,
@@ -13,7 +28,7 @@ pub struct Foo {
     pub y: i64,
 }
 
-#[derive(Shapely)]
+#[derive(Shapely, Debug)]
 #[repr(C)]
 pub struct Bar {
     pub a: i32,
@@ -36,11 +51,6 @@ mod tests {
 
     #[test]
     fn foo() {
-        let foo = unsafe { get_foo() };
-        let bar = unsafe { &(*foo).bar };
-        let x = unsafe { (*foo).x };
-        let y = unsafe { (*foo).y };
-
-        println!("Foo: x={}, bar.a={}, bar.b={}, y={}", x, bar.a, bar.b, y);
+        print_global_foo();
     }
 }

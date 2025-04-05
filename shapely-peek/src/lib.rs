@@ -23,7 +23,7 @@ use shapely_trait::{Def, OpaqueConst, Shape};
 #[derive(Clone, Copy)]
 pub enum Peek<'mem> {
     /// cf. [`PeekValue`]
-    Scalar(PeekValue<'mem>),
+    Value(PeekValue<'mem>),
 
     /// cf. [`PeekList`]
     List(PeekList<'mem>),
@@ -40,7 +40,7 @@ impl<'mem> std::ops::Deref for Peek<'mem> {
 
     fn deref(&self) -> &Self::Target {
         match self {
-            Peek::Scalar(value) => value,
+            Peek::Value(value) => value,
             Peek::List(list) => list,
             Peek::Map(map) => map,
             Peek::Struct(struct_) => struct_,
@@ -71,7 +71,7 @@ impl<'mem> Peek<'mem> {
             }
             Def::Map(def) => Peek::Map(PeekMap::new(value, def)),
             Def::List(def) => Peek::List(PeekList::new(value, def)),
-            Def::Scalar { .. } => Peek::Scalar(value),
+            Def::Scalar { .. } => Peek::Value(value),
             Def::Enum { .. } => todo!(),
         }
     }
@@ -79,7 +79,7 @@ impl<'mem> Peek<'mem> {
     /// Coerce this to a value so we can use display, debug, etc.
     pub fn as_value(self) -> PeekValue<'mem> {
         match self {
-            Self::Scalar(v) => v,
+            Self::Value(v) => v,
             Self::List(l) => *l,
             Self::Map(m) => *m,
             Self::Struct(s) => *s,

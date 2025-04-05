@@ -13,7 +13,7 @@ pub fn to_json<W: Write>(peek: Peek<'_>, writer: &mut W, indent: bool) -> io::Re
         level: usize,
     ) -> io::Result<()> {
         match peek {
-            Peek::Scalar(pv) => {
+            Peek::Value(pv) => {
                 if pv.shape().is_type::<()>() {
                     write!(writer, "null")
                 } else if pv.shape().is_type::<bool>() {
@@ -54,7 +54,7 @@ pub fn to_json<W: Write>(peek: Peek<'_>, writer: &mut W, indent: bool) -> io::Re
                         write!(writer, " ")?;
                     }
 
-                    serialize_value(Peek::Scalar(field.1), writer, indent, level + 1)?;
+                    serialize_value(Peek::Value(field.1), writer, indent, level + 1)?;
                 }
 
                 if !first && indent {

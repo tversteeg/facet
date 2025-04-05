@@ -23,3 +23,4 @@ color-backtrace = { version = "0.7.0", default-features = false, features = [
 ctor = "0.4.1"
 owo-colors = "4.2.0"
 shapely-derive.workspace = true
+shapely-samplelibc = { path = "../shapely-samplelibc" }
