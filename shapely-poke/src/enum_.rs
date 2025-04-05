@@ -1,4 +1,7 @@
-use crate::{EnumDef, FieldError, Opaque, OpaqueUninit, Shape, ShapeDebug, Shapely, trace};
+use shapely_trait::{
+    EnumDef, EnumRepr, FieldError, Opaque, OpaqueUninit, Shape, ShapeDebug, ShapeExt as _, Shapely,
+    VariantKind,
+};
 use std::ptr::NonNull;
 
 use super::{ISet, Poke, PokeValue};
@@ -84,47 +87,47 @@ impl<'mem> PokeEnumNoVariant<'mem> {
 
             // Write the discriminant value based on the representation
             match self.def.repr {
-                crate::EnumRepr::U8 => {
+                EnumRepr::U8 => {
                     let tag_ptr = self.data.as_mut_ptr();
                     *tag_ptr = discriminant_value as u8;
                 }
-                crate::EnumRepr::U16 => {
+                EnumRepr::U16 => {
                     let tag_ptr = self.data.as_mut_ptr() as *mut u16;
                     *tag_ptr = discriminant_value as u16;
                 }
-                crate::EnumRepr::U32 => {
+                EnumRepr::U32 => {
                     let tag_ptr = self.data.as_mut_ptr() as *mut u32;
                     *tag_ptr = discriminant_value as u32;
                 }
-                crate::EnumRepr::U64 => {
+                EnumRepr::U64 => {
                     let tag_ptr = self.data.as_mut_ptr() as *mut u64;
                     *tag_ptr = discriminant_value as u64;
                 }
-                crate::EnumRepr::USize => {
+                EnumRepr::USize => {
                     let tag_ptr = self.data.as_mut_ptr() as *mut usize;
                     *tag_ptr = discriminant_value as usize;
                 }
-                crate::EnumRepr::I8 => {
+                EnumRepr::I8 => {
                     let tag_ptr = self.data.as_mut_ptr() as *mut i8;
                     *tag_ptr = discriminant_value as i8;
                 }
-                crate::EnumRepr::I16 => {
+                EnumRepr::I16 => {
                     let tag_ptr = self.data.as_mut_ptr() as *mut i16;
                     *tag_ptr = discriminant_value as i16;
                 }
-                crate::EnumRepr::I32 => {
+                EnumRepr::I32 => {
                     let tag_ptr = self.data.as_mut_ptr() as *mut i32;
                     *tag_ptr = discriminant_value as i32;
                 }
-                crate::EnumRepr::I64 => {
+                EnumRepr::I64 => {
                     let tag_ptr = self.data.as_mut_ptr() as *mut i64;
                     *tag_ptr = discriminant_value;
                 }
-                crate::EnumRepr::ISize => {
+                EnumRepr::ISize => {
                     let tag_ptr = self.data.as_mut_ptr() as *mut isize;
                     *tag_ptr = discriminant_value as isize;
                 }
-                crate::EnumRepr::Default => {
+                EnumRepr::Default => {
                     // Use a heuristic based on the number of variants
                     if self.def.variants.len() <= 256 {
                         // Can fit in a u8
@@ -176,19 +179,16 @@ impl<'mem> PokeEnum<'mem> {
     /// Returns an error if:
     /// - The field name doesn't exist in the selected variant.
     /// - The selected variant is a unit variant (which has no fields).
-    pub fn variant_field_by_name<'s>(
-        &'s mut self,
-        name: &str,
-    ) -> Result<crate::Poke<'s>, FieldError> {
+    pub fn variant_field_by_name<'s>(&'s mut self, name: &str) -> Result<Poke<'s>, FieldError> {
         let variant = &self.def.variants[self.selected_variant];
 
         // Find the field in the variant
         match &variant.kind {
-            crate::VariantKind::Unit => {
+            VariantKind::Unit => {
                 // Unit variants have no fields
                 Err(FieldError::NoSuchStaticField)
             }
-            crate::VariantKind::Tuple { fields } => {
+            VariantKind::Tuple { fields } => {
                 // For tuple variants, find the field by name
                 let field = fields
                     .iter()
@@ -200,7 +200,7 @@ impl<'mem> PokeEnum<'mem> {
                 let poke = unsafe { Poke::from_opaque_uninit(field_data, field.shape) };
                 Ok(poke)
             }
-            crate::VariantKind::Struct { fields } => {
+            VariantKind::Struct { fields } => {
                 // For struct variants, find the field by name
                 let field = fields
                     .iter()
@@ -234,10 +234,10 @@ impl<'mem> PokeEnum<'mem> {
 
         // Check if all fields of the selected variant are initialized
         match &variant.kind {
-            crate::VariantKind::Unit => {
+            VariantKind::Unit => {
                 // Unit variants don't have fields, so they're always fully initialized
             }
-            crate::VariantKind::Tuple { fields } | crate::VariantKind::Struct { fields } => {
+            VariantKind::Tuple { fields } | VariantKind::Struct { fields } => {
                 // Check each field
                 for (field_index, field) in fields.iter().enumerate() {
                     if !self.iset.has(field_index) {
@@ -295,7 +295,6 @@ impl<'mem> PokeEnum<'mem> {
             let ptr = self.data.as_ptr() as *const T;
             std::ptr::read(ptr)
         };
-        trace!("Built \x1b[1;33m{}\x1b[0m successfully", T::SHAPE);
         std::mem::forget(self);
         result
     }
@@ -343,10 +342,10 @@ impl Drop for PokeEnum<'_> {
 
         // Drop fields based on the variant kind
         match &variant.kind {
-            crate::VariantKind::Unit => {
+            VariantKind::Unit => {
                 // Unit variants have no fields to drop
             }
-            crate::VariantKind::Tuple { fields } | crate::VariantKind::Struct { fields } => {
+            VariantKind::Tuple { fields } | VariantKind::Struct { fields } => {
                 // Drop each initialized field
                 for (field_index, field) in fields.iter().enumerate() {
                     if self.iset.has(field_index) {

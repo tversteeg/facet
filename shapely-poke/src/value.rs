@@ -1,5 +1,7 @@
-use crate::TryFromError;
-use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek, Shape, ShapeDebug, ValueVTable};
+use shapely_peek::Peek;
+use shapely_trait::{
+    Opaque, OpaqueConst, OpaqueUninit, Shape, ShapeDebug, TryFromError, ValueVTable,
+};
 
 /// Lets you write to a value (implements write-only [`ValueVTable`] proxies)
 pub struct PokeValue<'mem> {
@@ -45,7 +47,10 @@ impl<'mem> PokeValue<'mem> {
     /// Attempts to convert a value from another type into this one
     ///
     /// Returns `Ok(Opaque)` if the conversion was successful, `Err((Self, TryFromError))` otherwise.
-    pub fn try_from<'src>(self, source: Peek<'src>) -> Result<Opaque<'mem>, (Self, TryFromError)> {
+    pub fn try_from<'src>(
+        self,
+        source: OpaqueConst<'src>,
+    ) -> Result<Opaque<'mem>, (Self, TryFromError)> {
         if let Some(try_from_fn) = self.vtable().try_from {
             match unsafe { try_from_fn(source, self.data) } {
                 Ok(built_val) => Ok(built_val),

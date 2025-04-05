@@ -125,6 +125,8 @@ dependencies = [
  "color-backtrace",
  "ctor",
  "shapely",
+ "shapely-peek",
+ "shapely-poke",
 ]
 
 [[package]]
@@ -141,6 +143,10 @@ dependencies = [
 [[package]]
 name = "shapely-poke"
 version = "3.1.0"
+dependencies = [
+ "shapely-peek",
+ "shapely-trait",
+]
 
 [[package]]
 name = "shapely-spez"

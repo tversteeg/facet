@@ -1,4 +1,4 @@
-use crate::MapDef;
+use shapely_trait::MapDef;
 
 use super::PeekValue;
 

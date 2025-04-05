@@ -1,5 +1,6 @@
-use crate::StructDef;
-use crate::peek::PeekValue;
+use shapely_trait::StructDef;
+
+use crate::PeekValue;
 
 /// Lets you read from a struct (implements read-only struct operations)
 #[derive(Clone, Copy)]

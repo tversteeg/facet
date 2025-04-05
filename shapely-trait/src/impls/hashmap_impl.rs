@@ -4,6 +4,8 @@ use std::{
     hash::{Hash, RandomState},
 };
 
+use shapely_opaque::OpaqueConst;
+
 use crate::{
     Def, MapDef, MapIterVTable, MapVTable, MarkerTraits, ScalarDef, Shape, Shapely, ValueVTable,
     value_vtable,
@@ -104,7 +106,7 @@ where
             partial_ord: None,
             hash: if K::SHAPE.vtable.hash.is_some() && V::SHAPE.vtable.hash.is_some() {
                 Some(|value, hasher_this, hasher_write_fn| unsafe {
-                    use crate::vtable::HasherProxy;
+                    use crate::HasherProxy;
                     let map = value.as_ref::<HashMap<K, V>>();
 
                     let k_hash = K::SHAPE.vtable.hash.unwrap_unchecked();
@@ -131,35 +133,35 @@ where
             k: K::SHAPE,
             v: V::SHAPE,
             vtable: &MapVTable {
-                init_in_place_with_capacity: |uninit, capacity| unsafe {
+                init_in_place_with_capacity_fn: |uninit, capacity| unsafe {
                     Ok(uninit.write(Self::with_capacity_and_hasher(capacity, S::default())))
                 },
-                insert: |ptr, key, value| unsafe {
+                insert_fn: |ptr, key, value| unsafe {
                     let map = ptr.as_mut_ptr::<HashMap<K, V>>();
                     let key = key.read::<K>();
                     let value = value.read::<V>();
                     map.insert(key, value);
                 },
-                len: |ptr| unsafe {
+                len_fn: |ptr| unsafe {
                     let map = ptr.as_ref::<HashMap<K, V>>();
                     map.len()
                 },
-                contains_key: |ptr, key| unsafe {
+                contains_key_fn: |ptr, key| unsafe {
                     let map = ptr.as_ref::<HashMap<K, V>>();
                     map.contains_key(key.as_ref())
                 },
-                get_value_ptr: |ptr, key| unsafe {
+                get_value_ptr_fn: |ptr, key| unsafe {
                     let map = ptr.as_ref::<HashMap<K, V>>();
                     map.get(key.as_ref())
                         .map(|v| OpaqueConst::new_unchecked(v as *const _))
                 },
-                iter: |ptr| unsafe {
+                iter_fn: |ptr| unsafe {
                     let map = ptr.as_ref::<HashMap<K, V>>();
                     let keys: VecDeque<&K> = map.keys().collect();
                     let iter_state = Box::new(HashMapIterator { map: ptr, keys });
                     OpaqueConst::new_unchecked(Box::into_raw(iter_state) as *mut u8)
                 },
-                iter_vtable: MapIterVTable {
+                iter_vtable_fn: MapIterVTable {
                     next: |iter_ptr| unsafe {
                         let state = iter_ptr.as_mut_ptr::<HashMapIterator<'_, K>>();
                         let map = state.map.as_ref::<HashMap<K, V>>();

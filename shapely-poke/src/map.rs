@@ -1,4 +1,5 @@
-use crate::{MapDef, MapVTable, Opaque, OpaqueConst, OpaqueUninit, PokeValue, Shape};
+use crate::PokeValue;
+use shapely_trait::{MapDef, MapVTable, Opaque, OpaqueConst, OpaqueUninit, Shape};
 
 /// Allows initializing an uninitialized map
 pub struct PokeMapUninit<'mem> {
@@ -31,7 +32,7 @@ impl<'mem> PokeMapUninit<'mem> {
     /// Initializes the map with an optional size hint
     pub fn init(self, size_hint: Option<usize>) -> Result<PokeMap<'mem>, OpaqueUninit<'mem>> {
         let res = if let Some(capacity) = size_hint {
-            let init_in_place_with_capacity = self.def.vtable.init_in_place_with_capacity;
+            let init_in_place_with_capacity = self.def.vtable.init_in_place_with_capacity_fn;
             unsafe { init_in_place_with_capacity(self.data, capacity) }
         } else {
             let pv = unsafe { PokeValue::new(self.data, self.shape) };
@@ -76,13 +77,13 @@ impl<'mem> PokeMap<'mem> {
     /// afterwards but NOT dropped.
     #[inline]
     pub unsafe fn insert<'key, 'value>(&mut self, key: Opaque<'key>, value: Opaque<'value>) {
-        unsafe { (self.map_vtable().insert)(self.data, key, value) }
+        unsafe { (self.map_vtable().insert_fn)(self.data, key, value) }
     }
 
     /// Gets the number of entries in the map
     #[inline]
     pub fn len(&self) -> usize {
-        unsafe { (self.map_vtable().len)(self.data.as_const()) }
+        unsafe { (self.map_vtable().len_fn)(self.data.as_const()) }
     }
 
     /// Checks if the map contains no entries
@@ -94,7 +95,7 @@ impl<'mem> PokeMap<'mem> {
     /// Checks if the map contains a key
     #[inline]
     pub fn contains_key<'key>(&self, key: OpaqueConst<'key>) -> bool {
-        unsafe { (self.map_vtable().contains_key)(self.data.as_const(), key) }
+        unsafe { (self.map_vtable().contains_key_fn)(self.data.as_const(), key) }
     }
 
     /// Gets a pointer to the value for a given key
@@ -102,7 +103,7 @@ impl<'mem> PokeMap<'mem> {
     /// Returns `None` if the key is not found.
     #[inline]
     pub fn get_value_ptr<'key>(&self, key: OpaqueConst<'key>) -> Option<OpaqueConst<'mem>> {
-        unsafe { (self.map_vtable().get_value_ptr)(self.data.as_const(), key) }
+        unsafe { (self.map_vtable().get_value_ptr_fn)(self.data.as_const(), key) }
     }
 
     /// Takes ownership of this `PokeList` and returns the underlying data.

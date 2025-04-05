@@ -1,5 +1,4 @@
 mod array_impl;
-mod bytes_impl;
 mod hashmap_impl;
 mod scalar_impls;
 mod slice_impl;

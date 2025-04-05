@@ -67,7 +67,7 @@ where
                 partial_ord: None,
                 hash: if T::SHAPE.vtable.hash.is_some() {
                     Some(|value, hasher_this, hasher_write_fn| unsafe {
-                        use crate::vtable::HasherProxy;
+                        use crate::HasherProxy;
                         let vec = value.as_ref::<Vec<T>>();
                         let t_hash = T::SHAPE.vtable.hash.unwrap_unchecked();
                         let mut hasher = HasherProxy::new(hasher_this, hasher_write_fn);

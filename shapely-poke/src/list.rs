@@ -1,4 +1,5 @@
-use crate::{ListDef, ListVTable, Opaque, OpaqueUninit, PokeValue, Shape};
+use crate::PokeValue;
+use shapely_trait::{ListDef, ListVTable, Opaque, OpaqueConst, OpaqueUninit, Shape};
 
 /// Allows initializing an uninitialized list
 pub struct PokeListUninit<'mem> {
@@ -95,7 +96,7 @@ impl<'mem> PokeList<'mem> {
     /// # Panics
     ///
     /// Panics if the index is out of bounds.
-    pub fn get_item_ptr(&self, index: usize) -> crate::OpaqueConst {
+    pub fn get_item_ptr(&self, index: usize) -> OpaqueConst {
         unsafe { (self.list_vtable().get_item_ptr)(self.data.as_const(), index) }
     }
 

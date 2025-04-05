@@ -28,6 +28,7 @@ pub trait Shapely: Sized {
     }
 }
 
+/// Extension trait to provide `is_type` and `assert_type`
 pub trait ShapeExt {
     /// Check if this shape is of the given type
     fn is_type<Other: Shapely>(&'static self) -> bool;

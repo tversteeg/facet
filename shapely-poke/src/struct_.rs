@@ -1,4 +1,6 @@
-use crate::{FieldError, Opaque, OpaqueUninit, Shape, ShapeDebug, StructDef};
+use shapely_trait::{
+    FieldError, Opaque, OpaqueConst, OpaqueUninit, Shape, ShapeDebug, ShapeExt as _, StructDef,
+};
 use std::ptr::NonNull;
 
 use super::{Guard, ISet, PokeValue};
@@ -94,7 +96,6 @@ impl<'mem> PokeStruct<'mem> {
             let ptr = self.data.as_mut_ptr() as *const T;
             std::ptr::read(ptr)
         };
-        crate::trace!("Built \x1b[1;33m{}\x1b[0m successfully", T::SHAPE);
         self.guard_for_build.take(); // dealloc
         std::mem::forget(self);
         result
@@ -183,7 +184,7 @@ impl<'mem> PokeStruct<'mem> {
     /// Returns an error if:
     /// - The index is out of bounds
     /// - The field shapes don't match
-    pub fn set(&mut self, index: usize, value: crate::OpaqueConst) -> Result<(), FieldError> {
+    pub fn set(&mut self, index: usize, value: OpaqueConst) -> Result<(), FieldError> {
         if index >= self.def.fields.len() {
             return Err(FieldError::IndexOutOfBounds);
         }
@@ -209,7 +210,7 @@ impl<'mem> PokeStruct<'mem> {
     /// Returns an error if:
     /// - The field name doesn't exist
     /// - The field shapes don't match
-    pub fn set_by_name(&mut self, name: &str, value: crate::OpaqueConst) -> Result<(), FieldError> {
+    pub fn set_by_name(&mut self, name: &str, value: OpaqueConst) -> Result<(), FieldError> {
         let index = self
             .def
             .fields

@@ -1,6 +1,5 @@
-use crate::ListDef;
-
 use super::PeekValue;
+use shapely_trait::ListDef;
 
 /// Lets you read from a list (implements read-only [`ListVTable`] proxies)
 #[derive(Clone, Copy)]

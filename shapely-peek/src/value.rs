@@ -1,5 +1,4 @@
-use crate::vtable::TypeNameOpts;
-use crate::{Opaque, OpaqueConst, Shape, ValueVTable};
+use shapely_trait::{Opaque, OpaqueConst, Shape, TypeNameOpts, ValueVTable};
 use std::cmp::Ordering;
 
 /// Lets you read from a value (implements read-only [`ValueVTable`] proxies)

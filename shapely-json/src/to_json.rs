@@ -1,6 +1,6 @@
 #![allow(unreachable_code)]
 
-use shapely::Peek;
+use shapely_peek::Peek;
 use std::io::{self, Write};
 
 /// Serializes any Shapely type to JSON

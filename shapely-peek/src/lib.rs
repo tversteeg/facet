@@ -1,6 +1,6 @@
 //! Allows peeking (reading from) shapes
 
-use shapely_core::{Shapely, vtable::TypeNameOpts};
+use shapely_trait::{Shapely, TypeNameOpts};
 
 mod value;
 pub use value::*;
@@ -14,7 +14,7 @@ pub use list::*;
 mod map;
 pub use map::*;
 
-use super::{Def, OpaqueConst, Shape};
+use shapely_trait::{Def, OpaqueConst, Shape};
 
 /// Lets you peek at the innards of a value
 ///
