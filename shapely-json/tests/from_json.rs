@@ -39,7 +39,7 @@ fn test_to_json() {
         age: 30,
     };
 
-    let expected_json = r#"{"name":"Alice","age":30}"#;
+    let _expected_json = r#"{"name":"Alice","age":30}"#;
     let expected_json_indented = r#"{
   "name": "Alice",
   "age": 30
@@ -49,7 +49,7 @@ fn test_to_json() {
     let peek = Peek::new(&test_struct);
     to_json(peek, &mut buffer, true).unwrap();
     let json = String::from_utf8(buffer).unwrap();
-    assert_eq!(json, expected_json);
+    assert_eq!(json, expected_json_indented);
 
     // let mut buffer = Vec::new();
     // let (poke, _guard) = Poke::alloc::<TestStruct>();

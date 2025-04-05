@@ -1,3 +1,5 @@
+#![allow(unreachable_code)]
+
 use shapely::Peek;
 use std::io::{self, Write};
 
@@ -69,7 +71,7 @@ pub fn to_json<W: Write>(peek: Peek<'_>, writer: &mut W, indent: bool) -> io::Re
                 }
 
                 let mut first = true;
-                let mut index = 0;
+                let mut _index = 0;
                 // while let Some(item) = pl.item_at(index) {
                 //     if !first {
                 //         write!(writer, ",")?;
@@ -93,7 +95,7 @@ pub fn to_json<W: Write>(peek: Peek<'_>, writer: &mut W, indent: bool) -> io::Re
                 }
                 write!(writer, "]")
             }
-            Peek::Map(pm) => {
+            Peek::Map(_pm) => {
                 todo!("map");
 
                 write!(writer, "{{")?;
@@ -102,7 +104,7 @@ pub fn to_json<W: Write>(peek: Peek<'_>, writer: &mut W, indent: bool) -> io::Re
                 }
 
                 let mut first = true;
-                let mut index = 0;
+                let mut _index = 0;
                 // while let Some((key, value)) = pm.entry_at(index) {
                 //     if !first {
                 //         write!(writer, ",")?;
