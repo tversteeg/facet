@@ -24,19 +24,6 @@ pub use shape::*;
 mod helpers;
 pub use helpers::*;
 
-mod poke;
-pub use poke::*;
-
-mod peek;
-pub use peek::*;
-
-#[doc(hidden)]
-pub mod log;
-pub use log::*;
-
-#[cfg(test)]
-mod tests;
-
 /// Allows querying the [Shape] of a type, which in turn lets us inspect any fields, build a value of
 /// this type progressively, etc.
 pub trait Shapely: Sized {
