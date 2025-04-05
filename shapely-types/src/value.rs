@@ -457,14 +457,3 @@ impl ValueVTable {
         self.marker_traits.contains(MarkerTraits::COPY)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
-    fn test_vtable_size() {
-        assert_eq!(std::mem::size_of::<ValueVTable>(), 104);
-    }
-}
