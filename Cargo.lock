@@ -129,8 +129,9 @@ dependencies = [
  "color-backtrace",
  "ctor",
  "log",
- "shapely",
+ "shapely-derive",
  "shapely-poke",
+ "shapely-trait",
 ]
 
 [[package]]
