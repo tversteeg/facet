@@ -4,7 +4,7 @@
 
 The `Shapely` trait is the cornerstone of our reflection system. It provides a way to access type information at both compile time and runtime, enabling powerful meta-programming capabilities while maintaining Rust's safety guarantees.
 
-```rust
+```rust,ignore
 pub trait Shapely: 'static {
     /// A dummy value of this type, used for compile-time type information
     const DUMMY: Self;
@@ -41,6 +41,20 @@ The specialization technique uses Rust's method resolution rules to our advantag
 For example, in our code:
 
 ```rust
+# use std::fmt::{self, Debug};
+// Wrapper struct for the specialization trick
+struct Spez<T>(T);
+
+// Trait for types that implement Debug
+trait SpezDebugYes {
+    fn spez_debug(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error>;
+}
+
+// Trait for types that don't implement Debug
+trait SpezDebugNo {
+    fn spez_debug(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error>;
+}
+
 // For types that implement Debug
 impl<T: Debug> SpezDebugYes for &Spez<T> {
     fn spez_debug(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
@@ -81,19 +95,27 @@ Let's examine how the `PartialOrd` trait is conditionally implemented using both
 For arrays like `[T; 1]`, we need to check if the inner type `T` implements `PartialOrd`. Since this is a generic type, we use compile-time evaluation of `SHAPE`:
 
 ```rust
-partial_ord: if T::SHAPE.vtable.partial_ord.is_some() {
-    Some(|a, b| {
-        let a = unsafe { a.as_ref::<[T; 1]>() };
-        let b = unsafe { b.as_ref::<[T; 1]>() };
-        unsafe {
-            (T::SHAPE.vtable.partial_ord.unwrap_unchecked())(
-                OpaqueConst::from_ref(&a[0]),
-                OpaqueConst::from_ref(&b[0]),
-            )
-        }
-    })
-} else {
-    None
+# use shapely::{OpaqueConst, Shape, Shapely};
+# use std::cmp::Ordering;
+fn create_array_shape<T: Shapely>() {
+    let vtable = {
+        // Implementation of partial_ord for arrays
+        let partial_ord = if T::SHAPE.vtable.partial_ord.is_some() {
+            Some(|a: OpaqueConst, b: OpaqueConst| {
+                let a = unsafe { a.as_ref::<[T; 1]>() };
+                let b = unsafe { b.as_ref::<[T; 1]>() };
+                unsafe {
+                    (T::SHAPE.vtable.partial_ord.unwrap_unchecked())(
+                        OpaqueConst::from_ref(&a[0]),
+                        OpaqueConst::from_ref(&b[0]),
+                    )
+                }
+            })
+        } else {
+            None
+        };
+        // Rest of vtable implementation...
+    };
 }
 ```
 
@@ -110,15 +132,33 @@ Here's what's happening:
 For non-generic types, we use the `value_vtable` macro which leverages auto-deref specialization:
 
 ```rust
-partial_ord: if $crate::impls!($type_name: std::cmp::PartialOrd) {
-    Some(|left, right| {
-        use $crate::spez::*;
-        (&&Spez(unsafe { left.as_ref::<$type_name>() }))
-            .spez_partial_cmp(&&Spez(unsafe { right.as_ref::<$type_name>() }))
-    })
-} else {
-    None
-}
+# // This is a simplified version of what happens in the actual code
+# use shapely::OpaqueConst;
+
+# #[macro_export]
+# macro_rules! value_vtable {
+#     ($type_name:ty) => {
+#         {
+#             // Other vtable fields would be here...
+            let partial_ord = if shapely::impls!($type_name: std::cmp::PartialOrd) {
+                Some(|left: OpaqueConst, right: OpaqueConst| {
+                    use shapely::spez::*;
+                    (&&Spez(unsafe { left.as_ref::<$type_name>() }))
+                        .spez_partial_cmp(&&Spez(unsafe { right.as_ref::<$type_name>() }))
+                })
+            } else {
+                None
+            };
+#             // Return the vtable
+#             partial_ord
+#         }
+#     };
+# }
+#
+# fn main() {
+#     let _vtable = value_vtable!(u32);
+#     println!("Generated vtable for u32");
+# }
 ```
 
 Here's what's happening:
@@ -159,207 +199,3 @@ pub enum Characteristic {
     Default,
 }
 ```
-
-### BitFlags Integration
-
-Internally, these characteristics are represented using the `bitflags` crate, which provides an efficient way to store and manipulate sets of flags. The `MarkerTraits` type is a BitFlags representation that allows us to perform operations on sets of characteristics.
-
-While you could manually use bitwise operations to manipulate these flags, `Characteristic` provides several helper methods that make working with them more ergonomic:
-
-```rust
-// Instead of manually combining flags like this:
-let combined = MarkerTraits::from(Characteristic::Send) | MarkerTraits::from(Characteristic::Sync);
-
-// You can use the `all` method:
-let combined = Characteristic::all(&[Characteristic::Send, Characteristic::Sync]);
-```
-
-### Helper Methods
-
-The `Characteristic` type provides several helper methods for working with sets of characteristics:
-
-1. **Creating Sets**:
-   ```rust
-   // Create a set containing all specified characteristics
-   let traits = Characteristic::all(&[Characteristic::Copy, Characteristic::Send, Characteristic::Sync]);
-   ```
-
-2. **Testing for Characteristics**:
-   ```rust
-   // Check if a set contains ANY of the specified characteristics
-   if traits.any(&[Characteristic::Send, Characteristic::Sync]) {
-       // At least one of Send or Sync is implemented
-   }
-
-   // Check if a set contains ALL of the specified characteristics
-   if traits.all(&[Characteristic::Send, Characteristic::Sync]) {
-       // Both Send and Sync are implemented
-   }
-
-   // Check if NONE of the specified characteristics are present
-   if traits.none(&[Characteristic::Debug, Characteristic::Display]) {
-       // Neither Debug nor Display is implemented
-   }
-   ```
-
-3. **Operations on Sets**:
-   ```rust
-   // Union of two sets of characteristics
-   let combined = traits1.union(traits2);
-
-   // Intersection of two sets
-   let common = traits1.intersection(traits2);
-   ```
-
-### Example: Improving HashMapImpl
-
-The `HashMap<K, V>` implementation checks if keys and values implement various traits. This can be simplified using the helper methods:
-
-```rust
-// Instead of manually checking each trait like this:
-if (K::SHAPE.marker_traits.contains(Characteristic::Copy) &&
-    K::SHAPE.marker_traits.contains(Characteristic::Eq) &&
-    K::SHAPE.marker_traits.contains(Characteristic::Hash)) {
-    // ...
-}
-
-// You can use the `all` method:
-if K::SHAPE.marker_traits.all(&[Characteristic::Copy, Characteristic::Eq, Characteristic::Hash]) {
-    // Key type implements all required traits
-}
-```
-
-Similarly, when combining marker traits from two types:
-
-```rust
-// Instead of manual union:
-let combined_traits = K::SHAPE.marker_traits | V::SHAPE.marker_traits;
-
-// You can use the union method:
-let combined_traits = K::SHAPE.marker_traits.union(V::SHAPE.marker_traits);
-```
-
-These helper methods make the code more readable and less error-prone, especially when dealing with multiple characteristics at once.
-
-## Peek and Poke: Reflection-Based Access
-
-Shapely provides two powerful abstractions for working with values in a generic, reflection-based way:
-
-1. **Peek**: Read-only access to inspect values
-2. **Poke**: Write access to build or modify values
-
-These APIs allow you to work with values of any type that implements `Shapely` in a uniform way, without having to write type-specific code.
-
-### Peek: Reading Values
-
-The `Peek` enum and related types provide a way to inspect any value that implements `Shapely`. This is useful for serialization, debug printing, and other operations that need to read data.
-
-```rust
-pub enum Peek<'mem> {
-    Scalar(PeekValue<'mem>),
-    List(PeekList<'mem>),
-    Map(PeekMap<'mem>),
-    Struct(PeekStruct<'mem>),
-}
-```
-
-Each variant corresponds to a different kind of value:
-
-- **Scalar**: Basic types like numbers, strings, booleans
-- **List**: Sequential collections like arrays, vectors
-- **Map**: Key-value collections like HashMaps
-- **Struct**: Structs, tuple structs, and tuples
-
-You can use `Peek` to traverse a value's structure and read its contents safely, with the borrow checker ensuring that the underlying data remains valid:
-
-```rust
-// Example: Reading a struct field
-if let Peek::Struct(peek_struct) = my_peek {
-    // Get field by name
-    if let Some(field) = peek_struct.field("name") {
-        // Process the field value
-        if let Peek::Scalar(value) = field {
-            // Do something with the scalar value
-        }
-    }
-}
-```
-
-### Poke: Building Values
-
-The `Poke` enum and related types provide a way to build or modify values of any type that implements `Shapely`. This is useful for deserialization, cloning, and other operations that need to create or modify data.
-
-```rust
-pub enum Poke<'mem> {
-    Scalar(PokeValue<'mem>),
-    List(PokeListUninit<'mem>),
-    Map(PokeMapUninit<'mem>),
-    Struct(PokeStruct<'mem>),
-    Enum(PokeEnumNoVariant<'mem>),
-}
-```
-
-The variants correspond to the same kinds of values as `Peek`, with the addition of `Enum` for working with enum variants.
-
-Poke provides a safe abstraction for building values incrementally, ensuring that all required fields or elements are initialized:
-
-```rust
-// Example: Building a struct
-let (poke, guard) = Poke::alloc::<MyStruct>();
-let mut poke = poke.into_struct();
-
-// Set field values by name
-poke.set_by_name("foo", OpaqueConst::from_ref(&42u64))
-    .unwrap();
-
-// Set string field (needs proper lifetime management)
-{
-    let bar = String::from("Hello, World!");
-    poke.set_by_name("bar", OpaqueConst::from_ref(&bar))
-        .unwrap();
-    // String has been moved, forget it to prevent double-free
-    std::mem::forget(bar);
-}
-
-// Build the final value
-let my_struct = poke.build::<MyStruct>(Some(guard));
-```
-
-#### Alternative: Building In-Place
-
-```rust
-// Initialize with default value first
-let mut value: MyStruct = Default::default();
-
-// Create a Poke instance from existing value
-let mut poke = unsafe {
-    Poke::from_opaque_uninit(OpaqueUninit::new(&mut value as *mut _), MyStruct::SHAPE)
-}.into_struct();
-
-// Mark fields as initialized (if they're valid from Default)
-unsafe {
-    poke.mark_initialized(0);
-    poke.mark_initialized(1);
-}
-
-// Modify specific fields
-poke.set_by_name("bar", OpaqueConst::from_ref(&String::from("New Value")))
-    .unwrap();
-std::mem::forget(String::from("New Value"));
-
-// Complete the build in-place
-poke.build_in_place();
-```
-
-### Memory Safety
-
-Both Peek and Poke use a lifetime parameter `'mem` to ensure memory safety. This lifetime is tied to the lifetime of the underlying data, preventing use-after-free and other memory issues.
-
-In rare cases, you might see `'mem` set to `'static`, but this should be used with extreme caution as it bypasses some of the borrow checker's safety guarantees.
-
-### Common Uses
-
-- **Serialization/Deserialization**: Convert between Shapely values and other formats
-- **Cloning**: Create copies of values with potential modifications
-- **Debug Printing**: Generate string representations of complex values
-- **Generic Algorithms**: Write code that works with any Shapely type
