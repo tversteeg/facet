@@ -1,4 +1,4 @@
-use crate::{Bytes, Def, ScalarDef, Shape, Shapely, value_vtable};
+use crate::{Bytes, Shapely, value_vtable};
 
 impl Shapely for Bytes {
     const DUMMY: Self = Bytes(Shapely::DUMMY);

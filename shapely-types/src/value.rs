@@ -2,6 +2,8 @@ use bitflags::bitflags;
 use shapely_opaque::{Opaque, OpaqueConst, OpaqueUninit};
 use std::cmp::Ordering;
 
+use crate::Shape;
+
 //======== Type Information ========
 
 /// A function that formats the name of a type.

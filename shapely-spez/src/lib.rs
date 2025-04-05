@@ -6,6 +6,7 @@
 #![allow(missing_docs)]
 pub use ::impls::impls;
 use core::fmt::{self, Debug};
+use shapely_types::ParseError;
 
 use shapely_opaque::{Opaque, OpaqueUninit};
 

@@ -13,8 +13,6 @@ keywords = ["reflection", "introspection", "serialization", "deserialization"]
 categories = ["development-tools", "encoding"]
 
 [dependencies]
-bitflags = "2.9.0"
-impls = "1.0.3"
 shapely-opaque = { version = "3.1.0", path = "../shapely-opaque" }
 shapely-spez = { version = "3.1.0", path = "../shapely-spez" }
-typeid = "1.0.3"
+shapely-types = { version = "0.1.0", path = "../shapely-types" }

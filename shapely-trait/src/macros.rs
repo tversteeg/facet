@@ -152,7 +152,7 @@ macro_rules! enum_variants {
 /// ```
 /// use shapely_core::value_vtable;
 /// use std::fmt::{self, Formatter};
-/// use shapely_core::vtable::TypeNameOpts;
+/// use shapely_core::TypeNameOpts;
 ///
 /// let vtable = value_vtable!(String, |f: &mut Formatter<'_>, _opts: TypeNameOpts| write!(f, "String"));
 /// ```
@@ -165,33 +165,33 @@ macro_rules! value_vtable {
     ($type_name:ty, $type_name_fn:expr) => {
         &$crate::ValueVTable {
             type_name: $type_name_fn,
-            display: if $crate::impls!($type_name: std::fmt::Display) {
+            display: if $crate::shapely_spez::impls!($type_name: std::fmt::Display) {
                 Some(|data, f| {
-                    use $crate::spez::*;
+                    use $crate::shapely_spez::*;
                     (&&Spez(unsafe { data.as_ref::<$type_name>() })).spez_display(f)
                 })
             } else {
                 None
             },
-            debug: if $crate::impls!($type_name: std::fmt::Debug) {
+            debug: if $crate::shapely_spez::impls!($type_name: std::fmt::Debug) {
                 Some(|data, f| {
-                    use $crate::spez::*;
+                    use $crate::shapely_spez::*;
                     (&&Spez(unsafe { data.as_ref::<$type_name>() })).spez_debug(f)
                 })
             } else {
                 None
             },
-            default_in_place: if $crate::impls!($type_name: std::default::Default) {
+            default_in_place: if $crate::shapely_spez::impls!($type_name: std::default::Default) {
                 Some(|target| {
-                    use $crate::spez::*;
+                    use $crate::shapely_spez::*;
                     (&&Spez(<$type_name as $crate::Shapely>::DUMMY)).spez_default_in_place(target)
                 })
             } else {
                 None
             },
-            clone_into: if $crate::impls!($type_name: std::clone::Clone) {
+            clone_into: if $crate::shapely_spez::impls!($type_name: std::clone::Clone) {
                 Some(|src, dst| {
-                    use $crate::spez::*;
+                    use $crate::shapely_spez::*;
                     (&&Spez(unsafe { src.as_ref::<$type_name>() })).spez_clone_into(dst)
                 })
             } else {
@@ -200,53 +200,53 @@ macro_rules! value_vtable {
             marker_traits: {
                 const fn combine_traits() -> $crate::MarkerTraits {
                     let mut traits = $crate::MarkerTraits::empty();
-                    if $crate::impls!($type_name: std::cmp::Eq) {
+                    if $crate::shapely_spez::impls!($type_name: std::cmp::Eq) {
                         traits = traits.union($crate::MarkerTraits::EQ);
                     }
-                    if $crate::impls!($type_name: std::marker::Send) {
+                    if $crate::shapely_spez::impls!($type_name: std::marker::Send) {
                         traits = traits.union($crate::MarkerTraits::SEND);
                     }
-                    if $crate::impls!($type_name: std::marker::Sync) {
+                    if $crate::shapely_spez::impls!($type_name: std::marker::Sync) {
                         traits = traits.union($crate::MarkerTraits::SYNC);
                     }
-                    if $crate::impls!($type_name: std::marker::Copy) {
+                    if $crate::shapely_spez::impls!($type_name: std::marker::Copy) {
                         traits = traits.union($crate::MarkerTraits::COPY);
                     }
                     traits
                 }
                 combine_traits()
             },
-            eq: if $crate::impls!($type_name: std::cmp::PartialEq) {
+            eq: if $crate::shapely_spez::impls!($type_name: std::cmp::PartialEq) {
                 Some(|left, right| {
-                    use $crate::spez::*;
+                    use $crate::shapely_spez::*;
                     (&&Spez(unsafe { left.as_ref::<$type_name>() }))
                         .spez_eq(&&Spez(unsafe { right.as_ref::<$type_name>() }))
                 })
             } else {
                 None
             },
-            partial_ord: if $crate::impls!($type_name: std::cmp::PartialOrd) {
+            partial_ord: if $crate::shapely_spez::impls!($type_name: std::cmp::PartialOrd) {
                 Some(|left, right| {
-                    use $crate::spez::*;
+                    use $crate::shapely_spez::*;
                     (&&Spez(unsafe { left.as_ref::<$type_name>() }))
                         .spez_partial_cmp(&&Spez(unsafe { right.as_ref::<$type_name>() }))
                 })
             } else {
                 None
             },
-            ord: if $crate::impls!($type_name: std::cmp::Ord) {
+            ord: if $crate::shapely_spez::impls!($type_name: std::cmp::Ord) {
                 Some(|left, right| {
-                    use $crate::spez::*;
+                    use $crate::shapely_spez::*;
                     (&&Spez(unsafe { left.as_ref::<$type_name>() }))
                         .spez_cmp(&&Spez(unsafe { right.as_ref::<$type_name>() }))
                 })
             } else {
                 None
             },
-            hash: if $crate::impls!($type_name: std::hash::Hash) {
+            hash: if $crate::shapely_spez::impls!($type_name: std::hash::Hash) {
                 Some(|value, hasher_this, hasher_write_fn| {
-                    use $crate::spez::*;
-                    use $crate::vtable::HasherProxy;
+                    use $crate::shapely_spez::*;
+                    use $crate::HasherProxy;
                     (&&Spez(unsafe { value.as_ref::<$type_name>() }))
                         .spez_hash(&mut unsafe { HasherProxy::new(hasher_this, hasher_write_fn) })
                 })

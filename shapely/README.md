@@ -27,8 +27,14 @@ for speed of compilation.
 
 The main `shapely` crate re-exports symbols from:
 
-- [shapely-core](../shapely-core), which defines the main `Shapely` trait and the `Shape` struct
+- [shapely-trait](../shapely-trait), which defines the main `Shapely` trait and implements it for foreign types (mostly `libstd`)
+- [shapely-types](../shapely-types), which defines the `Shape` struct, along with various vtables and the whole `Def` tree
+- [shapely-opaque](../shapely-opaque), which provides helpers around type-erased pointers like
+  `OpaqueUninit`, `OpaqueConst`, `Opaque`
 - [shapely-derive](../shapely-derive), which implements the `Shapely` derive attribute as a fast/light proc macro powered by [unsynn](https://docs.rs/unsynn)
+- [shapely-spez](../shapely-spez), which implements an autoderef specialization trick needed for `shapely-derive`
+- [shapely-peek](../shapely-peek), which allows reading arbitrary `Shapely` types
+- [shapely-poke](../shapely-poke), which allows building/altering arbitrary `Shapely` types
 
 shapely supports deserialization from multiple data formats through dedicated crates:
 

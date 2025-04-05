@@ -5,8 +5,8 @@ use std::{
 };
 
 use crate::{
-    Def, MapDef, MapIterVTable, MapVTable, MarkerTraits, OpaqueConst, ScalarDef, Shape, Shapely,
-    ValueVTable, value_vtable,
+    Def, MapDef, MapIterVTable, MapVTable, MarkerTraits, ScalarDef, Shape, Shapely, ValueVTable,
+    value_vtable,
 };
 
 struct HashMapIterator<'mem, K> {

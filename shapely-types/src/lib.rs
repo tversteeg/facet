@@ -192,8 +192,8 @@ impl std::fmt::Display for FieldError {
 pub struct ShapeDebug(pub &'static Shape);
 
 impl std::fmt::Debug for ShapeDebug {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.pretty_print_recursive(f)
+    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        todo!("should debug :(")
     }
 }
 

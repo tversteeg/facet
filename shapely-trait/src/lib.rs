@@ -1,13 +1,15 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
+pub use shapely_spez;
+
+pub use shapely_opaque::*;
+pub use shapely_types::*;
+
 mod impls;
 
-mod shape;
-pub use shape::*;
-
-mod helpers;
-pub use helpers::*;
+mod macros;
+pub use macros::*;
 
 /// Allows querying the [Shape] of a type, which in turn lets us inspect any fields, build a value of
 /// this type progressively, etc.
@@ -28,12 +30,20 @@ pub trait Shapely: Sized {
 
 pub trait ShapeExt {
     /// Check if this shape is of the given type
-    pub fn is_type<Other: Shapely>(&'static self) -> bool {
+    fn is_type<Other: Shapely>(&'static self) -> bool;
+
+    /// Assert that this shape is of the given type, panicking if it's not
+    fn assert_type<Other: Shapely>(&'static self);
+}
+
+impl ShapeExt for Shape {
+    /// Check if this shape is of the given type
+    fn is_type<Other: Shapely>(&'static self) -> bool {
         self == Other::SHAPE
     }
 
     /// Assert that this shape is of the given type, panicking if it's not
-    pub fn assert_type<Other: Shapely>(&'static self) {
+    fn assert_type<Other: Shapely>(&'static self) {
         assert!(
             self.is_type::<Other>(),
             "Type mismatch: expected {:?}, found {:?}",
@@ -42,8 +52,6 @@ pub trait ShapeExt {
         );
     }
 }
-
-impl<T> ShapeExt for T where T: Shapely {}
 
 /// A wrapper around `Vec<u8>` for binary data
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default, PartialOrd, Ord)]
