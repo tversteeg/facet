@@ -107,6 +107,7 @@ dependencies = [
  "cargo-husky",
  "owo-colors",
  "shapely-derive",
+ "shapely-spez",
  "shapely-trait",
 ]
 

@@ -21,6 +21,7 @@ cargo-husky = { version = "1", default-features = false, features = [
     "user-hooks",
 ] }
 owo-colors = "4.2.0"
+shapely-spez = { path = "../shapely-spez" }
 
 [features]
 # Does nothing, only used for tests
