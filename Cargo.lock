@@ -172,6 +172,7 @@ name = "shapely-samplelibc"
 version = "3.1.0"
 dependencies = [
  "cc",
+ "shapely",
 ]
 
 [[package]]
