@@ -15,3 +15,11 @@ categories.workspace = true
 [dependencies]
 shapely-peek = { version = "3.1.0", path = "../shapely-peek" }
 shapely-trait.workspace = true
+
+[dev-dependencies]
+color-backtrace = { version = "0.7.0", default-features = false, features = [
+    "use-btparse-crate",
+] }
+ctor = "0.4.1"
+owo-colors = "4.2.0"
+shapely-derive.workspace = true

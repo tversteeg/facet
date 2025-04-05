@@ -1,5 +1,11 @@
-use crate::Poke;
-use shapely_trait::{OpaqueConst, OpaqueUninit, Shapely};
+use ctor::ctor;
+use owo_colors::{OwoColorize, Style};
+use shapely_derive::Shapely;
+use shapely_poke::{Peek, Poke};
+use shapely_trait::{OpaqueConst, OpaqueUninit, ShapeDebug, Shapely};
+use std::{cmp::Ordering, collections::HashSet, fmt::Debug};
+
+use shapely_trait as shapely;
 
 // Allow dead code in test modules since we're not constructing all enum variants
 #[allow(dead_code)]
@@ -98,17 +104,10 @@ fn build_foobar_after_default() {
     assert_eq!(foo_bar.bar, "Hello, World!");
 }
 
-use ctor::ctor;
-
 #[ctor]
 fn init_backtrace() {
     color_backtrace::install();
 }
-
-use std::{cmp::Ordering, collections::HashSet, fmt::Debug};
-
-use owo_colors::{OwoColorize, Style};
-use shapely::{Peek, Poke, Shapely};
 
 fn test_peek_pair<T>(val1: T, val2: T, expected_facts: HashSet<Fact>)
 where

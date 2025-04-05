@@ -5,9 +5,8 @@ fn init_backtrace() {
     color_backtrace::install();
 }
 
-use shapely::{Peek, Poke, Shapely};
-
 use shapely_json::{from_json, to_json};
+use shapely_poke::{Peek, Poke, Shapely};
 
 #[test]
 fn test_from_json() {

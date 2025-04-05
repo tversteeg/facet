@@ -68,6 +68,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a46645bbd70538861a90d0f26c31537cdf1e44aae99a794fb75a664b70951bc"
 
 [[package]]
+name = "log"
+version = "0.4.27"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
+
+[[package]]
 name = "mutants"
 version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -99,8 +105,6 @@ name = "shapely"
 version = "3.1.0"
 dependencies = [
  "cargo-husky",
- "color-backtrace",
- "ctor",
  "owo-colors",
  "shapely-derive",
  "shapely-trait",
@@ -124,8 +128,8 @@ version = "3.1.0"
 dependencies = [
  "color-backtrace",
  "ctor",
+ "log",
  "shapely",
- "shapely-peek",
  "shapely-poke",
 ]
 
@@ -144,6 +148,10 @@ dependencies = [
 name = "shapely-poke"
 version = "3.1.0"
 dependencies = [
+ "color-backtrace",
+ "ctor",
+ "owo-colors",
+ "shapely-derive",
  "shapely-peek",
  "shapely-trait",
 ]

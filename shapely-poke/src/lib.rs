@@ -2,6 +2,8 @@
 
 use std::{alloc::Layout, mem::MaybeUninit};
 
+pub use shapely_peek::*;
+
 use shapely_trait::{Def, OpaqueUninit, Shape, Shapely};
 
 mod value;
