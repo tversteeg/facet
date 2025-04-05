@@ -139,6 +139,13 @@ dependencies = [
 [[package]]
 name = "shapely-peek"
 version = "3.1.0"
+dependencies = [
+ "shapely-core",
+]
+
+[[package]]
+name = "shapely-poke"
+version = "3.1.0"
 
 [[package]]
 name = "termcolor"

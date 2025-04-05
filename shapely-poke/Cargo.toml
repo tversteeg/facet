@@ -1,5 +1,5 @@
 [package]
-name = "shapely-peek"
+name = "shapely-poke"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -13,4 +13,3 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
-shapely-core.workspace = true
