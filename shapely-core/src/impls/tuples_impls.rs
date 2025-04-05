@@ -181,7 +181,7 @@ where
                         (clone_into.0)(refs.0, dst.field_uninit(0));
                         (clone_into.1)(refs.1, dst.field_uninit(1));
 
-                        unsafe { dst.assume_init() }
+                        dst.assume_init()
                     })
                 } else {
                     None

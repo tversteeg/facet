@@ -70,13 +70,12 @@ impl<'mem> PeekValue<'mem> {
     ///
     /// `false` if equality comparison is not supported for this scalar type
     #[inline]
-    pub fn eq(&self, other: &PeekValue<'_>) -> bool {
+    pub fn eq(&self, other: &PeekValue<'_>) -> Option<bool> {
         unsafe {
             self.shape
                 .vtable
                 .eq
                 .map(|eq_fn| eq_fn(self.data, other.data))
-                .unwrap_or(false)
         }
     }
 

@@ -1,4 +1,4 @@
-use shapely::{Peek, Shapely};
+use shapely::Peek;
 use std::io::{self, Write};
 
 /// Serializes any Shapely type to JSON
