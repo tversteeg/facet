@@ -1,5 +1,5 @@
 [package]
-name = "shapely-core"
+name = "shapely-trait"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true

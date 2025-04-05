@@ -9,11 +9,17 @@ repository.workspace = true
 homepage.workspace = true
 documentation = "https://docs.rs/shapely-msgpack"
 description = "MessagePack serialization and deserialization for Shapely types"
-keywords = ["msgpack", "serialization", "deserialization", "reflection", "shapely"]
+keywords = [
+    "msgpack",
+    "serialization",
+    "deserialization",
+    "reflection",
+    "shapely",
+]
 categories = ["encoding", "parsing", "data-structures"]
 
 [dependencies]
-shapely-core = { workspace = true }
+shapely-trait = { workspace = true }
 [dev-dependencies]
 shapely = { workspace = true }
 shapely-derive = { workspace = true }

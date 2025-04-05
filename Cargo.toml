@@ -1,9 +1,9 @@
 [workspace]
-# members = ["shapely", "shapely-codegen", "shapely-core", "shapely-derive", "shapely-json", "shapely-msgpack", "shapely-pretty", "shapely-urlencoded", "shapely-yaml"]
+# members = ["shapely", "shapely-codegen", "shapely-trait", "shapely-derive", "shapely-json", "shapely-msgpack", "shapely-pretty", "shapely-urlencoded", "shapely-yaml"]
 members = [
     "shapely",
     "shapely-codegen",
-    "shapely-core",
+    "shapely-trait",
     "shapely-derive",
     "shapely-json",
     "shapely-opaque",
@@ -35,6 +35,6 @@ categories = ["encoding", "parsing", "development-tools", "data-structures"]
 
 [workspace.dependencies]
 shapely = { version = "3.1.0", path = "shapely" }
-shapely-core = { version = "3.1.0", path = "shapely-core" }
+shapely-trait = { version = "3.1.0", path = "shapely-trait" }
 shapely-derive = { version = "3.1.0", path = "shapely-derive" }
 unsynn = "0.0.25"

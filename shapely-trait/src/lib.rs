@@ -52,7 +52,3 @@ impl ShapeExt for Shape {
         );
     }
 }
-
-/// A wrapper around `Vec<u8>` for binary data
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Default, PartialOrd, Ord)]
-pub struct Bytes(pub Vec<u8>);

@@ -13,4 +13,4 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
-shapely-core.workspace = true
+shapely-trait.workspace = true

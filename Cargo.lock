@@ -102,8 +102,8 @@ dependencies = [
  "color-backtrace",
  "ctor",
  "owo-colors",
- "shapely-core",
  "shapely-derive",
+ "shapely-trait",
 ]
 
 [[package]]
@@ -111,19 +111,10 @@ name = "shapely-codegen"
 version = "3.1.0"
 
 [[package]]
-name = "shapely-core"
-version = "3.1.0"
-dependencies = [
- "shapely-opaque",
- "shapely-spez",
- "shapely-types",
-]
-
-[[package]]
 name = "shapely-derive"
 version = "3.1.0"
 dependencies = [
- "shapely-core",
+ "shapely-trait",
  "unsynn",
 ]
 
@@ -144,7 +135,7 @@ version = "3.1.0"
 name = "shapely-peek"
 version = "3.1.0"
 dependencies = [
- "shapely-core",
+ "shapely-trait",
 ]
 
 [[package]]
@@ -157,6 +148,15 @@ version = "3.1.0"
 dependencies = [
  "impls",
  "shapely-opaque",
+ "shapely-types",
+]
+
+[[package]]
+name = "shapely-trait"
+version = "3.1.0"
+dependencies = [
+ "shapely-opaque",
+ "shapely-spez",
  "shapely-types",
 ]
 

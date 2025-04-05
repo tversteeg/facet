@@ -9,11 +9,17 @@ repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 description = "Pretty-printing for types implementing the Shapely trait"
-keywords = ["pretty-print", "formatting", "reflection", "serialization", "visualization"]
+keywords = [
+    "pretty-print",
+    "formatting",
+    "reflection",
+    "serialization",
+    "visualization",
+]
 categories = ["development-tools", "visualization", "command-line-utilities"]
 
 [dependencies]
-shapely-core = { workspace = true }
+shapely-trait = { workspace = true }
 
 [dev-dependencies]
 shapely = { workspace = true }

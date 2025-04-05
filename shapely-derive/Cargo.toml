@@ -10,11 +10,11 @@ license.workspace = true
 rust-version.workspace = true
 description = "Proc macro for deriving the 'Shapely' trait in shapely"
 keywords = [
-  "reflection",
-  "introspection",
-  "serialization",
-  "deserialization",
-  "derive",
+    "reflection",
+    "introspection",
+    "serialization",
+    "deserialization",
+    "derive",
 ]
 categories = ["development-tools", "encoding"]
 
@@ -26,4 +26,4 @@ unsynn.workspace = true
 
 # cf. https://hachyderm.io/@epage/114141126315983016
 [target.'cfg(any())'.dependencies]
-shapely-core = { workspace = true }
+shapely-trait = { workspace = true }

@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "shapely-core"
+name = "shapely-trait"
 version = "0.1.0"

@@ -1,25 +1,24 @@
-# shapely-core
+# shapely-trait
 
 [![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/shapely)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/shapely-core.svg)](https://crates.io/crates/shapely-core)
-[![documentation](https://docs.rs/shapely-core/badge.svg)](https://docs.rs/shapely-core)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/shapely-core.svg)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/shapely-trait.svg)](https://crates.io/crates/shapely-trait)
+[![documentation](https://docs.rs/shapely-trait/badge.svg)](https://docs.rs/shapely-trait)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/shapely-trait.svg)](./LICENSE)
 
-This is the core crate for the shapely ecosystem. It provides the fundamental
-types and traits used by other crates in the shapely family.
+This exports the `Shapely` trait, which exposes an associated const `SHAPE` of type
+`Shape`, a struct defined in the `shapely-types` crate.
 
-Note that the main documentation for the shapely project can be found in the
-[shapely crate](https://crates.io/crates/shapely). This core crate serves as a
-common dependency for:
+This crate also provides implementations of `Shapely` for most standard types, like:
 
-  * The derived proc macro crate [`shapely-derive`]  (https://crates.io/crates/shapely-derive)
-  * Serializers and deserializers (e.g. [`shapely-json`]  (https://crates.io/crates/shapely-json))
-  * Any other crates in the shapely ecosystem
-
-If you're building tools or libraries that interact with shapely's core
-functionality, you should depend directly on `shapely-core` rather than the main
-`shapely` crate.
+  * integers
+  * booleans
+  * strings
+  * collections like `Vec<T>`, and `HashMap<K, V>`
+  * `[T; 1]` (for now)
+  * `&[T]`
+  * `Bytes` (a wrapper around `Vec<u8>`)
+  * `()`, `(T0,)`
 
 For more detailed information and usage examples, please refer to the [shapely crate documentation](https://docs.rs/shapely).
 

@@ -13,7 +13,7 @@ fn main() {
 
     let mut output = String::new();
     let _ = codegen_tuple_impls(&mut output);
-    let path = "shapely-core/src/impls/tuples_impls.rs";
+    let path = "shapely-trait/src/impls/tuples_impls.rs";
     std::fs::write(path, output).expect("Failed to write file");
 
     // Run rustfmt on the generated file
