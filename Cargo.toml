@@ -10,7 +10,7 @@ members = [
     "shapely-peek",
     "shapely-poke",
     "shapely-spez",
-    "shapely-types",
+    "shapely-types", "shapely-samplelibc",
 ]
 resolver = "3"
 
@@ -34,7 +34,6 @@ keywords = [
 categories = ["encoding", "parsing", "development-tools", "data-structures"]
 
 [workspace.dependencies]
-shapely = { version = "3.1.0", path = "shapely" }
 shapely-trait = { version = "3.1.0", path = "shapely-trait" }
 shapely-derive = { version = "3.1.0", path = "shapely-derive" }
 unsynn = "0.0.25"
