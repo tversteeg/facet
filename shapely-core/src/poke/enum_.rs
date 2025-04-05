@@ -11,11 +11,13 @@ pub struct PokeEnumNoVariant<'mem> {
 }
 
 impl<'mem> PokeEnumNoVariant<'mem> {
+    /// Coerce back into a `PokeValue`
     #[inline(always)]
     pub fn into_value(self) -> PokeValue<'mem> {
         unsafe { PokeValue::new(self.data, self.shape) }
     }
 
+    /// Shape getter
     #[inline(always)]
     pub fn shape(&self) -> &'static Shape {
         self.shape

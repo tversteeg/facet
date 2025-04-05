@@ -85,7 +85,6 @@ impl<'mem> PeekValue<'mem> {
     ///
     /// `None` if comparison is not supported for this scalar type
     #[inline]
-    #[expect(clippy::should_implement_trait)]
     pub fn partial_cmp(&self, other: &PeekValue<'_>) -> Option<Ordering> {
         unsafe {
             self.shape
@@ -101,6 +100,10 @@ impl<'mem> PeekValue<'mem> {
     ///
     /// `None` if comparison is not supported for this scalar type
     #[inline]
+    // Note: we cannot implement `Ord` for `PeekValue` because the underlying shape might
+    // not implement `Ord` — unlike the `PartialOrd` case where we can just pretend it
+    // could not order two specific values.
+    #[expect(clippy::should_implement_trait)]
     pub fn cmp(&self, other: &PeekValue<'_>) -> Option<Ordering> {
         unsafe {
             self.shape

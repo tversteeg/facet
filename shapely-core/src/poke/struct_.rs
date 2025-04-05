@@ -15,10 +15,12 @@ pub struct PokeStruct<'mem> {
 
 impl<'mem> PokeStruct<'mem> {
     #[inline(always)]
+    /// Coerce back into a `PokeValue`
     pub fn into_value(self) -> PokeValue<'mem> {
         unsafe { PokeValue::new(self.data, self.shape) }
     }
 
+    /// Shape getter
     #[inline(always)]
     pub fn shape(&self) -> &'static Shape {
         self.shape

@@ -20,6 +20,7 @@ impl<'mem> std::ops::Deref for PeekMap<'mem> {
 }
 
 impl<'mem> PeekMap<'mem> {
+    /// Constructor
     pub fn new(value: PeekValue<'mem>, def: MapDef) -> Self {
         Self { value, def }
     }

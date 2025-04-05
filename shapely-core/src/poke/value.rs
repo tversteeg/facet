@@ -17,10 +17,12 @@ impl std::fmt::Debug for PokeValue<'_> {
 
 impl<'mem> PokeValue<'mem> {
     #[inline(always)]
+    /// Coerce back into a `PokeValue`
     pub fn into_value(self) -> Self {
         self
     }
 
+    /// Shape getter
     #[inline(always)]
     pub fn shape(&self) -> &'static Shape {
         self.shape

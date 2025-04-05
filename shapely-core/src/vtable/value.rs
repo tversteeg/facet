@@ -139,9 +139,11 @@ pub const fn parse_fn_for<T: std::str::FromStr>() -> Option<ParseFn> {
     })
 }
 
+/// Error returned by [`ParseFn`]
 #[non_exhaustive]
 #[derive(Debug)]
 pub enum ParseError {
+    /// Generic error message
     Generic(&'static str),
 }
 

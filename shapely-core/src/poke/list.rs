@@ -9,11 +9,13 @@ pub struct PokeListUninit<'mem> {
 
 impl<'mem> PokeListUninit<'mem> {
     #[inline(always)]
+    /// Coerce back into a `PokeValue`
     pub fn into_value(self) -> PokeValue<'mem> {
         unsafe { PokeValue::new(self.data, self.shape) }
     }
 
     #[inline(always)]
+    /// Shape getter
     pub fn shape(&self) -> &'static Shape {
         self.shape
     }
