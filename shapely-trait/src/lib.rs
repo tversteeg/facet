@@ -47,9 +47,8 @@ impl ShapeExt for Shape {
     fn assert_type<Other: Shapely>(&'static self) {
         assert!(
             self.is_type::<Other>(),
-            "Type mismatch: expected {:?}, found {:?}",
-            ShapeDebug(Other::SHAPE),
-            ShapeDebug(self)
+            "Type mismatch: expected {}, found {self}",
+            Other::SHAPE,
         );
     }
 }

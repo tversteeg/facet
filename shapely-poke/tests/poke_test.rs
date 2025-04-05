@@ -2,7 +2,7 @@ use ctor::ctor;
 use owo_colors::{OwoColorize, Style};
 use shapely_derive::Shapely;
 use shapely_poke::{Peek, Poke};
-use shapely_trait::{OpaqueConst, OpaqueUninit, ShapeDebug, Shapely};
+use shapely_trait::{OpaqueConst, OpaqueUninit, Shapely};
 use std::{cmp::Ordering, collections::HashSet, fmt::Debug};
 
 use shapely_trait as shapely;
@@ -875,7 +875,7 @@ impl FactBuilder {
 #[test]
 fn build_u64_properly() {
     let shape = u64::SHAPE;
-    eprintln!("{:#?}", ShapeDebug(shape));
+    eprintln!("{:#?}", shape);
 
     let (poke, _guard) = Poke::alloc::<u64>();
     let poke = poke.into_scalar();

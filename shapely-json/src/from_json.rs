@@ -2,7 +2,7 @@ use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
 
 use log::trace;
 use shapely_poke::Poke;
-use shapely_trait::{Opaque, OpaqueConst, OpaqueUninit, ShapeDebug, ShapeExt as _};
+use shapely_trait::{Opaque, OpaqueConst, OpaqueUninit, ShapeExt as _};
 
 /// Deserialize a `Poke` object from a JSON string.
 pub fn from_json<'input, 'mem>(
@@ -19,7 +19,7 @@ fn deserialize_value<'input, 'mem>(
     poke: Poke<'mem>,
 ) -> Result<Opaque<'mem>, JsonParseErrorWithContext<'input>> {
     let shape = poke.shape();
-    trace!("Deserializing {:?}", ShapeDebug(shape));
+    trace!("Deserializing {:?}", shape);
 
     let opaque = match poke {
         Poke::Scalar(pv) => {

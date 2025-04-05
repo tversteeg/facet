@@ -1,5 +1,5 @@
 use shapely_trait::{
-    FieldError, Opaque, OpaqueConst, OpaqueUninit, Shape, ShapeDebug, ShapeExt as _, StructDef,
+    FieldError, Opaque, OpaqueConst, OpaqueUninit, Shape, ShapeExt as _, StructDef,
 };
 use std::ptr::NonNull;
 
@@ -49,8 +49,7 @@ impl<'mem> PokeStruct<'mem> {
             if !self.iset.has(i) {
                 panic!(
                     "Field '{}' was not initialized. Complete schema:\n{:?}",
-                    field.name,
-                    ShapeDebug(self.shape)
+                    field.name, self.shape
                 );
             }
         }

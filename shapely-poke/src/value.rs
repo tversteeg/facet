@@ -1,7 +1,5 @@
 use shapely_peek::Peek;
-use shapely_trait::{
-    Opaque, OpaqueConst, OpaqueUninit, Shape, ShapeDebug, TryFromError, ValueVTable,
-};
+use shapely_trait::{Opaque, OpaqueConst, OpaqueUninit, Shape, TryFromError, ValueVTable};
 
 /// Lets you write to a value (implements write-only [`ValueVTable`] proxies)
 pub struct PokeValue<'mem> {
@@ -12,7 +10,7 @@ pub struct PokeValue<'mem> {
 impl std::fmt::Debug for PokeValue<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PokeValue")
-            .field("shape", &ShapeDebug(self.shape))
+            .field("shape", &self.shape)
             .finish_non_exhaustive()
     }
 }

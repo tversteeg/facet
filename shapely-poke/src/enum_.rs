@@ -1,6 +1,5 @@
 use shapely_trait::{
-    EnumDef, EnumRepr, FieldError, Opaque, OpaqueUninit, Shape, ShapeDebug, ShapeExt as _, Shapely,
-    VariantKind,
+    EnumDef, EnumRepr, FieldError, Opaque, OpaqueUninit, Shape, ShapeExt as _, Shapely, VariantKind,
 };
 use std::ptr::NonNull;
 
@@ -242,10 +241,8 @@ impl<'mem> PokeEnum<'mem> {
                 for (field_index, field) in fields.iter().enumerate() {
                     if !self.iset.has(field_index) {
                         panic!(
-                            "Field '{}' of variant '{}' was not initialized. Complete schema:\n{:?}",
-                            field.name,
-                            variant.name,
-                            ShapeDebug(self.shape)
+                            "Field '{}' of variant '{}' was not initialized. Complete schema:\n{}",
+                            field.name, variant.name, self.shape
                         );
                     }
                 }
