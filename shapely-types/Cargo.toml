@@ -1,0 +1,9 @@
+[package]
+name = "shapely-types"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bitflags = "2.9.0"
+shapely-opaque = { version = "3.1.0", path = "../shapely-opaque" }
+typeid = "1.0.3"

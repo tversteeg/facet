@@ -1,8 +1,5 @@
-// FIXME: most of these shoudl take `Peek` rather than `OpaqueConst` — so we can assert that
-// the shapes even match.
-
-use crate::{Opaque, OpaqueConst, OpaqueUninit, Peek, Shape};
 use bitflags::bitflags;
+use shapely_opaque::{Opaque, OpaqueConst, OpaqueUninit};
 use std::cmp::Ordering;
 
 //======== Type Information ========
@@ -165,7 +162,7 @@ impl std::error::Error for ParseError {}
 /// uninitialized memory. If this function succeeds, it should return `Ok` with the
 /// same pointer wrapped in an [`Opaque`]. If conversion fails, it returns `Err` with an error.
 pub type TryFromFn = for<'src, 'mem> unsafe fn(
-    source: Peek<'src>,
+    source: OpaqueConst<'src>,
     target: OpaqueUninit<'mem>,
 ) -> Result<Opaque<'mem>, TryFromError>;
 

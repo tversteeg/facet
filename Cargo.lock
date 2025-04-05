@@ -116,6 +116,8 @@ version = "3.1.0"
 dependencies = [
  "bitflags",
  "impls",
+ "shapely-opaque",
+ "shapely-spez",
  "typeid",
 ]
 
@@ -137,6 +139,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "shapely-opaque"
+version = "3.1.0"
+
+[[package]]
 name = "shapely-peek"
 version = "3.1.0"
 dependencies = [
@@ -146,6 +152,24 @@ dependencies = [
 [[package]]
 name = "shapely-poke"
 version = "3.1.0"
+
+[[package]]
+name = "shapely-spez"
+version = "3.1.0"
+dependencies = [
+ "impls",
+ "shapely-opaque",
+ "shapely-types",
+]
+
+[[package]]
+name = "shapely-types"
+version = "0.1.0"
+dependencies = [
+ "bitflags",
+ "shapely-opaque",
+ "typeid",
+]
 
 [[package]]
 name = "termcolor"

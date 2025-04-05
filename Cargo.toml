@@ -5,7 +5,12 @@ members = [
     "shapely-codegen",
     "shapely-core",
     "shapely-derive",
-    "shapely-json", "shapely-peek", "shapely-poke",
+    "shapely-json",
+    "shapely-opaque",
+    "shapely-peek",
+    "shapely-poke",
+    "shapely-spez",
+    "shapely-types",
 ]
 resolver = "3"
 

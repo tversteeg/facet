@@ -1,21 +1,6 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-pub use ::impls::impls;
-
-pub mod spez;
-
-mod opaque;
-pub use opaque::*;
-
-/// Module containing the virtual table (vtable) definitions and implementations.
-///
-/// The vtable module provides structures and traits for defining and working with
-/// virtual tables, which are used to store metadata and function pointers for
-/// dynamic dispatch in the Shapely library.
-pub mod vtable;
-pub use vtable::*;
-
 mod impls;
 
 mod shape;
@@ -40,6 +25,25 @@ pub trait Shapely: Sized {
         Self::SHAPE == Other::SHAPE
     }
 }
+
+pub trait ShapeExt {
+    /// Check if this shape is of the given type
+    pub fn is_type<Other: Shapely>(&'static self) -> bool {
+        self == Other::SHAPE
+    }
+
+    /// Assert that this shape is of the given type, panicking if it's not
+    pub fn assert_type<Other: Shapely>(&'static self) {
+        assert!(
+            self.is_type::<Other>(),
+            "Type mismatch: expected {:?}, found {:?}",
+            ShapeDebug(Other::SHAPE),
+            ShapeDebug(self)
+        );
+    }
+}
+
+impl<T> ShapeExt for T where T: Shapely {}
 
 /// A wrapper around `Vec<u8>` for binary data
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default, PartialOrd, Ord)]

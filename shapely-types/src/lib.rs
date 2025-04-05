@@ -1,12 +1,20 @@
+//! structs and vtable definitions used by Shapely
+
+// TODO: mark `non_exhaustive`, add `const fn` builder patterns
+
 use std::alloc::Layout;
 
+use shapely_opaque::OpaqueUninit;
 use typeid::ConstTypeId;
 
-use crate::{
-    ListVTable, MapVTable, MarkerTraits, OpaqueUninit, Shapely, TypeNameOpts, ValueVTable,
-};
+mod list;
+pub use list::*;
 
-mod pretty_print;
+mod map;
+pub use map::*;
+
+mod value;
+pub use value::*;
 
 /// Schema for reflection of a type
 #[derive(Clone, Copy, Debug)]
@@ -24,16 +32,6 @@ pub struct Shape {
 }
 
 impl Shape {
-    /// Create a new shape for a type
-    pub const fn of_type<T: Shapely>() -> &'static Self {
-        T::SHAPE
-    }
-
-    /// Create a new shape for a type
-    pub const fn of_val<T: Shapely>(_: &T) -> &'static Self {
-        T::SHAPE
-    }
-
     /// Checks if a shape has the given characteristic.
     pub const fn is(&'static self, characteristic: Characteristic) -> bool {
         match characteristic {
@@ -127,23 +125,8 @@ impl std::hash::Hash for Shape {
 
 impl Shape {
     /// Check if this shape is of the given type
-    pub fn is_type<Other: Shapely>(&'static self) -> bool {
-        self == Other::SHAPE
-    }
-
-    /// Check if this shape is of the given type
     pub fn is_shape(&'static self, other: &'static Shape) -> bool {
         self == other
-    }
-
-    /// Assert that this shape is of the given type, panicking if it's not
-    pub fn assert_type<Other: Shapely>(&'static self) {
-        assert!(
-            self.is_type::<Other>(),
-            "Type mismatch: expected {:?}, found {:?}",
-            ShapeDebug(Other::SHAPE),
-            ShapeDebug(self)
-        );
     }
 
     /// Assert that this shape is equal to the given shape, panicking if it's not
@@ -237,68 +220,15 @@ pub struct Field {
     pub flags: FieldFlags,
 }
 
-/// Flags that can be applied to fields to modify their behavior
-///
-/// # Examples
-///
-/// ```rust
-/// use shapely_core::FieldFlags;
-///
-/// // Create flags with the sensitive bit set
-/// let flags = FieldFlags::SENSITIVE;
-/// assert!(flags.contains(FieldFlags::SENSITIVE));
-///
-/// // Combine multiple flags using bitwise OR
-/// let flags = FieldFlags::SENSITIVE | FieldFlags::EMPTY;
-/// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FieldFlags(u64);
+bitflags::bitflags! {
+    /// Flags that can be applied to fields to modify their behavior
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    pub struct FieldFlags: u64 {
+        /// An empty set of flags
+        const EMPTY = 0;
 
-impl FieldFlags {
-    /// An empty set of flags
-    pub const EMPTY: Self = Self(0);
-
-    /// Flag indicating this field contains sensitive data that should not be displayed
-    pub const SENSITIVE: Self = Self(1 << 0);
-
-    /// Returns true if the given flag is set
-    #[inline]
-    pub fn contains(&self, flag: FieldFlags) -> bool {
-        self.0 & flag.0 != 0
-    }
-
-    /// Sets the given flag and returns self for chaining
-    #[inline]
-    pub fn set_flag(&mut self, flag: FieldFlags) -> &mut Self {
-        self.0 |= flag.0;
-        self
-    }
-
-    /// Unsets the given flag and returns self for chaining
-    #[inline]
-    pub fn unset_flag(&mut self, flag: FieldFlags) -> &mut Self {
-        self.0 &= !flag.0;
-        self
-    }
-
-    /// Creates a new FieldFlags with the given flag set
-    #[inline]
-    pub const fn with_flag(flag: FieldFlags) -> Self {
-        Self(flag.0)
-    }
-}
-
-impl std::ops::BitOr for FieldFlags {
-    type Output = Self;
-
-    fn bitor(self, rhs: Self) -> Self {
-        Self(self.0 | rhs.0)
-    }
-}
-
-impl std::ops::BitOrAssign for FieldFlags {
-    fn bitor_assign(&mut self, rhs: Self) {
-        self.0 |= rhs.0;
+        /// Flag indicating this field contains sensitive data that should not be displayed
+        const SENSITIVE = 1 << 0;
     }
 }
 
@@ -311,22 +241,22 @@ impl Default for FieldFlags {
 
 impl std::fmt::Display for FieldFlags {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.0 == 0 {
+        if self.is_empty() {
             return write!(f, "none");
         }
 
-        // Define a vector of flag entries: (flag bit, name)
+        // Define a vector of flag entries: (flag, name)
         let flags = [
-            (Self::SENSITIVE.0, "sensitive"),
+            (FieldFlags::SENSITIVE, "sensitive"),
             // Future flags can be easily added here:
-            // (Self::SOME_FLAG.0, "some_flag"),
-            // (Self::ANOTHER_FLAG.0, "another_flag"),
+            // (FieldFlags::SOME_FLAG, "some_flag"),
+            // (FieldFlags::ANOTHER_FLAG, "another_flag"),
         ];
 
         // Write all active flags with proper separators
         let mut is_first = true;
-        for (bit, name) in flags {
-            if self.0 & bit != 0 {
+        for (flag, name) in flags {
+            if self.contains(flag) {
                 if !is_first {
                     write!(f, ", ")?;
                 }

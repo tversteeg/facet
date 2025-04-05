@@ -1,4 +1,4 @@
-use crate::{Opaque, OpaqueConst, OpaqueUninit};
+use shapely_opaque::{Opaque, OpaqueConst, OpaqueUninit};
 
 /// Initialize a map in place with a given capacity
 ///
@@ -80,23 +80,23 @@ pub struct MapIterVTable {
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub struct MapVTable {
     /// cf. [`MapInitInPlaceWithCapacityFn`]
-    pub init_in_place_with_capacity: MapInitInPlaceWithCapacityFn,
+    pub init_in_place_with_capacity_fn: MapInitInPlaceWithCapacityFn,
 
     /// cf. [`MapInsertFn`]
-    pub insert: MapInsertFn,
+    pub insert_fn: MapInsertFn,
 
     /// cf. [`MapLenFn`]
-    pub len: MapLenFn,
+    pub len_fn: MapLenFn,
 
     /// cf. [`MapContainsKeyFn`]
-    pub contains_key: MapContainsKeyFn,
+    pub contains_key_fn: MapContainsKeyFn,
 
     /// cf. [`MapGetValuePtrFn`]
-    pub get_value_ptr: MapGetValuePtrFn,
+    pub get_value_ptr_fn: MapGetValuePtrFn,
 
     /// cf. [`MapIterFn`]
-    pub iter: MapIterFn,
+    pub iter_fn: MapIterFn,
 
     /// Virtual table for map iterator operations
-    pub iter_vtable: MapIterVTable,
+    pub iter_vtable_fn: MapIterVTable,
 }

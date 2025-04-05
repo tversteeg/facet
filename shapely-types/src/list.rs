@@ -1,4 +1,4 @@
-use crate::{Opaque, OpaqueConst, OpaqueUninit};
+use shapely_opaque::{Opaque, OpaqueConst, OpaqueUninit};
 
 /// Initialize a list in place with a given capacity
 ///
