@@ -11,6 +11,6 @@ keywords = ["reflection", "traits"]
 categories = ["development-tools"]
 
 [dependencies]
-facet-opaque = { version = "0.1.0", path = "../facet-opaque" }
-facet-spez = { version = "0.1.0", path = "../facet-spez" }
-facet-types = { version = "0.1.0", path = "../facet-types" }
+facet-opaque = { workspace = true }
+facet-spez = { workspace = true }
+facet-types = { workspace = true }
