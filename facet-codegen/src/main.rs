@@ -85,10 +85,10 @@ fn generate_readme_files() {
     // Add template functions
     env.add_function("badges", |crate_name: String| {
         format!(
-            r#"[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)\n\
-[![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)\n\
-[![crates.io](https://img.shields.io/crates/v/{0}.svg)](https://crates.io/crates/{0})\n\
-[![documentation](https://docs.rs/{0}/badge.svg)](https://docs.rs/{0})\n\
+            r#"[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
+[![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
+[![crates.io](https://img.shields.io/crates/v/{0}.svg)](https://crates.io/crates/{0})
+[![documentation](https://docs.rs/{0}/badge.svg)](https://docs.rs/{0})
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/{0}.svg)](./LICENSE)
 
 ## Funding

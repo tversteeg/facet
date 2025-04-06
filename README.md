@@ -1,9 +1,9 @@
 # facet
 
-[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)\n\
-[![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)\n\
-[![crates.io](https://img.shields.io/crates/v/facet.svg)](https://crates.io/crates/facet)\n\
-[![documentation](https://docs.rs/facet/badge.svg)](https://docs.rs/facet)\n\
+[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
+[![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
+[![crates.io](https://img.shields.io/crates/v/facet.svg)](https://crates.io/crates/facet)
+[![documentation](https://docs.rs/facet/badge.svg)](https://docs.rs/facet)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet.svg)](./LICENSE)
 
 ## Funding
