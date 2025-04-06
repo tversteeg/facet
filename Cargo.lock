@@ -65,6 +65,101 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7454e41ff9012c00d53cf7f475c5e3afa3b91b7c90568495495e8d9bf47a1055"
 
 [[package]]
+name = "facet"
+version = "3.1.1"
+dependencies = [
+ "facet-derive",
+ "facet-spez",
+ "facet-trait",
+]
+
+[[package]]
+name = "facet-codegen"
+version = "3.1.1"
+dependencies = [
+ "minijinja",
+]
+
+[[package]]
+name = "facet-derive"
+version = "3.1.1"
+dependencies = [
+ "facet-trait",
+ "unsynn",
+]
+
+[[package]]
+name = "facet-json"
+version = "3.1.1"
+dependencies = [
+ "color-backtrace",
+ "ctor",
+ "facet-derive",
+ "facet-poke",
+ "facet-trait",
+ "log",
+]
+
+[[package]]
+name = "facet-opaque"
+version = "3.1.1"
+
+[[package]]
+name = "facet-peek"
+version = "3.1.1"
+dependencies = [
+ "facet-trait",
+]
+
+[[package]]
+name = "facet-poke"
+version = "3.1.1"
+dependencies = [
+ "color-backtrace",
+ "ctor",
+ "facet-derive",
+ "facet-peek",
+ "facet-samplelibc",
+ "facet-trait",
+ "owo-colors",
+]
+
+[[package]]
+name = "facet-samplelibc"
+version = "3.1.1"
+dependencies = [
+ "cc",
+ "facet",
+]
+
+[[package]]
+name = "facet-spez"
+version = "3.1.1"
+dependencies = [
+ "facet-opaque",
+ "facet-types",
+ "impls",
+]
+
+[[package]]
+name = "facet-trait"
+version = "3.1.1"
+dependencies = [
+ "facet-opaque",
+ "facet-spez",
+ "facet-types",
+]
+
+[[package]]
+name = "facet-types"
+version = "0.1.0"
+dependencies = [
+ "bitflags",
+ "facet-opaque",
+ "typeid",
+]
+
+[[package]]
 name = "impls"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -140,101 +235,6 @@ name = "shadow_counted"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "41cd78bcc9026f6fc699f717588c4f757e87758d33464ede841ad42eee49a5b2"
-
-[[package]]
-name = "facet"
-version = "3.1.1"
-dependencies = [
- "facet-derive",
- "facet-spez",
- "facet-trait",
-]
-
-[[package]]
-name = "facet-codegen"
-version = "3.1.1"
-dependencies = [
- "minijinja",
-]
-
-[[package]]
-name = "facet-derive"
-version = "3.1.1"
-dependencies = [
- "facet-trait",
- "unsynn",
-]
-
-[[package]]
-name = "facet-json"
-version = "3.1.1"
-dependencies = [
- "color-backtrace",
- "ctor",
- "log",
- "facet-derive",
- "facet-poke",
- "facet-trait",
-]
-
-[[package]]
-name = "facet-opaque"
-version = "3.1.1"
-
-[[package]]
-name = "facet-peek"
-version = "3.1.1"
-dependencies = [
- "facet-trait",
-]
-
-[[package]]
-name = "facet-poke"
-version = "3.1.1"
-dependencies = [
- "color-backtrace",
- "ctor",
- "owo-colors",
- "facet-derive",
- "facet-peek",
- "facet-samplelibc",
- "facet-trait",
-]
-
-[[package]]
-name = "facet-samplelibc"
-version = "3.1.1"
-dependencies = [
- "cc",
- "facet",
-]
-
-[[package]]
-name = "facet-spez"
-version = "3.1.1"
-dependencies = [
- "impls",
- "facet-opaque",
- "facet-types",
-]
-
-[[package]]
-name = "facet-trait"
-version = "3.1.1"
-dependencies = [
- "facet-opaque",
- "facet-spez",
- "facet-types",
-]
-
-[[package]]
-name = "facet-types"
-version = "0.1.0"
-dependencies = [
- "bitflags",
- "facet-opaque",
- "typeid",
-]
 
 [[package]]
 name = "shlex"

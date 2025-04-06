@@ -5,5 +5,5 @@ edition = "2024"
 
 [dependencies]
 bitflags = "2.9.0"
-facet-opaque = { version = "3.1.1", path = "../facet-opaque" }
+facet-opaque = { version = "0.1.0", path = "../facet-opaque" }
 typeid = "1.0.3"

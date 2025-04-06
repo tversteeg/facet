@@ -13,7 +13,7 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
-facet-peek = { version = "3.1.1", path = "../facet-peek" }
+facet-peek = { version = "0.1.0", path = "../facet-peek" }
 facet-trait.workspace = true
 
 [dev-dependencies]
