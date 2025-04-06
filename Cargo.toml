@@ -21,17 +21,6 @@ edition = "2024"
 rust-version = "1.86.0"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/facet-rs/facet"
-homepage = "https://github.com/facet-rs/facet"
-documentation = "https://docs.rs/facet"
-description = "One trait for reflection, serialization, deserialization"
-keywords = [
-    "serialization",
-    "deserialization",
-    "reflection",
-    "schema",
-    "validation",
-]
-categories = ["encoding", "parsing", "development-tools", "data-structures"]
 
 [workspace.dependencies]
 facet-trait = { version = "0.1.0", path = "facet-trait" }

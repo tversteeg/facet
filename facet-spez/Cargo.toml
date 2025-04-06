@@ -6,11 +6,9 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-homepage.workspace = true
-documentation.workspace = true
-description.workspace = true
-keywords.workspace = true
-categories.workspace = true
+description = "Auto-deref specialization helpers for the Facet reflection system"
+keywords = ["reflection", "specialization", "metaprogramming", "traits"]
+categories = ["development-tools", "rust-patterns"]
 
 [dependencies]
 impls = "1.0.3"

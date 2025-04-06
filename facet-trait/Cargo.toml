@@ -8,9 +8,9 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
-description = "Core types and traits for the facet ecosystem, providing fundamental reflection capabilities"
-keywords = ["reflection", "introspection", "serialization", "deserialization"]
-categories = ["development-tools", "encoding"]
+description = "Core traits for the facet ecosystem"
+keywords = ["reflection", "traits"]
+categories = ["development-tools"]
 
 [dependencies]
 facet-opaque = { version = "0.1.0", path = "../facet-opaque" }

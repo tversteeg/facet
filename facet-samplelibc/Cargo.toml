@@ -6,11 +6,9 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-homepage.workspace = true
-documentation.workspace = true
-description.workspace = true
-keywords.workspace = true
-categories.workspace = true
+description = "Sample C library integration with Facet"
+keywords = ["facet", "ffi", "binding", "libc"]
+categories = ["development-tools::ffi"]
 publish = false
 
 [build-dependencies]
