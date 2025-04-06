@@ -1,7 +1,7 @@
 use minijinja::Environment;
 use std::fs;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 fn main() {
     // Check if current directory has a Cargo.toml with [workspace]
@@ -118,7 +118,7 @@ at your option.".to_string()
 
         // Skip non-directories and entries starting with '.' or '_'
         if !path.is_dir()
-            || path.file_name().map_or(true, |name| {
+            || path.file_name().is_none_or(|name| {
                 let name = name.to_string_lossy();
                 name.starts_with('.') || name.starts_with('_')
             })
@@ -141,7 +141,7 @@ at your option.".to_string()
         // Check if there's a template directory with a README.md.j2 file
         let template_path = path.join("templates").join("README.md.j2");
         if template_path.exists() {
-            process_readme_template(&env, &path, &template_path);
+            process_readme_template(&mut env, &path, &template_path);
         } else {
             // Special case for the main shapely crate
             let crate_name = dir_name.to_string();
@@ -149,9 +149,9 @@ at your option.".to_string()
                 let alternative_template_path = Path::new("shapely/templates/README.md.j2");
                 if alternative_template_path.exists() {
                     process_readme_template(
-                        &env,
+                        &mut env,
                         &path,
-                        &Path::new("shapely/templates/README.md.j2"),
+                        Path::new("shapely/templates/README.md.j2"),
                     );
                 }
             }
@@ -163,12 +163,12 @@ at your option.".to_string()
     if shapely_crate_path.exists() && shapely_crate_path.is_dir() {
         let template_path = shapely_crate_path.join("templates").join("README.md.j2");
         if template_path.exists() {
-            process_readme_template(&env, &shapely_crate_path, &template_path);
+            process_readme_template(&mut env, &shapely_crate_path, &template_path);
         }
     }
 }
 
-fn process_readme_template(env: &Environment, crate_path: &Path, template_path: &Path) {
+fn process_readme_template(env: &mut Environment, crate_path: &Path, template_path: &Path) {
     println!("Processing template: {:?}", template_path);
 
     // Get crate name from directory name
@@ -179,17 +179,18 @@ fn process_readme_template(env: &Environment, crate_path: &Path, template_path: 
         .to_string();
 
     // Read the template
-    let template_content = fs::read_to_string(template_path).expect(&format!(
-        "Failed to read template file: {:?}",
-        template_path
-    ));
+    let template_content = fs::read_to_string(template_path).unwrap_or_else(|_| panic!("Failed to read template file: {:?}",
+        template_path));
 
     // Create a template ID
     let template_id = format!("{}_readme", crate_name);
 
     // Add template to environment
-    env.add_template(&template_id, &template_content)
-        .expect(&format!("Failed to add template: {}", template_id));
+    env.add_template(
+        Box::leak(template_id.clone().into_boxed_str()),
+        Box::leak(template_content.into_boxed_str()),
+    )
+    .unwrap_or_else(|_| panic!("Failed to add template: {}", template_id));
 
     // Get the template
     let template = env
@@ -206,7 +207,7 @@ fn process_readme_template(env: &Environment, crate_path: &Path, template_path: 
     // Save the rendered content to README.md
     let readme_path = crate_path.join("README.md");
     fs::write(&readme_path, output)
-        .expect(&format!("Failed to write README.md to {:?}", readme_path));
+        .unwrap_or_else(|_| panic!("Failed to write README.md to {:?}", readme_path));
 
     println!("Generated README.md for {}", crate_name);
 }

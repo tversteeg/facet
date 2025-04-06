@@ -56,13 +56,13 @@ Additionally:
 
 Thanks to Namespace for providing fast GitHub Actions workers:
 
-<a href="https://namespace.so"><img src="./static/namespace-d.svg" height="40"></a>
+<a href="https://namespace.so"><img src="https://github.com/shapely-rs/shapely/raw/main/static/namespace-d.svg" height="40"></a>
 
 ## License
 
 Licensed under either of:
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
+- Apache License, Version 2.0 ([LICENSE-APACHE](https://github.com/shapely-rs/shapely/blob/main/LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](https://github.com/shapely-rs/shapely/blob/main/LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.
