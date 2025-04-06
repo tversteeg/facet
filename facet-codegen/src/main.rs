@@ -88,7 +88,7 @@ fn generate_readme_files() {
         format!(r#"
 Thanks to all individual sponsors, without whom this work could not exist.
 
-<a href="https://ko-fi.com/fasterthanlime">
+<p> <a href="https://ko-fi.com/fasterthanlime">
     <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/ko-fi-dark.svg">
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/ko-fi-light.svg" height="40" alt="Ko-fi">
@@ -103,11 +103,11 @@ Thanks to all individual sponsors, without whom this work could not exist.
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/patreon-dark.svg">
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/patreon-light.svg" height="40" alt="Patreon">
     </picture>
-</a>
+</a> </p>
 
 Thanks to corporate sponsors: Zed Industries for free credits, and Namespace for providing fast GitHub Actions workers.
 
-<a href="https://zed.dev">
+<p> <a href="https://zed.dev">
     <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-dark.svg">
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-light.svg" height="40" alt="Zed">
@@ -117,7 +117,7 @@ Thanks to corporate sponsors: Zed Industries for free credits, and Namespace for
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/namespace-dark.svg">
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/namespace-light.svg" height="40" alt="Namespace">
     </picture>
-</a>
+</a> </p>
 
 # {0}
 
