@@ -1,18 +1,17 @@
-use std::alloc::Layout;
+use std::{alloc::Layout, fmt};
 
 use crate::{
     Characteristic, Def, Field, FieldFlags, OpaqueConst, Shape, Shapely, StructDef, TypeNameOpts,
     ValueVTable,
 };
 
-unsafe impl<T0> Shapely for (T0)
+unsafe impl<T0> Shapely for (T0,)
 where
     T0: Shapely,
 {
-    const DUMMY: Self = (T0::DUMMY);
-    const SHAPE: &'static Shape = &const {
-        use std::fmt;
+    const DUMMY: Self = (T0::DUMMY,);
 
+    const SHAPE: &'static Shape = &const {
         fn type_name<T0>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result
         where
             T0: Shapely,
@@ -83,7 +82,6 @@ where
         }
     };
 }
-
 unsafe impl<T0, T1> Shapely for (T0, T1)
 where
     T0: Shapely,
@@ -91,8 +89,6 @@ where
 {
     const DUMMY: Self = (T0::DUMMY, T1::DUMMY);
     const SHAPE: &'static Shape = &const {
-        use std::fmt;
-
         fn type_name<T0, T1>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result
         where
             T0: Shapely,
@@ -183,7 +179,6 @@ where
         }
     };
 }
-
 unsafe impl<T0, T1, T2> Shapely for (T0, T1, T2)
 where
     T0: Shapely,
@@ -192,8 +187,6 @@ where
 {
     const DUMMY: Self = (T0::DUMMY, T1::DUMMY, T2::DUMMY);
     const SHAPE: &'static Shape = &const {
-        use std::fmt;
-
         fn type_name<T0, T1, T2>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result
         where
             T0: Shapely,
@@ -307,7 +300,6 @@ where
         }
     };
 }
-
 unsafe impl<T0, T1, T2, T3> Shapely for (T0, T1, T2, T3)
 where
     T0: Shapely,
@@ -317,8 +309,6 @@ where
 {
     const DUMMY: Self = (T0::DUMMY, T1::DUMMY, T2::DUMMY, T3::DUMMY);
     const SHAPE: &'static Shape = &const {
-        use std::fmt;
-
         fn type_name<T0, T1, T2, T3>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result
         where
             T0: Shapely,
@@ -453,7 +443,6 @@ where
         }
     };
 }
-
 unsafe impl<T0, T1, T2, T3, T4> Shapely for (T0, T1, T2, T3, T4)
 where
     T0: Shapely,
@@ -464,8 +453,6 @@ where
 {
     const DUMMY: Self = (T0::DUMMY, T1::DUMMY, T2::DUMMY, T3::DUMMY, T4::DUMMY);
     const SHAPE: &'static Shape = &const {
-        use std::fmt;
-
         fn type_name<T0, T1, T2, T3, T4>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result
         where
             T0: Shapely,
@@ -635,7 +622,6 @@ where
         }
     };
 }
-
 unsafe impl<T0, T1, T2, T3, T4, T5> Shapely for (T0, T1, T2, T3, T4, T5)
 where
     T0: Shapely,
@@ -654,8 +640,6 @@ where
         T5::DUMMY,
     );
     const SHAPE: &'static Shape = &const {
-        use std::fmt;
-
         fn type_name<T0, T1, T2, T3, T4, T5>(
             f: &mut fmt::Formatter,
             opts: TypeNameOpts,
@@ -851,7 +835,6 @@ where
         }
     };
 }
-
 unsafe impl<T0, T1, T2, T3, T4, T5, T6> Shapely for (T0, T1, T2, T3, T4, T5, T6)
 where
     T0: Shapely,
@@ -872,8 +855,6 @@ where
         T6::DUMMY,
     );
     const SHAPE: &'static Shape = &const {
-        use std::fmt;
-
         fn type_name<T0, T1, T2, T3, T4, T5, T6>(
             f: &mut fmt::Formatter,
             opts: TypeNameOpts,
@@ -1092,7 +1073,6 @@ where
         }
     };
 }
-
 unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7> Shapely for (T0, T1, T2, T3, T4, T5, T6, T7)
 where
     T0: Shapely,
@@ -1115,8 +1095,6 @@ where
         T7::DUMMY,
     );
     const SHAPE: &'static Shape = &const {
-        use std::fmt;
-
         fn type_name<T0, T1, T2, T3, T4, T5, T6, T7>(
             f: &mut fmt::Formatter,
             opts: TypeNameOpts,
@@ -1359,7 +1337,6 @@ where
         }
     };
 }
-
 unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8> Shapely for (T0, T1, T2, T3, T4, T5, T6, T7, T8)
 where
     T0: Shapely,
@@ -1384,8 +1361,6 @@ where
         T8::DUMMY,
     );
     const SHAPE: &'static Shape = &const {
-        use std::fmt;
-
         fn type_name<T0, T1, T2, T3, T4, T5, T6, T7, T8>(
             f: &mut fmt::Formatter,
             opts: TypeNameOpts,
@@ -1651,7 +1626,6 @@ where
         }
     };
 }
-
 unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> Shapely
     for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)
 where
@@ -1679,8 +1653,6 @@ where
         T9::DUMMY,
     );
     const SHAPE: &'static Shape = &const {
-        use std::fmt;
-
         fn type_name<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>(
             f: &mut fmt::Formatter,
             opts: TypeNameOpts,
@@ -1970,7 +1942,6 @@ where
         }
     };
 }
-
 unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> Shapely
     for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)
 where
@@ -2000,8 +1971,6 @@ where
         T10::DUMMY,
     );
     const SHAPE: &'static Shape = &const {
-        use std::fmt;
-
         fn type_name<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
             f: &mut fmt::Formatter,
             opts: TypeNameOpts,
@@ -2319,7 +2288,6 @@ where
         }
     };
 }
-
 unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> Shapely
     for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)
 where
@@ -2351,8 +2319,6 @@ where
         T11::DUMMY,
     );
     const SHAPE: &'static Shape = &const {
-        use std::fmt;
-
         fn type_name<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(
             f: &mut fmt::Formatter,
             opts: TypeNameOpts,

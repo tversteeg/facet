@@ -2,6 +2,7 @@
 
 // TODO: mark `non_exhaustive`, add `const fn` builder patterns
 
+use core::fmt;
 use std::alloc::Layout;
 
 use shapely_opaque::OpaqueUninit;
@@ -105,6 +106,11 @@ impl Shape {
     /// Check if this shape implements the Default trait
     pub const fn is_default(&'static self) -> bool {
         self.is(Characteristic::Default)
+    }
+
+    /// Writes the name of this type to the given formatter
+    pub fn write_type_name(&self, f: &mut fmt::Formatter<'_>, opts: TypeNameOpts) -> fmt::Result {
+        (self.vtable.type_name)(f, opts)
     }
 }
 
@@ -483,4 +489,28 @@ impl Characteristic {
         }
         true
     }
+}
+
+#[inline(always)]
+pub fn type_name_set(
+    f: &mut fmt::Formatter<'_>,
+    opts: TypeNameOpts,
+    open: &'static str,
+    delimiter: &'static str,
+    close: &'static str,
+    shapes: &'static [&'static Shape],
+) -> fmt::Result {
+    f.pad(open)?;
+    if let Some(opts) = opts.for_children() {
+        for (index, shape) in shapes.iter().enumerate() {
+            if index > 0 {
+                f.pad(delimiter)?;
+            }
+            shape.write_type_name(f, opts)?;
+        }
+    } else {
+        write!(f, "⋯")?;
+    }
+    f.pad(close)?;
+    Ok(())
 }
