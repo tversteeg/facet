@@ -91,8 +91,6 @@ fn generate_readme_files() {
 [![documentation](https://docs.rs/{0}/badge.svg)](https://docs.rs/{0})
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/{0}.svg)](./LICENSE)
 
-## Funding
-
 Thanks to all individual sponsors, without whom this work could not exist:
 
 <a href="https://ko-fi.com/fasterthanlime">
