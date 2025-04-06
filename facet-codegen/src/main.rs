@@ -1,5 +1,8 @@
+use std::fs;
 use std::io::Write;
 use std::path::Path;
+
+use minijinja::Environment;
 
 fn main() {
     // Check if current directory has a Cargo.toml with [workspace]
