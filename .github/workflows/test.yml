@@ -17,11 +17,6 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - name: Check out repository code
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 2
-
             - name: Setup cargo cache
               uses: Swatinem/rust-cache@v2
 
@@ -37,4 +32,22 @@ jobs:
             - name: Run tests
               shell: bash
               run: |
-                  just ci
+                  just
+
+    miri:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Setup cargo cache
+              uses: Swatinem/rust-cache@v2
+              with:
+                  cache-directories: /home/runner/.rustup
+
+            - name: Install just and cargo-nextest
+              uses: taiki-e/install-action@v2
+              with:
+                  tool: just,cargo-nextest
+
+            - name: Run miri
+              run: just miri
