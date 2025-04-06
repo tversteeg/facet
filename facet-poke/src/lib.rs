@@ -1,3 +1,6 @@
+#![warn(missing_docs)]
+#![doc = include_str!("../README.md")]
+
 //! Allows poking (writing to) shapes
 
 use std::alloc::Layout;

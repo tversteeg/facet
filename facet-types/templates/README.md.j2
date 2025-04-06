@@ -1,5 +1,18 @@
 {{ header("facet-types") }}
 
-Defines the `Shape` struct, along with various vtables and the whole `Def` tree. This is a core component of facet that provides the type definitions needed for runtime reflection.
+Defines the core types used throughout the facet ecosystem for runtime reflection:
+
+* `Shape`: The central type that describes the memory layout and capabilities of a type
+* Various vtables that define how to manipulate types at runtime
+* The `Def` tree, which describes type definitions (structs, enums, etc.)
+
+This crate is foundational to facet's reflection capabilities, providing the type system that enables safe runtime type manipulation.
+
+### Key Components
+
+* Memory layout information (size, alignment, etc.)
+* Type definition hierarchies
+* Runtime type manipulation vtables
+* Safe type erasure primitives
 
 {{ footer() }}

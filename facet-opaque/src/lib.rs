@@ -1,3 +1,6 @@
+#![warn(missing_docs)]
+#![doc = include_str!("../README.md")]
+
 //! Opaque pointers
 //!
 //! TODO: should these carry a Layout around? That would be neat actually.

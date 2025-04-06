@@ -1,3 +1,6 @@
+#![warn(missing_docs)]
+#![doc = include_str!("../README.md")]
+
 //! Allows peeking (reading from) shapes
 
 use facet_trait::{Facet, TypeNameOpts};

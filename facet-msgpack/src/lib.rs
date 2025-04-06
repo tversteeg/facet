@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+#![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
 use facet_core::Partial;

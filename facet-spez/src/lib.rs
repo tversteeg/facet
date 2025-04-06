@@ -1,9 +1,5 @@
-//! Tricks for specialization on Rust stable
-//!
-//! Completely missing docs, sorry, read this for background:
-//! <https://lukaskalbertodt.github.io/2019/12/05/generalized-autoref-based-specialization.html>
-
-#![allow(missing_docs)]
+#![warn(missing_docs)]
+#![doc = include_str!("../README.md")]
 pub use ::impls::impls;
 use core::fmt::{self, Debug};
 use facet_types::ParseError;

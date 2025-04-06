@@ -1,5 +1,29 @@
 {{ header("facet-json") }}
 
-Provides JSON serialization and deserialization for Facet types.
+Provides JSON serialization and deserialization for any type that implements `Facet`.
+
+### Features
+
+* Zero-copy deserialization when possible
+* Support for custom serialization formats
+* Handles complex types like enums and nested structures
+* Preserves type information during serialization
+
+### Example
+
+```rust
+use facet_json::from_str;
+
+#[derive(Facet)]
+struct User {
+    name: String,
+    age: u32,
+}
+
+let json = r#"{"name": "Alice", "age": 30}"#;
+let user: User = from_str(json)?;
+```
+
+This crate serves as a reference implementation for facet serialization crates.
 
 {{ footer() }}

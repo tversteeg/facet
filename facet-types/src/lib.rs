@@ -1,3 +1,6 @@
+#![warn(missing_docs)]
+#![doc = include_str!("../README.md")]
+
 //! structs and vtable definitions used by Facet
 
 // TODO: mark `non_exhaustive`, add `const fn` builder patterns
