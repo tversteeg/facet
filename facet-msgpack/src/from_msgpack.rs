@@ -50,7 +50,7 @@ pub fn from_str<T: Facet>(msgpack: &[u8]) -> Result<T, DecodeError> {
 ///
 /// ```
 /// use facet::Facet;
-/// use facet_msgpack::from_msgpack;
+/// use facet_msgpack::from_str;
 ///
 /// #[derive(Debug, Facet, PartialEq)]
 /// struct User {
@@ -65,10 +65,7 @@ pub fn from_str<T: Facet>(msgpack: &[u8]) -> Result<T, DecodeError> {
 ///     0x73, 0x65, 0x72, 0x31, 0x32, 0x33
 /// ];
 ///
-/// let mut partial = User::partial();
-/// from_msgpack(&mut partial, &msgpack_data).expect("Failed to parse MessagePack data");
-///
-/// let user = partial.build::<User>();
+/// let user: User = from_str(&msgpack_data).unwrap();
 /// assert_eq!(user, User { id: 42, username: "user123".to_string() });
 /// ```
 ///

@@ -21,6 +21,9 @@ log = "0.4.27"
 facet-trait = { workspace = true }
 facet-poke = { workspace = true }
 facet-types.workspace = true
+facet-peek.workspace = true
 [dev-dependencies]
+color-backtrace = "0.7.0"
+ctor = "0.4.1"
 facet = { workspace = true }
 facet-derive = { workspace = true }
