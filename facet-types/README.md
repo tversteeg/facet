@@ -1,11 +1,11 @@
 
-# facet-pretty
+# facet-types
 
 [![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/facet-pretty.svg)](https://crates.io/crates/facet-pretty)
-[![documentation](https://docs.rs/facet-pretty/badge.svg)](https://docs.rs/facet-pretty)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-pretty.svg)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/facet-types.svg)](https://crates.io/crates/facet-types)
+[![documentation](https://docs.rs/facet-types/badge.svg)](https://docs.rs/facet-types)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-types.svg)](./LICENSE)
 
 Thanks to all individual and corporate sponsors, without whom this work could not exist:
 
@@ -37,7 +37,7 @@ Thanks to all individual and corporate sponsors, without whom this work could no
 </a> </p>
              
 
-Provides pretty-printing capabilities for Facet types.
+Defines the `Shape` struct, along with various vtables and the whole `Def` tree. This is a core component of facet that provides the type definitions needed for runtime reflection.
 
 
 ## License

@@ -1,11 +1,11 @@
 
-# facet-pretty
+# facet-spez
 
 [![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/facet-pretty.svg)](https://crates.io/crates/facet-pretty)
-[![documentation](https://docs.rs/facet-pretty/badge.svg)](https://docs.rs/facet-pretty)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-pretty.svg)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/facet-spez.svg)](https://crates.io/crates/facet-spez)
+[![documentation](https://docs.rs/facet-spez/badge.svg)](https://docs.rs/facet-spez)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-spez.svg)](./LICENSE)
 
 Thanks to all individual and corporate sponsors, without whom this work could not exist:
 
@@ -37,7 +37,7 @@ Thanks to all individual and corporate sponsors, without whom this work could no
 </a> </p>
              
 
-Provides pretty-printing capabilities for Facet types.
+Implements an autoderef specialization trick needed for `facet-derive`. This internal crate helps power facet's derive macro functionality.
 
 
 ## License

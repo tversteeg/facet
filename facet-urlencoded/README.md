@@ -1,3 +1,4 @@
+
 # facet-urlencoded
 
 [![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
@@ -6,47 +7,44 @@
 [![documentation](https://docs.rs/facet-urlencoded/badge.svg)](https://docs.rs/facet-urlencoded)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-urlencoded.svg)](./LICENSE)
 
-A serialization and deserialization library for URL encoded form data using the facet runtime reflection system.
+Thanks to all individual and corporate sponsors, without whom this work could not exist:
 
-## Features
+<p> <a href="https://ko-fi.com/fasterthanlime">
+    <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/ko-fi-dark.svg">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/ko-fi-light.svg" height="40" alt="Ko-fi">
+    </picture>
+</a> <a href="https://github.com/sponsors/fasterthanlime">
+    <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/github-dark.svg">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/github-light.svg" height="40" alt="GitHub Sponsors">
+    </picture>
+</a> <a href="https://patreon.com/fasterthanlime">
+    <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/patreon-dark.svg">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/patreon-light.svg" height="40" alt="Patreon">
+    </picture>
+</a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="https://zed.dev">
+    <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-dark.svg">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-light.svg" height="40" alt="Zed">
+    </picture>
+</a> <a href="https://namespace.so">
+    <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/namespace-dark.svg">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/namespace-light.svg" height="40" alt="Namespace">
+    </picture>
+</a> </p>
+             
 
-- Simple URL encoded form data deserialization for any type implementing the `Facet` trait
-- Support for query string parsing
-- Detailed error reporting with context
-- Support for nested structs and scalar values
+Provides URL-encoded form data deserialization for Facet types.
 
-## Example
-
-```rust
-use facet::Facet;
-use facet_urlencoded::from_urlencoded;
-
-#[derive(Debug, Facet, PartialEq)]
-struct SearchParams {
-    query: String,
-    page: u64,
-}
-
-let query_string = "query=rust+programming&page=2";
-
-let mut partial = SearchParams::partial();
-from_urlencoded(&mut partial, query_string).expect("Failed to parse URL encoded data");
-
-let params = partial.build::<SearchParams>();
-assert_eq!(params, SearchParams { query: "rust programming".to_string(), page: 2 });
-```
-
-### Funding
-
-Thanks to Namespace for providing fast GitHub Actions workers:
-
-<a href="https://namespace.so"><img src="./static/namespace-d.svg" height="40"></a>
 
 ## License
 
 Licensed under either of:
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
+- Apache License, Version 2.0 ([LICENSE-APACHE](https://github.com/facet-rs/facet/blob/main/LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](https://github.com/facet-rs/facet/blob/main/LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.
