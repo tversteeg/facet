@@ -6,8 +6,6 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-homepage.workspace = true
-documentation = "https://docs.rs/facet-msgpack"
 description = "MessagePack serialization and deserialization for Facet types"
 keywords = [
     "msgpack",

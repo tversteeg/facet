@@ -6,11 +6,9 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-homepage.workspace = true
-documentation.workspace = true
-description.workspace = true
-keywords.workspace = true
-categories.workspace = true
+description = "Read arbitrary Facet types safely"
+keywords = ["reflection", "introspection", "reading", "facet"]
+categories = ["development-tools", "rust-patterns", "parsing"]
 
 [dependencies]
 facet-trait.workspace = true
