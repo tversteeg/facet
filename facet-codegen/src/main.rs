@@ -102,7 +102,7 @@ Thanks to Zed for sponsoring this project:
 <a href="https://zed.dev">
     <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/zed-dark.svg">
-    <img src="https://github.com/facet-rs/facet/raw/main/static/zed-light.svg" height="40" alt="Zed">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/zed-light.svg?woops" height="40" alt="Zed">
     </picture>
 </a>
 
