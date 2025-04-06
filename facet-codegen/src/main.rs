@@ -85,17 +85,13 @@ fn generate_readme_files() {
     // Add template functions
     env.add_function("badges", |crate_name: String| {
         format!(
-            "[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)\n\
-             [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)\n\
-             [![crates.io](https://img.shields.io/crates/v/{0}.svg)](https://crates.io/crates/{0})\n\
-             [![documentation](https://docs.rs/{0}/badge.svg)](https://docs.rs/{0})\n\
-             [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/{0}.svg)](./LICENSE)",
-            crate_name
-        )
-    });
+            r#"[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)\n\
+[![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)\n\
+[![crates.io](https://img.shields.io/crates/v/{0}.svg)](https://crates.io/crates/{0})\n\
+[![documentation](https://docs.rs/{0}/badge.svg)](https://docs.rs/{0})\n\
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/{0}.svg)](./LICENSE)
 
-    env.add_function("footer", || {
-        r#"## Funding
+## Funding
 
 Thanks to all individual sponsors, without whom this work could not exist:
 
@@ -129,7 +125,13 @@ Thanks to corporate sponsors: Zed Industries for free credits, and Namespace for
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/namespace-light.svg" height="40" alt="Namespace">
     </picture>
 </a>
+             "#,
+            crate_name
+        )
+    });
 
+    env.add_function("footer", || {
+        r#"
 ## License
 
 Licensed under either of:
