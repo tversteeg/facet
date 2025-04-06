@@ -1,8 +1,23 @@
 {# Template for generating Shapely implementations for tuples #}
 
+{# Note: this comment applies not to this template file, but to the generated code #}
+//! GENERATED: DO NOT EDIT — this file is generated from `tuples_impls.rs.j2`
+//! file in the `shapely-codegen` crate.
+
 use std::{alloc::Layout, fmt};
 
 use crate::{Field, FieldFlags, Def, StructDef, Shape, Shapely, TypeNameOpts, ValueVTable, Characteristic, OpaqueConst};
+
+macro_rules! field {
+    ($idx:tt, $ty:ty,) => {
+        Field {
+            name: stringify!($idx),
+            shape: <$ty>::SHAPE,
+            offset: std::mem::offset_of!($ty, $idx),
+            flags: FieldFlags::EMPTY,
+        }
+    };
+}
 
 {% for n in range(1, max_tuple_size + 1) %}
     {%- set where_predicates %}{% for i in range(n) %}T{{ i }}: Shapely{% if not loop.last %},{% endif %}{% endfor %}{% endset %}
@@ -29,25 +44,14 @@ where
         where
             {{ where_predicates }}
         {
-            if let Some(opts) = opts.for_children() {
-                write!(f, "(")?;
-                {% for i in range(n) %}{% if i > 0 %}write!(f, ", ")?;
-                {% endif %}(T{{ i }}::SHAPE.vtable.type_name)(f, opts)?;{% endfor %}
-                write!(f, ")")
-            } else {
-                write!(f, "⋯")
-            }
-        }
-
-        macro_rules! field {
-            ($idx:tt, $ty:ty) => {
-                Field {
-                    name: stringify!($idx),
-                    shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!({{ type_name }}, $idx),
-                    flags: FieldFlags::EMPTY,
-                }
-            };
+            shapely_types::write_type_name_list(
+                f,
+                opts,
+                "(",
+                ", ",
+                ")",
+                &[{{ type_list }}]
+            )
         }
 
         Shape {
@@ -106,7 +110,7 @@ where
             },
             def: Def::Tuple(StructDef {
                 fields: &const { [
-                    {% for i in range(n) %}field!({{ i }}, T{{ i }}){% if not loop.last %},
+                    {% for i in range(n) %}field!({{ i }}, {{ type_name }},){% if not loop.last %},
                     {% endif %}{% endfor %}
                 ] },
             }),

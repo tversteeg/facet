@@ -1,4 +1,5 @@
 use minijinja::Environment;
+use std::io::Write;
 
 fn main() {
     // Check if current directory has a Cargo.toml with [workspace]
@@ -36,18 +37,29 @@ fn main() {
         })
         .expect("Failed to render template");
 
-    let path = "shapely-trait/src/impls/tuples_impls.rs";
-    std::fs::write(path, output).expect("Failed to write file");
-
-    // Run rustfmt on the generated file
-    let status = std::process::Command::new("rustfmt")
+    // Format the generated code using rustfmt
+    let mut fmt = std::process::Command::new("rustfmt")
         .arg("--edition")
         .arg("2024")
-        .arg(path)
-        .status()
-        .expect("Failed to execute rustfmt");
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .spawn()
+        .expect("Failed to spawn rustfmt");
 
-    if !status.success() {
-        eprintln!("rustfmt failed with exit code: {}", status);
+    // Write to rustfmt's stdin
+    fmt.stdin
+        .take()
+        .expect("Failed to get stdin")
+        .write_all(output.as_bytes())
+        .expect("Failed to write to rustfmt stdin");
+
+    // Get formatted output
+    let formatted_output = fmt.wait_with_output().expect("Failed to wait for rustfmt");
+    if !formatted_output.status.success() {
+        eprintln!("rustfmt failed with exit code: {}", formatted_output.status);
+        std::process::exit(1);
     }
+
+    let path = "shapely-trait/src/impls/tuples_impls.rs";
+    std::fs::write(path, formatted_output.stdout).expect("Failed to write file");
 }

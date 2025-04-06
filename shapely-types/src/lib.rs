@@ -492,7 +492,7 @@ impl Characteristic {
 }
 
 #[inline(always)]
-pub fn type_name_set(
+pub fn write_type_name_list(
     f: &mut fmt::Formatter<'_>,
     opts: TypeNameOpts,
     open: &'static str,

@@ -1,9 +1,23 @@
+//! GENERATED: DO NOT EDIT — this file is generated from `tuples_impls.rs.j2`
+//! file in the `shapely-codegen` crate.
+
 use std::{alloc::Layout, fmt};
 
 use crate::{
     Characteristic, Def, Field, FieldFlags, OpaqueConst, Shape, Shapely, StructDef, TypeNameOpts,
     ValueVTable,
 };
+
+macro_rules! field {
+    ($idx:tt, $ty:ty,) => {
+        Field {
+            name: stringify!($idx),
+            shape: <$ty>::SHAPE,
+            offset: std::mem::offset_of!($ty, $idx),
+            flags: FieldFlags::EMPTY,
+        }
+    };
+}
 
 unsafe impl<T0> Shapely for (T0,)
 where
@@ -15,24 +29,7 @@ where
         where
             T0: Shapely,
         {
-            if let Some(opts) = opts.for_children() {
-                write!(f, "(")?;
-                (T0::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ")")
-            } else {
-                write!(f, "⋯")
-            }
-        }
-
-        macro_rules! field {
-            ($idx:tt, $ty:ty) => {
-                Field {
-                    name: stringify!($idx),
-                    shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0,), $idx),
-                    flags: FieldFlags::EMPTY,
-                }
-            };
+            shapely_types::write_type_name_list(f, opts, "(", ", ", ")", &[T0])
         }
 
         Shape {
@@ -76,7 +73,7 @@ where
                 // ... (other vtable fields)
             },
             def: Def::Tuple(StructDef {
-                fields: &const { [field!(0, T0)] },
+                fields: &const { [field!(0, (T0,),)] },
             }),
         }
     };
@@ -93,26 +90,7 @@ where
             T0: Shapely,
             T1: Shapely,
         {
-            if let Some(opts) = opts.for_children() {
-                write!(f, "(")?;
-                (T0::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T1::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ")")
-            } else {
-                write!(f, "⋯")
-            }
-        }
-
-        macro_rules! field {
-            ($idx:tt, $ty:ty) => {
-                Field {
-                    name: stringify!($idx),
-                    shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1,), $idx),
-                    flags: FieldFlags::EMPTY,
-                }
-            };
+            shapely_types::write_type_name_list(f, opts, "(", ", ", ")", &[T0, T1])
         }
 
         Shape {
@@ -173,7 +151,7 @@ where
                 // ... (other vtable fields)
             },
             def: Def::Tuple(StructDef {
-                fields: &const { [field!(0, T0), field!(1, T1)] },
+                fields: &const { [field!(0, (T0, T1,),), field!(1, (T0, T1,),)] },
             }),
         }
     };
@@ -192,28 +170,7 @@ where
             T1: Shapely,
             T2: Shapely,
         {
-            if let Some(opts) = opts.for_children() {
-                write!(f, "(")?;
-                (T0::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T1::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T2::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ")")
-            } else {
-                write!(f, "⋯")
-            }
-        }
-
-        macro_rules! field {
-            ($idx:tt, $ty:ty) => {
-                Field {
-                    name: stringify!($idx),
-                    shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1, T2,), $idx),
-                    flags: FieldFlags::EMPTY,
-                }
-            };
+            shapely_types::write_type_name_list(f, opts, "(", ", ", ")", &[T0, T1, T2])
         }
 
         Shape {
@@ -294,7 +251,13 @@ where
                 // ... (other vtable fields)
             },
             def: Def::Tuple(StructDef {
-                fields: &const { [field!(0, T0), field!(1, T1), field!(2, T2)] },
+                fields: &const {
+                    [
+                        field!(0, (T0, T1, T2,),),
+                        field!(1, (T0, T1, T2,),),
+                        field!(2, (T0, T1, T2,),),
+                    ]
+                },
             }),
         }
     };
@@ -315,30 +278,7 @@ where
             T2: Shapely,
             T3: Shapely,
         {
-            if let Some(opts) = opts.for_children() {
-                write!(f, "(")?;
-                (T0::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T1::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T2::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T3::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ")")
-            } else {
-                write!(f, "⋯")
-            }
-        }
-
-        macro_rules! field {
-            ($idx:tt, $ty:ty) => {
-                Field {
-                    name: stringify!($idx),
-                    shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1, T2, T3,), $idx),
-                    flags: FieldFlags::EMPTY,
-                }
-            };
+            shapely_types::write_type_name_list(f, opts, "(", ", ", ")", &[T0, T1, T2, T3])
         }
 
         Shape {
@@ -437,7 +377,14 @@ where
                 // ... (other vtable fields)
             },
             def: Def::Tuple(StructDef {
-                fields: &const { [field!(0, T0), field!(1, T1), field!(2, T2), field!(3, T3)] },
+                fields: &const {
+                    [
+                        field!(0, (T0, T1, T2, T3,),),
+                        field!(1, (T0, T1, T2, T3,),),
+                        field!(2, (T0, T1, T2, T3,),),
+                        field!(3, (T0, T1, T2, T3,),),
+                    ]
+                },
             }),
         }
     };
@@ -460,32 +407,7 @@ where
             T3: Shapely,
             T4: Shapely,
         {
-            if let Some(opts) = opts.for_children() {
-                write!(f, "(")?;
-                (T0::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T1::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T2::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T3::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T4::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ")")
-            } else {
-                write!(f, "⋯")
-            }
-        }
-
-        macro_rules! field {
-            ($idx:tt, $ty:ty) => {
-                Field {
-                    name: stringify!($idx),
-                    shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4,), $idx),
-                    flags: FieldFlags::EMPTY,
-                }
-            };
+            shapely_types::write_type_name_list(f, opts, "(", ", ", ")", &[T0, T1, T2, T3, T4])
         }
 
         Shape {
@@ -610,11 +532,11 @@ where
             def: Def::Tuple(StructDef {
                 fields: &const {
                     [
-                        field!(0, T0),
-                        field!(1, T1),
-                        field!(2, T2),
-                        field!(3, T3),
-                        field!(4, T4),
+                        field!(0, (T0, T1, T2, T3, T4,),),
+                        field!(1, (T0, T1, T2, T3, T4,),),
+                        field!(2, (T0, T1, T2, T3, T4,),),
+                        field!(3, (T0, T1, T2, T3, T4,),),
+                        field!(4, (T0, T1, T2, T3, T4,),),
                     ]
                 },
             }),
@@ -651,34 +573,7 @@ where
             T4: Shapely,
             T5: Shapely,
         {
-            if let Some(opts) = opts.for_children() {
-                write!(f, "(")?;
-                (T0::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T1::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T2::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T3::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T4::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T5::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ")")
-            } else {
-                write!(f, "⋯")
-            }
-        }
-
-        macro_rules! field {
-            ($idx:tt, $ty:ty) => {
-                Field {
-                    name: stringify!($idx),
-                    shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5,), $idx),
-                    flags: FieldFlags::EMPTY,
-                }
-            };
+            shapely_types::write_type_name_list(f, opts, "(", ", ", ")", &[T0, T1, T2, T3, T4, T5])
         }
 
         Shape {
@@ -822,12 +717,12 @@ where
             def: Def::Tuple(StructDef {
                 fields: &const {
                     [
-                        field!(0, T0),
-                        field!(1, T1),
-                        field!(2, T2),
-                        field!(3, T3),
-                        field!(4, T4),
-                        field!(5, T5),
+                        field!(0, (T0, T1, T2, T3, T4, T5,),),
+                        field!(1, (T0, T1, T2, T3, T4, T5,),),
+                        field!(2, (T0, T1, T2, T3, T4, T5,),),
+                        field!(3, (T0, T1, T2, T3, T4, T5,),),
+                        field!(4, (T0, T1, T2, T3, T4, T5,),),
+                        field!(5, (T0, T1, T2, T3, T4, T5,),),
                     ]
                 },
             }),
@@ -867,36 +762,14 @@ where
             T5: Shapely,
             T6: Shapely,
         {
-            if let Some(opts) = opts.for_children() {
-                write!(f, "(")?;
-                (T0::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T1::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T2::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T3::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T4::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T5::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T6::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ")")
-            } else {
-                write!(f, "⋯")
-            }
-        }
-
-        macro_rules! field {
-            ($idx:tt, $ty:ty) => {
-                Field {
-                    name: stringify!($idx),
-                    shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5, T6,), $idx),
-                    flags: FieldFlags::EMPTY,
-                }
-            };
+            shapely_types::write_type_name_list(
+                f,
+                opts,
+                "(",
+                ", ",
+                ")",
+                &[T0, T1, T2, T3, T4, T5, T6],
+            )
         }
 
         Shape {
@@ -1059,13 +932,13 @@ where
             def: Def::Tuple(StructDef {
                 fields: &const {
                     [
-                        field!(0, T0),
-                        field!(1, T1),
-                        field!(2, T2),
-                        field!(3, T3),
-                        field!(4, T4),
-                        field!(5, T5),
-                        field!(6, T6),
+                        field!(0, (T0, T1, T2, T3, T4, T5, T6,),),
+                        field!(1, (T0, T1, T2, T3, T4, T5, T6,),),
+                        field!(2, (T0, T1, T2, T3, T4, T5, T6,),),
+                        field!(3, (T0, T1, T2, T3, T4, T5, T6,),),
+                        field!(4, (T0, T1, T2, T3, T4, T5, T6,),),
+                        field!(5, (T0, T1, T2, T3, T4, T5, T6,),),
+                        field!(6, (T0, T1, T2, T3, T4, T5, T6,),),
                     ]
                 },
             }),
@@ -1108,38 +981,14 @@ where
             T6: Shapely,
             T7: Shapely,
         {
-            if let Some(opts) = opts.for_children() {
-                write!(f, "(")?;
-                (T0::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T1::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T2::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T3::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T4::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T5::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T6::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T7::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ")")
-            } else {
-                write!(f, "⋯")
-            }
-        }
-
-        macro_rules! field {
-            ($idx:tt, $ty:ty) => {
-                Field {
-                    name: stringify!($idx),
-                    shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5, T6, T7,), $idx),
-                    flags: FieldFlags::EMPTY,
-                }
-            };
+            shapely_types::write_type_name_list(
+                f,
+                opts,
+                "(",
+                ", ",
+                ")",
+                &[T0, T1, T2, T3, T4, T5, T6, T7],
+            )
         }
 
         Shape {
@@ -1322,14 +1171,14 @@ where
             def: Def::Tuple(StructDef {
                 fields: &const {
                     [
-                        field!(0, T0),
-                        field!(1, T1),
-                        field!(2, T2),
-                        field!(3, T3),
-                        field!(4, T4),
-                        field!(5, T5),
-                        field!(6, T6),
-                        field!(7, T7),
+                        field!(0, (T0, T1, T2, T3, T4, T5, T6, T7,),),
+                        field!(1, (T0, T1, T2, T3, T4, T5, T6, T7,),),
+                        field!(2, (T0, T1, T2, T3, T4, T5, T6, T7,),),
+                        field!(3, (T0, T1, T2, T3, T4, T5, T6, T7,),),
+                        field!(4, (T0, T1, T2, T3, T4, T5, T6, T7,),),
+                        field!(5, (T0, T1, T2, T3, T4, T5, T6, T7,),),
+                        field!(6, (T0, T1, T2, T3, T4, T5, T6, T7,),),
+                        field!(7, (T0, T1, T2, T3, T4, T5, T6, T7,),),
                     ]
                 },
             }),
@@ -1375,40 +1224,14 @@ where
             T7: Shapely,
             T8: Shapely,
         {
-            if let Some(opts) = opts.for_children() {
-                write!(f, "(")?;
-                (T0::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T1::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T2::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T3::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T4::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T5::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T6::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T7::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T8::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ")")
-            } else {
-                write!(f, "⋯")
-            }
-        }
-
-        macro_rules! field {
-            ($idx:tt, $ty:ty) => {
-                Field {
-                    name: stringify!($idx),
-                    shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5, T6, T7, T8,), $idx),
-                    flags: FieldFlags::EMPTY,
-                }
-            };
+            shapely_types::write_type_name_list(
+                f,
+                opts,
+                "(",
+                ", ",
+                ")",
+                &[T0, T1, T2, T3, T4, T5, T6, T7, T8],
+            )
         }
 
         Shape {
@@ -1610,15 +1433,15 @@ where
             def: Def::Tuple(StructDef {
                 fields: &const {
                     [
-                        field!(0, T0),
-                        field!(1, T1),
-                        field!(2, T2),
-                        field!(3, T3),
-                        field!(4, T4),
-                        field!(5, T5),
-                        field!(6, T6),
-                        field!(7, T7),
-                        field!(8, T8),
+                        field!(0, (T0, T1, T2, T3, T4, T5, T6, T7, T8,),),
+                        field!(1, (T0, T1, T2, T3, T4, T5, T6, T7, T8,),),
+                        field!(2, (T0, T1, T2, T3, T4, T5, T6, T7, T8,),),
+                        field!(3, (T0, T1, T2, T3, T4, T5, T6, T7, T8,),),
+                        field!(4, (T0, T1, T2, T3, T4, T5, T6, T7, T8,),),
+                        field!(5, (T0, T1, T2, T3, T4, T5, T6, T7, T8,),),
+                        field!(6, (T0, T1, T2, T3, T4, T5, T6, T7, T8,),),
+                        field!(7, (T0, T1, T2, T3, T4, T5, T6, T7, T8,),),
+                        field!(8, (T0, T1, T2, T3, T4, T5, T6, T7, T8,),),
                     ]
                 },
             }),
@@ -1668,42 +1491,14 @@ where
             T8: Shapely,
             T9: Shapely,
         {
-            if let Some(opts) = opts.for_children() {
-                write!(f, "(")?;
-                (T0::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T1::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T2::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T3::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T4::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T5::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T6::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T7::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T8::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T9::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ")")
-            } else {
-                write!(f, "⋯")
-            }
-        }
-
-        macro_rules! field {
-            ($idx:tt, $ty:ty) => {
-                Field {
-                    name: stringify!($idx),
-                    shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5, T6, T7, T8, T9,), $idx),
-                    flags: FieldFlags::EMPTY,
-                }
-            };
+            shapely_types::write_type_name_list(
+                f,
+                opts,
+                "(",
+                ", ",
+                ")",
+                &[T0, T1, T2, T3, T4, T5, T6, T7, T8, T9],
+            )
         }
 
         Shape {
@@ -1925,16 +1720,16 @@ where
             def: Def::Tuple(StructDef {
                 fields: &const {
                     [
-                        field!(0, T0),
-                        field!(1, T1),
-                        field!(2, T2),
-                        field!(3, T3),
-                        field!(4, T4),
-                        field!(5, T5),
-                        field!(6, T6),
-                        field!(7, T7),
-                        field!(8, T8),
-                        field!(9, T9),
+                        field!(0, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9,),),
+                        field!(1, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9,),),
+                        field!(2, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9,),),
+                        field!(3, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9,),),
+                        field!(4, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9,),),
+                        field!(5, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9,),),
+                        field!(6, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9,),),
+                        field!(7, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9,),),
+                        field!(8, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9,),),
+                        field!(9, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9,),),
                     ]
                 },
             }),
@@ -1987,47 +1782,14 @@ where
             T9: Shapely,
             T10: Shapely,
         {
-            if let Some(opts) = opts.for_children() {
-                write!(f, "(")?;
-                (T0::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T1::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T2::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T3::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T4::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T5::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T6::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T7::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T8::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T9::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T10::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ")")
-            } else {
-                write!(f, "⋯")
-            }
-        }
-
-        macro_rules! field {
-            ($idx:tt, $ty:ty) => {
-                Field {
-                    name: stringify!($idx),
-                    shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!(
-                        (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,),
-                        $idx
-                    ),
-                    flags: FieldFlags::EMPTY,
-                }
-            };
+            shapely_types::write_type_name_list(
+                f,
+                opts,
+                "(",
+                ", ",
+                ")",
+                &[T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10],
+            )
         }
 
         Shape {
@@ -2270,17 +2032,17 @@ where
             def: Def::Tuple(StructDef {
                 fields: &const {
                     [
-                        field!(0, T0),
-                        field!(1, T1),
-                        field!(2, T2),
-                        field!(3, T3),
-                        field!(4, T4),
-                        field!(5, T5),
-                        field!(6, T6),
-                        field!(7, T7),
-                        field!(8, T8),
-                        field!(9, T9),
-                        field!(10, T10),
+                        field!(0, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,),),
+                        field!(1, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,),),
+                        field!(2, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,),),
+                        field!(3, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,),),
+                        field!(4, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,),),
+                        field!(5, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,),),
+                        field!(6, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,),),
+                        field!(7, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,),),
+                        field!(8, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,),),
+                        field!(9, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,),),
+                        field!(10, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,),),
                     ]
                 },
             }),
@@ -2336,49 +2098,14 @@ where
             T10: Shapely,
             T11: Shapely,
         {
-            if let Some(opts) = opts.for_children() {
-                write!(f, "(")?;
-                (T0::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T1::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T2::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T3::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T4::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T5::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T6::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T7::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T8::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T9::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T10::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ", ")?;
-                (T11::SHAPE.vtable.type_name)(f, opts)?;
-                write!(f, ")")
-            } else {
-                write!(f, "⋯")
-            }
-        }
-
-        macro_rules! field {
-            ($idx:tt, $ty:ty) => {
-                Field {
-                    name: stringify!($idx),
-                    shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!(
-                        (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,),
-                        $idx
-                    ),
-                    flags: FieldFlags::EMPTY,
-                }
-            };
+            shapely_types::write_type_name_list(
+                f,
+                opts,
+                "(",
+                ", ",
+                ")",
+                &[T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11],
+            )
         }
 
         Shape {
@@ -2642,18 +2369,18 @@ where
             def: Def::Tuple(StructDef {
                 fields: &const {
                     [
-                        field!(0, T0),
-                        field!(1, T1),
-                        field!(2, T2),
-                        field!(3, T3),
-                        field!(4, T4),
-                        field!(5, T5),
-                        field!(6, T6),
-                        field!(7, T7),
-                        field!(8, T8),
-                        field!(9, T9),
-                        field!(10, T10),
-                        field!(11, T11),
+                        field!(0, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,),),
+                        field!(1, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,),),
+                        field!(2, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,),),
+                        field!(3, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,),),
+                        field!(4, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,),),
+                        field!(5, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,),),
+                        field!(6, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,),),
+                        field!(7, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,),),
+                        field!(8, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,),),
+                        field!(9, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,),),
+                        field!(10, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,),),
+                        field!(11, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,),),
                     ]
                 },
             }),
