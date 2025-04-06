@@ -6,35 +6,47 @@
 [![documentation](https://docs.rs/facet/badge.svg)](https://docs.rs/facet)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet.svg)](./LICENSE)
 
-A Rust reflection, introspection, serialization and deserialization framework with support for multiple formats including JSON, YAML, MessagePack, URL-encoded data, and more.
+facet provides type reflection for Rust, in const contexts.
 
-A single, lightweight derive macro (thanks to [unsynn](https://crates.io/crates/unsynn))
+Any type that implements `Facet` trait returns a `Shape`, which describes:
 
-```rust
-#[derive(Facet)]
-struct Blah {
-    foo: u32,
-    bar: String,
-}
-```
+  * The memory layout of the type
+  * Its definition: struct fields, underlying type for newtypes, etc.
+  * How to drop it in place
 
-...gives you the equivalent of `Debug`, `Serialize`, `Deserialize`, and more.
+The `Poke` type is able to allocate (or work from a `&mut MaybeUninit<T>`)
+any Facet type, and gradually initialize its fields — until the fully-built
+value is moved out of the partial.
 
-facet's approach is halfway between [serde](https://crates.io/crates/serde) and [bevy_reflect](https://crates.io/crates/bevy_reflect)
+The `Peek` type helps perform read operations on any Facet type.
 
-See the [facet README](./facet/README.md) for more info.
+It comes with a derive macro that uses [unsynn](https://crates.io/crates/unsynn)
+for speed of compilation.
+
+## Ecosystem
+
+There are separate crates for the trait, the core types, the derive macro, peek, poke,
+and various serializers, deserializers, and pretty printers etc.
+
+The hub for everything is the [facet](https://crates.io/crates/facet) crate.
+
+You can start with its [README](https://github.com/fasterthanlime/facet/blob/main/facet/README.md).
 
 ### Funding
 
+Thanks to Zed for sponsoring this project:
+
+<a href="https://zed.dev"><img src="https://github.com/facet-rs/facet/raw/main/static/zed.svg" height="40"></a>
+
 Thanks to Namespace for providing fast GitHub Actions workers:
 
-<a href="https://namespace.so"><img src="./static/namespace-d.svg" height="40"></a>
+<a href="https://namespace.so"><img src="https://github.com/facet-rs/facet/raw/main/static/namespace-d.svg" height="40"></a>
 
 ## License
 
 Licensed under either of:
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0 ([LICENSE-APACHE](https://github.com/facet-rs/facet/blob/main/LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](https://github.com/facet-rs/facet/blob/main/LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.

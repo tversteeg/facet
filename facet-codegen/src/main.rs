@@ -99,11 +99,11 @@ fn generate_readme_files() {
 
 Thanks to Zed for sponsoring this project:
 
-<a href="https://zed.dev"><svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M9 6C7.34315 6 6 7.34315 6 9V75H0V9C0 4.02944 4.02944 0 9 0H89.3787C93.3878 0 95.3955 4.84715 92.5607 7.68198L43.0551 57.1875H57V51H63V58.6875C63 61.1728 60.9853 63.1875 58.5 63.1875H37.0551L26.7426 73.5H73.5V36H79.5V73.5C79.5 76.8137 76.8137 79.5 73.5 79.5H20.7426L10.2426 90H87C88.6569 90 90 88.6569 90 87V21H96V87C96 91.9706 91.9706 96 87 96H6.62132C2.61224 96 0.604504 91.1529 3.43934 88.318L52.7574 39H39V45H33V37.5C33 35.0147 35.0147 33 37.5 33H58.7574L69.2574 22.5H22.5V60H16.5V22.5C16.5 19.1863 19.1863 16.5 22.5 16.5H75.2574L85.7574 6H9Z" fill="white"/></svg></a>
+<a href="https://zed.dev"><img src="https://github.com/facet-rs/facet/raw/main/static/zed.svg" height="40"></a>
 
 Thanks to Namespace for providing fast GitHub Actions workers:
 
-<a href=\"https://namespace.so\"><img src=\"https://github.com/facet-rs/facet/raw/main/static/namespace-d.svg\" height=\"40\"></a>
+<a href="https://namespace.so"><img src="https://github.com/facet-rs/facet/raw/main/static/namespace-d.svg" height="40"></a>
 
 ## License
 
@@ -169,6 +169,12 @@ at your option."#.to_string()
         if template_path.exists() {
             process_readme_template(&mut env, &facet_crate_path, &template_path);
         }
+    }
+
+    // Generate workspace README if template exists
+    let workspace_template_path = workspace_dir.join("templates").join("README.md.j2");
+    if workspace_template_path.exists() {
+        process_readme_template(&mut env, &workspace_dir, &workspace_template_path);
     }
 }
 
