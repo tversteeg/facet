@@ -1,5 +1,5 @@
 [package]
-name = "shapely-codegen"
+name = "facet-codegen"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true

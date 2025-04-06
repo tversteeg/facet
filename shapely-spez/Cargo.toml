@@ -1,5 +1,5 @@
 [package]
-name = "shapely-spez"
+name = "facet-spez"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -14,5 +14,5 @@ categories.workspace = true
 
 [dependencies]
 impls = "1.0.3"
-shapely-opaque = { version = "3.1.1", path = "../shapely-opaque" }
-shapely-types = { version = "0.1.0", path = "../shapely-types" }
+facet-opaque = { version = "3.1.1", path = "../facet-opaque" }
+facet-types = { version = "0.1.0", path = "../facet-types" }

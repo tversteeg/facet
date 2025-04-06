@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [3.1.1](https://github.com/shapely-rs/shapely/compare/shapely-json-v3.1.0...shapely-json-v3.1.1) - 2025-04-05
+## [3.1.1](https://github.com/facet-rs/facet/compare/facet-json-v3.1.0...facet-json-v3.1.1) - 2025-04-05
 
 ### Fixed
 
@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Innards => Def
 - Introduce poke
 
-## [3.1.0](https://github.com/shapely-rs/shapely/compare/shapely-json-v3.0.0...shapely-json-v3.1.0) - 2025-03-31
+## [3.1.0](https://github.com/facet-rs/facet/compare/facet-json-v3.0.0...facet-json-v3.1.0) - 2025-03-31
 
 ### Added
 
@@ -71,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improve debug output
 - woo
 
-## [2.0.0](https://github.com/shapely-rs/shapely/compare/shapely-json-v1.0.0...shapely-json-v2.0.0) - 2025-03-11
+## [2.0.0](https://github.com/facet-rs/facet/compare/facet-json-v1.0.0...facet-json-v2.0.0) - 2025-03-11
 
 ### Other
 

@@ -1,10 +1,10 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-pub use shapely_spez;
+pub use facet_spez;
 
-pub use shapely_opaque::*;
-pub use shapely_types::*;
+pub use facet_opaque::*;
+pub use facet_types::*;
 
 mod impls;
 
@@ -16,7 +16,7 @@ pub use macros::*;
 ///
 /// # Safety
 ///
-/// If you implement this wrong, all the safe abstractions in `shapely-peek`, `shapely-poke`,
+/// If you implement this wrong, all the safe abstractions in `facet-peek`, `facet-poke`,
 /// all the serializers, deserializers, the entire ecosystem is unsafe.
 ///
 /// You're responsible for describing the type layout properly, and annotating all the invariants.

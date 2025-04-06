@@ -76,7 +76,7 @@ When we use these traits, the compiler will prefer the first implementation if t
 
 It's important to understand when this specialization technique can and cannot be used:
 
-1. **Only works in macros and non-generic contexts**: Auto-deref specialization is primarily useful in macros (like those in `shapely-derive`) and for non-generic, scalar types like `i32`, `u32`, `String`, etc.
+1. **Only works in macros and non-generic contexts**: Auto-deref specialization is primarily useful in macros (like those in `facet-derive`) and for non-generic, scalar types like `i32`, `u32`, `String`, etc.
 
 2. **Not suitable for generic types**: For types with generic parameters (like `HashMap<K, V>`), this approach doesn't work well because the specialization cannot be done based on properties of the generic parameters.
 
@@ -95,7 +95,7 @@ Let's examine how the `PartialOrd` trait is conditionally implemented using both
 For arrays like `[T; 1]`, we need to check if the inner type `T` implements `PartialOrd`. Since this is a generic type, we use compile-time evaluation of `SHAPE`:
 
 ```rust
-# use shapely::{OpaqueConst, Shape, Shapely};
+# use facet::{OpaqueConst, Shape, Shapely};
 # use std::cmp::Ordering;
 fn create_array_shape<T: Shapely>() {
     let vtable = {
@@ -133,16 +133,16 @@ For non-generic types, we use the `value_vtable` macro which leverages auto-dere
 
 ```rust
 # // This is a simplified version of what happens in the actual code
-# use shapely::OpaqueConst;
+# use facet::OpaqueConst;
 
 # #[macro_export]
 # macro_rules! value_vtable {
 #     ($type_name:ty) => {
 #         {
 #             // Other vtable fields would be here...
-            let partial_ord = if shapely_spez::impls!($type_name: std::cmp::PartialOrd) {
+            let partial_ord = if facet_spez::impls!($type_name: std::cmp::PartialOrd) {
                 Some(|left: OpaqueConst, right: OpaqueConst| {
-                    use shapely_spez::*;
+                    use facet_spez::*;
                     (&&Spez(unsafe { left.as_ref::<$type_name>() }))
                         .spez_partial_cmp(&&Spez(unsafe { right.as_ref::<$type_name>() }))
                 })

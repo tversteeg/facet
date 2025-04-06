@@ -1,5 +1,5 @@
 [package]
-name = "shapely"
+name = "facet"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -13,12 +13,12 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
-shapely-trait.workspace = true
-shapely-derive.workspace = true
+facet-trait.workspace = true
+facet-derive.workspace = true
 
 [features]
 # Does nothing, only used for tests
 testfeat = []
 
 [dev-dependencies]
-shapely-spez = { path = "../shapely-spez" }
+facet-spez = { path = "../facet-spez" }

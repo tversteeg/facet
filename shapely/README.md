@@ -1,12 +1,12 @@
-# shapely
+# facet
 
-[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/shapely)
+[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/shapely.svg)](https://crates.io/crates/shapely)
-[![documentation](https://docs.rs/shapely/badge.svg)](https://docs.rs/shapely)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/shapely.svg)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/facet.svg)](https://crates.io/crates/facet)
+[![documentation](https://docs.rs/facet/badge.svg)](https://docs.rs/facet)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet.svg)](./LICENSE)
 
-shapely provides runtime reflection for Rust.
+facet provides runtime reflection for Rust.
 
 Any type that implements `Shapely` trait returns a `Shape`, which describes:
 
@@ -25,44 +25,44 @@ for speed of compilation.
 
 ## Ecosystem
 
-The main `shapely` crate re-exports symbols from:
+The main `facet` crate re-exports symbols from:
 
-- [shapely-trait](../shapely-trait), which defines the main `Shapely` trait and implements it for foreign types (mostly `libstd`)
-- [shapely-types](../shapely-types), which defines the `Shape` struct, along with various vtables and the whole `Def` tree
-- [shapely-opaque](../shapely-opaque), which provides helpers around type-erased pointers like
+- [facet-trait](../facet-trait), which defines the main `Shapely` trait and implements it for foreign types (mostly `libstd`)
+- [facet-types](../facet-types), which defines the `Shape` struct, along with various vtables and the whole `Def` tree
+- [facet-opaque](../facet-opaque), which provides helpers around type-erased pointers like
   `OpaqueUninit`, `OpaqueConst`, `Opaque`
-- [shapely-derive](../shapely-derive), which implements the `Shapely` derive attribute as a fast/light proc macro powered by [unsynn](https://docs.rs/unsynn)
-- [shapely-spez](../shapely-spez), which implements an autoderef specialization trick needed for `shapely-derive`
-- [shapely-peek](../shapely-peek), which allows reading arbitrary `Shapely` types
-- [shapely-poke](../shapely-poke), which allows building/altering arbitrary `Shapely` types
+- [facet-derive](../facet-derive), which implements the `Shapely` derive attribute as a fast/light proc macro powered by [unsynn](https://docs.rs/unsynn)
+- [facet-spez](../facet-spez), which implements an autoderef specialization trick needed for `facet-derive`
+- [facet-peek](../facet-peek), which allows reading arbitrary `Shapely` types
+- [facet-poke](../facet-poke), which allows building/altering arbitrary `Shapely` types
 
-shapely supports deserialization from multiple data formats through dedicated crates:
+facet supports deserialization from multiple data formats through dedicated crates:
 
-- [shapely-json](../shapely-json): JSON deserialization
-- [shapely-yaml](../shapely-yaml): YAML deserialization
-- [shapely-msgpack](../shapely-msgpack): MessagePack deserialization
-- [shapely-urlencoded](../shapely-urlencoded): URL-encoded form data deserialization
+- [facet-json](../facet-json): JSON deserialization
+- [facet-yaml](../facet-yaml): YAML deserialization
+- [facet-msgpack](../facet-msgpack): MessagePack deserialization
+- [facet-urlencoded](../facet-urlencoded): URL-encoded form data deserialization
 
 Additionally:
 
-- [shapely-pretty](../shapely-pretty) is able to pretty-print Shapely types.
-- [shapely-codegen](../shapely-codegen) is internal and generates some of the code of `shapely-core`
+- [facet-pretty](../facet-pretty) is able to pretty-print Shapely types.
+- [facet-codegen](../facet-codegen) is internal and generates some of the code of `facet-core`
 
 ### Example usage
 
-[shapely-json](../shapely-json/src/lib.rs) is the one that gets updated first — look at it.
+[facet-json](../facet-json/src/lib.rs) is the one that gets updated first — look at it.
 
 ### Funding
 
 Thanks to Namespace for providing fast GitHub Actions workers:
 
-<a href="https://namespace.so"><img src="https://github.com/shapely-rs/shapely/raw/main/static/namespace-d.svg" height="40"></a>
+<a href="https://namespace.so"><img src="https://github.com/facet-rs/facet/raw/main/static/namespace-d.svg" height="40"></a>
 
 ## License
 
 Licensed under either of:
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](https://github.com/shapely-rs/shapely/blob/main/LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
-- MIT license ([LICENSE-MIT](https://github.com/shapely-rs/shapely/blob/main/LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
+- Apache License, Version 2.0 ([LICENSE-APACHE](https://github.com/facet-rs/facet/blob/main/LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](https://github.com/facet-rs/facet/blob/main/LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.

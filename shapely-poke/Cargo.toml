@@ -1,5 +1,5 @@
 [package]
-name = "shapely-poke"
+name = "facet-poke"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -13,8 +13,8 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
-shapely-peek = { version = "3.1.1", path = "../shapely-peek" }
-shapely-trait.workspace = true
+facet-peek = { version = "3.1.1", path = "../facet-peek" }
+facet-trait.workspace = true
 
 [dev-dependencies]
 color-backtrace = { version = "0.7.0", default-features = false, features = [
@@ -22,5 +22,5 @@ color-backtrace = { version = "0.7.0", default-features = false, features = [
 ] }
 ctor = "0.4.1"
 owo-colors = "4.2.0"
-shapely-derive.workspace = true
-shapely-samplelibc = { path = "../shapely-samplelibc" }
+facet-derive.workspace = true
+facet-samplelibc = { path = "../facet-samplelibc" }

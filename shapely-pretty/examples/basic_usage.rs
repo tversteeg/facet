@@ -1,5 +1,5 @@
-use shapely::Shapely;
-use shapely_pretty::{PrettyPrinter, ShapelyPretty};
+use facet::Shapely;
+use facet_pretty::{PrettyPrinter, ShapelyPretty};
 
 #[derive(Debug, Shapely)]
 struct Person {

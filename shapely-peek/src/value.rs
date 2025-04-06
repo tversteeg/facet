@@ -1,4 +1,4 @@
-use shapely_trait::{Opaque, OpaqueConst, Shape, TypeNameOpts, ValueVTable};
+use facet_trait::{Opaque, OpaqueConst, Shape, TypeNameOpts, ValueVTable};
 use std::cmp::Ordering;
 
 use crate::Peek;

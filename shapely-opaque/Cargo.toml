@@ -1,5 +1,5 @@
 [package]
-name = "shapely-opaque"
+name = "facet-opaque"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true

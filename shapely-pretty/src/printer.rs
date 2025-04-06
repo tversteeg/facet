@@ -7,7 +7,7 @@ use std::{
     str,
 };
 
-use shapely_core::{Def, FieldFlags, Scalar, Shape, ShapeFn, Shapely};
+use facet_core::{Def, FieldFlags, Scalar, Shape, ShapeFn, Shapely};
 
 use crate::{
     ansi,
@@ -212,7 +212,7 @@ impl PrettyPrinter {
         &self,
         ptr: *mut u8,
         shape: Shape,
-        fields: &'static [shapely_core::Field],
+        fields: &'static [facet_core::Field],
         f: &mut impl Write,
         depth: usize,
         visited: &mut HashSet<*mut u8>,
@@ -364,7 +364,7 @@ impl PrettyPrinter {
         &self,
         _ptr: *mut u8,
         shape: Shape,
-        _variants: &'static [shapely_core::Variant],
+        _variants: &'static [facet_core::Variant],
         f: &mut impl Write,
         depth: usize,
         _visited: &mut HashSet<*mut u8>,

@@ -1,12 +1,12 @@
-# shapely-urlencoded
+# facet-urlencoded
 
-[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/shapely)
+[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/shapely-urlencoded.svg)](https://crates.io/crates/shapely-urlencoded)
-[![documentation](https://docs.rs/shapely-urlencoded/badge.svg)](https://docs.rs/shapely-urlencoded)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/shapely-urlencoded.svg)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/facet-urlencoded.svg)](https://crates.io/crates/facet-urlencoded)
+[![documentation](https://docs.rs/facet-urlencoded/badge.svg)](https://docs.rs/facet-urlencoded)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-urlencoded.svg)](./LICENSE)
 
-A serialization and deserialization library for URL encoded form data using the shapely runtime reflection system.
+A serialization and deserialization library for URL encoded form data using the facet runtime reflection system.
 
 ## Features
 
@@ -18,8 +18,8 @@ A serialization and deserialization library for URL encoded form data using the 
 ## Example
 
 ```rust
-use shapely::Shapely;
-use shapely_urlencoded::from_urlencoded;
+use facet::Shapely;
+use facet_urlencoded::from_urlencoded;
 
 #[derive(Debug, Shapely, PartialEq)]
 struct SearchParams {

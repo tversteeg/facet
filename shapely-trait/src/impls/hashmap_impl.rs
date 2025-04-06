@@ -4,7 +4,7 @@ use std::{
     hash::{Hash, RandomState},
 };
 
-use shapely_opaque::OpaqueConst;
+use facet_opaque::OpaqueConst;
 
 use crate::{
     Def, MapDef, MapIterVTable, MapVTable, MarkerTraits, ScalarDef, Shape, Shapely, ValueVTable,

@@ -1,13 +1,13 @@
-# shapely-trait
+# facet-trait
 
-[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/shapely)
+[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/shapely-trait.svg)](https://crates.io/crates/shapely-trait)
-[![documentation](https://docs.rs/shapely-trait/badge.svg)](https://docs.rs/shapely-trait)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/shapely-trait.svg)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/facet-trait.svg)](https://crates.io/crates/facet-trait)
+[![documentation](https://docs.rs/facet-trait/badge.svg)](https://docs.rs/facet-trait)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-trait.svg)](./LICENSE)
 
 This exports the `Shapely` trait, which exposes an associated const `SHAPE` of type
-`Shape`, a struct defined in the `shapely-types` crate.
+`Shape`, a struct defined in the `facet-types` crate.
 
 This crate also provides implementations of `Shapely` for most standard types, like:
 
@@ -20,7 +20,7 @@ This crate also provides implementations of `Shapely` for most standard types, l
   * `Bytes` (a wrapper around `Vec<u8>`)
   * `()`, `(T0,)`
 
-For more detailed information and usage examples, please refer to the [shapely crate documentation](https://docs.rs/shapely).
+For more detailed information and usage examples, please refer to the [facet crate documentation](https://docs.rs/facet).
 
 ### Funding
 

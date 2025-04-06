@@ -1,6 +1,6 @@
 //! Allows peeking (reading from) shapes
 
-use shapely_trait::{Shapely, TypeNameOpts};
+use facet_trait::{Shapely, TypeNameOpts};
 
 mod value;
 pub use value::*;
@@ -14,7 +14,7 @@ pub use list::*;
 mod map;
 pub use map::*;
 
-use shapely_trait::{Def, OpaqueConst, Shape};
+use facet_trait::{Def, OpaqueConst, Shape};
 
 /// Lets you peek at the innards of a value
 ///

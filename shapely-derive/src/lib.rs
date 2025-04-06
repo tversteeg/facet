@@ -159,7 +159,7 @@ unsynn! {
 /// This uses unsynn, so it's light, but it _will_ choke on some Rust syntax because...
 /// there's a lot of Rust syntax.
 #[proc_macro_derive(Shapely)]
-pub fn shapely_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn facet_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = TokenStream::from(input);
     let mut i = input.to_token_iter();
 
@@ -262,19 +262,19 @@ fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
     let output = format!(
         r#"
 #[automatically_derived]
-unsafe impl shapely::Shapely for {struct_name} {{
+unsafe impl facet::Shapely for {struct_name} {{
     const DUMMY: Self = Self {{
         {dummy_fields}
     }};
-    const SHAPE: &'static shapely::Shape = &const {{
-        shapely::Shape {{
+    const SHAPE: &'static facet::Shape = &const {{
+        facet::Shape {{
             layout: std::alloc::Layout::new::<Self>(),
-            vtable: shapely::value_vtable!(
+            vtable: facet::value_vtable!(
                 {struct_name},
                 |f, _opts| std::fmt::Write::write_str(f, "{struct_name}")
             ),
-            def: shapely::Def::Struct(shapely::StructDef {{
-                fields: shapely::struct_fields!({struct_name}, ({fields})),
+            def: facet::Def::Struct(facet::StructDef {{
+                fields: facet::struct_fields!({struct_name}, ({fields})),
             }}),
         }}
     }};
@@ -315,17 +315,17 @@ fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStream {
     let output = format!(
         r#"
 #[automatically_derived]
-unsafe impl shapely::Shapely for {struct_name} {{
+unsafe impl facet::Shapely for {struct_name} {{
     const DUMMY: Self = Self({dummy_fields});
-    const SHAPE: &'static shapely::Shape = &const {{
-        shapely::Shape {{
+    const SHAPE: &'static facet::Shape = &const {{
+        facet::Shape {{
             layout: std::alloc::Layout::new::<Self>(),
-            vtable: shapely::value_vtable!(
+            vtable: facet::value_vtable!(
                 {struct_name},
                 |f, _opts| std::fmt::Write::write_str(f, "{struct_name}")
             ),
-            def: shapely::Def::TupleStruct(shapely::StructDef {{
-                fields: shapely::struct_fields!({struct_name}, ({fields_str})),
+            def: facet::Def::TupleStruct(facet::StructDef {{
+                fields: facet::struct_fields!({struct_name}, ({fields_str})),
             }}),
         }}
     }};
@@ -371,7 +371,7 @@ fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
         .map(|var_like| match &var_like.value {
             EnumVariantLike::Unit(unit) => {
                 let variant_name = unit.name.to_string();
-                format!("shapely::enum_unit_variant!({enum_name}, {variant_name})")
+                format!("facet::enum_unit_variant!({enum_name}, {variant_name})")
             }
             EnumVariantLike::Tuple(tuple) => {
                 let variant_name = tuple.name.to_string();
@@ -384,9 +384,7 @@ fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
                     .collect::<Vec<String>>()
                     .join(", ");
 
-                format!(
-                    "shapely::enum_tuple_variant!({enum_name}, {variant_name}, [{field_types}])"
-                )
+                format!("facet::enum_tuple_variant!({enum_name}, {variant_name}, [{field_types}])")
             }
             EnumVariantLike::Struct(struct_var) => {
                 let variant_name = struct_var.name.to_string();
@@ -403,7 +401,7 @@ fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
                     .collect::<Vec<String>>()
                     .join(", ");
 
-                format!("shapely::enum_struct_variant!({enum_name}, {variant_name}, {{{fields}}})")
+                format!("facet::enum_struct_variant!({enum_name}, {variant_name}, {{{fields}}})")
             }
         })
         .collect::<Vec<String>>()
@@ -434,17 +432,17 @@ fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
     let output = format!(
         r#"
 #[automatically_derived]
-unsafe impl shapely::Shapely for {enum_name} {{
-    const SHAPE: &'static shapely::Shape = &const {{
-        shapely::Shape {{
+unsafe impl facet::Shapely for {enum_name} {{
+    const SHAPE: &'static facet::Shape = &const {{
+        facet::Shape {{
             layout: std::alloc::Layout::new::<Self>(),
-            vtable: shapely::value_vtable!(
+            vtable: facet::value_vtable!(
                 {enum_name},
                 |f, _opts| std::fmt::Write::write_str(f, "{enum_name}")
             ),
-            def: shapely::Def::Enum(shapely::EnumDef {{
-                variants: shapely::enum_variants!({enum_name}, [{variants}]),
-                repr: shapely::EnumRepr::{repr_type},
+            def: facet::Def::Enum(facet::EnumDef {{
+                variants: facet::enum_variants!({enum_name}, [{variants}]),
+                repr: facet::EnumRepr::{repr_type},
             }}),
         }}
     }};

@@ -1,4 +1,4 @@
-use shapely::{Def, Shapely, StructDef};
+use facet::{Def, Shapely, StructDef};
 use std::mem::offset_of;
 
 #[test]
@@ -40,7 +40,7 @@ fn simple_struct() {
 
 #[test]
 fn struct_repr_c() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::shapely::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
     #[repr(C)]
     struct Blah {
         foo: u32,
@@ -50,14 +50,14 @@ fn struct_repr_c() {
 
 #[test]
 fn struct_doc_comment() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::shapely::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
     /// yes
     struct Foo {}
 }
 
 #[test]
 fn struct_field_doc_comment() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::shapely::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
     struct Foo {
         /// This field has a doc comment
         bar: u32,
@@ -66,7 +66,7 @@ fn struct_field_doc_comment() {
 
 #[test]
 fn struct_with_pub_field() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::shapely::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
     struct Foo {
         /// This is a public field
         pub bar: u32,
@@ -75,14 +75,14 @@ fn struct_with_pub_field() {
 
 #[test]
 fn tuple_struct_repr_transparent() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::shapely::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
     #[repr(transparent)]
     struct Blah(u32);
 }
 
 #[test]
 fn tuple_struct_doc_comment() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::shapely::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
     #[repr(transparent)]
     /// This is a struct for sure
     struct Blah(u32);
@@ -90,7 +90,7 @@ fn tuple_struct_doc_comment() {
 
 #[test]
 fn tuple_struct_field_doc_comment() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::shapely::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
     #[repr(transparent)]
     /// This is a struct for sure
     struct Blah(
@@ -101,7 +101,7 @@ fn tuple_struct_field_doc_comment() {
 
 #[test]
 fn tuple_struct_with_pub_field() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::shapely::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
     #[repr(transparent)]
     /// This is a struct for sure
     struct Blah(
@@ -136,7 +136,7 @@ fn cfg_attrs2() {
 
 #[test]
 fn struct_with_std_string() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::shapely::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
     struct FileInfo {
         path: std::string::String,
         size: u64,
@@ -175,7 +175,7 @@ fn derive_real_life_cub_config() {
 
 // #[test]
 // fn struct_with_tuple() {
-//     #[derive(Debug, ::shapely::Shapely)]
+//     #[derive(Debug, ::facet::Shapely)]
 //     struct TupleContainer {
 //         data: (u32, String, bool),
 //     }
@@ -205,7 +205,7 @@ fn derive_real_life_cub_config() {
 
 // #[test]
 // fn struct_with_vec() {
-//     #[derive(Debug, ::shapely::Shapely)]
+//     #[derive(Debug, ::facet::Shapely)]
 //     struct VecContainer {
 //         data: Vec<u32>,
 //     }
@@ -213,7 +213,7 @@ fn derive_real_life_cub_config() {
 
 // // #[test]
 // // fn struct_with_generic() {
-// //     #[derive(Debug, ::shapely::Shapely)]
+// //     #[derive(Debug, ::facet::Shapely)]
 // //     struct Generic<T> {
 // //         data: T,
 // //     }
@@ -224,7 +224,7 @@ fn derive_real_life_cub_config() {
 
 // // #[test]
 // // fn struct_with_lifetime() {
-// //     #[derive(Debug, ::shapely::Shapely)]
+// //     #[derive(Debug, ::facet::Shapely)]
 // //     struct WithLifetime<'a> {
 // //         reference: &'a str,
 // //     }
@@ -235,7 +235,7 @@ fn derive_real_life_cub_config() {
 
 // #[test]
 // fn tuple_struct() {
-//     #[derive(Debug, ::shapely::Shapely)]
+//     #[derive(Debug, ::facet::Shapely)]
 //     struct Point(f32, f32);
 
 //     let shape = Point::SHAPE;
@@ -252,17 +252,17 @@ fn derive_real_life_cub_config() {
 // // #[test]
 // // fn unit_struct() {
 // //     /// A unit struct with documentation
-// //     #[derive(Debug, ::shapely::Shapely)]
+// //     #[derive(Debug, ::facet::Shapely)]
 // //     struct Unit;
 
 // //     let shape = Unit::shape();
 // //     assert_eq!(format!("{}", shape), "Unit");
-// //     assert!(matches!(shape.innards, shapely::Innards::Struct { fields } if fields.is_empty()));
+// //     assert!(matches!(shape.innards, facet::Innards::Struct { fields } if fields.is_empty()));
 // // }
 
 // // // #[test]
 // // // fn struct_with_attributes() {
-// // //     #[derive(Debug, ::shapely::Shapely)]
+// // //     #[derive(Debug, ::facet::Shapely)]
 // // //     #[repr(C, packed)]
 // // //     struct Packed {
 // // //         a: u8,
@@ -276,7 +276,7 @@ fn derive_real_life_cub_config() {
 
 // // // #[test]
 // // // fn enum_test() {
-// // //     #[derive(Debug, ::shapely::Shapely)]
+// // //     #[derive(Debug, ::facet::Shapely)]
 // // //     enum MyEnum {
 // // //         A,
 // // //         B(i32),
@@ -285,7 +285,7 @@ fn derive_real_life_cub_config() {
 
 // // //     let shape = MyEnum::shape();
 // // //     assert_eq!(format!("{}", shape), "MyEnum");
-// // //     if let shapely::Innards::Enum { variants, .. } = shape.innards {
+// // //     if let facet::Innards::Enum { variants, .. } = shape.innards {
 // // //         assert_eq!(variants.len(), 3);
 // // //         assert_eq!(variants[0].name, "A");
 // // //         assert_eq!(variants[1].name, "B");

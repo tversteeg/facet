@@ -1,4 +1,4 @@
-use shapely_opaque::{Opaque, OpaqueConst, OpaqueUninit};
+use facet_opaque::{Opaque, OpaqueConst, OpaqueUninit};
 
 /// Initialize a map in place with a given capacity
 ///

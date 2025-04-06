@@ -5,7 +5,7 @@
 use core::fmt;
 use std::alloc::Layout;
 
-use shapely_opaque::OpaqueUninit;
+use facet_opaque::OpaqueUninit;
 use typeid::ConstTypeId;
 
 mod list;

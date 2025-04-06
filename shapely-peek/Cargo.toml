@@ -1,5 +1,5 @@
 [package]
-name = "shapely-peek"
+name = "facet-peek"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -13,4 +13,4 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
-shapely-trait.workspace = true
+facet-trait.workspace = true

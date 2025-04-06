@@ -1,6 +1,6 @@
-use shapely::Shapely;
-use shapely_core::{Def, Field, FieldFlags, Shape, ShapeFn};
-use shapely_pretty::{PrettyPrinter, ShapelyPretty};
+use facet::Shapely;
+use facet_core::{Def, Field, FieldFlags, Shape, ShapeFn};
+use facet_pretty::{PrettyPrinter, ShapelyPretty};
 use std::{alloc::Layout, fmt::Write};
 
 #[derive(Debug, Shapely)]

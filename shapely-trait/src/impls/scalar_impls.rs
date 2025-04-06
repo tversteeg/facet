@@ -50,7 +50,7 @@ unsafe impl Shapely for bool {
     };
 }
 
-macro_rules! impl_shapely_for_integer {
+macro_rules! impl_facet_for_integer {
     ($type:ty) => {
         unsafe impl Shapely for $type {
             const DUMMY: Self = 0;
@@ -63,18 +63,18 @@ macro_rules! impl_shapely_for_integer {
     };
 }
 
-impl_shapely_for_integer!(u8);
-impl_shapely_for_integer!(i8);
-impl_shapely_for_integer!(u16);
-impl_shapely_for_integer!(i16);
-impl_shapely_for_integer!(u32);
-impl_shapely_for_integer!(i32);
-impl_shapely_for_integer!(u64);
-impl_shapely_for_integer!(i64);
-impl_shapely_for_integer!(u128);
-impl_shapely_for_integer!(i128);
+impl_facet_for_integer!(u8);
+impl_facet_for_integer!(i8);
+impl_facet_for_integer!(u16);
+impl_facet_for_integer!(i16);
+impl_facet_for_integer!(u32);
+impl_facet_for_integer!(i32);
+impl_facet_for_integer!(u64);
+impl_facet_for_integer!(i64);
+impl_facet_for_integer!(u128);
+impl_facet_for_integer!(i128);
 
-macro_rules! impl_shapely_for_float {
+macro_rules! impl_facet_for_float {
     ($type:ty) => {
         unsafe impl Shapely for $type {
             const DUMMY: Self = 0.0;
@@ -87,5 +87,5 @@ macro_rules! impl_shapely_for_float {
     };
 }
 
-impl_shapely_for_float!(f32);
-impl_shapely_for_float!(f64);
+impl_facet_for_float!(f32);
+impl_facet_for_float!(f64);

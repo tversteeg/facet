@@ -1,6 +1,6 @@
 use std::alloc::Layout;
 
-use shapely_types::Characteristic;
+use facet_types::Characteristic;
 
 use crate::{
     Def, Field, FieldFlags, MarkerTraits, OpaqueConst, Shape, Shapely, StructDef, TypeNameOpts,
@@ -221,4 +221,3 @@ where
         }
     };
 }
-

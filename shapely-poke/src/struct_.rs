@@ -1,6 +1,4 @@
-use shapely_trait::{
-    FieldError, Opaque, OpaqueConst, OpaqueUninit, Shape, ShapeExt as _, StructDef,
-};
+use facet_trait::{FieldError, Opaque, OpaqueConst, OpaqueUninit, Shape, ShapeExt as _, StructDef};
 use std::ptr::NonNull;
 
 use super::{Guard, ISet, PokeValue};

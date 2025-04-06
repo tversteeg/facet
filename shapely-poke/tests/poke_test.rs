@@ -1,11 +1,11 @@
 use ctor::ctor;
+use facet_derive::Shapely;
+use facet_poke::{Peek, Poke};
+use facet_trait::{OpaqueConst, OpaqueUninit, Shapely};
 use owo_colors::{OwoColorize, Style};
-use shapely_derive::Shapely;
-use shapely_poke::{Peek, Poke};
-use shapely_trait::{OpaqueConst, OpaqueUninit, Shapely};
 use std::{cmp::Ordering, collections::HashSet, fmt::Debug};
 
-use shapely_trait as shapely;
+use facet_trait as facet;
 
 // Allow dead code in test modules since we're not constructing all enum variants
 #[allow(dead_code)]

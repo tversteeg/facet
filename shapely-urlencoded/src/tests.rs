@@ -1,5 +1,5 @@
 use crate::from_urlencoded;
-use shapely::Shapely;
+use facet::Shapely;
 
 #[derive(Debug, Shapely, PartialEq)]
 struct SearchParams {

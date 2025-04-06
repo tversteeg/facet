@@ -1,5 +1,5 @@
 [package]
-name = "shapely-pretty"
+name = "facet-pretty"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -19,7 +19,7 @@ keywords = [
 categories = ["development-tools", "visualization", "command-line-utilities"]
 
 [dependencies]
-shapely-trait = { workspace = true }
+facet-trait = { workspace = true }
 
 [dev-dependencies]
-shapely = { workspace = true }
+facet = { workspace = true }

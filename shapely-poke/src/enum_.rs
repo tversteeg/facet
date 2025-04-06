@@ -1,4 +1,4 @@
-use shapely_trait::{
+use facet_trait::{
     EnumDef, EnumRepr, FieldError, Opaque, OpaqueUninit, Shape, ShapeExt as _, Shapely, VariantKind,
 };
 use std::ptr::NonNull;

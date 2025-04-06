@@ -1,9 +1,9 @@
 use super::*;
 
-use shapely_core::Shapely;
+use facet_core::Shapely;
 // this makes the derives work.. dirty but oh well.
-use shapely_core as shapely;
-use shapely_derive::Shapely;
+use facet_core as facet;
+use facet_derive::Shapely;
 
 #[test]
 fn it_works() {

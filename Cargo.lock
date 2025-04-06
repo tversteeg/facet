@@ -142,97 +142,97 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "41cd78bcc9026f6fc699f717588c4f757e87758d33464ede841ad42eee49a5b2"
 
 [[package]]
-name = "shapely"
+name = "facet"
 version = "3.1.1"
 dependencies = [
- "shapely-derive",
- "shapely-spez",
- "shapely-trait",
+ "facet-derive",
+ "facet-spez",
+ "facet-trait",
 ]
 
 [[package]]
-name = "shapely-codegen"
+name = "facet-codegen"
 version = "3.1.1"
 dependencies = [
  "minijinja",
 ]
 
 [[package]]
-name = "shapely-derive"
+name = "facet-derive"
 version = "3.1.1"
 dependencies = [
- "shapely-trait",
+ "facet-trait",
  "unsynn",
 ]
 
 [[package]]
-name = "shapely-json"
+name = "facet-json"
 version = "3.1.1"
 dependencies = [
  "color-backtrace",
  "ctor",
  "log",
- "shapely-derive",
- "shapely-poke",
- "shapely-trait",
+ "facet-derive",
+ "facet-poke",
+ "facet-trait",
 ]
 
 [[package]]
-name = "shapely-opaque"
+name = "facet-opaque"
 version = "3.1.1"
 
 [[package]]
-name = "shapely-peek"
+name = "facet-peek"
 version = "3.1.1"
 dependencies = [
- "shapely-trait",
+ "facet-trait",
 ]
 
 [[package]]
-name = "shapely-poke"
+name = "facet-poke"
 version = "3.1.1"
 dependencies = [
  "color-backtrace",
  "ctor",
  "owo-colors",
- "shapely-derive",
- "shapely-peek",
- "shapely-samplelibc",
- "shapely-trait",
+ "facet-derive",
+ "facet-peek",
+ "facet-samplelibc",
+ "facet-trait",
 ]
 
 [[package]]
-name = "shapely-samplelibc"
+name = "facet-samplelibc"
 version = "3.1.1"
 dependencies = [
  "cc",
- "shapely",
+ "facet",
 ]
 
 [[package]]
-name = "shapely-spez"
+name = "facet-spez"
 version = "3.1.1"
 dependencies = [
  "impls",
- "shapely-opaque",
- "shapely-types",
+ "facet-opaque",
+ "facet-types",
 ]
 
 [[package]]
-name = "shapely-trait"
+name = "facet-trait"
 version = "3.1.1"
 dependencies = [
- "shapely-opaque",
- "shapely-spez",
- "shapely-types",
+ "facet-opaque",
+ "facet-spez",
+ "facet-types",
 ]
 
 [[package]]
-name = "shapely-types"
+name = "facet-types"
 version = "0.1.0"
 dependencies = [
  "bitflags",
- "shapely-opaque",
+ "facet-opaque",
  "typeid",
 ]
 

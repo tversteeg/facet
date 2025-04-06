@@ -1,18 +1,18 @@
-# shapely-yaml
+# facet-yaml
 
-[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/shapely)
+[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/shapely-yaml.svg)](https://crates.io/crates/shapely-yaml)
-[![documentation](https://docs.rs/shapely-yaml/badge.svg)](https://docs.rs/shapely-yaml)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/shapely-yaml.svg)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/facet-yaml.svg)](https://crates.io/crates/facet-yaml)
+[![documentation](https://docs.rs/facet-yaml/badge.svg)](https://docs.rs/facet-yaml)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-yaml.svg)](./LICENSE)
 
 [YAML](https://yaml.org/) serialization and deserialization for Shapely types.
 
 ## Example
 
 ```rust
-use shapely::Shapely;
-use shapely_yaml::from_yaml;
+use facet::Shapely;
+use facet_yaml::from_yaml;
 
 #[derive(Debug, Shapely, PartialEq)]
 struct Config {

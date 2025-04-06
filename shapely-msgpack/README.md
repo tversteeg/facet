@@ -1,18 +1,18 @@
-# shapely-msgpack
+# facet-msgpack
 
-[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/shapely)
+[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/shapely-msgpack.svg)](https://crates.io/crates/shapely-msgpack)
-[![documentation](https://docs.rs/shapely-msgpack/badge.svg)](https://docs.rs/shapely-msgpack)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/shapely-msgpack.svg)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/facet-msgpack.svg)](https://crates.io/crates/facet-msgpack)
+[![documentation](https://docs.rs/facet-msgpack/badge.svg)](https://docs.rs/facet-msgpack)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-msgpack.svg)](./LICENSE)
 
 A crate for deserializing [MessagePack](https://msgpack.org/) data into Shapely structures.
 
 ## Example
 
 ```rust
-use shapely::Shapely;
-use shapely_msgpack::from_msgpack;
+use facet::Shapely;
+use facet_msgpack::from_msgpack;
 
 #[derive(Debug, Shapely, PartialEq)]
 struct User {

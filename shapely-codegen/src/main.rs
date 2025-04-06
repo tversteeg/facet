@@ -27,7 +27,7 @@ fn generate_tuple_impls() {
     env.add_function("range", minijinja::functions::range);
 
     // Load the template from file
-    let template_path = "shapely-codegen/src/tuples_impls.rs.j2";
+    let template_path = "facet-codegen/src/tuples_impls.rs.j2";
     let template_content =
         std::fs::read_to_string(template_path).expect("Failed to read template file");
 
@@ -70,7 +70,7 @@ fn generate_tuple_impls() {
         std::process::exit(1);
     }
 
-    let path = "shapely-trait/src/impls/tuples_impls.rs";
+    let path = "facet-trait/src/impls/tuples_impls.rs";
     std::fs::write(path, formatted_output.stdout).expect("Failed to write file");
 }
 
@@ -85,7 +85,7 @@ fn generate_readme_files() {
     // Add template functions
     env.add_function("badges", |crate_name: String| {
         format!(
-            "[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/shapely)\n\
+            "[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)\n\
              [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)\n\
              [![crates.io](https://img.shields.io/crates/v/{0}.svg)](https://crates.io/crates/{0})\n\
              [![documentation](https://docs.rs/{0}/badge.svg)](https://docs.rs/{0})\n\
@@ -99,14 +99,14 @@ fn generate_readme_files() {
 
 Thanks to Namespace for providing fast GitHub Actions workers:
 
-<a href=\"https://namespace.so\"><img src=\"https://github.com/shapely-rs/shapely/raw/main/static/namespace-d.svg\" height=\"40\"></a>
+<a href=\"https://namespace.so\"><img src=\"https://github.com/facet-rs/facet/raw/main/static/namespace-d.svg\" height=\"40\"></a>
 
 ## License
 
 Licensed under either of:
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](https://github.com/shapely-rs/shapely/blob/main/LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
-- MIT license ([LICENSE-MIT](https://github.com/shapely-rs/shapely/blob/main/LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
+- Apache License, Version 2.0 ([LICENSE-APACHE](https://github.com/facet-rs/facet/blob/main/LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](https://github.com/facet-rs/facet/blob/main/LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.".to_string()
     });
@@ -126,9 +126,9 @@ at your option.".to_string()
             continue;
         }
 
-        // Skip target directory and shapely-codegen itself
+        // Skip target directory and facet-codegen itself
         let dir_name = path.file_name().unwrap().to_string_lossy();
-        if dir_name == "target" || dir_name == "shapely-codegen" {
+        if dir_name == "target" || dir_name == "facet-codegen" {
             continue;
         }
 
@@ -143,27 +143,27 @@ at your option.".to_string()
         if template_path.exists() {
             process_readme_template(&mut env, &path, &template_path);
         } else {
-            // Special case for the main shapely crate
+            // Special case for the main facet crate
             let crate_name = dir_name.to_string();
-            if crate_name == "shapely" {
-                let alternative_template_path = Path::new("shapely/templates/README.md.j2");
+            if crate_name == "facet" {
+                let alternative_template_path = Path::new("facet/templates/README.md.j2");
                 if alternative_template_path.exists() {
                     process_readme_template(
                         &mut env,
                         &path,
-                        Path::new("shapely/templates/README.md.j2"),
+                        Path::new("facet/templates/README.md.j2"),
                     );
                 }
             }
         }
     }
 
-    // Also check for the special case where template is in shapely/shapely/templates
-    let shapely_crate_path = workspace_dir.join("shapely");
-    if shapely_crate_path.exists() && shapely_crate_path.is_dir() {
-        let template_path = shapely_crate_path.join("templates").join("README.md.j2");
+    // Also check for the special case where template is in facet/facet/templates
+    let facet_crate_path = workspace_dir.join("facet");
+    if facet_crate_path.exists() && facet_crate_path.is_dir() {
+        let template_path = facet_crate_path.join("templates").join("README.md.j2");
         if template_path.exists() {
-            process_readme_template(&mut env, &shapely_crate_path, &template_path);
+            process_readme_template(&mut env, &facet_crate_path, &template_path);
         }
     }
 }
@@ -179,8 +179,8 @@ fn process_readme_template(env: &mut Environment, crate_path: &Path, template_pa
         .to_string();
 
     // Read the template
-    let template_content = fs::read_to_string(template_path).unwrap_or_else(|_| panic!("Failed to read template file: {:?}",
-        template_path));
+    let template_content = fs::read_to_string(template_path)
+        .unwrap_or_else(|_| panic!("Failed to read template file: {:?}", template_path));
 
     // Create a template ID
     let template_id = format!("{}_readme", crate_name);

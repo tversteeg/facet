@@ -1,16 +1,16 @@
 [workspace]
 members = [
-    "shapely",
-    "shapely-codegen",
-    "shapely-trait",
-    "shapely-derive",
-    "shapely-json",
-    "shapely-opaque",
-    "shapely-peek",
-    "shapely-poke",
-    "shapely-spez",
-    "shapely-types",
-    "shapely-samplelibc",
+    "facet",
+    "facet-codegen",
+    "facet-trait",
+    "facet-derive",
+    "facet-json",
+    "facet-opaque",
+    "facet-peek",
+    "facet-poke",
+    "facet-spez",
+    "facet-types",
+    "facet-samplelibc",
 ]
 resolver = "3"
 
@@ -20,9 +20,9 @@ authors = ["Amos Wenger <amos@bearcove.eu>"]
 edition = "2024"
 rust-version = "1.85"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/shapely-rs/shapely"
-homepage = "https://github.com/shapely-rs/shapely"
-documentation = "https://docs.rs/shapely"
+repository = "https://github.com/facet-rs/facet"
+homepage = "https://github.com/facet-rs/facet"
+documentation = "https://docs.rs/facet"
 description = "One trait for reflection, serialization, deserialization"
 keywords = [
     "serialization",
@@ -34,6 +34,6 @@ keywords = [
 categories = ["encoding", "parsing", "development-tools", "data-structures"]
 
 [workspace.dependencies]
-shapely-trait = { version = "3.1.1", path = "shapely-trait" }
-shapely-derive = { version = "3.1.1", path = "shapely-derive" }
+facet-trait = { version = "3.1.1", path = "facet-trait" }
+facet-derive = { version = "3.1.1", path = "facet-derive" }
 unsynn = "0.0.25"

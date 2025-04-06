@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use super::*;
-    use shapely_core::Shapely;
+    use facet_core::Shapely;
 
     #[derive(Debug, Shapely, PartialEq)]
     struct Person {
@@ -20,6 +20,12 @@ mod tests {
         from_yaml(&mut partial, yaml).expect("Failed to parse YAML");
 
         let person = partial.build::<Person>();
-        assert_eq!(person, Person { name: "Alice".to_string(), age: 30 });
+        assert_eq!(
+            person,
+            Person {
+                name: "Alice".to_string(),
+                age: 30
+            }
+        );
     }
 }

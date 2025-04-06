@@ -1,5 +1,5 @@
 [package]
-name = "shapely-trait"
+name = "facet-trait"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -8,11 +8,11 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
-description = "Core types and traits for the shapely ecosystem, providing fundamental reflection capabilities"
+description = "Core types and traits for the facet ecosystem, providing fundamental reflection capabilities"
 keywords = ["reflection", "introspection", "serialization", "deserialization"]
 categories = ["development-tools", "encoding"]
 
 [dependencies]
-shapely-opaque = { version = "3.1.1", path = "../shapely-opaque" }
-shapely-spez = { version = "3.1.1", path = "../shapely-spez" }
-shapely-types = { version = "0.1.0", path = "../shapely-types" }
+facet-opaque = { version = "3.1.1", path = "../facet-opaque" }
+facet-spez = { version = "3.1.1", path = "../facet-spez" }
+facet-types = { version = "0.1.0", path = "../facet-types" }

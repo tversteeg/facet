@@ -1,4 +1,4 @@
-use shapely_trait::MapDef;
+use facet_trait::MapDef;
 
 use super::PeekValue;
 

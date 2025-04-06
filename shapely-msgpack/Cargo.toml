@@ -1,5 +1,5 @@
 [package]
-name = "shapely-msgpack"
+name = "facet-msgpack"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -7,19 +7,19 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
-documentation = "https://docs.rs/shapely-msgpack"
+documentation = "https://docs.rs/facet-msgpack"
 description = "MessagePack serialization and deserialization for Shapely types"
 keywords = [
     "msgpack",
     "serialization",
     "deserialization",
     "reflection",
-    "shapely",
+    "facet",
 ]
 categories = ["encoding", "parsing", "data-structures"]
 
 [dependencies]
-shapely-trait = { workspace = true }
+facet-trait = { workspace = true }
 [dev-dependencies]
-shapely = { workspace = true }
-shapely-derive = { workspace = true }
+facet = { workspace = true }
+facet-derive = { workspace = true }

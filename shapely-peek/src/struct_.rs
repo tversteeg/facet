@@ -1,4 +1,4 @@
-use shapely_trait::StructDef;
+use facet_trait::StructDef;
 
 use crate::PeekValue;
 

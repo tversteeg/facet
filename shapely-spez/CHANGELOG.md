@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [3.1.1](https://github.com/shapely-rs/shapely/compare/shapely-spez-v3.1.0...shapely-spez-v3.1.1) - 2025-04-05
+## [3.1.1](https://github.com/facet-rs/facet/compare/facet-spez-v3.1.0...facet-spez-v3.1.1) - 2025-04-05
 
 ### Other
 

@@ -1,5 +1,5 @@
 use crate::PokeValue;
-use shapely_trait::{ListDef, ListVTable, Opaque, OpaqueConst, OpaqueUninit, Shape};
+use facet_trait::{ListDef, ListVTable, Opaque, OpaqueConst, OpaqueUninit, Shape};
 
 /// Allows initializing an uninitialized list
 pub struct PokeListUninit<'mem> {

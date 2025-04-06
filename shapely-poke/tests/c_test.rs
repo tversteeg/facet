@@ -1,10 +1,10 @@
+use facet_peek::Peek;
 use owo_colors::OwoColorize;
-use shapely_peek::Peek;
 
 #[test]
 fn test_sample_libc() {
     if !cfg!(miri) {
-        let (data, shape) = shapely_samplelibc::get_foo_and_shape();
+        let (data, shape) = facet_samplelibc::get_foo_and_shape();
         let peek = unsafe { Peek::unchecked_new(data.as_const(), shape) };
         eprintln!("🔍 Display: {}", format!("{}", peek).bright_green());
         eprintln!("🐛 Debug: {}", format!("{:?}", peek).bright_blue());

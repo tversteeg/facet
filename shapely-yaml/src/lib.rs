@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-use shapely_core::Partial;
+use facet_core::Partial;
 use yaml_rust2::YamlLoader;
 
 /// Deserializes YAML data into a Shapely Partial.
@@ -9,8 +9,8 @@ use yaml_rust2::YamlLoader;
 /// # Example
 ///
 /// ```
-/// use shapely::Shapely;
-/// use shapely_yaml::from_yaml;
+/// use facet::Shapely;
+/// use facet_yaml::from_yaml;
 ///
 /// #[derive(Debug, Shapely, PartialEq)]
 /// struct Config {

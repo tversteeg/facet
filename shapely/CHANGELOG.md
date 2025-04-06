@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [3.1.1](https://github.com/shapely-rs/shapely/compare/shapely-v3.1.0...shapely-v3.1.1) - 2025-04-05
+## [3.1.1](https://github.com/facet-rs/facet/compare/facet-v3.1.0...facet-v3.1.1) - 2025-04-05
 
 ### Fixed
 
@@ -78,11 +78,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - new structure works
 - introduce init_in_place_with_capacity
 - Rname more things for more consistency
-- Move tests to shapely proper
+- Move tests to facet proper
 - whoa hey down to 111 errors
 - Innards => Def
 
-## [3.1.0](https://github.com/shapely-rs/shapely/compare/shapely-v3.0.0...shapely-v3.1.0) - 2025-03-31
+## [3.1.0](https://github.com/facet-rs/facet/compare/facet-v3.0.0...facet-v3.1.0) - 2025-03-31
 
 ### Other
 
@@ -106,14 +106,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - set up cargo-husky to run cargo fmt
 - specific toolchains, reformat code
 
-## [3.0.0](https://github.com/shapely-rs/shapely/compare/shapely-v2.0.1...shapely-v3.0.0) - 2025-03-11
+## [3.0.0](https://github.com/facet-rs/facet/compare/facet-v2.0.1...facet-v3.0.0) - 2025-03-11
 
 ### Other
 
 - Fix doc tests in README.md
 - Document how to write your deserializer a little better
 
-## [2.0.0](https://github.com/shapely-rs/shapely/compare/shapely-v1.0.0...shapely-v2.0.0) - 2025-03-11
+## [2.0.0](https://github.com/facet-rs/facet/compare/facet-v1.0.0...facet-v2.0.0) - 2025-03-11
 
 ### Other
 

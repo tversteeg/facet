@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-use shapely::{Partial, error, trace, warn};
+use facet::{Partial, error, trace, warn};
 
 #[cfg(test)]
 mod tests;
@@ -11,8 +11,8 @@ mod tests;
 /// # Example
 ///
 /// ```
-/// use shapely::Shapely;
-/// use shapely_urlencoded::from_urlencoded;
+/// use facet::Shapely;
+/// use facet_urlencoded::from_urlencoded;
 ///
 /// #[derive(Debug, Shapely, PartialEq)]
 /// struct SearchParams {
@@ -29,7 +29,7 @@ mod tests;
 /// assert_eq!(params, SearchParams { query: "rust programming".to_string(), page: 2 });
 /// ```
 pub fn from_urlencoded(partial: &mut Partial, input: &str) -> Result<(), UrlEncodedError> {
-    use shapely::{Def, Scalar};
+    use facet::{Def, Scalar};
 
     trace!("Starting URL encoded form data deserialization");
 

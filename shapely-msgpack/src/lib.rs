@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![doc = include_str!("../README.md")]
 
-use shapely_core::Partial;
+use facet_core::Partial;
 use std::convert::TryInto;
 
 mod errors;
@@ -21,8 +21,8 @@ mod tests;
 /// # Example
 ///
 /// ```
-/// use shapely::Shapely;
-/// use shapely_msgpack::from_msgpack;
+/// use facet::Shapely;
+/// use facet_msgpack::from_msgpack;
 ///
 /// #[derive(Debug, Shapely, PartialEq)]
 /// struct User {
@@ -64,14 +64,14 @@ pub fn from_msgpack(partial: &mut Partial, msgpack: &[u8]) -> Result<(), DecodeE
         let shape = shape_fn.get();
 
         match &shape.innards {
-            shapely_core::Def::Scalar(scalar) => {
+            facet_core::Def::Scalar(scalar) => {
                 let slot = partial.scalar_slot().expect("Scalar slot");
                 match scalar {
-                    shapely_core::Scalar::String => {
+                    facet_core::Scalar::String => {
                         let value = decoder.decode_string()?;
                         slot.fill(value);
                     }
-                    shapely_core::Scalar::U64 => {
+                    facet_core::Scalar::U64 => {
                         let value = decoder.decode_u64()?;
                         slot.fill(value);
                     }
@@ -81,7 +81,7 @@ pub fn from_msgpack(partial: &mut Partial, msgpack: &[u8]) -> Result<(), DecodeE
                     }
                 }
             }
-            shapely_core::Def::Struct { .. } => {
+            facet_core::Def::Struct { .. } => {
                 let map_len = decoder.decode_map_len()?;
 
                 for _ in 0..map_len {

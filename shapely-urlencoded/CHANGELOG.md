@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [3.1.0](https://github.com/shapely-rs/shapely/compare/shapely-urlencoded-v3.0.0...shapely-urlencoded-v3.1.0) - 2025-03-31
+## [3.1.0](https://github.com/facet-rs/facet/compare/facet-urlencoded-v3.0.0...facet-urlencoded-v3.1.0) - 2025-03-31
 
 ### Other
 
@@ -18,9 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - specific toolchains, reformat code
 - Improve debug output
 
-## [2.0.1](https://github.com/shapely-rs/shapely/compare/shapely-urlencoded-v2.0.0...shapely-urlencoded-v2.0.1) - 2025-03-11
+## [2.0.1](https://github.com/facet-rs/facet/compare/facet-urlencoded-v2.0.0...facet-urlencoded-v2.0.1) - 2025-03-11
 
 ### Other
 
 - Last few fixes
-- Add shapely-urlencoded crate for URL encoded form data deserialization
+- Add facet-urlencoded crate for URL encoded form data deserialization

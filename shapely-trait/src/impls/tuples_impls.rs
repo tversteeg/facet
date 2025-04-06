@@ -1,5 +1,5 @@
 //! GENERATED: DO NOT EDIT — this file is generated from `tuples_impls.rs.j2`
-//! file in the `shapely-codegen` crate.
+//! file in the `facet-codegen` crate.
 
 use std::{alloc::Layout, fmt};
 

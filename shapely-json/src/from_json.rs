@@ -1,8 +1,8 @@
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
 
+use facet_poke::Poke;
+use facet_trait::{Opaque, OpaqueConst, OpaqueUninit, ShapeExt as _};
 use log::trace;
-use shapely_poke::Poke;
-use shapely_trait::{Opaque, OpaqueConst, OpaqueUninit, ShapeExt as _};
 
 /// Deserialize a `Poke` object from a JSON string.
 pub fn from_json<'input, 'mem>(

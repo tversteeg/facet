@@ -1,5 +1,5 @@
 [package]
-name = "shapely-derive"
+name = "facet-derive"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -8,7 +8,7 @@ homepage.workspace = true
 documentation.workspace = true
 license.workspace = true
 rust-version.workspace = true
-description = "Proc macro for deriving the 'Shapely' trait in shapely"
+description = "Proc macro for deriving the 'Shapely' trait in facet"
 keywords = [
     "reflection",
     "introspection",
@@ -26,4 +26,4 @@ unsynn.workspace = true
 
 # cf. https://hachyderm.io/@epage/114141126315983016
 [target.'cfg(any())'.dependencies]
-shapely-trait = { workspace = true }
+facet-trait = { workspace = true }

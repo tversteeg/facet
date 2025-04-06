@@ -2,9 +2,9 @@
 
 use std::alloc::Layout;
 
-pub use shapely_peek::*;
+pub use facet_peek::*;
 
-use shapely_trait::{Def, OpaqueUninit, Shape, Shapely};
+use facet_trait::{Def, OpaqueUninit, Shape, Shapely};
 
 mod value;
 pub use value::*;
@@ -51,7 +51,7 @@ impl Drop for Guard {
 }
 
 impl<'mem> Poke<'mem> {
-    /// Allocates a new poke of a type that implements shapely
+    /// Allocates a new poke of a type that implements facet
     pub fn alloc<S: Shapely>() -> (Self, Guard) {
         let data = S::SHAPE.allocate();
         let layout = Layout::new::<S>();

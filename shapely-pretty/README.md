@@ -1,10 +1,10 @@
-# shapely-pretty
+# facet-pretty
 
-[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/shapely-rs/shapely)
+[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/facet-rs/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/bearcove/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/shapely-pretty.svg)](https://crates.io/crates/shapely-pretty)
-[![documentation](https://docs.rs/shapely-pretty/badge.svg)](https://docs.rs/shapely-pretty)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/shapely-pretty.svg)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/facet-pretty.svg)](https://crates.io/crates/facet-pretty)
+[![documentation](https://docs.rs/facet-pretty/badge.svg)](https://docs.rs/facet-pretty)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-pretty.svg)](./LICENSE)
 
 A pretty-printing library for types implementing the `Shapely` trait, providing colorful and well-formatted output.
 
@@ -20,8 +20,8 @@ A pretty-printing library for types implementing the `Shapely` trait, providing 
 ## Example
 
 ```rust
-use shapely::Shapely;
-use shapely_pretty::PrettyPrinter;
+use facet::Shapely;
+use facet_pretty::PrettyPrinter;
 
 #[derive(Debug, Shapely)]
 struct Person {

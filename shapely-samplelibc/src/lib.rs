@@ -1,6 +1,6 @@
 #![allow(clippy::disallowed_names)]
 
-use shapely::{Opaque, Shape, Shapely};
+use facet::{Opaque, Shape, Shapely};
 
 unsafe extern "C" {
     pub unsafe fn get_library_message() -> *const std::ffi::c_char;

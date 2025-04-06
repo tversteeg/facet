@@ -1,5 +1,5 @@
 use bitflags::bitflags;
-use shapely_opaque::{Opaque, OpaqueConst, OpaqueUninit};
+use facet_opaque::{Opaque, OpaqueConst, OpaqueUninit};
 use std::cmp::Ordering;
 
 use crate::Shape;
