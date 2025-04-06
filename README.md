@@ -35,7 +35,7 @@ Thanks to all individual and corporate sponsors, without whom this work could no
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/namespace-light.svg" height="40" alt="Namespace">
     </picture>
 </a> </p>
-
+             
 
 facet provides type reflection for Rust, in const contexts.
 
