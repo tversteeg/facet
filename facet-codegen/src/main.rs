@@ -86,9 +86,9 @@ fn generate_readme_files() {
     // Add template functions
     env.add_function("header", |crate_name: String| {
         format!(r#"
-Thanks to all individual sponsors, without whom this work could not exist.
+Thanks to all individual and corporate sponsors, without whom this work could not exist:
 
-<p> <a href="https://ko-fi.com/fasterthanlime">
+<p> Individual: <a href="https://ko-fi.com/fasterthanlime">
     <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/ko-fi-dark.svg">
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/ko-fi-light.svg" height="40" alt="Ko-fi">
@@ -103,11 +103,7 @@ Thanks to all individual sponsors, without whom this work could not exist.
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/patreon-dark.svg">
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/patreon-light.svg" height="40" alt="Patreon">
     </picture>
-</a> </p>
-
-Thanks to corporate sponsors: Zed Industries for free credits, and Namespace for providing fast GitHub Actions workers.
-
-<p> <a href="https://zed.dev">
+</a> / Corporate: <a href="https://zed.dev">
     <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-dark.svg">
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-light.svg" height="40" alt="Zed">
