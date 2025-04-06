@@ -95,19 +95,38 @@ fn generate_readme_files() {
     });
 
     env.add_function("footer", || {
-        r#"### Funding
+        r#"## Funding
 
-Thanks to Zed for sponsoring this project, and Namespace for providing fast GitHub Actions workers.
+Thanks to all individual sponsors, without whom this work could not exist:
+
+<a href="https://ko-fi.com/fasterthanlime">
+    <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/ko-fi-dark.svg">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/ko-fi-light.svg" height="40" alt="Ko-fi">
+    </picture>
+</a> <a href="https://github.com/sponsors/fasterthanlime">
+    <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/github-sponsors-dark.svg">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/github-sponsors-light.svg" height="40" alt="GitHub Sponsors">
+    </picture>
+</a> <a href="https://patreon.com/fasterthanlime">
+    <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/patreon-dark.svg">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/patreon-light.svg" height="40" alt="Patreon">
+    </picture>
+</a>
+
+Thanks to corporate sponsors: Zed Industries for free credits, and Namespace for providing fast GitHub Actions workers.
 
 <a href="https://zed.dev">
     <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v1/zed-dark.svg">
-    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v1/zed-light.svg" height="40" alt="Zed">
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-dark.svg">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-light.svg" height="40" alt="Zed">
     </picture>
 </a> <a href="https://namespace.so">
     <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v1/namespace-dark.svg">
-    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v1/namespace-light.svg" height="40" alt="Namespace">
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/namespace-dark.svg">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/namespace-light.svg" height="40" alt="Namespace">
     </picture>
 </a>
 
