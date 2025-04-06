@@ -76,7 +76,7 @@ impl<'mem> PokeMap<'mem> {
     /// `key` and `value` are moved out of (with [`std::ptr::read`]) — they should be deallocated
     /// afterwards but NOT dropped.
     #[inline]
-    pub unsafe fn insert<'key, 'value>(&mut self, key: Opaque<'key>, value: Opaque<'value>) {
+    pub unsafe fn insert(&mut self, key: Opaque<'_>, value: Opaque<'_>) {
         unsafe { (self.map_vtable().insert_fn)(self.data, key, value) }
     }
 
@@ -94,7 +94,7 @@ impl<'mem> PokeMap<'mem> {
 
     /// Checks if the map contains a key
     #[inline]
-    pub fn contains_key<'key>(&self, key: OpaqueConst<'key>) -> bool {
+    pub fn contains_key(&self, key: OpaqueConst<'_>) -> bool {
         unsafe { (self.map_vtable().contains_key_fn)(self.data.as_const(), key) }
     }
 

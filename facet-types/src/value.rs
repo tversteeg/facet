@@ -324,7 +324,7 @@ impl<'a> HasherProxy<'a> {
     }
 }
 
-impl<'a> std::hash::Hasher for HasherProxy<'a> {
+impl std::hash::Hasher for HasherProxy<'_> {
     fn finish(&self) -> u64 {
         unimplemented!("finish is not needed for this implementation")
     }

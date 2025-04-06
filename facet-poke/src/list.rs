@@ -77,7 +77,7 @@ impl<'mem> PokeList<'mem> {
     ///
     /// `item` is moved out of (with [`std::ptr::read`]) — it should be deallocated
     /// afterwards but NOT dropped.
-    pub unsafe fn push<'src>(&mut self, item: Opaque<'src>) {
+    pub unsafe fn push(&mut self, item: Opaque<'_>) {
         unsafe { (self.list_vtable().push)(self.data, item) }
     }
 

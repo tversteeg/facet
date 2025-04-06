@@ -159,7 +159,7 @@ impl<'mem> PokeStruct<'mem> {
     /// Returns an error if:
     /// - The shape doesn't represent a struct.
     /// - The index is out of bounds.
-    pub fn field<'s>(&'s mut self, index: usize) -> Result<crate::Poke<'s>, FieldError> {
+    pub fn field(&mut self, index: usize) -> Result<crate::Poke<'_>, FieldError> {
         if index >= self.def.fields.len() {
             return Err(FieldError::IndexOutOfBounds);
         }

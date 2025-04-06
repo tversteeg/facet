@@ -1,6 +1,4 @@
 [toolchain]
-# Use a single nightly version for everything
-channel = "nightly-2025-04-03"
+channel = "1.86.0"
 # Specify all components needed for CI and development
-components = ["miri", "rust-src", "rustfmt", "clippy"]
-# profile = "default" # Optional: keep if you want stable available locally via `rustup default stable`
+components = ["rust-src", "rustfmt", "clippy"]
