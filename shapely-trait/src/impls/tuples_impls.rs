@@ -5,11 +5,11 @@ use crate::{
     ValueVTable,
 };
 
-unsafe impl<T0> Shapely for (T0,)
+unsafe impl<T0> Shapely for (T0)
 where
     T0: Shapely,
 {
-    const DUMMY: Self = (T0::DUMMY,);
+    const DUMMY: Self = (T0::DUMMY);
     const SHAPE: &'static Shape = &const {
         use std::fmt;
 
@@ -25,25 +25,27 @@ where
                 write!(f, "⋯")
             }
         }
+
         macro_rules! field {
             ($idx:tt, $ty:ty) => {
                 Field {
                     name: stringify!($idx),
                     shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0,), $idx),
+                    offset: std::mem::offset_of!((T0), $idx),
                     flags: FieldFlags::EMPTY,
                 }
             };
         }
+
         Shape {
-            layout: Layout::new::<(T0,)>(),
+            layout: Layout::new::<(T0)>(),
             vtable: &ValueVTable {
                 type_name: type_name::<T0>,
                 display: None,
                 debug: const {
                     if Characteristic::Debug.all(&[T0::SHAPE]) {
                         Some(|value, f| {
-                            let value = unsafe { value.as_ref::<(T0,)>() };
+                            let value = unsafe { value.as_ref::<(T0)>() };
                             write!(f, "(")?;
                             unsafe {
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
@@ -59,17 +61,15 @@ where
                 },
                 eq: if T0::SHAPE.vtable.eq.is_some() {
                     Some(|a, b| {
-                        let a = unsafe { a.as_ref::<(T0,)>() };
-                        let b = unsafe { b.as_ref::<(T0,)>() };
+                        let a = unsafe { a.as_ref::<(T0)>() };
+                        let b = unsafe { b.as_ref::<(T0)>() };
 
-                        // Compare first element
-                        if !unsafe {
+                        // Compare last element
+                        unsafe {
                             (T0::SHAPE.vtable.eq.unwrap_unchecked())(
                                 OpaqueConst::from_ref(&a.0),
                                 OpaqueConst::from_ref(&b.0),
                             )
-                        } {
-                            return false;
                         }
                     })
                 } else {
@@ -108,6 +108,7 @@ where
                 write!(f, "⋯")
             }
         }
+
         macro_rules! field {
             ($idx:tt, $ty:ty) => {
                 Field {
@@ -118,6 +119,7 @@ where
                 }
             };
         }
+
         Shape {
             layout: Layout::new::<(T0, T1)>(),
             vtable: &ValueVTable {
@@ -152,7 +154,7 @@ where
                         let a = unsafe { a.as_ref::<(T0, T1)>() };
                         let b = unsafe { b.as_ref::<(T0, T1)>() };
 
-                        // Compare first element
+                        // Compare element 0
                         if !unsafe {
                             (T0::SHAPE.vtable.eq.unwrap_unchecked())(
                                 OpaqueConst::from_ref(&a.0),
@@ -210,6 +212,7 @@ where
                 write!(f, "⋯")
             }
         }
+
         macro_rules! field {
             ($idx:tt, $ty:ty) => {
                 Field {
@@ -220,6 +223,7 @@ where
                 }
             };
         }
+
         Shape {
             layout: Layout::new::<(T0, T1, T2)>(),
             vtable: &ValueVTable {
@@ -264,7 +268,7 @@ where
                         let a = unsafe { a.as_ref::<(T0, T1, T2)>() };
                         let b = unsafe { b.as_ref::<(T0, T1, T2)>() };
 
-                        // Compare first element
+                        // Compare element 0
                         if !unsafe {
                             (T0::SHAPE.vtable.eq.unwrap_unchecked())(
                                 OpaqueConst::from_ref(&a.0),
@@ -336,6 +340,7 @@ where
                 write!(f, "⋯")
             }
         }
+
         macro_rules! field {
             ($idx:tt, $ty:ty) => {
                 Field {
@@ -346,6 +351,7 @@ where
                 }
             };
         }
+
         Shape {
             layout: Layout::new::<(T0, T1, T2, T3)>(),
             vtable: &ValueVTable {
@@ -398,7 +404,7 @@ where
                         let a = unsafe { a.as_ref::<(T0, T1, T2, T3)>() };
                         let b = unsafe { b.as_ref::<(T0, T1, T2, T3)>() };
 
-                        // Compare first element
+                        // Compare element 0
                         if !unsafe {
                             (T0::SHAPE.vtable.eq.unwrap_unchecked())(
                                 OpaqueConst::from_ref(&a.0),
@@ -484,6 +490,7 @@ where
                 write!(f, "⋯")
             }
         }
+
         macro_rules! field {
             ($idx:tt, $ty:ty) => {
                 Field {
@@ -494,6 +501,7 @@ where
                 }
             };
         }
+
         Shape {
             layout: Layout::new::<(T0, T1, T2, T3, T4)>(),
             vtable: &ValueVTable {
@@ -560,7 +568,7 @@ where
                         let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4)>() };
                         let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4)>() };
 
-                        // Compare first element
+                        // Compare element 0
                         if !unsafe {
                             (T0::SHAPE.vtable.eq.unwrap_unchecked())(
                                 OpaqueConst::from_ref(&a.0),
@@ -678,6 +686,7 @@ where
                 write!(f, "⋯")
             }
         }
+
         macro_rules! field {
             ($idx:tt, $ty:ty) => {
                 Field {
@@ -688,6 +697,7 @@ where
                 }
             };
         }
+
         Shape {
             layout: Layout::new::<(T0, T1, T2, T3, T4, T5)>(),
             vtable: &ValueVTable {
@@ -763,7 +773,7 @@ where
                         let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5)>() };
                         let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5)>() };
 
-                        // Compare first element
+                        // Compare element 0
                         if !unsafe {
                             (T0::SHAPE.vtable.eq.unwrap_unchecked())(
                                 OpaqueConst::from_ref(&a.0),
@@ -897,6 +907,7 @@ where
                 write!(f, "⋯")
             }
         }
+
         macro_rules! field {
             ($idx:tt, $ty:ty) => {
                 Field {
@@ -907,6 +918,7 @@ where
                 }
             };
         }
+
         Shape {
             layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6)>(),
             vtable: &ValueVTable {
@@ -991,7 +1003,7 @@ where
                         let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5, T6)>() };
                         let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6)>() };
 
-                        // Compare first element
+                        // Compare element 0
                         if !unsafe {
                             (T0::SHAPE.vtable.eq.unwrap_unchecked())(
                                 OpaqueConst::from_ref(&a.0),
@@ -1141,6 +1153,7 @@ where
                 write!(f, "⋯")
             }
         }
+
         macro_rules! field {
             ($idx:tt, $ty:ty) => {
                 Field {
@@ -1151,6 +1164,7 @@ where
                 }
             };
         }
+
         Shape {
             layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7)>(),
             vtable: &ValueVTable {
@@ -1245,7 +1259,7 @@ where
                         let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7)>() };
                         let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7)>() };
 
-                        // Compare first element
+                        // Compare element 0
                         if !unsafe {
                             (T0::SHAPE.vtable.eq.unwrap_unchecked())(
                                 OpaqueConst::from_ref(&a.0),
@@ -1411,6 +1425,7 @@ where
                 write!(f, "⋯")
             }
         }
+
         macro_rules! field {
             ($idx:tt, $ty:ty) => {
                 Field {
@@ -1421,6 +1436,7 @@ where
                 }
             };
         }
+
         Shape {
             layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>(),
             vtable: &ValueVTable {
@@ -1524,7 +1540,7 @@ where
                         let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>() };
                         let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>() };
 
-                        // Compare first element
+                        // Compare element 0
                         if !unsafe {
                             (T0::SHAPE.vtable.eq.unwrap_unchecked())(
                                 OpaqueConst::from_ref(&a.0),
@@ -1707,6 +1723,7 @@ where
                 write!(f, "⋯")
             }
         }
+
         macro_rules! field {
             ($idx:tt, $ty:ty) => {
                 Field {
@@ -1717,6 +1734,7 @@ where
                 }
             };
         }
+
         Shape {
             layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>(),
             vtable: &ValueVTable {
@@ -1830,7 +1848,7 @@ where
                         let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>() };
                         let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>() };
 
-                        // Compare first element
+                        // Compare element 0
                         if !unsafe {
                             (T0::SHAPE.vtable.eq.unwrap_unchecked())(
                                 OpaqueConst::from_ref(&a.0),
@@ -2029,6 +2047,7 @@ where
                 write!(f, "⋯")
             }
         }
+
         macro_rules! field {
             ($idx:tt, $ty:ty) => {
                 Field {
@@ -2042,6 +2061,7 @@ where
                 }
             };
         }
+
         Shape {
             layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>(),
             vtable: &ValueVTable {
@@ -2166,7 +2186,7 @@ where
                         let b =
                             unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>() };
 
-                        // Compare first element
+                        // Compare element 0
                         if !unsafe {
                             (T0::SHAPE.vtable.eq.unwrap_unchecked())(
                                 OpaqueConst::from_ref(&a.0),
@@ -2381,6 +2401,7 @@ where
                 write!(f, "⋯")
             }
         }
+
         macro_rules! field {
             ($idx:tt, $ty:ty) => {
                 Field {
@@ -2394,6 +2415,7 @@ where
                 }
             };
         }
+
         Shape {
             layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)>(),
             vtable: &ValueVTable {
@@ -2529,7 +2551,7 @@ where
                             b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)>()
                         };
 
-                        // Compare first element
+                        // Compare element 0
                         if !unsafe {
                             (T0::SHAPE.vtable.eq.unwrap_unchecked())(
                                 OpaqueConst::from_ref(&a.0),

@@ -13,6 +13,7 @@ fn main() {
 
     // Initialize minijinja environment
     let mut env = Environment::empty();
+    env.add_function("range", minijinja::functions::range);
 
     // Load the template from file
     let template_path = "shapely-codegen/src/tuples_impls.rs.j2";

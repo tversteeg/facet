@@ -1,5 +1,4 @@
 [workspace]
-# members = ["shapely", "shapely-codegen", "shapely-trait", "shapely-derive", "shapely-json", "shapely-msgpack", "shapely-pretty", "shapely-urlencoded", "shapely-yaml"]
 members = [
     "shapely",
     "shapely-codegen",
@@ -10,7 +9,8 @@ members = [
     "shapely-peek",
     "shapely-poke",
     "shapely-spez",
-    "shapely-types", "shapely-samplelibc",
+    "shapely-types",
+    "shapely-samplelibc",
 ]
 resolver = "3"
 
