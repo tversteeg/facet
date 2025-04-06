@@ -35,7 +35,7 @@ Thanks to all individual and corporate sponsors, without whom this work could no
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/namespace-light.svg" height="40" alt="Namespace">
     </picture>
 </a> </p>
-             
+
 
 facet provides type reflection for Rust, in const contexts.
 
@@ -61,7 +61,7 @@ and various serializers, deserializers, and pretty printers etc.
 
 The hub for everything is the [facet](https://crates.io/crates/facet) crate.
 
-You can start with its [README](https://github.com/fasterthanlime/facet/blob/main/facet/README.md).
+You can start with its [README](https://github.com/facet-rs/facet/blob/main/facet/README.md).
 
 
 ## License
