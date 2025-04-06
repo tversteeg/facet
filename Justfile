@@ -37,8 +37,8 @@ doc-tests:
 codegen:
     #!/usr/bin/env -S bash -euo pipefail
     cargo run -p facet-codegen
-    just test
-    echo -e "\033[1;34m🍉 Looking good!\033[0m"
+    # just test
+    # echo -e "\033[1;34m🍉 Looking good!\033[0m"
 
 rustfmt-fix:
     #!/usr/bin/env -S bash -euo pipefail

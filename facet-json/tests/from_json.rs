@@ -6,7 +6,7 @@ fn init_backtrace() {
 }
 
 use facet_derive::Facet;
-use facet_json::{from_json, to_json};
+use facet_json::{from_str_opaque, to_json};
 use facet_poke::{Peek, Poke};
 use facet_trait::Facet;
 
@@ -22,7 +22,7 @@ fn test_from_json() {
     let json = r#"{"name": "Alice", "age": 30}"#;
 
     let (poke, _guard) = Poke::alloc::<TestStruct>();
-    let opaque = from_json(poke, json).unwrap();
+    let opaque = from_str_opaque(poke, json).unwrap();
     let s = unsafe { opaque.read::<TestStruct>() };
 
     assert_eq!(s.name, "Alice");

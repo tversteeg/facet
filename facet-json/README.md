@@ -42,8 +42,9 @@ Provides JSON serialization and deserialization for any type that implements `Fa
 ### Example
 
 ```rust
-use facet::Facet;
-use facet_json::from_str;
+# use facet_trait::Facet;
+# use facet_derive::Facet;
+# use facet_trait as facet;
 
 #[derive(Debug, Facet, PartialEq)]
 struct User {
@@ -52,11 +53,8 @@ struct User {
 }
 
 let json = r#"{"name": "Alice", "age": 30}"#;
-let mut partial = User::partial();
-from_str(&mut partial, json)?;
-let user = partial.build::<User>();
+let user: User = facet_json::from_str(&json).unwrap();
 assert_eq!(user, User { name: "Alice".into(), age: 30 });
-# Ok::<(), facet_json::Error>(())
 ```
 
 

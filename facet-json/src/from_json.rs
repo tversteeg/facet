@@ -1,11 +1,47 @@
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
 
 use facet_poke::Poke;
-use facet_trait::{Opaque, OpaqueConst, OpaqueUninit, ShapeExt as _};
+use facet_trait::{Facet, Opaque, OpaqueConst, OpaqueUninit, ShapeExt as _};
 use log::trace;
 
+/// Deserializes a JSON string into a value of type `T` that implements `Facet`.
+///
+/// This function takes a JSON string representation and converts it into a Rust
+/// value of the specified type `T`. The type must implement the `Facet` trait
+/// to provide the necessary type information for deserialization.
+///
+/// # Parameters
+/// * `json` - A string slice containing the JSON to deserialize
+///
+/// # Returns
+/// * `Ok(T)` - The successfully deserialized value
+/// * `Err(JsonParseErrorWithContext)` - An error with context if deserialization fails
+///
+/// # Example
+/// ```
+/// # use facet_trait::Facet;
+/// # use facet_derive::Facet;
+/// # use facet_trait as facet;
+/// # #[derive(Facet)]
+/// # struct Person { name: String, age: u64 }
+/// let json = r#"{"name":"Alice","age":30}"#;
+/// let person: Person = facet_json::from_str(json).unwrap();
+/// ```
+pub fn from_str<T: Facet>(json: &str) -> Result<T, JsonParseErrorWithContext<'_>> {
+    // Allocate a Poke for type T
+    let (poke, _guard) = Poke::alloc::<T>();
+
+    // Deserialize the JSON into the Poke
+    let opaque = from_str_opaque(poke, json)?;
+
+    // Convert the Opaque to the concrete type T
+    let result = unsafe { opaque.read::<T>() };
+
+    Ok(result)
+}
+
 /// Deserialize a `Poke` object from a JSON string.
-pub fn from_json<'input, 'mem>(
+pub fn from_str_opaque<'input, 'mem>(
     poke: Poke<'mem>,
     json: &'input str,
 ) -> Result<Opaque<'mem>, JsonParseErrorWithContext<'input>> {
