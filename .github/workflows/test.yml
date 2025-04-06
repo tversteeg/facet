@@ -50,4 +50,4 @@ jobs:
                   tool: just,cargo-nextest
 
             - name: Run miri
-              run: just miri --release
+              run: just miri
