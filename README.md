@@ -43,8 +43,8 @@ Thanks to all individual sponsors, without whom this work could not exist:
     </picture>
 </a> <a href="https://github.com/sponsors/fasterthanlime">
     <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/github-sponsors-dark.svg">
-    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/github-sponsors-light.svg" height="40" alt="GitHub Sponsors">
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/github-dark.svg">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/github-light.svg" height="40" alt="GitHub Sponsors">
     </picture>
 </a> <a href="https://patreon.com/fasterthanlime">
     <picture>
