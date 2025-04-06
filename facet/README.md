@@ -1,4 +1,12 @@
 
+# facet
+
+[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
+[![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
+[![crates.io](https://img.shields.io/crates/v/facet.svg)](https://crates.io/crates/facet)
+[![documentation](https://docs.rs/facet/badge.svg)](https://docs.rs/facet)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet.svg)](./LICENSE)
+
 Thanks to all individual and corporate sponsors, without whom this work could not exist:
 
 <p> <a href="https://ko-fi.com/fasterthanlime">
@@ -27,14 +35,6 @@ Thanks to all individual and corporate sponsors, without whom this work could no
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/namespace-light.svg" height="40" alt="Namespace">
     </picture>
 </a> </p>
-
-# facet
-
-[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
-[![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/facet.svg)](https://crates.io/crates/facet)
-[![documentation](https://docs.rs/facet/badge.svg)](https://docs.rs/facet)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet.svg)](./LICENSE)
              
 
 facet provides runtime reflection for Rust.

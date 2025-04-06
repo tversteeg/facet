@@ -86,6 +86,14 @@ fn generate_readme_files() {
     // Add template functions
     env.add_function("header", |crate_name: String| {
         format!(r#"
+# {0}
+
+[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
+[![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
+[![crates.io](https://img.shields.io/crates/v/{0}.svg)](https://crates.io/crates/{0})
+[![documentation](https://docs.rs/{0}/badge.svg)](https://docs.rs/{0})
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/{0}.svg)](./LICENSE)
+
 Thanks to all individual and corporate sponsors, without whom this work could not exist:
 
 <p> <a href="https://ko-fi.com/fasterthanlime">
@@ -114,14 +122,6 @@ Thanks to all individual and corporate sponsors, without whom this work could no
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/namespace-light.svg" height="40" alt="Namespace">
     </picture>
 </a> </p>
-
-# {0}
-
-[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
-[![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/{0}.svg)](https://crates.io/crates/{0})
-[![documentation](https://docs.rs/{0}/badge.svg)](https://docs.rs/{0})
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/{0}.svg)](./LICENSE)
              "#,
             crate_name
         )
