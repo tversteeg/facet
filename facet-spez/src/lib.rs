@@ -6,6 +6,14 @@ use facet_types::ParseError;
 
 use facet_opaque::{Opaque, OpaqueUninit};
 
+/// A wrapper type used for auto-deref specialization.
+///
+/// This struct is a core part of the auto-deref-based specialization technique which allows
+/// conditionally implementing functionality based on what traits a type implements, without
+/// requiring the unstable `specialization` feature.
+///
+/// It wraps a value and is used in conjunction with trait implementations that leverage
+/// Rust's method resolution rules to select different implementations based on available traits.
 pub struct Spez<T>(pub T);
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -14,6 +22,10 @@ pub struct Spez<T>(pub T);
 
 /// Specialization proxy for [`std::fmt::Debug`]
 pub trait SpezDebugYes {
+    /// Delegates to the inner type's `Debug` implementation.
+    ///
+    /// This method is called when the wrapped type implements `Debug`.
+    /// It forwards the formatting request to the inner value's `Debug` implementation.
     fn spez_debug(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error>;
 }
 impl<T: Debug> SpezDebugYes for &Spez<T> {
@@ -24,6 +36,10 @@ impl<T: Debug> SpezDebugYes for &Spez<T> {
 
 /// Specialization proxy for [`std::fmt::Debug`]
 pub trait SpezDebugNo {
+    /// Fallback implementation when the type doesn't implement `Debug`.
+    ///
+    /// This method is used as a fallback and is designed to be unreachable in practice.
+    /// It's only selected when the wrapped type doesn't implement `Debug`.
     fn spez_debug(&self, _f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error>;
 }
 impl<T> SpezDebugNo for Spez<T> {
@@ -38,6 +54,10 @@ impl<T> SpezDebugNo for Spez<T> {
 
 /// Specialization proxy for [`std::fmt::Display`]
 pub trait SpezDisplayYes {
+    /// Delegates to the inner type's `Display` implementation.
+    ///
+    /// This method is called when the wrapped type implements `Display`.
+    /// It forwards the formatting request to the inner value's `Display` implementation.
     fn spez_display(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error>;
 }
 impl<T: fmt::Display> SpezDisplayYes for &Spez<T> {
@@ -48,6 +68,10 @@ impl<T: fmt::Display> SpezDisplayYes for &Spez<T> {
 
 /// Specialization proxy for [`std::fmt::Display`]
 pub trait SpezDisplayNo {
+    /// Fallback implementation when the type doesn't implement `Display`.
+    ///
+    /// This method is used as a fallback and is designed to be unreachable in practice.
+    /// It's only selected when the wrapped type doesn't implement `Display`.
     fn spez_display(&self, _f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error>;
 }
 impl<T> SpezDisplayNo for Spez<T> {
@@ -62,6 +86,10 @@ impl<T> SpezDisplayNo for Spez<T> {
 
 /// Specialization proxy for [`std::default::Default`]
 pub trait SpezDefaultInPlaceYes {
+    /// Creates a default value for the inner type in place.
+    ///
+    /// This method is called when the wrapped type implements `Default`.
+    /// It writes the default value into the provided uninitialized memory.
     fn spez_default_in_place<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem>;
 }
 impl<T: Default> SpezDefaultInPlaceYes for &Spez<T> {
@@ -72,6 +100,10 @@ impl<T: Default> SpezDefaultInPlaceYes for &Spez<T> {
 
 /// Specialization proxy for [`std::default::Default`]
 pub trait SpezDefaultInPlaceNo {
+    /// Fallback implementation when the type doesn't implement `Default`.
+    ///
+    /// This method is used as a fallback and is designed to be unreachable in practice.
+    /// It's only selected when the wrapped type doesn't implement `Default`.
     fn spez_default_in_place<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem>;
 }
 impl<T> SpezDefaultInPlaceNo for Spez<T> {
@@ -86,6 +118,10 @@ impl<T> SpezDefaultInPlaceNo for Spez<T> {
 
 /// Specialization proxy for [`std::clone::Clone`]
 pub trait SpezCloneIntoYes {
+    /// Clones the inner value into the provided uninitialized memory.
+    ///
+    /// This method is called when the wrapped type implements `Clone`.
+    /// It creates a clone of the inner value and writes it into the target memory.
     fn spez_clone_into<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem>;
 }
 impl<T: Clone> SpezCloneIntoYes for &Spez<T> {
@@ -96,6 +132,10 @@ impl<T: Clone> SpezCloneIntoYes for &Spez<T> {
 
 /// Specialization proxy for [`std::clone::Clone`]
 pub trait SpezCloneIntoNo {
+    /// Fallback implementation when the type doesn't implement `Clone`.
+    ///
+    /// This method is used as a fallback and is designed to be unreachable in practice.
+    /// It's only selected when the wrapped type doesn't implement `Clone`.
     fn spez_clone_into<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem>;
 }
 impl<T> SpezCloneIntoNo for Spez<T> {
@@ -110,6 +150,10 @@ impl<T> SpezCloneIntoNo for Spez<T> {
 
 /// Specialization proxy for [`std::str::FromStr`]
 pub trait SpezParseYes {
+    /// Parses a string slice into the inner type.
+    ///
+    /// This method is called when the wrapped type implements `FromStr`.
+    /// It attempts to parse the provided string and write the result into the target memory.
     fn spez_parse(&self, s: &str, target: OpaqueUninit) -> Result<(), ParseError>;
 }
 impl<T: core::str::FromStr> SpezParseYes for &Spez<T> {
@@ -128,6 +172,10 @@ impl<T: core::str::FromStr> SpezParseYes for &Spez<T> {
 
 /// Specialization proxy for [`std::str::FromStr`]
 pub trait SpezParseNo {
+    /// Fallback implementation when the type doesn't implement `FromStr`.
+    ///
+    /// This method is used as a fallback and is designed to be unreachable in practice.
+    /// It's only selected when the wrapped type doesn't implement `FromStr`.
     fn spez_parse(&self, _s: &str, _target: OpaqueUninit) -> Result<(), ParseError>;
 }
 impl<T> SpezParseNo for Spez<T> {
@@ -142,6 +190,10 @@ impl<T> SpezParseNo for Spez<T> {
 
 /// Specialization proxy for [`std::cmp::PartialEq`]
 pub trait SpezPartialEqYes {
+    /// Checks if two values are equal.
+    ///
+    /// This method is called when the wrapped type implements `PartialEq`.
+    /// It compares the inner values for equality.
     fn spez_eq(&self, other: &Self) -> bool;
 }
 impl<T: PartialEq> SpezPartialEqYes for &Spez<T> {
@@ -152,6 +204,10 @@ impl<T: PartialEq> SpezPartialEqYes for &Spez<T> {
 
 /// Specialization proxy for [`std::cmp::PartialEq`]
 pub trait SpezPartialEqNo {
+    /// Fallback implementation when the type doesn't implement `PartialEq`.
+    ///
+    /// This method is used as a fallback and is designed to be unreachable in practice.
+    /// It's only selected when the wrapped type doesn't implement `PartialEq`.
     fn spez_eq(&self, _other: &Self) -> bool;
 }
 impl<T> SpezPartialEqNo for Spez<T> {
@@ -166,6 +222,10 @@ impl<T> SpezPartialEqNo for Spez<T> {
 
 /// Specialization proxy for [`std::cmp::PartialOrd`]
 pub trait SpezPartialOrdYes {
+    /// Compares two values for ordering.
+    ///
+    /// This method is called when the wrapped type implements `PartialOrd`.
+    /// It compares the inner values and returns their ordering.
     fn spez_partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering>;
 }
 impl<T: PartialOrd> SpezPartialOrdYes for &Spez<T> {
@@ -176,6 +236,10 @@ impl<T: PartialOrd> SpezPartialOrdYes for &Spez<T> {
 
 /// Specialization proxy for [`std::cmp::PartialOrd`]
 pub trait SpezPartialOrdNo {
+    /// Fallback implementation when the type doesn't implement `PartialOrd`.
+    ///
+    /// This method is used as a fallback and is designed to be unreachable in practice.
+    /// It's only selected when the wrapped type doesn't implement `PartialOrd`.
     fn spez_partial_cmp(&self, _other: &Self) -> Option<std::cmp::Ordering>;
 }
 impl<T> SpezPartialOrdNo for Spez<T> {
@@ -190,6 +254,10 @@ impl<T> SpezPartialOrdNo for Spez<T> {
 
 /// Specialization proxy for [`std::cmp::Ord`]
 pub trait SpezOrdYes {
+    /// Compares two values for ordering.
+    ///
+    /// This method is called when the wrapped type implements `Ord`.
+    /// It compares the inner values and returns their ordering.
     fn spez_cmp(&self, other: &Self) -> std::cmp::Ordering;
 }
 impl<T: Ord> SpezOrdYes for &Spez<T> {
@@ -200,6 +268,10 @@ impl<T: Ord> SpezOrdYes for &Spez<T> {
 
 /// Specialization proxy for [`std::cmp::Ord`]
 pub trait SpezOrdNo {
+    /// Fallback implementation when the type doesn't implement `Ord`.
+    ///
+    /// This method is used as a fallback and is designed to be unreachable in practice.
+    /// It's only selected when the wrapped type doesn't implement `Ord`.
     fn spez_cmp(&self, _other: &Self) -> std::cmp::Ordering;
 }
 impl<T> SpezOrdNo for Spez<T> {
@@ -214,6 +286,10 @@ impl<T> SpezOrdNo for Spez<T> {
 
 /// Specialization proxy for [`std::hash::Hash`]
 pub trait SpezHashYes {
+    /// Hashes the inner value.
+    ///
+    /// This method is called when the wrapped type implements `Hash`.
+    /// It hashes the inner value using the provided hasher.
     fn spez_hash<H: std::hash::Hasher>(&self, state: &mut H);
 }
 impl<T: std::hash::Hash> SpezHashYes for &Spez<T> {
@@ -224,6 +300,10 @@ impl<T: std::hash::Hash> SpezHashYes for &Spez<T> {
 
 /// Specialization proxy for [`std::hash::Hash`]
 pub trait SpezHashNo {
+    /// Fallback implementation when the type doesn't implement `Hash`.
+    ///
+    /// This method is used as a fallback and is designed to be unreachable in practice.
+    /// It's only selected when the wrapped type doesn't implement `Hash`.
     fn spez_hash<H: std::hash::Hasher>(&self, _state: &mut H);
 }
 impl<T> SpezHashNo for Spez<T> {
