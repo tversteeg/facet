@@ -81,7 +81,7 @@ impl<'mem> PokeStruct<'mem> {
     /// This function will panic if:
     /// - Not all the fields have been initialized.
     /// - The generic type parameter T does not match the shape that this PokeStruct is building.
-    pub fn build<T: crate::Shapely>(mut self, guard: Option<Guard>) -> T {
+    pub fn build<T: crate::Facet>(mut self, guard: Option<Guard>) -> T {
         self.guard_for_build = guard;
         self.assert_all_fields_initialized();
         self.shape.assert_type::<T>();
@@ -105,7 +105,7 @@ impl<'mem> PokeStruct<'mem> {
     /// This function will panic if:
     /// - Not all the fields have been initialized.
     /// - The generic type parameter T does not match the shape that this PokeStruct is building.
-    pub fn build_boxed<T: crate::Shapely>(self) -> Box<T> {
+    pub fn build_boxed<T: crate::Facet>(self) -> Box<T> {
         self.assert_all_fields_initialized();
         self.shape.assert_type::<T>();
 

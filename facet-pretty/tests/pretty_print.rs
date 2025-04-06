@@ -1,16 +1,16 @@
-use facet::Shapely;
+use facet::Facet;
 use facet_core::{Def, Field, FieldFlags, Shape, ShapeFn};
-use facet_pretty::{PrettyPrinter, ShapelyPretty};
+use facet_pretty::{FacetPretty, PrettyPrinter};
 use std::{alloc::Layout, fmt::Write};
 
-#[derive(Debug, Shapely)]
+#[derive(Debug, Facet)]
 struct Person {
     name: String,
     age: u32,
     address: Address,
 }
 
-#[derive(Debug, Shapely)]
+#[derive(Debug, Facet)]
 struct Address {
     street: String,
     city: String,
@@ -29,8 +29,8 @@ struct TestSecrets {
     sensitive_field: String,
 }
 
-// Manual Shapely implementation with a sensitive field
-impl Shapely for TestSecrets {
+// Manual Facet implementation with a sensitive field
+impl Facet for TestSecrets {
     fn shape() -> Shape {
         Shape {
             name: |f, _opts| write!(f, "TestSecrets"),
@@ -89,7 +89,7 @@ fn test_pretty_print() {
     assert!(output.contains("city"));
     assert!(output.contains("country"));
 
-    // Test the ShapelyPretty trait
+    // Test the FacetPretty trait
     let mut buffer = String::new();
     write!(buffer, "{}", person.pretty()).unwrap();
 
@@ -116,7 +116,7 @@ fn test_pretty_print() {
     assert!(custom_output.contains("age"));
     assert!(custom_output.contains("address"));
 
-    // Test the ShapelyPretty trait with custom printer
+    // Test the FacetPretty trait with custom printer
     let mut custom_buffer = String::new();
     write!(custom_buffer, "{}", person.pretty_with(custom_printer)).unwrap();
 

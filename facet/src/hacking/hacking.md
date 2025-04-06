@@ -1,11 +1,11 @@
-## Hacking Guide to Shapely
+## Hacking Guide to Facet
 
-## The Shapely Trait and Its Purpose
+## The Facet Trait and Its Purpose
 
-The `Shapely` trait is the cornerstone of our reflection system. It provides a way to access type information at both compile time and runtime, enabling powerful meta-programming capabilities while maintaining Rust's safety guarantees.
+The `Facet` trait is the cornerstone of our reflection system. It provides a way to access type information at both compile time and runtime, enabling powerful meta-programming capabilities while maintaining Rust's safety guarantees.
 
 ```rust,ignore
-pub unsafe trait Shapely: 'static {
+pub unsafe trait Facet: 'static {
     /// A dummy value of this type, used for compile-time type information
     const DUMMY: Self;
 
@@ -16,15 +16,15 @@ pub unsafe trait Shapely: 'static {
 
 ### Core Concept
 
-The `Shapely` trait allows any implementing type to expose its structural information through a static `Shape` object. This enables introspection of types at compile time, powering serialization, deserialization, debugging, and other operations that need to understand the structure of data.
+The `Facet` trait allows any implementing type to expose its structural information through a static `Shape` object. This enables introspection of types at compile time, powering serialization, deserialization, debugging, and other operations that need to understand the structure of data.
 
 ## Specialization via Auto-Deref
 
-Shapely uses a technique called "auto-deref-based specialization" to enable trait-like specialization on stable Rust. This approach allows us to conditionally implement functionality based on what traits a type implements, all without requiring the unstable `specialization` feature.
+Facet uses a technique called "auto-deref-based specialization" to enable trait-like specialization on stable Rust. This approach allows us to conditionally implement functionality based on what traits a type implements, all without requiring the unstable `specialization` feature.
 
 ### The DUMMY Value
 
-The `DUMMY` constant in the `Shapely` trait might seem strange at first glance. It's important to understand that:
+The `DUMMY` constant in the `Facet` trait might seem strange at first glance. It's important to understand that:
 
 1. The `DUMMY` value is never actually read at runtime
 2. It only exists to enable the specialization pattern
@@ -95,9 +95,9 @@ Let's examine how the `PartialOrd` trait is conditionally implemented using both
 For arrays like `[T; 1]`, we need to check if the inner type `T` implements `PartialOrd`. Since this is a generic type, we use compile-time evaluation of `SHAPE`:
 
 ```rust
-# use facet::{OpaqueConst, Shape, Shapely};
+# use facet::{OpaqueConst, Shape, Facet};
 # use std::cmp::Ordering;
-fn create_array_shape<T: Shapely>() {
+fn create_array_shape<T: Facet>() {
     let vtable = {
         // Implementation of partial_ord for arrays
         let partial_ord = if T::SHAPE.vtable.partial_ord.is_some() {
@@ -171,7 +171,7 @@ Here's what's happening:
 
 ### Key Differences
 
-These examples highlight the two approaches to specialization in the Shapely codebase:
+These examples highlight the two approaches to specialization in the Facet codebase:
 
 1. **Generic approach**: Directly inspects `T::SHAPE` at compile time for trait information
 2. **Non-generic approach**: Uses the `impls!` macro with auto-deref trick for specialization

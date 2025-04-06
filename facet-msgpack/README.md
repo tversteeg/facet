@@ -6,15 +6,15 @@
 [![documentation](https://docs.rs/facet-msgpack/badge.svg)](https://docs.rs/facet-msgpack)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-msgpack.svg)](./LICENSE)
 
-A crate for deserializing [MessagePack](https://msgpack.org/) data into Shapely structures.
+A crate for deserializing [MessagePack](https://msgpack.org/) data into Facet structures.
 
 ## Example
 
 ```rust
-use facet::Shapely;
+use facet::Facet;
 use facet_msgpack::from_msgpack;
 
-#[derive(Debug, Shapely, PartialEq)]
+#[derive(Debug, Facet, PartialEq)]
 struct User {
     id: u64,
     username: String,

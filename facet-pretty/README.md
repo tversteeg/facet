@@ -6,11 +6,11 @@
 [![documentation](https://docs.rs/facet-pretty/badge.svg)](https://docs.rs/facet-pretty)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-pretty.svg)](./LICENSE)
 
-A pretty-printing library for types implementing the `Shapely` trait, providing colorful and well-formatted output.
+A pretty-printing library for types implementing the `Facet` trait, providing colorful and well-formatted output.
 
 ## Features
 
-- Pretty-print any type implementing the `Shapely` trait
+- Pretty-print any type implementing the `Facet` trait
 - Colorful output with ANSI escape codes
 - Unique colors for different scalar types based on their Shape hash
 - Customizable indentation and formatting
@@ -20,17 +20,17 @@ A pretty-printing library for types implementing the `Shapely` trait, providing 
 ## Example
 
 ```rust
-use facet::Shapely;
+use facet::Facet;
 use facet_pretty::PrettyPrinter;
 
-#[derive(Debug, Shapely)]
+#[derive(Debug, Facet)]
 struct Person {
     name: String,
     age: u32,
     address: Address,
 }
 
-#[derive(Debug, Shapely)]
+#[derive(Debug, Facet)]
 struct Address {
     street: String,
     city: String,

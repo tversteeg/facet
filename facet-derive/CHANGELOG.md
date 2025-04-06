@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
-- Shapely is unsafe
+- Facet is unsafe
 - json tests almost passing
 - errors gone
 - restore json test a little?? not much
@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- add support for tuple fields in Shapely derive macro
+- add support for tuple fields in Facet derive macro
 
 ### Fixed
 

@@ -1,9 +1,9 @@
 use crate::*;
 use std::{alloc::Layout, hash::Hash as _};
 
-unsafe impl<T> Shapely for Vec<T>
+unsafe impl<T> Facet for Vec<T>
 where
-    T: Shapely,
+    T: Facet,
 {
     const DUMMY: Self = Vec::new(); // oh this is const, fantastic
     const SHAPE: &'static Shape = &const {

@@ -1,5 +1,5 @@
 use facet_trait::{
-    EnumDef, EnumRepr, FieldError, Opaque, OpaqueUninit, Shape, ShapeExt as _, Shapely, VariantKind,
+    EnumDef, EnumRepr, Facet, FieldError, Opaque, OpaqueUninit, Shape, ShapeExt as _, VariantKind,
 };
 use std::ptr::NonNull;
 
@@ -250,7 +250,7 @@ impl<'mem> PokeEnum<'mem> {
         }
     }
 
-    fn assert_matching_shape<T: Shapely>(&self) {
+    fn assert_matching_shape<T: Facet>(&self) {
         if !self.shape.is_type::<T>() {
             panic!(
                 "This is a partial \x1b[1;34m{}\x1b[0m, you can't build a \x1b[1;32m{}\x1b[0m out of it",
@@ -284,7 +284,7 @@ impl<'mem> PokeEnum<'mem> {
     /// This function will panic if:
     /// - Not all fields in the selected variant have been initialized.
     /// - The generic type parameter T does not match the shape that this PokeEnum is building.
-    pub fn build<T: Shapely>(self) -> T {
+    pub fn build<T: Facet>(self) -> T {
         self.assert_all_fields_initialized();
         self.assert_matching_shape::<T>();
 
@@ -303,7 +303,7 @@ impl<'mem> PokeEnum<'mem> {
     /// This function will panic if:
     /// - Not all fields in the selected variant have been initialized.
     /// - The generic type parameter T does not match the shape that this PokeEnum is building.
-    pub fn build_boxed<T: Shapely>(self) -> Box<T> {
+    pub fn build_boxed<T: Facet>(self) -> Box<T> {
         self.assert_all_fields_initialized();
         self.assert_matching_shape::<T>();
 

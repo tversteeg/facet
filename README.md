@@ -11,7 +11,7 @@ A Rust reflection, introspection, serialization and deserialization framework wi
 A single, lightweight derive macro (thanks to [unsynn](https://crates.io/crates/unsynn))
 
 ```rust
-#[derive(Shapely)]
+#[derive(Facet)]
 struct Blah {
     foo: u32,
     bar: String,

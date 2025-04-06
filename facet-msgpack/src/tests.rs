@@ -1,13 +1,13 @@
 use super::*;
 
-use facet_core::Shapely;
+use facet_core::Facet;
 // this makes the derives work.. dirty but oh well.
 use facet_core as facet;
-use facet_derive::Shapely;
+use facet_derive::Facet;
 
 #[test]
 fn it_works() {
-    #[derive(Debug, PartialEq, Shapely)]
+    #[derive(Debug, PartialEq, Facet)]
     struct TestStruct {
         name: String,
         age: u64,

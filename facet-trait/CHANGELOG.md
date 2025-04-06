@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
-- Shapely is unsafe
+- Facet is unsafe
 - Fix tests etc.
 - shapedebug bye
 - getting there

@@ -8,7 +8,7 @@ homepage.workspace = true
 documentation.workspace = true
 license.workspace = true
 rust-version.workspace = true
-description = "Proc macro for deriving the 'Shapely' trait in facet"
+description = "Proc macro for deriving the 'Facet' trait in facet"
 keywords = [
     "reflection",
     "introspection",

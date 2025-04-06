@@ -8,7 +8,7 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 documentation = "https://docs.rs/facet-msgpack"
-description = "MessagePack serialization and deserialization for Shapely types"
+description = "MessagePack serialization and deserialization for Facet types"
 keywords = [
     "msgpack",
     "serialization",

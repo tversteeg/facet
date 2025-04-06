@@ -8,7 +8,7 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
-description = "YAML serialization and deserialization for Shapely types"
+description = "YAML serialization and deserialization for Facet types"
 keywords = ["yaml", "serialization", "deserialization", "reflection", "facet"]
 categories = ["encoding", "parsing", "data-structures"]
 

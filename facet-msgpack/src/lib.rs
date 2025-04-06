@@ -13,7 +13,7 @@ use constants::*;
 #[cfg(test)]
 mod tests;
 
-/// Deserializes MessagePack-encoded data into a Shapely Partial.
+/// Deserializes MessagePack-encoded data into a Facet Partial.
 ///
 /// This function takes a MessagePack byte array and populates a Partial object
 /// according to the shape description provided by the Partial.
@@ -21,10 +21,10 @@ mod tests;
 /// # Example
 ///
 /// ```
-/// use facet::Shapely;
+/// use facet::Facet;
 /// use facet_msgpack::from_msgpack;
 ///
-/// #[derive(Debug, Shapely, PartialEq)]
+/// #[derive(Debug, Facet, PartialEq)]
 /// struct User {
 ///     id: u64,
 ///     username: String,

@@ -1,23 +1,23 @@
-//! Display trait implementations for pretty-printing Shapely types
+//! Display trait implementations for pretty-printing Facet types
 
 use std::fmt::{self, Display, Formatter};
 
 use crate::printer::PrettyPrinter;
 
-/// Display wrapper for any type that implements Shapely
-pub struct PrettyDisplay<'a, T: facet_core::Shapely> {
+/// Display wrapper for any type that implements Facet
+pub struct PrettyDisplay<'a, T: facet_core::Facet> {
     pub(crate) value: &'a T,
     pub(crate) printer: PrettyPrinter,
 }
 
-impl<T: facet_core::Shapely> Display for PrettyDisplay<'_, T> {
+impl<T: facet_core::Facet> Display for PrettyDisplay<'_, T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         self.printer.format_to(self.value, f)
     }
 }
 
-/// Extension trait for Shapely types to easily pretty-print them
-pub trait ShapelyPretty: facet_core::Shapely {
+/// Extension trait for Facet types to easily pretty-print them
+pub trait FacetPretty: facet_core::Facet {
     /// Get a displayable wrapper that pretty-prints this value
     fn pretty(&self) -> PrettyDisplay<'_, Self>;
 
@@ -25,7 +25,7 @@ pub trait ShapelyPretty: facet_core::Shapely {
     fn pretty_with(&self, printer: PrettyPrinter) -> PrettyDisplay<'_, Self>;
 }
 
-impl<T: facet_core::Shapely> ShapelyPretty for T {
+impl<T: facet_core::Facet> FacetPretty for T {
     fn pretty(&self) -> PrettyDisplay<'_, Self> {
         PrettyDisplay {
             value: self,
@@ -44,11 +44,11 @@ impl<T: facet_core::Shapely> ShapelyPretty for T {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use facet::Shapely;
+    use facet::Facet;
     use std::fmt::Write;
 
     // Use the derive macro from facet
-    #[derive(Shapely)]
+    #[derive(Facet)]
     struct TestStruct {
         field: u32,
     }

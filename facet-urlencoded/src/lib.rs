@@ -6,15 +6,15 @@ use facet::{Partial, error, trace, warn};
 #[cfg(test)]
 mod tests;
 
-/// Deserializes URL encoded form data into a Shapely Partial.
+/// Deserializes URL encoded form data into a Facet Partial.
 ///
 /// # Example
 ///
 /// ```
-/// use facet::Shapely;
+/// use facet::Facet;
 /// use facet_urlencoded::from_urlencoded;
 ///
-/// #[derive(Debug, Shapely, PartialEq)]
+/// #[derive(Debug, Facet, PartialEq)]
 /// struct SearchParams {
 ///     query: String,
 ///     page: u64,

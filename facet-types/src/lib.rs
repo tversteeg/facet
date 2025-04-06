@@ -1,4 +1,4 @@
-//! structs and vtable definitions used by Shapely
+//! structs and vtable definitions used by Facet
 
 // TODO: mark `non_exhaustive`, add `const fn` builder patterns
 

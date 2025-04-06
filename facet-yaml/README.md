@@ -6,15 +6,15 @@
 [![documentation](https://docs.rs/facet-yaml/badge.svg)](https://docs.rs/facet-yaml)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-yaml.svg)](./LICENSE)
 
-[YAML](https://yaml.org/) serialization and deserialization for Shapely types.
+[YAML](https://yaml.org/) serialization and deserialization for Facet types.
 
 ## Example
 
 ```rust
-use facet::Shapely;
+use facet::Facet;
 use facet_yaml::from_yaml;
 
-#[derive(Debug, Shapely, PartialEq)]
+#[derive(Debug, Facet, PartialEq)]
 struct Config {
     name: String,
     version: u64,

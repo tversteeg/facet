@@ -1,14 +1,14 @@
-use facet::Shapely;
-use facet_pretty::{PrettyPrinter, ShapelyPretty};
+use facet::Facet;
+use facet_pretty::{FacetPretty, PrettyPrinter};
 
-#[derive(Debug, Shapely)]
+#[derive(Debug, Facet)]
 struct Person {
     name: String,
     age: u32,
     address: Address,
 }
 
-#[derive(Debug, Shapely)]
+#[derive(Debug, Facet)]
 struct Address {
     street: String,
     city: String,

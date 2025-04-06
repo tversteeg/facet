@@ -1,7 +1,7 @@
-use crate::{Shape, Shapely};
+use crate::{Facet, Shape};
 
 #[doc(hidden)]
-pub const fn shape_of<TStruct, TField: Shapely>(_f: &dyn Fn(TStruct) -> TField) -> &'static Shape {
+pub const fn shape_of<TStruct, TField: Facet>(_f: &dyn Fn(TStruct) -> TField) -> &'static Shape {
     TField::SHAPE
 }
 
@@ -184,7 +184,7 @@ macro_rules! value_vtable {
             default_in_place: if $crate::facet_spez::impls!($type_name: std::default::Default) {
                 Some(|target| {
                     use $crate::facet_spez::*;
-                    (&&Spez(<$type_name as $crate::Shapely>::DUMMY)).spez_default_in_place(target)
+                    (&&Spez(<$type_name as $crate::Facet>::DUMMY)).spez_default_in_place(target)
                 })
             } else {
                 None

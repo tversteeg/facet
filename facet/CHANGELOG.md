@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Other
 
 - Add .envrc to try removing rebuilds
-- Shapely is unsafe
+- Facet is unsafe
 - Fix tests etc.
 - woo everything builds
 - getting there

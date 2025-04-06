@@ -20,7 +20,7 @@ pub use macros::*;
 /// all the serializers, deserializers, the entire ecosystem is unsafe.
 ///
 /// You're responsible for describing the type layout properly, and annotating all the invariants.
-pub unsafe trait Shapely: Sized {
+pub unsafe trait Facet: Sized {
     /// The shape of this type
     const SHAPE: &'static Shape;
 
@@ -30,7 +30,7 @@ pub unsafe trait Shapely: Sized {
     const DUMMY: Self;
 
     /// Returns true if the type of `self` is equal to the type of `other`
-    fn type_eq<Other: Shapely>() -> bool {
+    fn type_eq<Other: Facet>() -> bool {
         Self::SHAPE == Other::SHAPE
     }
 }
@@ -38,20 +38,20 @@ pub unsafe trait Shapely: Sized {
 /// Extension trait to provide `is_type` and `assert_type`
 pub trait ShapeExt {
     /// Check if this shape is of the given type
-    fn is_type<Other: Shapely>(&'static self) -> bool;
+    fn is_type<Other: Facet>(&'static self) -> bool;
 
     /// Assert that this shape is of the given type, panicking if it's not
-    fn assert_type<Other: Shapely>(&'static self);
+    fn assert_type<Other: Facet>(&'static self);
 }
 
 impl ShapeExt for Shape {
     /// Check if this shape is of the given type
-    fn is_type<Other: Shapely>(&'static self) -> bool {
+    fn is_type<Other: Facet>(&'static self) -> bool {
         self == Other::SHAPE
     }
 
     /// Assert that this shape is of the given type, panicking if it's not
-    fn assert_type<Other: Shapely>(&'static self) {
+    fn assert_type<Other: Facet>(&'static self) {
         assert!(
             self.is_type::<Other>(),
             "Type mismatch: expected {}, found {self}",

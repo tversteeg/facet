@@ -1,4 +1,4 @@
-//! Pretty printer implementation for Shapely types
+//! Pretty printer implementation for Facet types
 
 use std::{
     collections::HashSet,
@@ -7,14 +7,14 @@ use std::{
     str,
 };
 
-use facet_core::{Def, FieldFlags, Scalar, Shape, ShapeFn, Shapely};
+use facet_core::{Def, Facet, FieldFlags, Scalar, Shape, ShapeFn};
 
 use crate::{
     ansi,
     color::{self, ColorGenerator},
 };
 
-/// A formatter for pretty-printing Shapely types
+/// A formatter for pretty-printing Facet types
 pub struct PrettyPrinter {
     indent_size: usize,
     max_depth: Option<usize>,
@@ -63,8 +63,8 @@ impl PrettyPrinter {
         self
     }
 
-    /// Pretty-print a value that implements Shapely
-    pub fn print<T: Shapely>(&self, value: &T) {
+    /// Pretty-print a value that implements Facet
+    pub fn print<T: Facet>(&self, value: &T) {
         let shape_fn = T::SHAPE_FN;
         let ptr = value as *const T as *mut u8;
 
@@ -76,7 +76,7 @@ impl PrettyPrinter {
     }
 
     /// Format a value to a string
-    pub fn format<T: Shapely>(&self, value: &T) -> String {
+    pub fn format<T: Facet>(&self, value: &T) -> String {
         let shape_fn = T::SHAPE_FN;
         let ptr = value as *const T as *mut u8;
 
@@ -88,7 +88,7 @@ impl PrettyPrinter {
     }
 
     /// Format a value to a formatter
-    pub fn format_to<T: Shapely>(&self, value: &T, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    pub fn format_to<T: Facet>(&self, value: &T, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let shape_fn = T::SHAPE_FN;
         let ptr = value as *const T as *mut u8;
 

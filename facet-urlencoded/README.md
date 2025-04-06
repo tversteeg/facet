@@ -10,7 +10,7 @@ A serialization and deserialization library for URL encoded form data using the 
 
 ## Features
 
-- Simple URL encoded form data deserialization for any type implementing the `Shapely` trait
+- Simple URL encoded form data deserialization for any type implementing the `Facet` trait
 - Support for query string parsing
 - Detailed error reporting with context
 - Support for nested structs and scalar values
@@ -18,10 +18,10 @@ A serialization and deserialization library for URL encoded form data using the 
 ## Example
 
 ```rust
-use facet::Shapely;
+use facet::Facet;
 use facet_urlencoded::from_urlencoded;
 
-#[derive(Debug, Shapely, PartialEq)]
+#[derive(Debug, Facet, PartialEq)]
 struct SearchParams {
     query: String,
     page: u64,

@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod tests {
     use super::*;
-    use facet_core::Shapely;
+    use facet_core::Facet;
 
-    #[derive(Debug, Shapely, PartialEq)]
+    #[derive(Debug, Facet, PartialEq)]
     struct Person {
         name: String,
         age: u64,

@@ -4,7 +4,7 @@ use facet_poke::Peek;
 use facet_trait::ShapeExt as _;
 use std::io::{self, Write};
 
-/// Serializes any Shapely type to JSON
+/// Serializes any Facet type to JSON
 pub fn to_json<W: Write>(peek: Peek<'_>, writer: &mut W, indent: bool) -> io::Result<()> {
     fn serialize_value<W: Write>(
         peek: Peek<'_>,
@@ -144,7 +144,7 @@ pub fn to_json<W: Write>(peek: Peek<'_>, writer: &mut W, indent: bool) -> io::Re
     serialize_value(peek, writer, indent, 0)
 }
 
-/// Serializes any Shapely type to JSON and returns it as a String
+/// Serializes any Facet type to JSON and returns it as a String
 pub fn to_json_string(peek: Peek<'_>, indent: bool) -> String {
     let mut buffer = Vec::new();
     to_json(peek, &mut buffer, indent).unwrap();

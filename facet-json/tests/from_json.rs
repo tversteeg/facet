@@ -5,16 +5,16 @@ fn init_backtrace() {
     color_backtrace::install();
 }
 
-use facet_derive::Shapely;
+use facet_derive::Facet;
 use facet_json::{from_json, to_json};
 use facet_poke::{Peek, Poke};
-use facet_trait::Shapely;
+use facet_trait::Facet;
 
 use facet_trait as facet;
 
 #[test]
 fn test_from_json() {
-    #[derive(Shapely)]
+    #[derive(Facet)]
     struct TestStruct {
         name: String,
         age: u64,
@@ -31,7 +31,7 @@ fn test_from_json() {
 
 #[test]
 fn test_to_json() {
-    #[derive(Debug, PartialEq, Clone, Shapely)]
+    #[derive(Debug, PartialEq, Clone, Facet)]
     struct TestStruct {
         name: String,
         age: u64,
@@ -70,7 +70,7 @@ fn test_to_json() {
 
 // #[test]
 // fn test_from_json_with_more_types() {
-//     #[derive(Shapely)]
+//     #[derive(Facet)]
 //     struct TestStructWithMoreTypes {
 //         u8_val: u8,
 //         u16_val: u16,
@@ -115,12 +115,12 @@ fn test_to_json() {
 
 // #[test]
 // fn test_from_json_with_nested_structs() {
-//     #[derive(Shapely)]
+//     #[derive(Facet)]
 //     struct InnerStruct {
 //         value: i32,
 //     }
 
-//     #[derive(Shapely)]
+//     #[derive(Facet)]
 //     struct OuterStruct {
 //         name: String,
 //         inner: InnerStruct,
@@ -143,7 +143,7 @@ fn test_to_json() {
 
 // #[test]
 // fn test_from_json_with_tuples() {
-//     #[derive(Shapely)]
+//     #[derive(Facet)]
 //     struct TupleStruct(i32, String, (f64, bool));
 
 //     let json = r#"[123, "Hello", [3.69, true]]"#;
@@ -160,7 +160,7 @@ fn test_to_json() {
 
 // #[test]
 // fn test_from_json_with_vec() {
-//     #[derive(Shapely, Debug, PartialEq)]
+//     #[derive(Facet, Debug, PartialEq)]
 //     struct VecStruct {
 //         numbers: Vec<i32>,
 //         names: Vec<String>,
@@ -205,13 +205,13 @@ fn test_to_json() {
 
 // #[test]
 // fn test_from_json_with_hashmap() {
-//     #[derive(Shapely, Debug, PartialEq)]
+//     #[derive(Facet, Debug, PartialEq)]
 //     struct OtherStruct {
 //         value: i32,
 //         name: String,
 //     }
 
-//     #[derive(Shapely, Debug, PartialEq)]
+//     #[derive(Facet, Debug, PartialEq)]
 //     struct HashmapStruct {
 //         data: std::collections::HashMap<String, OtherStruct>,
 //     }

@@ -4,15 +4,15 @@
 use facet_core::Partial;
 use yaml_rust2::YamlLoader;
 
-/// Deserializes YAML data into a Shapely Partial.
+/// Deserializes YAML data into a Facet Partial.
 ///
 /// # Example
 ///
 /// ```
-/// use facet::Shapely;
+/// use facet::Facet;
 /// use facet_yaml::from_yaml;
 ///
-/// #[derive(Debug, Shapely, PartialEq)]
+/// #[derive(Debug, Facet, PartialEq)]
 /// struct Config {
 ///     name: String,
 ///     version: u64,

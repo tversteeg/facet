@@ -4,7 +4,7 @@ use std::alloc::Layout;
 
 pub use facet_peek::*;
 
-use facet_trait::{Def, OpaqueUninit, Shape, Shapely};
+use facet_trait::{Def, Facet, OpaqueUninit, Shape};
 
 mod value;
 pub use value::*;
@@ -52,7 +52,7 @@ impl Drop for Guard {
 
 impl<'mem> Poke<'mem> {
     /// Allocates a new poke of a type that implements facet
-    pub fn alloc<S: Shapely>() -> (Self, Guard) {
+    pub fn alloc<S: Facet>() -> (Self, Guard) {
         let data = S::SHAPE.allocate();
         let layout = Layout::new::<S>();
         let guard = Guard {

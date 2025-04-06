@@ -6,9 +6,9 @@
 [![documentation](https://docs.rs/facet-derive/badge.svg)](https://docs.rs/facet-derive)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-derive.svg)](./LICENSE)
 
-facet-derive provides procedural macros to derive the `Shapely` trait from facet.
+facet-derive provides procedural macros to derive the `Facet` trait from facet.
 
-This crate implements the `#[derive(Shapely)]` macro which automatically generates runtime reflection code for Rust structs, providing:
+This crate implements the `#[derive(Facet)]` macro which automatically generates runtime reflection code for Rust structs, providing:
 
   * Structure parsing and representation
   * Field access and manipulation

@@ -10,7 +10,7 @@ A serialization and deserialization library for JSON using the facet runtime ref
 
 ## Features
 
-- Simple JSON deserialization for any type implementing the `Shapely` trait
+- Simple JSON deserialization for any type implementing the `Facet` trait
 - Detailed error reporting with context
 - Support for nested structs and scalar values
 

@@ -7,7 +7,7 @@ use std::{
 use facet_opaque::OpaqueConst;
 
 use crate::{
-    Def, MapDef, MapIterVTable, MapVTable, MarkerTraits, ScalarDef, Shape, Shapely, ValueVTable,
+    Def, Facet, MapDef, MapIterVTable, MapVTable, MarkerTraits, ScalarDef, Shape, ValueVTable,
     value_vtable,
 };
 
@@ -16,11 +16,11 @@ struct HashMapIterator<'mem, K> {
     keys: VecDeque<&'mem K>,
 }
 
-unsafe impl<K, V, S> Shapely for HashMap<K, V, S>
+unsafe impl<K, V, S> Facet for HashMap<K, V, S>
 where
-    K: Shapely + std::cmp::Eq + std::hash::Hash + 'static,
-    V: Shapely + 'static,
-    S: Shapely + Default,
+    K: Facet + std::cmp::Eq + std::hash::Hash + 'static,
+    V: Facet + 'static,
+    S: Facet + Default,
 {
     const DUMMY: Self = HashMap::with_hasher(S::DUMMY);
     const SHAPE: &'static Shape = &Shape {
@@ -193,7 +193,7 @@ struct RandomStateInnards {
     k1: u64,
 }
 
-unsafe impl Shapely for RandomState {
+unsafe impl Facet for RandomState {
     const DUMMY: Self = unsafe { std::mem::transmute(RandomStateInnards { k0: 0, k1: 0 }) };
     const SHAPE: &'static Shape = &const {
         Shape {

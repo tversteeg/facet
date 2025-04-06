@@ -1,9 +1,9 @@
-use facet::{Def, Shapely, StructDef};
+use facet::{Def, Facet, StructDef};
 use std::mem::offset_of;
 
 #[test]
 fn simple_struct() {
-    #[derive(Debug, Shapely)]
+    #[derive(Debug, Facet)]
     struct Blah {
         foo: u32,
         bar: String,
@@ -40,7 +40,7 @@ fn simple_struct() {
 
 #[test]
 fn struct_repr_c() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
     #[repr(C)]
     struct Blah {
         foo: u32,
@@ -50,14 +50,14 @@ fn struct_repr_c() {
 
 #[test]
 fn struct_doc_comment() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
     /// yes
     struct Foo {}
 }
 
 #[test]
 fn struct_field_doc_comment() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
     struct Foo {
         /// This field has a doc comment
         bar: u32,
@@ -66,7 +66,7 @@ fn struct_field_doc_comment() {
 
 #[test]
 fn struct_with_pub_field() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
     struct Foo {
         /// This is a public field
         pub bar: u32,
@@ -75,14 +75,14 @@ fn struct_with_pub_field() {
 
 #[test]
 fn tuple_struct_repr_transparent() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
     #[repr(transparent)]
     struct Blah(u32);
 }
 
 #[test]
 fn tuple_struct_doc_comment() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
     #[repr(transparent)]
     /// This is a struct for sure
     struct Blah(u32);
@@ -90,7 +90,7 @@ fn tuple_struct_doc_comment() {
 
 #[test]
 fn tuple_struct_field_doc_comment() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
     #[repr(transparent)]
     /// This is a struct for sure
     struct Blah(
@@ -101,7 +101,7 @@ fn tuple_struct_field_doc_comment() {
 
 #[test]
 fn tuple_struct_with_pub_field() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
     #[repr(transparent)]
     /// This is a struct for sure
     struct Blah(
@@ -112,7 +112,7 @@ fn tuple_struct_with_pub_field() {
 
 #[test]
 fn cfg_attrs() {
-    #[derive(Shapely)]
+    #[derive(Facet)]
     #[cfg_attr(feature = "testfeat", derive(Serialize, Deserialize))]
     #[cfg_attr(feature = "testfeat", serde(deny_unknown_fields))]
     pub struct CubConfig {}
@@ -120,7 +120,7 @@ fn cfg_attrs() {
 
 #[test]
 fn cfg_attrs2() {
-    #[derive(Shapely)]
+    #[derive(Facet)]
     #[cfg_attr(feature = "testfeat", derive(Serialize, Deserialize))]
     #[cfg_attr(feature = "testfeat", serde(deny_unknown_fields))]
     pub struct CubConfig {
@@ -136,7 +136,7 @@ fn cfg_attrs2() {
 
 #[test]
 fn struct_with_std_string() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Shapely)]
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
     struct FileInfo {
         path: std::string::String,
         size: u64,
@@ -145,7 +145,7 @@ fn struct_with_std_string() {
 
 #[test]
 fn derive_real_life_cub_config() {
-    #[derive(Shapely)]
+    #[derive(Facet)]
     #[cfg_attr(feature = "testfeat", derive(Serialize, Deserialize))]
     #[cfg_attr(feature = "testfeat", serde(deny_unknown_fields))]
     pub struct CubConfig {
@@ -175,7 +175,7 @@ fn derive_real_life_cub_config() {
 
 // #[test]
 // fn struct_with_tuple() {
-//     #[derive(Debug, ::facet::Shapely)]
+//     #[derive(Debug, ::facet::Facet)]
 //     struct TupleContainer {
 //         data: (u32, String, bool),
 //     }
@@ -205,7 +205,7 @@ fn derive_real_life_cub_config() {
 
 // #[test]
 // fn struct_with_vec() {
-//     #[derive(Debug, ::facet::Shapely)]
+//     #[derive(Debug, ::facet::Facet)]
 //     struct VecContainer {
 //         data: Vec<u32>,
 //     }
@@ -213,7 +213,7 @@ fn derive_real_life_cub_config() {
 
 // // #[test]
 // // fn struct_with_generic() {
-// //     #[derive(Debug, ::facet::Shapely)]
+// //     #[derive(Debug, ::facet::Facet)]
 // //     struct Generic<T> {
 // //         data: T,
 // //     }
@@ -224,7 +224,7 @@ fn derive_real_life_cub_config() {
 
 // // #[test]
 // // fn struct_with_lifetime() {
-// //     #[derive(Debug, ::facet::Shapely)]
+// //     #[derive(Debug, ::facet::Facet)]
 // //     struct WithLifetime<'a> {
 // //         reference: &'a str,
 // //     }
@@ -235,7 +235,7 @@ fn derive_real_life_cub_config() {
 
 // #[test]
 // fn tuple_struct() {
-//     #[derive(Debug, ::facet::Shapely)]
+//     #[derive(Debug, ::facet::Facet)]
 //     struct Point(f32, f32);
 
 //     let shape = Point::SHAPE;
@@ -252,7 +252,7 @@ fn derive_real_life_cub_config() {
 // // #[test]
 // // fn unit_struct() {
 // //     /// A unit struct with documentation
-// //     #[derive(Debug, ::facet::Shapely)]
+// //     #[derive(Debug, ::facet::Facet)]
 // //     struct Unit;
 
 // //     let shape = Unit::shape();
@@ -262,7 +262,7 @@ fn derive_real_life_cub_config() {
 
 // // // #[test]
 // // // fn struct_with_attributes() {
-// // //     #[derive(Debug, ::facet::Shapely)]
+// // //     #[derive(Debug, ::facet::Facet)]
 // // //     #[repr(C, packed)]
 // // //     struct Packed {
 // // //         a: u8,
@@ -276,7 +276,7 @@ fn derive_real_life_cub_config() {
 
 // // // #[test]
 // // // fn enum_test() {
-// // //     #[derive(Debug, ::facet::Shapely)]
+// // //     #[derive(Debug, ::facet::Facet)]
 // // //     enum MyEnum {
 // // //         A,
 // // //         B(i32),

@@ -4,7 +4,7 @@
 use std::{alloc::Layout, fmt};
 
 use crate::{
-    Characteristic, Def, Field, FieldFlags, MarkerTraits, OpaqueConst, Shape, Shapely, StructDef,
+    Characteristic, Def, Facet, Field, FieldFlags, MarkerTraits, OpaqueConst, Shape, StructDef,
     TypeNameOpts, ValueVTable,
 };
 
@@ -43,15 +43,15 @@ macro_rules! field {
     };
 }
 
-unsafe impl<T0> Shapely for (T0,)
+unsafe impl<T0> Facet for (T0,)
 where
-    T0: Shapely,
+    T0: Facet,
 {
     const DUMMY: Self = (T0::DUMMY,);
     const SHAPE: &'static Shape = &const {
         fn type_name<T0>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result
         where
-            T0: Shapely,
+            T0: Facet,
         {
             write_type_name_list(f, opts, "(", ", ", ")", &[T0::SHAPE])
         }
@@ -110,17 +110,17 @@ where
         }
     };
 }
-unsafe impl<T0, T1> Shapely for (T0, T1)
+unsafe impl<T0, T1> Facet for (T0, T1)
 where
-    T0: Shapely,
-    T1: Shapely,
+    T0: Facet,
+    T1: Facet,
 {
     const DUMMY: Self = (T0::DUMMY, T1::DUMMY);
     const SHAPE: &'static Shape = &const {
         fn type_name<T0, T1>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result
         where
-            T0: Shapely,
-            T1: Shapely,
+            T0: Facet,
+            T1: Facet,
         {
             write_type_name_list(f, opts, "(", ", ", ")", &[T0::SHAPE, T1::SHAPE])
         }
@@ -196,19 +196,19 @@ where
         }
     };
 }
-unsafe impl<T0, T1, T2> Shapely for (T0, T1, T2)
+unsafe impl<T0, T1, T2> Facet for (T0, T1, T2)
 where
-    T0: Shapely,
-    T1: Shapely,
-    T2: Shapely,
+    T0: Facet,
+    T1: Facet,
+    T2: Facet,
 {
     const DUMMY: Self = (T0::DUMMY, T1::DUMMY, T2::DUMMY);
     const SHAPE: &'static Shape = &const {
         fn type_name<T0, T1, T2>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result
         where
-            T0: Shapely,
-            T1: Shapely,
-            T2: Shapely,
+            T0: Facet,
+            T1: Facet,
+            T2: Facet,
         {
             write_type_name_list(f, opts, "(", ", ", ")", &[T0::SHAPE, T1::SHAPE, T2::SHAPE])
         }
@@ -307,21 +307,21 @@ where
         }
     };
 }
-unsafe impl<T0, T1, T2, T3> Shapely for (T0, T1, T2, T3)
+unsafe impl<T0, T1, T2, T3> Facet for (T0, T1, T2, T3)
 where
-    T0: Shapely,
-    T1: Shapely,
-    T2: Shapely,
-    T3: Shapely,
+    T0: Facet,
+    T1: Facet,
+    T2: Facet,
+    T3: Facet,
 {
     const DUMMY: Self = (T0::DUMMY, T1::DUMMY, T2::DUMMY, T3::DUMMY);
     const SHAPE: &'static Shape = &const {
         fn type_name<T0, T1, T2, T3>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result
         where
-            T0: Shapely,
-            T1: Shapely,
-            T2: Shapely,
-            T3: Shapely,
+            T0: Facet,
+            T1: Facet,
+            T2: Facet,
+            T3: Facet,
         {
             write_type_name_list(
                 f,
@@ -445,23 +445,23 @@ where
         }
     };
 }
-unsafe impl<T0, T1, T2, T3, T4> Shapely for (T0, T1, T2, T3, T4)
+unsafe impl<T0, T1, T2, T3, T4> Facet for (T0, T1, T2, T3, T4)
 where
-    T0: Shapely,
-    T1: Shapely,
-    T2: Shapely,
-    T3: Shapely,
-    T4: Shapely,
+    T0: Facet,
+    T1: Facet,
+    T2: Facet,
+    T3: Facet,
+    T4: Facet,
 {
     const DUMMY: Self = (T0::DUMMY, T1::DUMMY, T2::DUMMY, T3::DUMMY, T4::DUMMY);
     const SHAPE: &'static Shape = &const {
         fn type_name<T0, T1, T2, T3, T4>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result
         where
-            T0: Shapely,
-            T1: Shapely,
-            T2: Shapely,
-            T3: Shapely,
-            T4: Shapely,
+            T0: Facet,
+            T1: Facet,
+            T2: Facet,
+            T3: Facet,
+            T4: Facet,
         {
             write_type_name_list(
                 f,
@@ -615,14 +615,14 @@ where
         }
     };
 }
-unsafe impl<T0, T1, T2, T3, T4, T5> Shapely for (T0, T1, T2, T3, T4, T5)
+unsafe impl<T0, T1, T2, T3, T4, T5> Facet for (T0, T1, T2, T3, T4, T5)
 where
-    T0: Shapely,
-    T1: Shapely,
-    T2: Shapely,
-    T3: Shapely,
-    T4: Shapely,
-    T5: Shapely,
+    T0: Facet,
+    T1: Facet,
+    T2: Facet,
+    T3: Facet,
+    T4: Facet,
+    T5: Facet,
 {
     const DUMMY: Self = (
         T0::DUMMY,
@@ -638,12 +638,12 @@ where
             opts: TypeNameOpts,
         ) -> fmt::Result
         where
-            T0: Shapely,
-            T1: Shapely,
-            T2: Shapely,
-            T3: Shapely,
-            T4: Shapely,
-            T5: Shapely,
+            T0: Facet,
+            T1: Facet,
+            T2: Facet,
+            T3: Facet,
+            T4: Facet,
+            T5: Facet,
         {
             write_type_name_list(
                 f,
@@ -824,15 +824,15 @@ where
         }
     };
 }
-unsafe impl<T0, T1, T2, T3, T4, T5, T6> Shapely for (T0, T1, T2, T3, T4, T5, T6)
+unsafe impl<T0, T1, T2, T3, T4, T5, T6> Facet for (T0, T1, T2, T3, T4, T5, T6)
 where
-    T0: Shapely,
-    T1: Shapely,
-    T2: Shapely,
-    T3: Shapely,
-    T4: Shapely,
-    T5: Shapely,
-    T6: Shapely,
+    T0: Facet,
+    T1: Facet,
+    T2: Facet,
+    T3: Facet,
+    T4: Facet,
+    T5: Facet,
+    T6: Facet,
 {
     const DUMMY: Self = (
         T0::DUMMY,
@@ -849,13 +849,13 @@ where
             opts: TypeNameOpts,
         ) -> fmt::Result
         where
-            T0: Shapely,
-            T1: Shapely,
-            T2: Shapely,
-            T3: Shapely,
-            T4: Shapely,
-            T5: Shapely,
-            T6: Shapely,
+            T0: Facet,
+            T1: Facet,
+            T2: Facet,
+            T3: Facet,
+            T4: Facet,
+            T5: Facet,
+            T6: Facet,
         {
             write_type_name_list(
                 f,
@@ -1057,16 +1057,16 @@ where
         }
     };
 }
-unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7> Shapely for (T0, T1, T2, T3, T4, T5, T6, T7)
+unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7> Facet for (T0, T1, T2, T3, T4, T5, T6, T7)
 where
-    T0: Shapely,
-    T1: Shapely,
-    T2: Shapely,
-    T3: Shapely,
-    T4: Shapely,
-    T5: Shapely,
-    T6: Shapely,
-    T7: Shapely,
+    T0: Facet,
+    T1: Facet,
+    T2: Facet,
+    T3: Facet,
+    T4: Facet,
+    T5: Facet,
+    T6: Facet,
+    T7: Facet,
 {
     const DUMMY: Self = (
         T0::DUMMY,
@@ -1084,14 +1084,14 @@ where
             opts: TypeNameOpts,
         ) -> fmt::Result
         where
-            T0: Shapely,
-            T1: Shapely,
-            T2: Shapely,
-            T3: Shapely,
-            T4: Shapely,
-            T5: Shapely,
-            T6: Shapely,
-            T7: Shapely,
+            T0: Facet,
+            T1: Facet,
+            T2: Facet,
+            T3: Facet,
+            T4: Facet,
+            T5: Facet,
+            T6: Facet,
+            T7: Facet,
         {
             write_type_name_list(
                 f,
@@ -1315,17 +1315,17 @@ where
         }
     };
 }
-unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8> Shapely for (T0, T1, T2, T3, T4, T5, T6, T7, T8)
+unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8> Facet for (T0, T1, T2, T3, T4, T5, T6, T7, T8)
 where
-    T0: Shapely,
-    T1: Shapely,
-    T2: Shapely,
-    T3: Shapely,
-    T4: Shapely,
-    T5: Shapely,
-    T6: Shapely,
-    T7: Shapely,
-    T8: Shapely,
+    T0: Facet,
+    T1: Facet,
+    T2: Facet,
+    T3: Facet,
+    T4: Facet,
+    T5: Facet,
+    T6: Facet,
+    T7: Facet,
+    T8: Facet,
 {
     const DUMMY: Self = (
         T0::DUMMY,
@@ -1344,15 +1344,15 @@ where
             opts: TypeNameOpts,
         ) -> fmt::Result
         where
-            T0: Shapely,
-            T1: Shapely,
-            T2: Shapely,
-            T3: Shapely,
-            T4: Shapely,
-            T5: Shapely,
-            T6: Shapely,
-            T7: Shapely,
-            T8: Shapely,
+            T0: Facet,
+            T1: Facet,
+            T2: Facet,
+            T3: Facet,
+            T4: Facet,
+            T5: Facet,
+            T6: Facet,
+            T7: Facet,
+            T8: Facet,
         {
             write_type_name_list(
                 f,
@@ -1597,19 +1597,19 @@ where
         }
     };
 }
-unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> Shapely
+unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> Facet
     for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)
 where
-    T0: Shapely,
-    T1: Shapely,
-    T2: Shapely,
-    T3: Shapely,
-    T4: Shapely,
-    T5: Shapely,
-    T6: Shapely,
-    T7: Shapely,
-    T8: Shapely,
-    T9: Shapely,
+    T0: Facet,
+    T1: Facet,
+    T2: Facet,
+    T3: Facet,
+    T4: Facet,
+    T5: Facet,
+    T6: Facet,
+    T7: Facet,
+    T8: Facet,
+    T9: Facet,
 {
     const DUMMY: Self = (
         T0::DUMMY,
@@ -1629,16 +1629,16 @@ where
             opts: TypeNameOpts,
         ) -> fmt::Result
         where
-            T0: Shapely,
-            T1: Shapely,
-            T2: Shapely,
-            T3: Shapely,
-            T4: Shapely,
-            T5: Shapely,
-            T6: Shapely,
-            T7: Shapely,
-            T8: Shapely,
-            T9: Shapely,
+            T0: Facet,
+            T1: Facet,
+            T2: Facet,
+            T3: Facet,
+            T4: Facet,
+            T5: Facet,
+            T6: Facet,
+            T7: Facet,
+            T8: Facet,
+            T9: Facet,
         {
             write_type_name_list(
                 f,
@@ -1905,20 +1905,20 @@ where
         }
     };
 }
-unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> Shapely
+unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> Facet
     for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)
 where
-    T0: Shapely,
-    T1: Shapely,
-    T2: Shapely,
-    T3: Shapely,
-    T4: Shapely,
-    T5: Shapely,
-    T6: Shapely,
-    T7: Shapely,
-    T8: Shapely,
-    T9: Shapely,
-    T10: Shapely,
+    T0: Facet,
+    T1: Facet,
+    T2: Facet,
+    T3: Facet,
+    T4: Facet,
+    T5: Facet,
+    T6: Facet,
+    T7: Facet,
+    T8: Facet,
+    T9: Facet,
+    T10: Facet,
 {
     const DUMMY: Self = (
         T0::DUMMY,
@@ -1939,17 +1939,17 @@ where
             opts: TypeNameOpts,
         ) -> fmt::Result
         where
-            T0: Shapely,
-            T1: Shapely,
-            T2: Shapely,
-            T3: Shapely,
-            T4: Shapely,
-            T5: Shapely,
-            T6: Shapely,
-            T7: Shapely,
-            T8: Shapely,
-            T9: Shapely,
-            T10: Shapely,
+            T0: Facet,
+            T1: Facet,
+            T2: Facet,
+            T3: Facet,
+            T4: Facet,
+            T5: Facet,
+            T6: Facet,
+            T7: Facet,
+            T8: Facet,
+            T9: Facet,
+            T10: Facet,
         {
             write_type_name_list(
                 f,
@@ -2239,21 +2239,21 @@ where
         }
     };
 }
-unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> Shapely
+unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> Facet
     for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)
 where
-    T0: Shapely,
-    T1: Shapely,
-    T2: Shapely,
-    T3: Shapely,
-    T4: Shapely,
-    T5: Shapely,
-    T6: Shapely,
-    T7: Shapely,
-    T8: Shapely,
-    T9: Shapely,
-    T10: Shapely,
-    T11: Shapely,
+    T0: Facet,
+    T1: Facet,
+    T2: Facet,
+    T3: Facet,
+    T4: Facet,
+    T5: Facet,
+    T6: Facet,
+    T7: Facet,
+    T8: Facet,
+    T9: Facet,
+    T10: Facet,
+    T11: Facet,
 {
     const DUMMY: Self = (
         T0::DUMMY,
@@ -2275,18 +2275,18 @@ where
             opts: TypeNameOpts,
         ) -> fmt::Result
         where
-            T0: Shapely,
-            T1: Shapely,
-            T2: Shapely,
-            T3: Shapely,
-            T4: Shapely,
-            T5: Shapely,
-            T6: Shapely,
-            T7: Shapely,
-            T8: Shapely,
-            T9: Shapely,
-            T10: Shapely,
-            T11: Shapely,
+            T0: Facet,
+            T1: Facet,
+            T2: Facet,
+            T3: Facet,
+            T4: Facet,
+            T5: Facet,
+            T6: Facet,
+            T7: Facet,
+            T8: Facet,
+            T9: Facet,
+            T10: Facet,
+            T11: Facet,
         {
             write_type_name_list(
                 f,

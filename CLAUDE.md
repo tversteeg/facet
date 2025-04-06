@@ -1,19 +1,3 @@
-# Shapely Project Guide
-
-## Code Style Guidelines
-- Follow Rust snake_case for functions/variables, PascalCase for types/traits
-- Group imports: std first, external crates second, internal imports last
-- Document public APIs with `///` comments (explain behavior, parameters, return values)
-  (don't parrot what the code does: explain the why, not the how)
-- Use Result<T, E> with descriptive error types that implement std::error::Error
-- Provide context in error messages (including position information where relevant)
-- Wrap unsafe code in safe abstractions with clear documentation
-- Write thorough unit tests for all functionality
-- Use explicit panic messages that explain invariant violations
-- Document any undefined behavior with clear warnings
-
-## Important instructions
-
 Dear Claude — unless specifically asked for, don't fix all the diagnostics, ESPECIALLY in unrelated files.
 
 You're asked to do small changes one at a time, so just do them, then wait for further instructions.

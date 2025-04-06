@@ -1,7 +1,7 @@
 use crate::from_urlencoded;
-use facet::Shapely;
+use facet::Facet;
 
-#[derive(Debug, Shapely, PartialEq)]
+#[derive(Debug, Facet, PartialEq)]
 struct SearchParams {
     query: String,
     page: u64,

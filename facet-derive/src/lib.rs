@@ -154,11 +154,11 @@ unsynn! {
     }
 }
 
-/// Derive the Shapely trait for structs, tuple structs, and enums.
+/// Derive the Facet trait for structs, tuple structs, and enums.
 ///
 /// This uses unsynn, so it's light, but it _will_ choke on some Rust syntax because...
 /// there's a lot of Rust syntax.
-#[proc_macro_derive(Shapely)]
+#[proc_macro_derive(Facet)]
 pub fn facet_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = TokenStream::from(input);
     let mut i = input.to_token_iter();
@@ -227,7 +227,7 @@ pub fn facet_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     panic!("{msg}");
 }
 
-/// Processes a regular struct to implement Shapely
+/// Processes a regular struct to implement Facet
 ///
 /// Example input:
 /// ```rust
@@ -254,7 +254,7 @@ fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
         .0
         .iter()
         .map(|field| field.value.name.to_string())
-        .map(|field| format!("{field}: Shapely::DUMMY"))
+        .map(|field| format!("{field}: Facet::DUMMY"))
         .collect::<Vec<String>>()
         .join(", ");
 
@@ -262,7 +262,7 @@ fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
     let output = format!(
         r#"
 #[automatically_derived]
-unsafe impl facet::Shapely for {struct_name} {{
+unsafe impl facet::Facet for {struct_name} {{
     const DUMMY: Self = Self {{
         {dummy_fields}
     }};
@@ -284,7 +284,7 @@ unsafe impl facet::Shapely for {struct_name} {{
     output.into_token_stream().into()
 }
 
-/// Processes a tuple struct to implement Shapely
+/// Processes a tuple struct to implement Facet
 ///
 /// Example input:
 /// ```rust
@@ -307,7 +307,7 @@ fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStream {
     let fields_str = fields.join(", ");
 
     let dummy_fields = (0..parsed.body.content.0.len())
-        .map(|_| String::from("Shapely::DUMMY"))
+        .map(|_| String::from("Facet::DUMMY"))
         .collect::<Vec<String>>()
         .join(", ");
 
@@ -315,7 +315,7 @@ fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStream {
     let output = format!(
         r#"
 #[automatically_derived]
-unsafe impl facet::Shapely for {struct_name} {{
+unsafe impl facet::Facet for {struct_name} {{
     const DUMMY: Self = Self({dummy_fields});
     const SHAPE: &'static facet::Shape = &const {{
         facet::Shape {{
@@ -335,7 +335,7 @@ unsafe impl facet::Shapely for {struct_name} {{
     output.into_token_stream().into()
 }
 
-/// Processes an enum to implement Shapely
+/// Processes an enum to implement Facet
 ///
 /// Example input:
 /// ```rust
@@ -357,7 +357,7 @@ fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
         .any(|attr| matches!(attr.body.content, AttributeInner::Repr(_)));
 
     if !has_repr {
-        return r#"compile_error!("Enums must have an explicit representation (e.g. #[repr(u8)]) to be used with Shapely")"#
+        return r#"compile_error!("Enums must have an explicit representation (e.g. #[repr(u8)]) to be used with Facet")"#
             .into_token_stream()
             .into();
     }
@@ -432,7 +432,7 @@ fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
     let output = format!(
         r#"
 #[automatically_derived]
-unsafe impl facet::Shapely for {enum_name} {{
+unsafe impl facet::Facet for {enum_name} {{
     const SHAPE: &'static facet::Shape = &const {{
         facet::Shape {{
             layout: std::alloc::Layout::new::<Self>(),

@@ -6,10 +6,10 @@
 [![documentation](https://docs.rs/facet-trait/badge.svg)](https://docs.rs/facet-trait)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-trait.svg)](./LICENSE)
 
-This exports the `Shapely` trait, which exposes an associated const `SHAPE` of type
+This exports the `Facet` trait, which exposes an associated const `SHAPE` of type
 `Shape`, a struct defined in the `facet-types` crate.
 
-This crate also provides implementations of `Shapely` for most standard types, like:
+This crate also provides implementations of `Facet` for most standard types, like:
 
   * integers
   * booleans

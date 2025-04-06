@@ -1,6 +1,6 @@
 #![allow(clippy::disallowed_names)]
 
-use facet::{Opaque, Shape, Shapely};
+use facet::{Facet, Opaque, Shape};
 
 unsafe extern "C" {
     pub unsafe fn get_library_message() -> *const std::ffi::c_char;
@@ -20,7 +20,7 @@ pub fn print_global_foo() {
     println!("Foo: x={}, bar.a={}, bar.b={}, y={}", x, bar.a, bar.b, y);
 }
 
-#[derive(Shapely, Debug)]
+#[derive(Facet, Debug)]
 #[repr(C)]
 pub struct Foo {
     pub x: i64,
@@ -28,7 +28,7 @@ pub struct Foo {
     pub y: i64,
 }
 
-#[derive(Shapely, Debug)]
+#[derive(Facet, Debug)]
 #[repr(C)]
 pub struct Bar {
     pub a: i32,

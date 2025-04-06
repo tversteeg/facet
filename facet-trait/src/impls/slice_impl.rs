@@ -1,9 +1,9 @@
 use crate::*;
 use std::alloc::Layout;
 
-unsafe impl<T> Shapely for &[T]
+unsafe impl<T> Facet for &[T]
 where
-    T: Shapely,
+    T: Facet,
 {
     const DUMMY: Self = &[];
     const SHAPE: &'static Shape = &const {

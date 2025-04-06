@@ -1,6 +1,6 @@
 //! Allows peeking (reading from) shapes
 
-use facet_trait::{Shapely, TypeNameOpts};
+use facet_trait::{Facet, TypeNameOpts};
 
 mod value;
 pub use value::*;
@@ -49,8 +49,8 @@ impl<'mem> std::ops::Deref for Peek<'mem> {
 }
 
 impl<'mem> Peek<'mem> {
-    /// Creates a new peek from a reference to some initialized value that implements `Shapely`
-    pub fn new<S: Shapely>(s: &'mem S) -> Self {
+    /// Creates a new peek from a reference to some initialized value that implements `Facet`
+    pub fn new<S: Facet>(s: &'mem S) -> Self {
         // This is safe because we're creating an Opaque pointer to read-only data
         // The pointer will be valid for the lifetime 'mem
         let data = OpaqueConst::from_ref(s);

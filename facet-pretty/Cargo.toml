@@ -8,7 +8,7 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
-description = "Pretty-printing for types implementing the Shapely trait"
+description = "Pretty-printing for types implementing the Facet trait"
 keywords = [
     "pretty-print",
     "formatting",

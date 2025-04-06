@@ -1,7 +1,7 @@
 use ctor::ctor;
-use facet_derive::Shapely;
+use facet_derive::Facet;
 use facet_poke::{Peek, Poke};
-use facet_trait::{OpaqueConst, OpaqueUninit, Shapely};
+use facet_trait::{Facet, OpaqueConst, OpaqueUninit};
 use owo_colors::{OwoColorize, Style};
 use std::{cmp::Ordering, collections::HashSet, fmt::Debug};
 
@@ -9,7 +9,7 @@ use facet_trait as facet;
 
 // Allow dead code in test modules since we're not constructing all enum variants
 #[allow(dead_code)]
-#[derive(Debug, PartialEq, Eq, Shapely)]
+#[derive(Debug, PartialEq, Eq, Facet)]
 struct FooBar {
     foo: u64,
     bar: String,
@@ -110,7 +110,7 @@ fn init_backtrace() {
 
 fn test_peek_pair<T>(val1: T, val2: T, expected_facts: HashSet<Fact>)
 where
-    T: Shapely + 'static,
+    T: Facet + 'static,
 {
     let mut facts: HashSet<Fact> = HashSet::new();
     let name = format!("{}", T::SHAPE);
@@ -603,7 +603,7 @@ fn test_hashmaps() {
 #[test]
 fn test_custom_structs() {
     // Struct with no trait implementations
-    #[derive(Shapely)]
+    #[derive(Facet)]
     struct StructNoTraits {
         value: i32,
     }
@@ -614,7 +614,7 @@ fn test_custom_structs() {
     );
 
     // Struct with Debug only
-    #[derive(Shapely, Debug)]
+    #[derive(Facet, Debug)]
     struct StructDebug {
         value: i32,
     }
@@ -625,7 +625,7 @@ fn test_custom_structs() {
     );
 
     // Struct with Debug and PartialEq
-    #[derive(Shapely, Debug, PartialEq)]
+    #[derive(Facet, Debug, PartialEq)]
     struct StructDebugEq {
         value: i32,
     }
@@ -636,7 +636,7 @@ fn test_custom_structs() {
     );
 
     // Struct with all traits
-    #[derive(Shapely, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+    #[derive(Facet, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
     struct StructAll {
         value: i32,
     }
@@ -675,7 +675,7 @@ fn test_custom_structs() {
 #[test]
 fn test_tuple_structs() {
     // Tuple struct with no trait implementations
-    #[derive(Shapely)]
+    #[derive(Facet)]
     struct TupleNoTraits(i32, String);
     test_peek_pair(
         TupleNoTraits(42, "Hello".to_string()),
@@ -684,7 +684,7 @@ fn test_tuple_structs() {
     );
 
     // Tuple struct with Debug only
-    #[derive(Shapely, Debug)]
+    #[derive(Facet, Debug)]
     struct TupleDebug(i32, String);
     test_peek_pair(
         TupleDebug(42, "Hello".to_string()),
@@ -693,7 +693,7 @@ fn test_tuple_structs() {
     );
 
     // Tuple struct with EQ only
-    #[derive(Shapely, PartialEq)]
+    #[derive(Facet, PartialEq)]
     struct TupleEq(i32, String);
     test_peek_pair(
         TupleEq(42, "Hello".to_string()),
@@ -702,7 +702,7 @@ fn test_tuple_structs() {
     );
 
     // Tuple struct with all traits
-    #[derive(Shapely, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+    #[derive(Facet, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
     struct TupleAll(i32, String);
     test_peek_pair(
         TupleAll(42, "Hello".to_string()),
@@ -720,7 +720,7 @@ fn test_tuple_structs() {
 /*
 #[test]
 fn test_enums() {
-    #[derive(Shapely, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    #[derive(Facet, Debug, PartialEq, Eq, PartialOrd, Ord)]
     enum TestEnum {
         Variant1,
         Variant2(i32),
