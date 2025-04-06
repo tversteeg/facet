@@ -1,9 +1,10 @@
 use super::*;
 
-use facet_core::Facet;
-// this makes the derives work.. dirty but oh well.
-use facet_core as facet;
 use facet_derive::Facet;
+use facet_trait::Facet;
+
+// this makes the derives work.. dirty but oh well.
+use facet_trait as facet;
 
 #[test]
 fn it_works() {

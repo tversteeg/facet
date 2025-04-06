@@ -10,6 +10,11 @@ happily do it. I will be happier clarifying ahead of time than undoing your stuf
 
 In general, give a high-level overview of your plan and ask for consent before making any edits. Thanks.
 
+Don't edit any `README.md` files directly — edit `templates/README.md.j2` and run `just codegen` to
+regenerate the README.
+
+Run `just quickcheck` to make sure that tests pass.
+
 DON'T FIX DIAGNOSTICS BY YOURSELF. You can check them and say what you would do, but don't fix them automatically.
 
 Don't keep going. Ask for the next thing to do.

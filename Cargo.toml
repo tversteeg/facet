@@ -5,6 +5,7 @@ members = [
     "facet-trait",
     "facet-derive",
     "facet-json",
+    "facet-msgpack",
     "facet-opaque",
     "facet-peek",
     "facet-poke",
