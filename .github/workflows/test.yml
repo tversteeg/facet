@@ -11,7 +11,7 @@ jobs:
     test:
         strategy:
             matrix:
-                os: [namespace-profile-macos-arm64, namespace-profile-linux-amd64]
+                os: [ubuntu-latest, macos-latest]
         runs-on: ${{ matrix.os }}
 
         steps:
@@ -23,10 +23,7 @@ jobs:
                   fetch-depth: 2
 
             - name: Setup cargo cache
-              uses: namespacelabs/nscloud-cache-action@v1
-              with:
-                  cache: |
-                      rust
+              uses: Swatinem/rust-cache@v2
 
             - name: Install Rust specified toolchain
               run: |
