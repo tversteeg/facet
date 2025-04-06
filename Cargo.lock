@@ -66,7 +66,7 @@ checksum = "7454e41ff9012c00d53cf7f475c5e3afa3b91b7c90568495495e8d9bf47a1055"
 
 [[package]]
 name = "facet"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "facet-derive",
  "facet-spez",
@@ -75,7 +75,7 @@ dependencies = [
 
 [[package]]
 name = "facet-codegen"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "minijinja",
  "similar",
@@ -83,7 +83,7 @@ dependencies = [
 
 [[package]]
 name = "facet-derive"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "facet-trait",
  "unsynn",
@@ -91,7 +91,7 @@ dependencies = [
 
 [[package]]
 name = "facet-json"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "color-backtrace",
  "ctor",
@@ -103,18 +103,18 @@ dependencies = [
 
 [[package]]
 name = "facet-opaque"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "facet-peek"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "facet-trait",
 ]
 
 [[package]]
 name = "facet-poke"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "color-backtrace",
  "ctor",
@@ -127,7 +127,7 @@ dependencies = [
 
 [[package]]
 name = "facet-samplelibc"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "cc",
  "facet",
@@ -135,7 +135,7 @@ dependencies = [
 
 [[package]]
 name = "facet-spez"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "facet-opaque",
  "facet-types",
@@ -144,7 +144,7 @@ dependencies = [
 
 [[package]]
 name = "facet-trait"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "facet-opaque",
  "facet-spez",
@@ -153,7 +153,7 @@ dependencies = [
 
 [[package]]
 name = "facet-types"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bitflags",
  "facet-opaque",
