@@ -102,7 +102,7 @@ Thanks to Zed for sponsoring this project:
 <a href="https://zed.dev">
     <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/zed-dark.svg">
-    <img src="https://github.com/facet-rs/facet/raw/main/static/zed-light.svg?woops" height="40" alt="Zed">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/zed-light2.svg" height="40" alt="Zed">
     </picture>
 </a>
 
@@ -111,7 +111,7 @@ Thanks to Namespace for providing fast GitHub Actions workers:
 <a href="https://namespace.so">
     <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/namespace-dark.svg">
-    <img src="https://github.com/facet-rs/facet/raw/main/static/namespace-light.svg" height="40" alt="Namespace">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/namespace-light2.svg" height="40" alt="Namespace">
     </picture>
 </a>
 

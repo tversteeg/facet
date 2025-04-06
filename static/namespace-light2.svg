@@ -73,12 +73,18 @@
             />
         </g>
         <g transform="matrix(1,0,0,1,-248.323,4)">
-            <rect x="281.46" y="22.475" width="8.032" height="2.397" style="fill-rule:nonzero;" />
+            <rect
+                x="281.46"
+                y="22.475"
+                width="8.032"
+                height="2.397"
+                style="fill: white; fill-rule:nonzero;"
+            />
         </g>
         <g transform="matrix(1,0,0,1,-248.323,4)">
             <path
                 d="M283.441,20.766L281.474,20.766L275.825,12.799L275.825,20.766L273.427,20.766L273.427,8.808L275.768,8.808L281.043,16.366L281.043,8.808L283.441,8.808L283.441,20.766Z"
-                style="fill-rule:nonzero;"
+                style="fill:white;fill-rule:nonzero;"
             />
         </g>
     </g>
