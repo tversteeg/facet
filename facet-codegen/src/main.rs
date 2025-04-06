@@ -1,10 +1,57 @@
 use std::fs;
 use std::io::Write;
 use std::path::Path;
+use std::process;
 
 use minijinja::Environment;
+use similar::{ChangeTag, TextDiff};
+
+#[derive(Debug)]
+struct Options {
+    check: bool,
+}
+
+fn check_diff(path: &Path, new_content: &[u8]) -> bool {
+    if !path.exists() {
+        eprintln!("{}: would create new file", path.display());
+        return true;
+    }
+
+    let old_content = fs::read(path).unwrap();
+    if old_content != new_content {
+        let old_str = String::from_utf8_lossy(&old_content);
+        let new_str = String::from_utf8_lossy(new_content);
+
+        let diff = TextDiff::from_lines(&old_str, &new_str);
+        eprintln!("Diff for {}:", path.display());
+        for change in diff.iter_all_changes() {
+            let sign = match change.tag() {
+                ChangeTag::Delete => "-",
+                ChangeTag::Insert => "+",
+                ChangeTag::Equal => " ",
+            };
+            eprint!("{}{}", sign, change);
+        }
+        return true;
+    }
+    false
+}
+
+fn write_if_different(path: &Path, content: Vec<u8>, check_mode: bool) -> bool {
+    if check_mode {
+        check_diff(path, &content)
+    } else {
+        fs::write(path, content).expect("Failed to write file");
+        false
+    }
+}
 
 fn main() {
+    let opts = Options {
+        check: std::env::args().any(|arg| arg == "--check"),
+    };
+    let mut has_diffs = false;
+
     // Check if current directory has a Cargo.toml with [workspace]
     let cargo_toml_path = std::env::current_dir().unwrap().join("Cargo.toml");
     let cargo_toml_content =
@@ -16,13 +63,17 @@ fn main() {
     }
 
     // Generate tuple implementations
-    generate_tuple_impls();
+    generate_tuple_impls(&mut has_diffs, &opts);
 
     // Generate README files from templates
-    generate_readme_files();
+    generate_readme_files(&mut has_diffs, &opts);
+
+    if opts.check && has_diffs {
+        process::exit(1);
+    }
 }
 
-fn generate_tuple_impls() {
+fn generate_tuple_impls(has_diffs: &mut bool, opts: &Options) {
     // Initialize minijinja environment
     let mut env = Environment::empty();
     env.add_function("range", minijinja::functions::range);
@@ -71,11 +122,11 @@ fn generate_tuple_impls() {
         std::process::exit(1);
     }
 
-    let path = "facet-trait/src/impls/tuples_impls.rs";
-    std::fs::write(path, formatted_output.stdout).expect("Failed to write file");
+    let path = Path::new("facet-trait/src/impls/tuples_impls.rs");
+    *has_diffs |= write_if_different(path, formatted_output.stdout, opts.check);
 }
 
-fn generate_readme_files() {
+fn generate_readme_files(has_diffs: &mut bool, opts: &Options) {
     // Get all crate directories in the workspace
     let workspace_dir = std::env::current_dir().unwrap();
     let entries = fs::read_dir(&workspace_dir).expect("Failed to read workspace directory");
@@ -146,7 +197,7 @@ at your option."#.to_string()
 
         // Skip non-directories and entries starting with '.' or '_'
         if !path.is_dir()
-            || path.file_name().is_none_or(|name| {
+            || path.file_name().is_some_and(|name| {
                 let name = name.to_string_lossy();
                 name.starts_with('.') || name.starts_with('_')
             })
@@ -169,7 +220,7 @@ at your option."#.to_string()
         // Check if there's a template directory with a README.md.j2 file
         let template_path = path.join("templates").join("README.md.j2");
         if template_path.exists() {
-            process_readme_template(&mut env, &path, &template_path);
+            process_readme_template(&mut env, &path, &template_path, has_diffs, opts);
         } else {
             // Special case for the main facet crate
             let crate_name = dir_name.to_string();
@@ -180,6 +231,8 @@ at your option."#.to_string()
                         &mut env,
                         &path,
                         Path::new("facet/templates/README.md.j2"),
+                        has_diffs,
+                        opts,
                     );
                 }
             }
@@ -191,18 +244,30 @@ at your option."#.to_string()
     if facet_crate_path.exists() && facet_crate_path.is_dir() {
         let template_path = facet_crate_path.join("templates").join("README.md.j2");
         if template_path.exists() {
-            process_readme_template(&mut env, &facet_crate_path, &template_path);
+            process_readme_template(&mut env, &facet_crate_path, &template_path, has_diffs, opts);
         }
     }
 
     // Generate workspace README if template exists
     let workspace_template_path = workspace_dir.join("templates").join("README.md.j2");
     if workspace_template_path.exists() {
-        process_readme_template(&mut env, &workspace_dir, &workspace_template_path);
+        process_readme_template(
+            &mut env,
+            &workspace_dir,
+            &workspace_template_path,
+            has_diffs,
+            opts,
+        );
     }
 }
 
-fn process_readme_template(env: &mut Environment, crate_path: &Path, template_path: &Path) {
+fn process_readme_template(
+    env: &mut Environment,
+    crate_path: &Path,
+    template_path: &Path,
+    has_diffs: &mut bool,
+    opts: &Options,
+) {
     println!("Processing template: {:?}", template_path);
 
     // Get crate name from directory name
@@ -240,8 +305,11 @@ fn process_readme_template(env: &mut Environment, crate_path: &Path, template_pa
 
     // Save the rendered content to README.md
     let readme_path = crate_path.join("README.md");
-    fs::write(&readme_path, output)
-        .unwrap_or_else(|_| panic!("Failed to write README.md to {:?}", readme_path));
+    *has_diffs |= write_if_different(&readme_path, output.into_bytes(), opts.check);
 
-    println!("Generated README.md for {}", crate_name);
+    if opts.check {
+        println!("Checked README.md for {}", crate_name);
+    } else {
+        println!("Generated README.md for {}", crate_name);
+    }
 }
