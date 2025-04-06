@@ -1,10 +1,15 @@
 use std::fmt;
 
 #[derive(Debug)]
+/// Errors that can occur during MessagePack encoding/decoding operations
 pub enum Error {
+    /// Encountered a MessagePack type that doesn't match the expected type
     UnexpectedType,
+    /// Not enough data available to decode a complete MessagePack value
     InsufficientData,
+    /// The MessagePack data is malformed or corrupted
     InvalidData,
+    /// Encountered a field name that isn't recognized
     UnknownField(String),
 }
 
