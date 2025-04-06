@@ -1,3 +1,0 @@
-pnpx lint-staged
-cargo clippy --fix --allow-staged
-git add .
