@@ -1,0 +1,31 @@
+# facet
+
+{{ badges("facet") }}
+
+facet provides type reflection for Rust, in const contexts.
+
+Any type that implements `Facet` trait returns a `Shape`, which describes:
+
+  * The memory layout of the type
+  * Its definition: struct fields, underlying type for newtypes, etc.
+  * How to drop it in place
+
+The `Poke` type is able to allocate (or work from a `&mut MaybeUninit<T>`)
+any Facet type, and gradually initialize its fields — until the fully-built
+value is moved out of the partial.
+
+The `Peek` type helps perform read operations on any Facet type.
+
+It comes with a derive macro that uses [unsynn](https://crates.io/crates/unsynn)
+for speed of compilation.
+
+## Ecosystem
+
+There are separate crates for the trait, the core types, the derive macro, peek, poke,
+and various serializers, deserializers, and pretty printers etc.
+
+The hub for everything is the [facet](https://crates.io/crates/facet) crate.
+
+You can start with its [README](https://github.com/fasterthanlime/facet/blob/main/facet/README.md).
+
+{{ footer() }}
