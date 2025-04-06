@@ -51,16 +51,14 @@ impl TypeNameOpts {
     ///
     /// See the implementation for `Vec` for examples.
     pub fn for_children(&self) -> Option<Self> {
-        if self.recurse_ttl > 0 {
-            Some(Self {
+        match self.recurse_ttl.cmp(&0) {
+            Ordering::Greater => Some(Self {
                 recurse_ttl: self.recurse_ttl - 1,
-            })
-        } else if self.recurse_ttl < 0 {
-            Some(Self {
+            }),
+            Ordering::Less => Some(Self {
                 recurse_ttl: self.recurse_ttl,
-            })
-        } else {
-            None
+            }),
+            Ordering::Equal => None,
         }
     }
 }
