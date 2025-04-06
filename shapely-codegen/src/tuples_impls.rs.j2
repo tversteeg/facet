@@ -6,7 +6,31 @@
 
 use std::{alloc::Layout, fmt};
 
-use crate::{Field, FieldFlags, Def, StructDef, Shape, Shapely, TypeNameOpts, ValueVTable, Characteristic, OpaqueConst};
+use crate::{Field, FieldFlags, Def, StructDef, Shape, Shapely, TypeNameOpts, ValueVTable, Characteristic, OpaqueConst, MarkerTraits};
+
+#[inline(always)]
+pub fn write_type_name_list(
+    f: &mut fmt::Formatter<'_>,
+    opts: TypeNameOpts,
+    open: &'static str,
+    delimiter: &'static str,
+    close: &'static str,
+    shapes: &'static [&'static Shape],
+) -> fmt::Result {
+    f.pad(open)?;
+    if let Some(opts) = opts.for_children() {
+        for (index, shape) in shapes.iter().enumerate() {
+            if index > 0 {
+                f.pad(delimiter)?;
+            }
+            shape.write_type_name(f, opts)?;
+        }
+    } else {
+        write!(f, "⋯")?;
+    }
+    f.pad(close)?;
+    Ok(())
+}
 
 macro_rules! field {
     ($idx:tt, $ty:ty,) => {
@@ -26,6 +50,12 @@ macro_rules! field {
         T{{ i }}{% if not loop.last %}, {% endif %}
         {%- endfor -%}
     {%- endset %}
+    {%- set shape_list %}
+        {%- for i in range(n) -%}
+        T{{ i }}::SHAPE{% if not loop.last %}, {% endif %}
+        {%- endfor -%}
+    {%- endset -%}
+    {%- set shape_slice %}&[{{ shape_list }}]{%- endset -%}
     {%- set type_name %}
         ({%- for i in range(n) %}T{{ i }},{% endfor -%})
     {%- endset -%}
@@ -44,14 +74,7 @@ where
         where
             {{ where_predicates }}
         {
-            shapely_types::write_type_name_list(
-                f,
-                opts,
-                "(",
-                ", ",
-                ")",
-                &[{{ type_list }}]
-            )
+            write_type_name_list(f, opts, "(", ", ", ")", {{ shape_slice }})
         }
 
         Shape {
@@ -60,10 +83,7 @@ where
                 type_name: type_name::<{{ type_list }}>,
                 display: None,
                 debug: const {
-                    if Characteristic::Debug.all(&[
-                        {% for i in range(n) %}T{{ i }}::SHAPE{% if not loop.last %},
-                        {% endif %}{% endfor %}
-                    ]) {
+                    if Characteristic::Eq.all({{ shape_slice }}) {
                         Some(|value, f| {
                             let value = unsafe { value.as_ref::<{{ type_name }}>() };
                             write!(f, "(")?;
@@ -80,7 +100,10 @@ where
                         None
                     }
                 },
-                eq: if {% for i in range(n) %}{% if i > 0 %} && {% endif %}T{{ i }}::SHAPE.vtable.eq.is_some(){% endfor %} {
+                default_in_place: None,
+                clone_into: None,
+                marker_traits: MarkerTraits::empty(),
+                eq: if Characteristic::Eq.all({{ shape_slice }}) {
                     Some(|a, b| {
                         let a = unsafe { a.as_ref::<{{ type_name }}>() };
                         let b = unsafe { b.as_ref::<{{ type_name }}>() };
@@ -106,7 +129,12 @@ where
                 } else {
                     None
                 },
-                // ... (other vtable fields)
+                partial_ord: None,
+                ord: None,
+                hash: None,
+                drop_in_place: None,
+                parse: None,
+                try_from: None,
             },
             def: Def::Tuple(StructDef {
                 fields: &const { [

@@ -4,9 +4,33 @@
 use std::{alloc::Layout, fmt};
 
 use crate::{
-    Characteristic, Def, Field, FieldFlags, OpaqueConst, Shape, Shapely, StructDef, TypeNameOpts,
-    ValueVTable,
+    Characteristic, Def, Field, FieldFlags, MarkerTraits, OpaqueConst, Shape, Shapely, StructDef,
+    TypeNameOpts, ValueVTable,
 };
+
+#[inline(always)]
+pub fn write_type_name_list(
+    f: &mut fmt::Formatter<'_>,
+    opts: TypeNameOpts,
+    open: &'static str,
+    delimiter: &'static str,
+    close: &'static str,
+    shapes: &'static [&'static Shape],
+) -> fmt::Result {
+    f.pad(open)?;
+    if let Some(opts) = opts.for_children() {
+        for (index, shape) in shapes.iter().enumerate() {
+            if index > 0 {
+                f.pad(delimiter)?;
+            }
+            shape.write_type_name(f, opts)?;
+        }
+    } else {
+        write!(f, "⋯")?;
+    }
+    f.pad(close)?;
+    Ok(())
+}
 
 macro_rules! field {
     ($idx:tt, $ty:ty,) => {
@@ -29,7 +53,7 @@ where
         where
             T0: Shapely,
         {
-            shapely_types::write_type_name_list(f, opts, "(", ", ", ")", &[T0])
+            write_type_name_list(f, opts, "(", ", ", ")", &[T0::SHAPE])
         }
 
         Shape {
@@ -38,7 +62,7 @@ where
                 type_name: type_name::<T0>,
                 display: None,
                 debug: const {
-                    if Characteristic::Debug.all(&[T0::SHAPE]) {
+                    if Characteristic::Eq.all(&[T0::SHAPE]) {
                         Some(|value, f| {
                             let value = unsafe { value.as_ref::<(T0,)>() };
                             write!(f, "(")?;
@@ -54,7 +78,10 @@ where
                         None
                     }
                 },
-                eq: if T0::SHAPE.vtable.eq.is_some() {
+                default_in_place: None,
+                clone_into: None,
+                marker_traits: MarkerTraits::empty(),
+                eq: if Characteristic::Eq.all(&[T0::SHAPE]) {
                     Some(|a, b| {
                         let a = unsafe { a.as_ref::<(T0,)>() };
                         let b = unsafe { b.as_ref::<(T0,)>() };
@@ -70,7 +97,12 @@ where
                 } else {
                     None
                 },
-                // ... (other vtable fields)
+                partial_ord: None,
+                ord: None,
+                hash: None,
+                drop_in_place: None,
+                parse: None,
+                try_from: None,
             },
             def: Def::Tuple(StructDef {
                 fields: &const { [field!(0, (T0,),)] },
@@ -90,7 +122,7 @@ where
             T0: Shapely,
             T1: Shapely,
         {
-            shapely_types::write_type_name_list(f, opts, "(", ", ", ")", &[T0, T1])
+            write_type_name_list(f, opts, "(", ", ", ")", &[T0::SHAPE, T1::SHAPE])
         }
 
         Shape {
@@ -99,7 +131,7 @@ where
                 type_name: type_name::<T0, T1>,
                 display: None,
                 debug: const {
-                    if Characteristic::Debug.all(&[T0::SHAPE, T1::SHAPE]) {
+                    if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE]) {
                         Some(|value, f| {
                             let value = unsafe { value.as_ref::<(T0, T1)>() };
                             write!(f, "(")?;
@@ -122,7 +154,10 @@ where
                         None
                     }
                 },
-                eq: if T0::SHAPE.vtable.eq.is_some() && T1::SHAPE.vtable.eq.is_some() {
+                default_in_place: None,
+                clone_into: None,
+                marker_traits: MarkerTraits::empty(),
+                eq: if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE]) {
                     Some(|a, b| {
                         let a = unsafe { a.as_ref::<(T0, T1)>() };
                         let b = unsafe { b.as_ref::<(T0, T1)>() };
@@ -148,7 +183,12 @@ where
                 } else {
                     None
                 },
-                // ... (other vtable fields)
+                partial_ord: None,
+                ord: None,
+                hash: None,
+                drop_in_place: None,
+                parse: None,
+                try_from: None,
             },
             def: Def::Tuple(StructDef {
                 fields: &const { [field!(0, (T0, T1,),), field!(1, (T0, T1,),)] },
@@ -170,7 +210,7 @@ where
             T1: Shapely,
             T2: Shapely,
         {
-            shapely_types::write_type_name_list(f, opts, "(", ", ", ")", &[T0, T1, T2])
+            write_type_name_list(f, opts, "(", ", ", ")", &[T0::SHAPE, T1::SHAPE, T2::SHAPE])
         }
 
         Shape {
@@ -179,7 +219,7 @@ where
                 type_name: type_name::<T0, T1, T2>,
                 display: None,
                 debug: const {
-                    if Characteristic::Debug.all(&[T0::SHAPE, T1::SHAPE, T2::SHAPE]) {
+                    if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE, T2::SHAPE]) {
                         Some(|value, f| {
                             let value = unsafe { value.as_ref::<(T0, T1, T2)>() };
                             write!(f, "(")?;
@@ -209,10 +249,10 @@ where
                         None
                     }
                 },
-                eq: if T0::SHAPE.vtable.eq.is_some()
-                    && T1::SHAPE.vtable.eq.is_some()
-                    && T2::SHAPE.vtable.eq.is_some()
-                {
+                default_in_place: None,
+                clone_into: None,
+                marker_traits: MarkerTraits::empty(),
+                eq: if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE, T2::SHAPE]) {
                     Some(|a, b| {
                         let a = unsafe { a.as_ref::<(T0, T1, T2)>() };
                         let b = unsafe { b.as_ref::<(T0, T1, T2)>() };
@@ -248,7 +288,12 @@ where
                 } else {
                     None
                 },
-                // ... (other vtable fields)
+                partial_ord: None,
+                ord: None,
+                hash: None,
+                drop_in_place: None,
+                parse: None,
+                try_from: None,
             },
             def: Def::Tuple(StructDef {
                 fields: &const {
@@ -278,7 +323,14 @@ where
             T2: Shapely,
             T3: Shapely,
         {
-            shapely_types::write_type_name_list(f, opts, "(", ", ", ")", &[T0, T1, T2, T3])
+            write_type_name_list(
+                f,
+                opts,
+                "(",
+                ", ",
+                ")",
+                &[T0::SHAPE, T1::SHAPE, T2::SHAPE, T3::SHAPE],
+            )
         }
 
         Shape {
@@ -287,7 +339,7 @@ where
                 type_name: type_name::<T0, T1, T2, T3>,
                 display: None,
                 debug: const {
-                    if Characteristic::Debug.all(&[T0::SHAPE, T1::SHAPE, T2::SHAPE, T3::SHAPE]) {
+                    if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE, T2::SHAPE, T3::SHAPE]) {
                         Some(|value, f| {
                             let value = unsafe { value.as_ref::<(T0, T1, T2, T3)>() };
                             write!(f, "(")?;
@@ -324,11 +376,10 @@ where
                         None
                     }
                 },
-                eq: if T0::SHAPE.vtable.eq.is_some()
-                    && T1::SHAPE.vtable.eq.is_some()
-                    && T2::SHAPE.vtable.eq.is_some()
-                    && T3::SHAPE.vtable.eq.is_some()
-                {
+                default_in_place: None,
+                clone_into: None,
+                marker_traits: MarkerTraits::empty(),
+                eq: if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE, T2::SHAPE, T3::SHAPE]) {
                     Some(|a, b| {
                         let a = unsafe { a.as_ref::<(T0, T1, T2, T3)>() };
                         let b = unsafe { b.as_ref::<(T0, T1, T2, T3)>() };
@@ -374,7 +425,12 @@ where
                 } else {
                     None
                 },
-                // ... (other vtable fields)
+                partial_ord: None,
+                ord: None,
+                hash: None,
+                drop_in_place: None,
+                parse: None,
+                try_from: None,
             },
             def: Def::Tuple(StructDef {
                 fields: &const {
@@ -407,7 +463,14 @@ where
             T3: Shapely,
             T4: Shapely,
         {
-            shapely_types::write_type_name_list(f, opts, "(", ", ", ")", &[T0, T1, T2, T3, T4])
+            write_type_name_list(
+                f,
+                opts,
+                "(",
+                ", ",
+                ")",
+                &[T0::SHAPE, T1::SHAPE, T2::SHAPE, T3::SHAPE, T4::SHAPE],
+            )
         }
 
         Shape {
@@ -416,7 +479,7 @@ where
                 type_name: type_name::<T0, T1, T2, T3, T4>,
                 display: None,
                 debug: const {
-                    if Characteristic::Debug.all(&[
+                    if Characteristic::Eq.all(&[
                         T0::SHAPE,
                         T1::SHAPE,
                         T2::SHAPE,
@@ -466,12 +529,16 @@ where
                         None
                     }
                 },
-                eq: if T0::SHAPE.vtable.eq.is_some()
-                    && T1::SHAPE.vtable.eq.is_some()
-                    && T2::SHAPE.vtable.eq.is_some()
-                    && T3::SHAPE.vtable.eq.is_some()
-                    && T4::SHAPE.vtable.eq.is_some()
-                {
+                default_in_place: None,
+                clone_into: None,
+                marker_traits: MarkerTraits::empty(),
+                eq: if Characteristic::Eq.all(&[
+                    T0::SHAPE,
+                    T1::SHAPE,
+                    T2::SHAPE,
+                    T3::SHAPE,
+                    T4::SHAPE,
+                ]) {
                     Some(|a, b| {
                         let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4)>() };
                         let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4)>() };
@@ -527,7 +594,12 @@ where
                 } else {
                     None
                 },
-                // ... (other vtable fields)
+                partial_ord: None,
+                ord: None,
+                hash: None,
+                drop_in_place: None,
+                parse: None,
+                try_from: None,
             },
             def: Def::Tuple(StructDef {
                 fields: &const {
@@ -573,7 +645,21 @@ where
             T4: Shapely,
             T5: Shapely,
         {
-            shapely_types::write_type_name_list(f, opts, "(", ", ", ")", &[T0, T1, T2, T3, T4, T5])
+            write_type_name_list(
+                f,
+                opts,
+                "(",
+                ", ",
+                ")",
+                &[
+                    T0::SHAPE,
+                    T1::SHAPE,
+                    T2::SHAPE,
+                    T3::SHAPE,
+                    T4::SHAPE,
+                    T5::SHAPE,
+                ],
+            )
         }
 
         Shape {
@@ -582,7 +668,7 @@ where
                 type_name: type_name::<T0, T1, T2, T3, T4, T5>,
                 display: None,
                 debug: const {
-                    if Characteristic::Debug.all(&[
+                    if Characteristic::Eq.all(&[
                         T0::SHAPE,
                         T1::SHAPE,
                         T2::SHAPE,
@@ -640,13 +726,17 @@ where
                         None
                     }
                 },
-                eq: if T0::SHAPE.vtable.eq.is_some()
-                    && T1::SHAPE.vtable.eq.is_some()
-                    && T2::SHAPE.vtable.eq.is_some()
-                    && T3::SHAPE.vtable.eq.is_some()
-                    && T4::SHAPE.vtable.eq.is_some()
-                    && T5::SHAPE.vtable.eq.is_some()
-                {
+                default_in_place: None,
+                clone_into: None,
+                marker_traits: MarkerTraits::empty(),
+                eq: if Characteristic::Eq.all(&[
+                    T0::SHAPE,
+                    T1::SHAPE,
+                    T2::SHAPE,
+                    T3::SHAPE,
+                    T4::SHAPE,
+                    T5::SHAPE,
+                ]) {
                     Some(|a, b| {
                         let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5)>() };
                         let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5)>() };
@@ -712,7 +802,12 @@ where
                 } else {
                     None
                 },
-                // ... (other vtable fields)
+                partial_ord: None,
+                ord: None,
+                hash: None,
+                drop_in_place: None,
+                parse: None,
+                try_from: None,
             },
             def: Def::Tuple(StructDef {
                 fields: &const {
@@ -762,13 +857,21 @@ where
             T5: Shapely,
             T6: Shapely,
         {
-            shapely_types::write_type_name_list(
+            write_type_name_list(
                 f,
                 opts,
                 "(",
                 ", ",
                 ")",
-                &[T0, T1, T2, T3, T4, T5, T6],
+                &[
+                    T0::SHAPE,
+                    T1::SHAPE,
+                    T2::SHAPE,
+                    T3::SHAPE,
+                    T4::SHAPE,
+                    T5::SHAPE,
+                    T6::SHAPE,
+                ],
             )
         }
 
@@ -778,7 +881,7 @@ where
                 type_name: type_name::<T0, T1, T2, T3, T4, T5, T6>,
                 display: None,
                 debug: const {
-                    if Characteristic::Debug.all(&[
+                    if Characteristic::Eq.all(&[
                         T0::SHAPE,
                         T1::SHAPE,
                         T2::SHAPE,
@@ -844,14 +947,18 @@ where
                         None
                     }
                 },
-                eq: if T0::SHAPE.vtable.eq.is_some()
-                    && T1::SHAPE.vtable.eq.is_some()
-                    && T2::SHAPE.vtable.eq.is_some()
-                    && T3::SHAPE.vtable.eq.is_some()
-                    && T4::SHAPE.vtable.eq.is_some()
-                    && T5::SHAPE.vtable.eq.is_some()
-                    && T6::SHAPE.vtable.eq.is_some()
-                {
+                default_in_place: None,
+                clone_into: None,
+                marker_traits: MarkerTraits::empty(),
+                eq: if Characteristic::Eq.all(&[
+                    T0::SHAPE,
+                    T1::SHAPE,
+                    T2::SHAPE,
+                    T3::SHAPE,
+                    T4::SHAPE,
+                    T5::SHAPE,
+                    T6::SHAPE,
+                ]) {
                     Some(|a, b| {
                         let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5, T6)>() };
                         let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6)>() };
@@ -927,7 +1034,12 @@ where
                 } else {
                     None
                 },
-                // ... (other vtable fields)
+                partial_ord: None,
+                ord: None,
+                hash: None,
+                drop_in_place: None,
+                parse: None,
+                try_from: None,
             },
             def: Def::Tuple(StructDef {
                 fields: &const {
@@ -981,13 +1093,22 @@ where
             T6: Shapely,
             T7: Shapely,
         {
-            shapely_types::write_type_name_list(
+            write_type_name_list(
                 f,
                 opts,
                 "(",
                 ", ",
                 ")",
-                &[T0, T1, T2, T3, T4, T5, T6, T7],
+                &[
+                    T0::SHAPE,
+                    T1::SHAPE,
+                    T2::SHAPE,
+                    T3::SHAPE,
+                    T4::SHAPE,
+                    T5::SHAPE,
+                    T6::SHAPE,
+                    T7::SHAPE,
+                ],
             )
         }
 
@@ -997,7 +1118,7 @@ where
                 type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7>,
                 display: None,
                 debug: const {
-                    if Characteristic::Debug.all(&[
+                    if Characteristic::Eq.all(&[
                         T0::SHAPE,
                         T1::SHAPE,
                         T2::SHAPE,
@@ -1072,15 +1193,19 @@ where
                         None
                     }
                 },
-                eq: if T0::SHAPE.vtable.eq.is_some()
-                    && T1::SHAPE.vtable.eq.is_some()
-                    && T2::SHAPE.vtable.eq.is_some()
-                    && T3::SHAPE.vtable.eq.is_some()
-                    && T4::SHAPE.vtable.eq.is_some()
-                    && T5::SHAPE.vtable.eq.is_some()
-                    && T6::SHAPE.vtable.eq.is_some()
-                    && T7::SHAPE.vtable.eq.is_some()
-                {
+                default_in_place: None,
+                clone_into: None,
+                marker_traits: MarkerTraits::empty(),
+                eq: if Characteristic::Eq.all(&[
+                    T0::SHAPE,
+                    T1::SHAPE,
+                    T2::SHAPE,
+                    T3::SHAPE,
+                    T4::SHAPE,
+                    T5::SHAPE,
+                    T6::SHAPE,
+                    T7::SHAPE,
+                ]) {
                     Some(|a, b| {
                         let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7)>() };
                         let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7)>() };
@@ -1166,7 +1291,12 @@ where
                 } else {
                     None
                 },
-                // ... (other vtable fields)
+                partial_ord: None,
+                ord: None,
+                hash: None,
+                drop_in_place: None,
+                parse: None,
+                try_from: None,
             },
             def: Def::Tuple(StructDef {
                 fields: &const {
@@ -1224,13 +1354,23 @@ where
             T7: Shapely,
             T8: Shapely,
         {
-            shapely_types::write_type_name_list(
+            write_type_name_list(
                 f,
                 opts,
                 "(",
                 ", ",
                 ")",
-                &[T0, T1, T2, T3, T4, T5, T6, T7, T8],
+                &[
+                    T0::SHAPE,
+                    T1::SHAPE,
+                    T2::SHAPE,
+                    T3::SHAPE,
+                    T4::SHAPE,
+                    T5::SHAPE,
+                    T6::SHAPE,
+                    T7::SHAPE,
+                    T8::SHAPE,
+                ],
             )
         }
 
@@ -1240,7 +1380,7 @@ where
                 type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7, T8>,
                 display: None,
                 debug: const {
-                    if Characteristic::Debug.all(&[
+                    if Characteristic::Eq.all(&[
                         T0::SHAPE,
                         T1::SHAPE,
                         T2::SHAPE,
@@ -1323,16 +1463,20 @@ where
                         None
                     }
                 },
-                eq: if T0::SHAPE.vtable.eq.is_some()
-                    && T1::SHAPE.vtable.eq.is_some()
-                    && T2::SHAPE.vtable.eq.is_some()
-                    && T3::SHAPE.vtable.eq.is_some()
-                    && T4::SHAPE.vtable.eq.is_some()
-                    && T5::SHAPE.vtable.eq.is_some()
-                    && T6::SHAPE.vtable.eq.is_some()
-                    && T7::SHAPE.vtable.eq.is_some()
-                    && T8::SHAPE.vtable.eq.is_some()
-                {
+                default_in_place: None,
+                clone_into: None,
+                marker_traits: MarkerTraits::empty(),
+                eq: if Characteristic::Eq.all(&[
+                    T0::SHAPE,
+                    T1::SHAPE,
+                    T2::SHAPE,
+                    T3::SHAPE,
+                    T4::SHAPE,
+                    T5::SHAPE,
+                    T6::SHAPE,
+                    T7::SHAPE,
+                    T8::SHAPE,
+                ]) {
                     Some(|a, b| {
                         let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>() };
                         let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>() };
@@ -1428,7 +1572,12 @@ where
                 } else {
                     None
                 },
-                // ... (other vtable fields)
+                partial_ord: None,
+                ord: None,
+                hash: None,
+                drop_in_place: None,
+                parse: None,
+                try_from: None,
             },
             def: Def::Tuple(StructDef {
                 fields: &const {
@@ -1491,13 +1640,24 @@ where
             T8: Shapely,
             T9: Shapely,
         {
-            shapely_types::write_type_name_list(
+            write_type_name_list(
                 f,
                 opts,
                 "(",
                 ", ",
                 ")",
-                &[T0, T1, T2, T3, T4, T5, T6, T7, T8, T9],
+                &[
+                    T0::SHAPE,
+                    T1::SHAPE,
+                    T2::SHAPE,
+                    T3::SHAPE,
+                    T4::SHAPE,
+                    T5::SHAPE,
+                    T6::SHAPE,
+                    T7::SHAPE,
+                    T8::SHAPE,
+                    T9::SHAPE,
+                ],
             )
         }
 
@@ -1507,7 +1667,7 @@ where
                 type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>,
                 display: None,
                 debug: const {
-                    if Characteristic::Debug.all(&[
+                    if Characteristic::Eq.all(&[
                         T0::SHAPE,
                         T1::SHAPE,
                         T2::SHAPE,
@@ -1599,17 +1759,21 @@ where
                         None
                     }
                 },
-                eq: if T0::SHAPE.vtable.eq.is_some()
-                    && T1::SHAPE.vtable.eq.is_some()
-                    && T2::SHAPE.vtable.eq.is_some()
-                    && T3::SHAPE.vtable.eq.is_some()
-                    && T4::SHAPE.vtable.eq.is_some()
-                    && T5::SHAPE.vtable.eq.is_some()
-                    && T6::SHAPE.vtable.eq.is_some()
-                    && T7::SHAPE.vtable.eq.is_some()
-                    && T8::SHAPE.vtable.eq.is_some()
-                    && T9::SHAPE.vtable.eq.is_some()
-                {
+                default_in_place: None,
+                clone_into: None,
+                marker_traits: MarkerTraits::empty(),
+                eq: if Characteristic::Eq.all(&[
+                    T0::SHAPE,
+                    T1::SHAPE,
+                    T2::SHAPE,
+                    T3::SHAPE,
+                    T4::SHAPE,
+                    T5::SHAPE,
+                    T6::SHAPE,
+                    T7::SHAPE,
+                    T8::SHAPE,
+                    T9::SHAPE,
+                ]) {
                     Some(|a, b| {
                         let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>() };
                         let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>() };
@@ -1715,7 +1879,12 @@ where
                 } else {
                     None
                 },
-                // ... (other vtable fields)
+                partial_ord: None,
+                ord: None,
+                hash: None,
+                drop_in_place: None,
+                parse: None,
+                try_from: None,
             },
             def: Def::Tuple(StructDef {
                 fields: &const {
@@ -1782,13 +1951,25 @@ where
             T9: Shapely,
             T10: Shapely,
         {
-            shapely_types::write_type_name_list(
+            write_type_name_list(
                 f,
                 opts,
                 "(",
                 ", ",
                 ")",
-                &[T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10],
+                &[
+                    T0::SHAPE,
+                    T1::SHAPE,
+                    T2::SHAPE,
+                    T3::SHAPE,
+                    T4::SHAPE,
+                    T5::SHAPE,
+                    T6::SHAPE,
+                    T7::SHAPE,
+                    T8::SHAPE,
+                    T9::SHAPE,
+                    T10::SHAPE,
+                ],
             )
         }
 
@@ -1798,7 +1979,7 @@ where
                 type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>,
                 display: None,
                 debug: const {
-                    if Characteristic::Debug.all(&[
+                    if Characteristic::Eq.all(&[
                         T0::SHAPE,
                         T1::SHAPE,
                         T2::SHAPE,
@@ -1898,18 +2079,22 @@ where
                         None
                     }
                 },
-                eq: if T0::SHAPE.vtable.eq.is_some()
-                    && T1::SHAPE.vtable.eq.is_some()
-                    && T2::SHAPE.vtable.eq.is_some()
-                    && T3::SHAPE.vtable.eq.is_some()
-                    && T4::SHAPE.vtable.eq.is_some()
-                    && T5::SHAPE.vtable.eq.is_some()
-                    && T6::SHAPE.vtable.eq.is_some()
-                    && T7::SHAPE.vtable.eq.is_some()
-                    && T8::SHAPE.vtable.eq.is_some()
-                    && T9::SHAPE.vtable.eq.is_some()
-                    && T10::SHAPE.vtable.eq.is_some()
-                {
+                default_in_place: None,
+                clone_into: None,
+                marker_traits: MarkerTraits::empty(),
+                eq: if Characteristic::Eq.all(&[
+                    T0::SHAPE,
+                    T1::SHAPE,
+                    T2::SHAPE,
+                    T3::SHAPE,
+                    T4::SHAPE,
+                    T5::SHAPE,
+                    T6::SHAPE,
+                    T7::SHAPE,
+                    T8::SHAPE,
+                    T9::SHAPE,
+                    T10::SHAPE,
+                ]) {
                     Some(|a, b| {
                         let a =
                             unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>() };
@@ -2027,7 +2212,12 @@ where
                 } else {
                     None
                 },
-                // ... (other vtable fields)
+                partial_ord: None,
+                ord: None,
+                hash: None,
+                drop_in_place: None,
+                parse: None,
+                try_from: None,
             },
             def: Def::Tuple(StructDef {
                 fields: &const {
@@ -2098,13 +2288,26 @@ where
             T10: Shapely,
             T11: Shapely,
         {
-            shapely_types::write_type_name_list(
+            write_type_name_list(
                 f,
                 opts,
                 "(",
                 ", ",
                 ")",
-                &[T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11],
+                &[
+                    T0::SHAPE,
+                    T1::SHAPE,
+                    T2::SHAPE,
+                    T3::SHAPE,
+                    T4::SHAPE,
+                    T5::SHAPE,
+                    T6::SHAPE,
+                    T7::SHAPE,
+                    T8::SHAPE,
+                    T9::SHAPE,
+                    T10::SHAPE,
+                    T11::SHAPE,
+                ],
             )
         }
 
@@ -2114,7 +2317,7 @@ where
                 type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>,
                 display: None,
                 debug: const {
-                    if Characteristic::Debug.all(&[
+                    if Characteristic::Eq.all(&[
                         T0::SHAPE,
                         T1::SHAPE,
                         T2::SHAPE,
@@ -2222,19 +2425,23 @@ where
                         None
                     }
                 },
-                eq: if T0::SHAPE.vtable.eq.is_some()
-                    && T1::SHAPE.vtable.eq.is_some()
-                    && T2::SHAPE.vtable.eq.is_some()
-                    && T3::SHAPE.vtable.eq.is_some()
-                    && T4::SHAPE.vtable.eq.is_some()
-                    && T5::SHAPE.vtable.eq.is_some()
-                    && T6::SHAPE.vtable.eq.is_some()
-                    && T7::SHAPE.vtable.eq.is_some()
-                    && T8::SHAPE.vtable.eq.is_some()
-                    && T9::SHAPE.vtable.eq.is_some()
-                    && T10::SHAPE.vtable.eq.is_some()
-                    && T11::SHAPE.vtable.eq.is_some()
-                {
+                default_in_place: None,
+                clone_into: None,
+                marker_traits: MarkerTraits::empty(),
+                eq: if Characteristic::Eq.all(&[
+                    T0::SHAPE,
+                    T1::SHAPE,
+                    T2::SHAPE,
+                    T3::SHAPE,
+                    T4::SHAPE,
+                    T5::SHAPE,
+                    T6::SHAPE,
+                    T7::SHAPE,
+                    T8::SHAPE,
+                    T9::SHAPE,
+                    T10::SHAPE,
+                    T11::SHAPE,
+                ]) {
                     Some(|a, b| {
                         let a = unsafe {
                             a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)>()
@@ -2364,7 +2571,12 @@ where
                 } else {
                     None
                 },
-                // ... (other vtable fields)
+                partial_ord: None,
+                ord: None,
+                hash: None,
+                drop_in_place: None,
+                parse: None,
+                try_from: None,
             },
             def: Def::Tuple(StructDef {
                 fields: &const {

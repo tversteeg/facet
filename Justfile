@@ -26,17 +26,19 @@ clippy:
 test *args:
     #!/usr/bin/env -S bash -euo pipefail
     echo -e "\033[1;33m🏃 Running all but doc-tests with nextest...\033[0m"
-    cargo nextest run {{args}}
+    cargo nextest run {{args}} < /dev/null
+    echo -e "\033[1;33m✅ Good good!\033[0m"
 
 doc-tests:
     #!/usr/bin/env -S bash -euo pipefail
     echo -e "\033[1;36m📚 Running documentation tests...\033[0m"
     cargo test --doc
 
-
 codegen:
     #!/usr/bin/env -S bash -euo pipefail
     cargo run -p shapely-codegen
+    just test
+    echo -e "\033[1;34m🍉 Looking good!\033[0m"
 
 rustfmt-fix:
     #!/usr/bin/env -S bash -euo pipefail

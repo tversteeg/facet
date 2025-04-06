@@ -490,27 +490,3 @@ impl Characteristic {
         true
     }
 }
-
-#[inline(always)]
-pub fn write_type_name_list(
-    f: &mut fmt::Formatter<'_>,
-    opts: TypeNameOpts,
-    open: &'static str,
-    delimiter: &'static str,
-    close: &'static str,
-    shapes: &'static [&'static Shape],
-) -> fmt::Result {
-    f.pad(open)?;
-    if let Some(opts) = opts.for_children() {
-        for (index, shape) in shapes.iter().enumerate() {
-            if index > 0 {
-                f.pad(delimiter)?;
-            }
-            shape.write_type_name(f, opts)?;
-        }
-    } else {
-        write!(f, "⋯")?;
-    }
-    f.pad(close)?;
-    Ok(())
-}
