@@ -1,11 +1,11 @@
 
-# facet-msgpack
+# facet-opaque
 
 [![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/facet-msgpack.svg)](https://crates.io/crates/facet-msgpack)
-[![documentation](https://docs.rs/facet-msgpack/badge.svg)](https://docs.rs/facet-msgpack)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-msgpack.svg)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/facet-opaque.svg)](https://crates.io/crates/facet-opaque)
+[![documentation](https://docs.rs/facet-opaque/badge.svg)](https://docs.rs/facet-opaque)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-opaque.svg)](./LICENSE)
 
 Thanks to all individual and corporate sponsors, without whom this work could not exist:
 
@@ -37,7 +37,7 @@ Thanks to all individual and corporate sponsors, without whom this work could no
 </a> </p>
              
 
-Provides MessagePack serialization and deserialization for Facet types.
+Provides helpers around type-erased pointers like `OpaqueUninit`, `OpaqueConst`, `Opaque` for Facet types.
 
 
 ## License

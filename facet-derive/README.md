@@ -1,3 +1,4 @@
+
 # facet-derive
 
 [![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
@@ -6,27 +7,44 @@
 [![documentation](https://docs.rs/facet-derive/badge.svg)](https://docs.rs/facet-derive)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-derive.svg)](./LICENSE)
 
-facet-derive provides procedural macros to derive the `Facet` trait from facet.
+Thanks to all individual and corporate sponsors, without whom this work could not exist:
 
-This crate implements the `#[derive(Facet)]` macro which automatically generates runtime reflection code for Rust structs, providing:
+<p> <a href="https://ko-fi.com/fasterthanlime">
+    <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/ko-fi-dark.svg">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/ko-fi-light.svg" height="40" alt="Ko-fi">
+    </picture>
+</a> <a href="https://github.com/sponsors/fasterthanlime">
+    <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/github-dark.svg">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/github-light.svg" height="40" alt="GitHub Sponsors">
+    </picture>
+</a> <a href="https://patreon.com/fasterthanlime">
+    <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/patreon-dark.svg">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/patreon-light.svg" height="40" alt="Patreon">
+    </picture>
+</a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="https://zed.dev">
+    <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-dark.svg">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-light.svg" height="40" alt="Zed">
+    </picture>
+</a> <a href="https://namespace.so">
+    <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/namespace-dark.svg">
+    <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/namespace-light.svg" height="40" alt="Namespace">
+    </picture>
+</a> </p>
+             
 
-  * Structure parsing and representation
-  * Field access and manipulation
-  * Integration with the facet runtime reflection system
+Implements the `Facet` derive macro for facet. Uses [unsynn](https://crates.io/crates/unsynn) to provide fast compilation times.
 
-The implementation uses [unsynn](https://crates.io/crates/unsynn) for efficient and fast compilation.
-
-### Funding
-
-Thanks to Namespace for providing fast GitHub Actions workers:
-
-<a href="https://namespace.so"><img src="./static/namespace-d.svg" height="40"></a>
 
 ## License
 
 Licensed under either of:
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0 ([LICENSE-APACHE](https://github.com/facet-rs/facet/blob/main/LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](https://github.com/facet-rs/facet/blob/main/LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.

@@ -1,11 +1,11 @@
 
-# facet-msgpack
+# facet-peek
 
 [![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/facet-msgpack.svg)](https://crates.io/crates/facet-msgpack)
-[![documentation](https://docs.rs/facet-msgpack/badge.svg)](https://docs.rs/facet-msgpack)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-msgpack.svg)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/facet-peek.svg)](https://crates.io/crates/facet-peek)
+[![documentation](https://docs.rs/facet-peek/badge.svg)](https://docs.rs/facet-peek)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-peek.svg)](./LICENSE)
 
 Thanks to all individual and corporate sponsors, without whom this work could not exist:
 
@@ -37,7 +37,7 @@ Thanks to all individual and corporate sponsors, without whom this work could no
 </a> </p>
              
 
-Provides MessagePack serialization and deserialization for Facet types.
+Provides safe read operations for arbitrary Facet types.
 
 
 ## License
