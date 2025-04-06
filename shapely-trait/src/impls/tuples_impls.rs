@@ -10,7 +10,6 @@ where
     T0: Shapely,
 {
     const DUMMY: Self = (T0::DUMMY,);
-
     const SHAPE: &'static Shape = &const {
         fn type_name<T0>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result
         where
@@ -30,21 +29,21 @@ where
                 Field {
                     name: stringify!($idx),
                     shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0), $idx),
+                    offset: std::mem::offset_of!((T0,), $idx),
                     flags: FieldFlags::EMPTY,
                 }
             };
         }
 
         Shape {
-            layout: Layout::new::<(T0)>(),
+            layout: Layout::new::<(T0,)>(),
             vtable: &ValueVTable {
                 type_name: type_name::<T0>,
                 display: None,
                 debug: const {
                     if Characteristic::Debug.all(&[T0::SHAPE]) {
                         Some(|value, f| {
-                            let value = unsafe { value.as_ref::<(T0)>() };
+                            let value = unsafe { value.as_ref::<(T0,)>() };
                             write!(f, "(")?;
                             unsafe {
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
@@ -60,8 +59,8 @@ where
                 },
                 eq: if T0::SHAPE.vtable.eq.is_some() {
                     Some(|a, b| {
-                        let a = unsafe { a.as_ref::<(T0)>() };
-                        let b = unsafe { b.as_ref::<(T0)>() };
+                        let a = unsafe { a.as_ref::<(T0,)>() };
+                        let b = unsafe { b.as_ref::<(T0,)>() };
 
                         // Compare last element
                         unsafe {
@@ -110,7 +109,7 @@ where
                 Field {
                     name: stringify!($idx),
                     shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1), $idx),
+                    offset: std::mem::offset_of!((T0, T1,), $idx),
                     flags: FieldFlags::EMPTY,
                 }
             };
@@ -211,7 +210,7 @@ where
                 Field {
                     name: stringify!($idx),
                     shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1, T2), $idx),
+                    offset: std::mem::offset_of!((T0, T1, T2,), $idx),
                     flags: FieldFlags::EMPTY,
                 }
             };
@@ -336,7 +335,7 @@ where
                 Field {
                     name: stringify!($idx),
                     shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1, T2, T3), $idx),
+                    offset: std::mem::offset_of!((T0, T1, T2, T3,), $idx),
                     flags: FieldFlags::EMPTY,
                 }
             };
@@ -483,7 +482,7 @@ where
                 Field {
                     name: stringify!($idx),
                     shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4), $idx),
+                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4,), $idx),
                     flags: FieldFlags::EMPTY,
                 }
             };
@@ -676,7 +675,7 @@ where
                 Field {
                     name: stringify!($idx),
                     shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5), $idx),
+                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5,), $idx),
                     flags: FieldFlags::EMPTY,
                 }
             };
@@ -894,7 +893,7 @@ where
                 Field {
                     name: stringify!($idx),
                     shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5, T6), $idx),
+                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5, T6,), $idx),
                     flags: FieldFlags::EMPTY,
                 }
             };
@@ -1137,7 +1136,7 @@ where
                 Field {
                     name: stringify!($idx),
                     shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5, T6, T7), $idx),
+                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5, T6, T7,), $idx),
                     flags: FieldFlags::EMPTY,
                 }
             };
@@ -1406,7 +1405,7 @@ where
                 Field {
                     name: stringify!($idx),
                     shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5, T6, T7, T8), $idx),
+                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5, T6, T7, T8,), $idx),
                     flags: FieldFlags::EMPTY,
                 }
             };
@@ -1701,7 +1700,7 @@ where
                 Field {
                     name: stringify!($idx),
                     shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5, T6, T7, T8, T9), $idx),
+                    offset: std::mem::offset_of!((T0, T1, T2, T3, T4, T5, T6, T7, T8, T9,), $idx),
                     flags: FieldFlags::EMPTY,
                 }
             };
@@ -2023,7 +2022,7 @@ where
                     name: stringify!($idx),
                     shape: <$ty>::SHAPE,
                     offset: std::mem::offset_of!(
-                        (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10),
+                        (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,),
                         $idx
                     ),
                     flags: FieldFlags::EMPTY,
@@ -2374,7 +2373,7 @@ where
                     name: stringify!($idx),
                     shape: <$ty>::SHAPE,
                     offset: std::mem::offset_of!(
-                        (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11),
+                        (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,),
                         $idx
                     ),
                     flags: FieldFlags::EMPTY,

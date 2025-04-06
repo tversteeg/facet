@@ -12,7 +12,7 @@ use crate::{Field, FieldFlags, Def, StructDef, Shape, Shapely, TypeNameOpts, Val
         {%- endfor -%}
     {%- endset %}
     {%- set type_name %}
-        ({%- for i in range(n) %}T{{ i }}, {% endif %}{% endfor -%})
+        ({%- for i in range(n) %}T{{ i }},{% endfor -%})
     {%- endset -%}
 unsafe impl<{{ type_list }}> Shapely for {{ type_name }}
 where
@@ -22,13 +22,12 @@ where
         {% for i in range(n) %}T{{ i }}::DUMMY,{% endfor %}
     );
     const SHAPE: &'static Shape = &const {
-        fn type_name<{% for i in range(n) %}T{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}>(
+        fn type_name<{{ type_list }}>(
             f: &mut fmt::Formatter,
             opts: TypeNameOpts,
         ) -> fmt::Result
         where
-            {% for i in range(n) %}T{{ i }}: Shapely{% if not loop.last %},
-            {% endif %}{% endfor %}
+            {{ where_predicates }}
         {
             if let Some(opts) = opts.for_children() {
                 write!(f, "(")?;
@@ -45,16 +44,16 @@ where
                 Field {
                     name: stringify!($idx),
                     shape: <$ty>::SHAPE,
-                    offset: std::mem::offset_of!(({% for i in range(n) %}T{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}), $idx),
+                    offset: std::mem::offset_of!({{ type_name }}, $idx),
                     flags: FieldFlags::EMPTY,
                 }
             };
         }
 
         Shape {
-            layout: Layout::new::<({% for i in range(n) %}T{{ i }}{% if not loop.last %}, {% endif %}{% endfor %})>(),
+            layout: Layout::new::<{{ type_name }}>(),
             vtable: &ValueVTable {
-                type_name: type_name::<{% for i in range(n) %}T{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}>,
+                type_name: type_name::<{{ type_list }}>,
                 display: None,
                 debug: const {
                     if Characteristic::Debug.all(&[
@@ -62,7 +61,7 @@ where
                         {% endif %}{% endfor %}
                     ]) {
                         Some(|value, f| {
-                            let value = unsafe { value.as_ref::<({% for i in range(n) %}T{{ i }}{% if not loop.last %}, {% endif %}{% endfor %})>() };
+                            let value = unsafe { value.as_ref::<{{ type_name }}>() };
                             write!(f, "(")?;
                             {% for i in range(n) %}{% if i > 0 %}write!(f, ", ")?;
                             {% endif %}unsafe {
@@ -79,8 +78,8 @@ where
                 },
                 eq: if {% for i in range(n) %}{% if i > 0 %} && {% endif %}T{{ i }}::SHAPE.vtable.eq.is_some(){% endfor %} {
                     Some(|a, b| {
-                        let a = unsafe { a.as_ref::<({% for i in range(n) %}T{{ i }}{% if not loop.last %}, {% endif %}{% endfor %})>() };
-                        let b = unsafe { b.as_ref::<({% for i in range(n) %}T{{ i }}{% if not loop.last %}, {% endif %}{% endfor %})>() };
+                        let a = unsafe { a.as_ref::<{{ type_name }}>() };
+                        let b = unsafe { b.as_ref::<{{ type_name }}>() };
 
                         {% for i in range(n) %}{% if i < n-1 %}// Compare element {{ i }}
                         if !unsafe {
