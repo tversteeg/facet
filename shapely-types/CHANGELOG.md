@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0](https://github.com/bearcove/shapely/releases/tag/shapely-types-v0.1.0) - 2025-04-05
+## [0.1.0](https://github.com/shapely-rs/shapely/releases/tag/shapely-types-v0.1.0) - 2025-04-05
 
 ### Other
 

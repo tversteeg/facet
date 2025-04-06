@@ -1,6 +1,6 @@
 # shapely-pretty
 
-[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/bearcove/shapely)
+[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/shapely-rs/shapely)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/bearcove/free-of-syn)
 [![crates.io](https://img.shields.io/crates/v/shapely-pretty.svg)](https://crates.io/crates/shapely-pretty)
 [![documentation](https://docs.rs/shapely-pretty/badge.svg)](https://docs.rs/shapely-pretty)

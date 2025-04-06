@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [3.1.1](https://github.com/bearcove/shapely/compare/shapely-codegen-v3.1.0...shapely-codegen-v3.1.1) - 2025-04-05
+## [3.1.1](https://github.com/shapely-rs/shapely/compare/shapely-codegen-v3.1.0...shapely-codegen-v3.1.1) - 2025-04-05
 
 ### Fixed
 
@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - indirect vtable(), start fixing partial
 - tuples impl is up
 
-## [3.1.0](https://github.com/bearcove/shapely/compare/shapely-codegen-v3.0.0...shapely-codegen-v3.1.0) - 2025-03-31
+## [3.1.0](https://github.com/shapely-rs/shapely/compare/shapely-codegen-v3.0.0...shapely-codegen-v3.1.0) - 2025-03-31
 
 ### Added
 

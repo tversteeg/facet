@@ -1,5 +1,7 @@
 use minijinja::Environment;
+use std::fs;
 use std::io::Write;
+use std::path::{Path, PathBuf};
 
 fn main() {
     // Check if current directory has a Cargo.toml with [workspace]
@@ -12,6 +14,14 @@ fn main() {
         );
     }
 
+    // Generate tuple implementations
+    generate_tuple_impls();
+
+    // Generate README files from templates
+    generate_readme_files();
+}
+
+fn generate_tuple_impls() {
     // Initialize minijinja environment
     let mut env = Environment::empty();
     env.add_function("range", minijinja::functions::range);
@@ -62,4 +72,141 @@ fn main() {
 
     let path = "shapely-trait/src/impls/tuples_impls.rs";
     std::fs::write(path, formatted_output.stdout).expect("Failed to write file");
+}
+
+fn generate_readme_files() {
+    // Get all crate directories in the workspace
+    let workspace_dir = std::env::current_dir().unwrap();
+    let entries = fs::read_dir(&workspace_dir).expect("Failed to read workspace directory");
+
+    // Create a new MiniJinja environment for README templates
+    let mut env = Environment::empty();
+
+    // Add template functions
+    env.add_function("badges", |crate_name: String| {
+        format!(
+            "[![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/shapely)\n\
+             [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)\n\
+             [![crates.io](https://img.shields.io/crates/v/{0}.svg)](https://crates.io/crates/{0})\n\
+             [![documentation](https://docs.rs/{0}/badge.svg)](https://docs.rs/{0})\n\
+             [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/{0}.svg)](./LICENSE)",
+            crate_name
+        )
+    });
+
+    env.add_function("footer", || {
+        "### Funding
+
+Thanks to Namespace for providing fast GitHub Actions workers:
+
+<a href=\"https://namespace.so\"><img src=\"https://github.com/shapely-rs/shapely/raw/main/static/namespace-d.svg\" height=\"40\"></a>
+
+## License
+
+Licensed under either of:
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](https://github.com/shapely-rs/shapely/blob/main/LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](https://github.com/shapely-rs/shapely/blob/main/LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
+
+at your option.".to_string()
+    });
+
+    // Process each crate in the workspace
+    for entry in entries {
+        let entry = entry.expect("Failed to read directory entry");
+        let path = entry.path();
+
+        // Skip non-directories and entries starting with '.' or '_'
+        if !path.is_dir()
+            || path.file_name().map_or(true, |name| {
+                let name = name.to_string_lossy();
+                name.starts_with('.') || name.starts_with('_')
+            })
+        {
+            continue;
+        }
+
+        // Skip target directory and shapely-codegen itself
+        let dir_name = path.file_name().unwrap().to_string_lossy();
+        if dir_name == "target" || dir_name == "shapely-codegen" {
+            continue;
+        }
+
+        // Check if this is a crate directory (has a Cargo.toml)
+        let cargo_toml_path = path.join("Cargo.toml");
+        if !cargo_toml_path.exists() {
+            continue;
+        }
+
+        // Check if there's a template directory with a README.md.j2 file
+        let template_path = path.join("templates").join("README.md.j2");
+        if template_path.exists() {
+            process_readme_template(&env, &path, &template_path);
+        } else {
+            // Special case for the main shapely crate
+            let crate_name = dir_name.to_string();
+            if crate_name == "shapely" {
+                let alternative_template_path = Path::new("shapely/templates/README.md.j2");
+                if alternative_template_path.exists() {
+                    process_readme_template(
+                        &env,
+                        &path,
+                        &Path::new("shapely/templates/README.md.j2"),
+                    );
+                }
+            }
+        }
+    }
+
+    // Also check for the special case where template is in shapely/shapely/templates
+    let shapely_crate_path = workspace_dir.join("shapely");
+    if shapely_crate_path.exists() && shapely_crate_path.is_dir() {
+        let template_path = shapely_crate_path.join("templates").join("README.md.j2");
+        if template_path.exists() {
+            process_readme_template(&env, &shapely_crate_path, &template_path);
+        }
+    }
+}
+
+fn process_readme_template(env: &Environment, crate_path: &Path, template_path: &Path) {
+    println!("Processing template: {:?}", template_path);
+
+    // Get crate name from directory name
+    let crate_name = crate_path
+        .file_name()
+        .unwrap()
+        .to_string_lossy()
+        .to_string();
+
+    // Read the template
+    let template_content = fs::read_to_string(template_path).expect(&format!(
+        "Failed to read template file: {:?}",
+        template_path
+    ));
+
+    // Create a template ID
+    let template_id = format!("{}_readme", crate_name);
+
+    // Add template to environment
+    env.add_template(&template_id, &template_content)
+        .expect(&format!("Failed to add template: {}", template_id));
+
+    // Get the template
+    let template = env
+        .get_template(&template_id)
+        .expect("Failed to get template");
+
+    // Render the template with context
+    let output = template
+        .render(minijinja::context! {
+            crate_name => crate_name
+        })
+        .expect("Failed to render template");
+
+    // Save the rendered content to README.md
+    let readme_path = crate_path.join("README.md");
+    fs::write(&readme_path, output)
+        .expect(&format!("Failed to write README.md to {:?}", readme_path));
+
+    println!("Generated README.md for {}", crate_name);
 }

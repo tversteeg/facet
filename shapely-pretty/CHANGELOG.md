@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [3.1.0](https://github.com/bearcove/shapely/compare/shapely-pretty-v3.0.0...shapely-pretty-v3.1.0) - 2025-03-31
+## [3.1.0](https://github.com/shapely-rs/shapely/compare/shapely-pretty-v3.0.0...shapely-pretty-v3.1.0) - 2025-03-31
 
 ### Added
 
@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - shill for namespace, closes #36
 - specific toolchains, reformat code
 
-## [3.0.0](https://github.com/bearcove/shapely/compare/shapely-pretty-v2.0.1...shapely-pretty-v3.0.0) - 2025-03-11
+## [3.0.0](https://github.com/shapely-rs/shapely/compare/shapely-pretty-v2.0.1...shapely-pretty-v3.0.0) - 2025-03-11
 
 ### Added
 
