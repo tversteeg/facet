@@ -1,12 +1,10 @@
 quickcheck:
     #!/usr/bin/env -S bash -euo pipefail
     source .envrc
-    just codegen-check
-    just rustfmt
+    just veryquickcheck
     just clippy
     just test
     just doc-tests
-    just absolve
 
 veryquickcheck:
     #!/usr/bin/env -S bash -euo pipefail
