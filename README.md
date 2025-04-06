@@ -1,7 +1,7 @@
 
 Thanks to all individual and corporate sponsors, without whom this work could not exist:
 
-<p> Individual: <a href="https://ko-fi.com/fasterthanlime">
+<p> <a href="https://ko-fi.com/fasterthanlime">
     <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/ko-fi-dark.svg">
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/ko-fi-light.svg" height="40" alt="Ko-fi">
@@ -16,7 +16,7 @@ Thanks to all individual and corporate sponsors, without whom this work could no
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/patreon-dark.svg">
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/patreon-light.svg" height="40" alt="Patreon">
     </picture>
-</a> / Corporate: <a href="https://zed.dev">
+</a> &nbsp&nbsp&nbsp&nbsp;;;;&nbsp; <a href="https://zed.dev">
     <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-dark.svg">
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-light.svg" height="40" alt="Zed">
