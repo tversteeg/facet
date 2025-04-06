@@ -17,7 +17,9 @@ keywords = [
 categories = ["encoding", "parsing", "data-structures"]
 
 [dependencies]
+log = "0.4.27"
 facet-trait = { workspace = true }
+facet-poke = { workspace = true }
 facet-types.workspace = true
 [dev-dependencies]
 facet = { workspace = true }

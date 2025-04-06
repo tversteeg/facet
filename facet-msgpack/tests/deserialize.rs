@@ -1,5 +1,3 @@
-use super::*;
-
 use facet_derive::Facet;
 use facet_trait::Facet;
 
@@ -26,10 +24,7 @@ fn it_works() {
         0x00, 0x00, 0x00, 0x1e, // 30
     ];
 
-    let mut partial = Partial::alloc(TestStruct::SHAPE_FN);
-    from_msgpack(&mut partial, &data).unwrap();
-
-    let result = partial.build::<TestStruct>();
+    let result: TestStruct = facet_msgpack::from_str(&data).unwrap();
     assert_eq!(
         result,
         TestStruct {

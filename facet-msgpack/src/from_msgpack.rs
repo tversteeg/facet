@@ -1,3 +1,46 @@
+use crate::constants::*;
+use crate::errors::Error as DecodeError;
+use facet_poke::Poke;
+use facet_trait::ShapeExt as _;
+use facet_trait::{Facet, Opaque, OpaqueConst};
+use log::trace;
+
+/// Deserializes MessagePack-encoded data into a type that implements `Facet`.
+///
+/// # Example
+/// ```
+/// use facet::Facet;
+/// use facet_msgpack::from_str;
+///
+/// #[derive(Debug, Facet, PartialEq)]
+/// struct User {
+///     id: u64,
+///     username: String,
+/// }
+///
+/// // MessagePack binary data (equivalent to {"id": 42, "username": "user123"})
+/// let msgpack_data = [
+///     0x82, 0xa2, 0x69, 0x64, 0x2a, 0xa8, 0x75, 0x73,
+///     0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0xa7, 0x75,
+///     0x73, 0x65, 0x72, 0x31, 0x32, 0x33
+/// ];
+///
+/// let user: User = from_str(&msgpack_data).unwrap();
+/// assert_eq!(user, User { id: 42, username: "user123".to_string() });
+/// ```
+pub fn from_str<T: Facet>(msgpack: &[u8]) -> Result<T, DecodeError> {
+    // Allocate a Poke for type T
+    let (poke, _guard) = Poke::alloc::<T>();
+
+    // Deserialize the MessagePack into the Poke
+    let opaque = from_slice_opaque(poke, msgpack)?;
+
+    // Convert the Opaque to the concrete type T
+    let result = unsafe { opaque.read::<T>() };
+
+    Ok(result)
+}
+
 /// Deserializes MessagePack-encoded data into a Facet Partial.
 ///
 /// This function takes a MessagePack byte array and populates a Partial object
@@ -41,55 +84,58 @@
 /// This implementation follows the MessagePack specification:
 /// <https://github.com/msgpack/msgpack/blob/master/spec.md>
 #[allow(clippy::needless_lifetimes)]
-pub fn from_msgpack(partial: &mut Partial, msgpack: &[u8]) -> Result<(), DecodeError> {
+pub fn from_slice_opaque<'mem>(
+    poke: Poke<'mem>,
+    msgpack: &[u8],
+) -> Result<Opaque<'mem>, DecodeError> {
     let mut decoder = Decoder::new(msgpack);
 
-    fn deserialize_value(decoder: &mut Decoder, partial: &mut Partial) -> Result<(), DecodeError> {
-        let shape_fn = partial.shape();
-        let shape = shape_fn.get();
+    fn deserialize_value<'mem>(
+        decoder: &mut Decoder,
+        poke: Poke<'mem>,
+    ) -> Result<Opaque<'mem>, DecodeError> {
+        let shape = poke.shape();
+        trace!("Deserializing {:?}", shape);
 
-        match &shape.innards {
-            facet_core::Def::Scalar(scalar) => {
-                let slot = partial.scalar_slot().expect("Scalar slot");
-                match scalar {
-                    facet_core::Scalar::String => {
-                        let value = decoder.decode_string()?;
-                        slot.fill(value);
-                    }
-                    facet_core::Scalar::U64 => {
-                        let value = decoder.decode_u64()?;
-                        slot.fill(value);
-                    }
-                    _ => {
-                        println!("Unsupported scalar type: {:?}", scalar);
-                        todo!()
-                    }
+        let opaque = match poke {
+            Poke::Scalar(pv) => {
+                trace!("Deserializing scalar");
+                if pv.shape().is_type::<String>() {
+                    let s = decoder.decode_string()?;
+                    let data = unsafe { pv.put(OpaqueConst::from_ref(&s)) };
+                    std::mem::forget(s);
+                    data
+                } else if pv.shape().is_type::<u64>() {
+                    let n = decoder.decode_u64()?;
+                    unsafe { pv.put(OpaqueConst::from_ref(&n)) }
+                } else {
+                    todo!("Unsupported scalar type: {}", pv.shape())
                 }
             }
-            facet_core::Def::Struct { .. } => {
+            Poke::Struct(mut ps) => {
+                trace!("Deserializing struct");
                 let map_len = decoder.decode_map_len()?;
 
                 for _ in 0..map_len {
                     let key = decoder.decode_string()?;
-                    let slot = partial
-                        .slot_by_name(&key)
+                    let (index, field_poke) = ps
+                        .field_by_name(&key)
                         .map_err(|_| DecodeError::UnknownField(key))?;
 
-                    let mut partial_field = Partial::alloc(slot.shape());
-                    deserialize_value(decoder, &mut partial_field)?;
-                    slot.fill_from_partial(partial_field);
+                    deserialize_value(decoder, field_poke)?;
+                    unsafe { ps.mark_initialized(index) };
                 }
+                ps.build_in_place()
             }
             _ => {
-                println!("Unsupported shape: {:?}", shape.innards);
-                todo!()
+                todo!("Unsupported shape: {:?}", shape)
             }
-        }
+        };
 
-        Ok(())
+        Ok(opaque)
     }
 
-    deserialize_value(&mut decoder, partial)
+    deserialize_value(&mut decoder, poke)
 }
 
 struct Decoder<'input> {
