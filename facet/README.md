@@ -54,18 +54,14 @@ Additionally:
 
 ### Funding
 
-Thanks to Zed for sponsoring this project:
+Thanks to Zed for sponsoring this project, and Namespace for providing fast GitHub Actions workers.
 
 <a href="https://zed.dev">
     <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v1/zed-dark.svg">
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v1/zed-light.svg" height="40" alt="Zed">
     </picture>
-</a>
-
-Thanks to Namespace for providing fast GitHub Actions workers:
-
-<a href="https://namespace.so">
+</a> <a href="https://namespace.so">
     <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v1/namespace-dark.svg">
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v1/namespace-light.svg" height="40" alt="Namespace">
