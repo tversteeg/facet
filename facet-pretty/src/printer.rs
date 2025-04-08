@@ -1,7 +1,7 @@
 //! Pretty printer implementation for Facet types
 
 use std::{
-    collections::HashSet,
+    collections::HashMap,
     fmt::{self, Write},
     hash::{DefaultHasher, Hash, Hasher},
     str,
@@ -66,7 +66,7 @@ impl PrettyPrinter {
         let peek = Peek::new(value);
 
         let mut output = String::new();
-        self.format_peek(peek, &mut output, 0, &mut HashSet::<*const ()>::new())
+        self.format_peek(peek, &mut output, 0, 0, &mut HashMap::new())
             .expect("Formatting failed");
 
         print!("{}", output);
@@ -77,7 +77,7 @@ impl PrettyPrinter {
         let peek = Peek::new(value);
 
         let mut output = String::new();
-        self.format_peek(peek, &mut output, 0, &mut HashSet::<*const ()>::new())
+        self.format_peek(peek, &mut output, 0, 0, &mut HashMap::new())
             .expect("Formatting failed");
 
         output
@@ -86,20 +86,21 @@ impl PrettyPrinter {
     /// Format a value to a formatter
     pub fn format_to<T: Facet>(&self, value: &T, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let peek = Peek::new(value);
-        self.format_peek(peek, f, 0, &mut HashSet::<*const ()>::new())
+        self.format_peek(peek, f, 0, 0, &mut HashMap::new())
     }
 
     /// Internal method to format a Peek value
-    pub(crate) fn format_peek<'mem>(
+    pub(crate) fn format_peek(
         &self,
-        peek: Peek<'mem>,
+        peek: Peek<'_>,
         f: &mut impl Write,
-        depth: usize,
-        visited: &mut HashSet<*const ()>,
+        format_depth: usize,
+        type_depth: usize,
+        visited: &mut HashMap<*const (), usize>,
     ) -> fmt::Result {
         // Check if we've reached the maximum depth
         if let Some(max_depth) = self.max_depth {
-            if depth > max_depth {
+            if format_depth > max_depth {
                 self.write_punctuation(f, "[")?;
                 write!(f, "...")?;
                 return Ok(());
@@ -107,27 +108,64 @@ impl PrettyPrinter {
         }
 
         // Get the data pointer for cycle detection
-        let ptr = unsafe { peek.data().as_ptr() as *const () };
+        let ptr = unsafe { peek.data().as_ptr() };
 
-        // Check for cycles
-        if !visited.insert(ptr) {
-            self.write_type_name(f, &peek)?;
-            self.write_punctuation(f, " { ")?;
-            self.write_comment(f, "/* cycle detected */")?;
-            self.write_punctuation(f, " }")?;
-            return Ok(());
+        // Check for cycles - if we've seen this pointer before at a different type_depth
+        if let Some(&ptr_type_depth) = visited.get(&ptr) {
+            // If the current type_depth is significantly deeper than when we first saw this pointer,
+            // we have a true cycle, not just a transparent wrapper
+            if type_depth > ptr_type_depth + 1 {
+                self.write_type_name(f, &peek)?;
+                self.write_punctuation(f, " { ")?;
+                self.write_comment(
+                    f,
+                    &format!(
+                        "/* cycle detected at {:p} (first seen at type_depth {}) */",
+                        ptr, ptr_type_depth
+                    ),
+                )?;
+                self.write_punctuation(f, " }")?;
+                return Ok(());
+            }
+        } else {
+            // First time seeing this pointer, record its type_depth
+            visited.insert(ptr, type_depth);
         }
 
         // Format based on the peek variant
         match peek {
             Peek::Value(value) => self.format_value(value, f)?,
-            Peek::Struct(struct_) => self.format_struct(struct_, f, depth, visited)?,
-            Peek::List(list) => self.format_list(list, f, depth, visited)?,
-            Peek::Map(map) => self.format_map(map, f, depth, visited)?,
+            Peek::Struct(struct_) => {
+                // When recursing into a struct, always increment format_depth
+                // Only increment type_depth if we're moving to a different address
+                let new_type_depth = if unsafe { struct_.data().as_ptr() } == ptr {
+                    type_depth // Same pointer, don't increment type_depth
+                } else {
+                    type_depth + 1 // Different pointer, increment type_depth
+                };
+                self.format_struct(struct_, f, format_depth + 1, new_type_depth, visited)?
+            }
+            Peek::List(list) => {
+                // When recursing into a list, always increment format_depth
+                // Only increment type_depth if we're moving to a different address
+                let new_type_depth = if unsafe { list.data().as_ptr() } == ptr {
+                    type_depth // Same pointer, don't increment type_depth
+                } else {
+                    type_depth + 1 // Different pointer, increment type_depth
+                };
+                self.format_list(list, f, format_depth + 1, new_type_depth, visited)?
+            }
+            Peek::Map(map) => {
+                // When recursing into a map, always increment format_depth
+                // Only increment type_depth if we're moving to a different address
+                let new_type_depth = if unsafe { map.data().as_ptr() } == ptr {
+                    type_depth // Same pointer, don't increment type_depth
+                } else {
+                    type_depth + 1 // Different pointer, increment type_depth
+                };
+                self.format_map(map, f, format_depth + 1, new_type_depth, visited)?
+            }
         }
-
-        // Remove from visited set when we're done
-        visited.remove(&ptr);
 
         Ok(())
     }
@@ -177,8 +215,9 @@ impl PrettyPrinter {
         &self,
         struct_: facet_peek::PeekStruct<'_>,
         f: &mut impl Write,
-        depth: usize,
-        visited: &mut HashSet<*const ()>,
+        format_depth: usize,
+        type_depth: usize,
+        visited: &mut HashMap<*const (), usize>,
     ) -> fmt::Result {
         // Print the struct name
         self.write_type_name(f, &struct_)?;
@@ -194,7 +233,12 @@ impl PrettyPrinter {
         // Print each field
         for (_, field_name, field_value, flags) in struct_.fields_with_metadata() {
             // Indent
-            write!(f, "{:width$}", "", width = (depth + 1) * self.indent_size)?;
+            write!(
+                f,
+                "{:width$}",
+                "",
+                width = (format_depth + 1) * self.indent_size
+            )?;
 
             // Field name
             self.write_field_name(f, field_name)?;
@@ -206,7 +250,13 @@ impl PrettyPrinter {
                 self.write_redacted(f, "[REDACTED]")?;
             } else {
                 // Field value is not sensitive, format normally
-                self.format_peek(Peek::Value(field_value), f, depth + 1, visited)?;
+                self.format_peek(
+                    Peek::Value(field_value),
+                    f,
+                    format_depth + 1,
+                    type_depth + 1,
+                    visited,
+                )?;
             }
 
             self.write_punctuation(f, ",")?;
@@ -214,7 +264,7 @@ impl PrettyPrinter {
         }
 
         // Closing brace with proper indentation
-        write!(f, "{:width$}", "", width = depth * self.indent_size)?;
+        write!(f, "{:width$}", "", width = format_depth * self.indent_size)?;
         self.write_punctuation(f, "}")
     }
 
@@ -223,8 +273,9 @@ impl PrettyPrinter {
         &self,
         list: facet_peek::PeekList<'_>,
         f: &mut impl Write,
-        depth: usize,
-        visited: &mut HashSet<*const ()>,
+        format_depth: usize,
+        type_depth: usize,
+        visited: &mut HashMap<*const (), usize>,
     ) -> fmt::Result {
         // Print the list name
         self.write_type_name(f, &list)?;
@@ -234,10 +285,21 @@ impl PrettyPrinter {
         // Iterate through list items
         for (index, item) in list.iter().enumerate() {
             // Indent
-            write!(f, "{:width$}", "", width = (depth + 1) * self.indent_size)?;
+            write!(
+                f,
+                "{:width$}",
+                "",
+                width = (format_depth + 1) * self.indent_size
+            )?;
 
             // Format item
-            self.format_peek(Peek::Value(item), f, depth + 1, visited)?;
+            self.format_peek(
+                Peek::Value(item),
+                f,
+                format_depth + 1,
+                type_depth + 1,
+                visited,
+            )?;
 
             // Add comma if not the last item
             if index < list.len() - 1 {
@@ -247,7 +309,7 @@ impl PrettyPrinter {
         }
 
         // Closing bracket with proper indentation
-        write!(f, "{:width$}", "", width = depth * self.indent_size)?;
+        write!(f, "{:width$}", "", width = format_depth * self.indent_size)?;
         self.write_punctuation(f, "]")
     }
 
@@ -256,8 +318,9 @@ impl PrettyPrinter {
         &self,
         map: facet_peek::PeekMap<'_>,
         f: &mut impl Write,
-        depth: usize,
-        _visited: &mut HashSet<*const ()>,
+        format_depth: usize,
+        _type_depth: usize,
+        _visited: &mut HashMap<*const (), usize>,
     ) -> fmt::Result {
         // Print the map name
         self.write_type_name(f, &map)?;
@@ -267,7 +330,12 @@ impl PrettyPrinter {
         // TODO: Implement proper map iteration when available in facet_peek
 
         // Indent
-        write!(f, "{:width$}", "", width = (depth + 1) * self.indent_size)?;
+        write!(
+            f,
+            "{:width$}",
+            "",
+            width = (format_depth + 1) * self.indent_size
+        )?;
         write!(f, "{}", self.style_comment("/* Map contents */"))?;
         writeln!(f)?;
 
@@ -277,7 +345,7 @@ impl PrettyPrinter {
             "{:width$}{}",
             "",
             self.style_punctuation("}"),
-            width = depth * self.indent_size
+            width = format_depth * self.indent_size
         )
     }
 
@@ -306,6 +374,7 @@ impl PrettyPrinter {
     }
 
     /// Style a type name and return it as a string
+    #[allow(dead_code)]
     fn style_type_name(&self, peek: &facet_peek::PeekValue) -> String {
         let mut result = String::new();
         self.write_type_name(&mut result, peek).unwrap();
@@ -372,6 +441,7 @@ impl PrettyPrinter {
     }
 
     /// Style a redacted value and return it as a string
+    #[allow(dead_code)]
     fn style_redacted(&self, text: &str) -> String {
         let mut result = String::new();
         self.write_redacted(&mut result, text).unwrap();
