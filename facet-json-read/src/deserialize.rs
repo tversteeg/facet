@@ -55,14 +55,31 @@ fn deserialize_value<'input, 'mem>(
     use std::collections::VecDeque;
 
     enum StackItem<'mem> {
-        Value { poke: Poke<'mem> },
-        FinishStruct { ps: facet_poke::PokeStruct<'mem> },
-        StructField { key: String },
-        AfterStructField { index: usize },
-        FinishList { pl: facet_poke::PokeList<'mem> },
-        AfterListItem { item: OpaqueUninit<'mem> },
-        FinishMap { pm: facet_poke::PokeMap<'mem> },
-        AfterMapEntry { key: String },
+        Value {
+            poke: Poke<'mem>,
+        },
+        FinishStruct {
+            ps: facet_poke::PokeStruct<'mem>,
+        },
+        StructField {
+            key: String,
+        },
+        AfterStructField {
+            index: usize,
+        },
+        FinishList {
+            pl: facet_poke::PokeList<'mem>,
+        },
+        AfterListItem {
+            item: OpaqueUninit<'mem>,
+        },
+        FinishMap {
+            pm: facet_poke::PokeMap<'mem>,
+        },
+        AfterMapValue {
+            key: String,
+            value: OpaqueUninit<'mem>,
+        },
     }
 
     let mut result = None;
@@ -172,17 +189,17 @@ fn deserialize_value<'input, 'mem>(
 
                         if let Some(key) = first_key {
                             let value_shape = pm.def.v;
-
-                            stack.push_front(StackItem::FinishMap { pm });
-
                             let value_data =
                                 OpaqueUninit::new(unsafe { std::alloc::alloc(value_shape.layout) });
                             let value_poke =
                                 unsafe { Poke::unchecked_new(value_data, value_shape) };
 
+                            stack.push_front(StackItem::FinishMap { pm });
+                            stack.push_front(StackItem::AfterMapValue {
+                                key,
+                                value: value_data,
+                            });
                             stack.push_front(StackItem::Value { poke: value_poke });
-
-                            stack.push_front(StackItem::AfterMapEntry { key });
                         } else {
                             stack.push_front(StackItem::FinishMap { pm });
                         }
@@ -276,32 +293,31 @@ fn deserialize_value<'input, 'mem>(
                 let opaque = pl.build_in_place();
                 result = Some(opaque);
             }
-            StackItem::AfterMapEntry { key } => {
+            StackItem::AfterMapValue { mut key, value } => {
                 trace!("Processing hashmap key: \x1b[1;33m{}\x1b[0m", key);
 
                 let pm = match stack.front_mut().unwrap() {
                     StackItem::FinishMap { pm } => pm,
                     _ => unreachable!(),
                 };
-
-                let key_data = OpaqueUninit::new(unsafe { std::alloc::alloc(pm.def.k.layout) });
-                let key_poke = unsafe { Poke::unchecked_new(key_data, pm.def.k) };
-                let scalar_key_poke = key_poke.into_scalar();
-                scalar_key_poke.parse(&key).unwrap(); // TODO: map errors
-
-                let value_data = OpaqueUninit::new(unsafe { std::alloc::alloc(pm.def.v.layout) });
-                let value_poke = unsafe { Poke::unchecked_new(value_data, pm.def.v) };
-
-                let value_opaque = result.take().expect("Expected a value result");
+                let key_data = Opaque::from_ref(&mut key);
                 unsafe {
-                    pm.insert(key_data.assume_init(), value_opaque);
+                    pm.insert(key_data, value.assume_init());
                 }
-
-                stack.push_front(StackItem::Value { poke: value_poke });
+                std::mem::forget(key); // key has been moved out of
 
                 let next_key = parser.parse_object_key()?;
                 if let Some(next_key) = next_key {
-                    stack.push_front(StackItem::AfterMapEntry { key: next_key });
+                    let value_shape = pm.def.v;
+                    let value_data =
+                        OpaqueUninit::new(unsafe { std::alloc::alloc(value_shape.layout) });
+                    let value_poke = unsafe { Poke::unchecked_new(value_data, value_shape) };
+
+                    stack.push_front(StackItem::AfterMapValue {
+                        key: next_key,
+                        value: value_data,
+                    });
+                    stack.push_front(StackItem::Value { poke: value_poke });
                 }
             }
             StackItem::FinishMap { pm } => {
