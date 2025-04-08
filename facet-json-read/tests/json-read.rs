@@ -1,19 +1,24 @@
-use ctor::ctor;
-
-#[ctor]
-fn init_backtrace() {
-    color_backtrace::install();
-}
-
 use facet_derive::Facet;
-use facet_json::{from_str_opaque, to_json};
-use facet_poke::{Peek, Poke};
+use facet_json_read::from_str;
 use facet_trait::Facet;
 
 use facet_trait as facet;
 
+#[ctor::ctor]
+fn init() {
+    // Initialize color backtrace for pretty stack traces
+    color_backtrace::install();
+
+    // Initialize logger to print all log levels
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("trace"))
+        .format_timestamp(None)
+        .init();
+
+    log::info!("Logging and color backtrace initialized");
+}
+
 #[test]
-fn test_from_json() {
+fn json_read_simple_strut() {
     #[derive(Facet)]
     struct TestStruct {
         name: String,
@@ -21,55 +26,13 @@ fn test_from_json() {
     }
     let json = r#"{"name": "Alice", "age": 30}"#;
 
-    let (poke, _guard) = Poke::alloc::<TestStruct>();
-    let opaque = from_str_opaque(poke, json).unwrap();
-    let s = unsafe { opaque.read::<TestStruct>() };
-
+    let s: TestStruct = from_str(json).unwrap();
     assert_eq!(s.name, "Alice");
     assert_eq!(s.age, 30);
 }
 
-#[test]
-fn test_to_json() {
-    #[derive(Debug, PartialEq, Clone, Facet)]
-    struct TestStruct {
-        name: String,
-        age: u64,
-    }
-
-    let test_struct = TestStruct {
-        name: "Alice".to_string(),
-        age: 30,
-    };
-
-    let _expected_json = r#"{"name":"Alice","age":30}"#;
-    let expected_json_indented = r#"{
-  "name": "Alice",
-  "age": 30
-}"#;
-
-    let mut buffer = Vec::new();
-    let peek = Peek::new(&test_struct);
-    to_json(peek, &mut buffer, true).unwrap();
-    let json = String::from_utf8(buffer).unwrap();
-    assert_eq!(json, expected_json_indented);
-
-    // let mut buffer = Vec::new();
-    // let (poke, _guard) = Poke::alloc::<TestStruct>();
-    // unsafe { std::ptr::write(poke.as_mut_ptr(), test_struct.clone()) };
-    // to_json(&poke, &mut buffer, true).unwrap();
-    // let json_indented = String::from_utf8(buffer).unwrap();
-    // assert_eq!(json_indented, expected_json_indented.trim());
-
-    // // Test roundtrip
-    // let (poke, _guard) = Poke::alloc::<TestStruct>();
-    // from_json(poke, expected_json).unwrap();
-    // let deserialized_struct = unsafe { (*poke.as_mut_ptr()).clone() };
-    // assert_eq!(deserialized_struct, test_struct);
-}
-
 // #[test]
-// fn test_from_json_with_more_types() {
+// fn json_read_more_types() {
 //     #[derive(Facet)]
 //     struct TestStructWithMoreTypes {
 //         u8_val: u8,
@@ -149,7 +112,7 @@ fn test_to_json() {
 //     let json = r#"[123, "Hello", [3.69, true]]"#;
 
 //     let mut test_struct = TupleStruct::partial();
-//     from_json(&mut test_struct, json).unwrap();
+//     from_str(&mut test_struct, json).unwrap();
 
 //     let built_struct = test_struct.build::<TupleStruct>();
 //     assert_eq!(built_struct.0, 123);
@@ -204,7 +167,7 @@ fn test_to_json() {
 // }
 
 // #[test]
-// fn test_from_json_with_hashmap() {
+// fn json_read_with_hashmap() {
 //     #[derive(Facet, Debug, PartialEq)]
 //     struct OtherStruct {
 //         value: i32,

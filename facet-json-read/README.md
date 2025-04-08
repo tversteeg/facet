@@ -1,11 +1,11 @@
 
-# facet-json
+# facet-json-read
 
 [![experimental](https://img.shields.io/badge/status-highly%20experimental-orange)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/facet-json.svg)](https://crates.io/crates/facet-json)
-[![documentation](https://docs.rs/facet-json/badge.svg)](https://docs.rs/facet-json)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-json.svg)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/facet-json-read.svg)](https://crates.io/crates/facet-json-read)
+[![documentation](https://docs.rs/facet-json-read/badge.svg)](https://docs.rs/facet-json-read)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-json-read.svg)](./LICENSE)
 
 Thanks to all individual and corporate sponsors, without whom this work could not exist:
 
@@ -32,25 +32,7 @@ Thanks to all individual and corporate sponsors, without whom this work could no
 </a> </p>
              
 
-Provides JSON serialization and deserialization for any type that implements `Facet`.
-
-### Example
-
-```rust
-# use facet_trait::Facet;
-# use facet_derive::Facet;
-# use facet_trait as facet;
-
-#[derive(Debug, Facet, PartialEq)]
-struct User {
-    name: String,
-    age: u64,
-}
-
-let json = r#"{"name": "Alice", "age": 30}"#;
-let user: User = facet_json::from_str(&json).unwrap();
-assert_eq!(user, User { name: "Alice".into(), age: 30 });
-```
+Provides JSON deserialization for any type that implements `Facet`.
 
 
 ## License

@@ -1,5 +1,3 @@
-#![allow(unreachable_code)]
-
 use facet_poke::{Peek, PeekValue};
 use facet_trait::ShapeExt as _;
 use std::collections::VecDeque;

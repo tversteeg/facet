@@ -5,6 +5,3 @@ mod parser;
 
 mod deserialize;
 pub use deserialize::*;
-
-mod serialize;
-pub use serialize::*;

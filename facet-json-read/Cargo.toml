@@ -1,0 +1,19 @@
+[package]
+name = "facet-json-read"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+facet-poke.workspace = true
+facet-trait.workspace = true
+log = "0.4.27"
+
+[dev-dependencies]
+color-backtrace = "0.7.0"
+ctor = "0.4.1"
+env_logger = "0.11.8"
+facet-derive.workspace = true
