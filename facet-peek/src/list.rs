@@ -5,7 +5,7 @@ use facet_trait::ListDef;
 
 /// Iterator over a `PeekList`
 pub struct PeekListIter<'mem> {
-    list: &'mem PeekList<'mem>,
+    list: PeekList<'mem>,
     index: usize,
     len: usize,
 }
@@ -83,7 +83,7 @@ impl<'mem> PeekList<'mem> {
     }
 
     /// Returns an iterator over the list
-    pub fn iter(&'mem self) -> PeekListIter<'mem> {
+    pub fn iter(self) -> PeekListIter<'mem> {
         PeekListIter {
             list: self,
             index: 0,

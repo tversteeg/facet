@@ -1,7 +1,7 @@
 //! Pretty printer implementation for Facet types
 
 use std::{
-    collections::HashMap,
+    collections::{HashMap, VecDeque},
     fmt::{self, Write},
     hash::{DefaultHasher, Hash, Hasher},
     str,
@@ -29,6 +29,23 @@ impl Default for PrettyPrinter {
             use_colors: true,
         }
     }
+}
+
+/// Stack state for iterative formatting
+enum StackState {
+    Start,
+    ProcessStructField { field_index: usize },
+    ProcessListItem { item_index: usize },
+    ProcessMapEntry,
+    Finish,
+}
+
+/// Stack item for iterative traversal
+struct StackItem<'a> {
+    peek: Peek<'a>,
+    format_depth: usize,
+    type_depth: usize,
+    state: StackState,
 }
 
 impl PrettyPrinter {
@@ -95,72 +112,257 @@ impl PrettyPrinter {
         type_depth: usize,
         visited: &mut HashMap<*const (), usize>,
     ) -> fmt::Result {
-        // Check if we've reached the maximum depth
-        if let Some(max_depth) = self.max_depth {
-            if format_depth > max_depth {
-                self.write_punctuation(f, "[")?;
-                write!(f, "...")?;
-                return Ok(());
-            }
-        }
+        // Create a queue for our stack items
+        let mut stack = VecDeque::new();
 
-        // Get the data pointer for cycle detection
-        let ptr = unsafe { peek.data().as_ptr() };
+        // Push the initial item
+        stack.push_back(StackItem {
+            peek,
+            format_depth,
+            type_depth,
+            state: StackState::Start,
+        });
 
-        // Check for cycles - if we've seen this pointer before at a different type_depth
-        if let Some(&ptr_type_depth) = visited.get(&ptr) {
-            // If the current type_depth is significantly deeper than when we first saw this pointer,
-            // we have a true cycle, not just a transparent wrapper
-            if type_depth > ptr_type_depth + 1 {
-                self.write_type_name(f, &peek)?;
-                self.write_punctuation(f, " { ")?;
-                self.write_comment(
-                    f,
-                    &format!(
-                        "/* cycle detected at {:p} (first seen at type_depth {}) */",
-                        ptr, ptr_type_depth
-                    ),
-                )?;
-                self.write_punctuation(f, " }")?;
-                return Ok(());
-            }
-        } else {
-            // First time seeing this pointer, record its type_depth
-            visited.insert(ptr, type_depth);
-        }
+        // Process items until the stack is empty
+        while let Some(mut item) = stack.pop_back() {
+            match item.state {
+                StackState::Start => {
+                    // Check if we've reached the maximum depth
+                    if let Some(max_depth) = self.max_depth {
+                        if item.format_depth > max_depth {
+                            self.write_punctuation(f, "[")?;
+                            write!(f, "...")?;
+                            continue;
+                        }
+                    }
 
-        // Format based on the peek variant
-        match peek {
-            Peek::Value(value) => self.format_value(value, f)?,
-            Peek::Struct(struct_) => {
-                // When recursing into a struct, always increment format_depth
-                // Only increment type_depth if we're moving to a different address
-                let new_type_depth = if unsafe { struct_.data().as_ptr() } == ptr {
-                    type_depth // Same pointer, don't increment type_depth
-                } else {
-                    type_depth + 1 // Different pointer, increment type_depth
-                };
-                self.format_struct(struct_, f, format_depth + 1, new_type_depth, visited)?
-            }
-            Peek::List(list) => {
-                // When recursing into a list, always increment format_depth
-                // Only increment type_depth if we're moving to a different address
-                let new_type_depth = if unsafe { list.data().as_ptr() } == ptr {
-                    type_depth // Same pointer, don't increment type_depth
-                } else {
-                    type_depth + 1 // Different pointer, increment type_depth
-                };
-                self.format_list(list, f, format_depth + 1, new_type_depth, visited)?
-            }
-            Peek::Map(map) => {
-                // When recursing into a map, always increment format_depth
-                // Only increment type_depth if we're moving to a different address
-                let new_type_depth = if unsafe { map.data().as_ptr() } == ptr {
-                    type_depth // Same pointer, don't increment type_depth
-                } else {
-                    type_depth + 1 // Different pointer, increment type_depth
-                };
-                self.format_map(map, f, format_depth + 1, new_type_depth, visited)?
+                    // Get the data pointer for cycle detection
+                    let ptr = unsafe { item.peek.data().as_ptr() };
+
+                    // Check for cycles - if we've seen this pointer before at a different type_depth
+                    if let Some(&ptr_type_depth) = visited.get(&ptr) {
+                        // If the current type_depth is significantly deeper than when we first saw this pointer,
+                        // we have a true cycle, not just a transparent wrapper
+                        if item.type_depth > ptr_type_depth + 1 {
+                            self.write_type_name(f, &item.peek)?;
+                            self.write_punctuation(f, " { ")?;
+                            self.write_comment(
+                                f,
+                                &format!(
+                                    "/* cycle detected at {:p} (first seen at type_depth {}) */",
+                                    ptr, ptr_type_depth
+                                ),
+                            )?;
+                            self.write_punctuation(f, " }")?;
+                            continue;
+                        }
+                    } else {
+                        // First time seeing this pointer, record its type_depth
+                        visited.insert(ptr, item.type_depth);
+                    }
+
+                    // Process based on the peek variant
+                    match item.peek {
+                        Peek::Value(value) => {
+                            self.format_value(value, f)?;
+                        }
+                        Peek::Struct(struct_) => {
+                            // When recursing into a struct, always increment format_depth
+                            // Only increment type_depth if we're moving to a different address
+                            let new_type_depth = if unsafe { struct_.data().as_ptr() } == ptr {
+                                item.type_depth // Same pointer, don't increment type_depth
+                            } else {
+                                item.type_depth + 1 // Different pointer, increment type_depth
+                            };
+
+                            // Print the struct name
+                            self.write_type_name(f, &struct_)?;
+                            self.write_punctuation(f, " {")?;
+
+                            if struct_.field_count() == 0 {
+                                self.write_punctuation(f, " }")?;
+                                continue;
+                            }
+
+                            writeln!(f)?;
+
+                            // Push back the item with the next state to continue processing fields
+                            item.state = StackState::ProcessStructField { field_index: 0 };
+                            item.format_depth += 1;
+                            item.type_depth = new_type_depth;
+                            stack.push_back(item);
+                        }
+                        Peek::List(list) => {
+                            // When recursing into a list, always increment format_depth
+                            // Only increment type_depth if we're moving to a different address
+                            let new_type_depth = if unsafe { list.data().as_ptr() } == ptr {
+                                item.type_depth // Same pointer, don't increment type_depth
+                            } else {
+                                item.type_depth + 1 // Different pointer, increment type_depth
+                            };
+
+                            // Print the list name
+                            self.write_type_name(f, &list)?;
+                            self.write_punctuation(f, " [")?;
+                            writeln!(f)?;
+
+                            // Push back the item with the next state to continue processing list items
+                            item.state = StackState::ProcessListItem { item_index: 0 };
+                            item.format_depth += 1;
+                            item.type_depth = new_type_depth;
+                            stack.push_back(item);
+                        }
+                        Peek::Map(map) => {
+                            // Print the map name
+                            self.write_type_name(f, &map)?;
+                            self.write_punctuation(f, " {")?;
+                            writeln!(f)?;
+
+                            // Push back the item with the next state to continue processing map
+                            item.state = StackState::ProcessMapEntry;
+                            item.format_depth += 1;
+                            // When recursing into a map, always increment format_depth
+                            // Only increment type_depth if we're moving to a different address
+                            item.type_depth = if unsafe { map.data().as_ptr() } == ptr {
+                                item.type_depth // Same pointer, don't increment type_depth
+                            } else {
+                                item.type_depth + 1 // Different pointer, increment type_depth
+                            };
+                            stack.push_back(item);
+                        }
+                    }
+                }
+                StackState::ProcessStructField { field_index } => {
+                    if let Peek::Struct(struct_) = item.peek {
+                        let fields: Vec<_> = struct_.fields_with_metadata().collect();
+
+                        if field_index >= fields.len() {
+                            // All fields processed, write closing brace
+                            write!(
+                                f,
+                                "{:width$}{}",
+                                "",
+                                self.style_punctuation("}"),
+                                width = (item.format_depth - 1) * self.indent_size
+                            )?;
+                            continue;
+                        }
+
+                        let (_, field_name, field_value, flags) = &fields[field_index];
+
+                        // Indent
+                        write!(
+                            f,
+                            "{:width$}",
+                            "",
+                            width = item.format_depth * self.indent_size
+                        )?;
+
+                        // Field name
+                        self.write_field_name(f, field_name)?;
+                        self.write_punctuation(f, ": ")?;
+
+                        // Check if field is sensitive
+                        if flags.contains(facet_trait::FieldFlags::SENSITIVE) {
+                            // Field value is sensitive, use write_redacted
+                            self.write_redacted(f, "[REDACTED]")?;
+                            self.write_punctuation(f, ",")?;
+                            writeln!(f)?;
+
+                            // Process next field
+                            item.state = StackState::ProcessStructField {
+                                field_index: field_index + 1,
+                            };
+                            stack.push_back(item);
+                        } else {
+                            // Field value is not sensitive, format normally
+                            // Push back current item to continue after formatting field value
+                            item.state = StackState::ProcessStructField {
+                                field_index: field_index + 1,
+                            };
+                            let value_item = StackItem {
+                                peek: *field_value,
+                                format_depth: item.format_depth,
+                                type_depth: item.type_depth + 1,
+                                state: StackState::Finish,
+                            };
+                            stack.push_back(item);
+
+                            // Push field value to format first
+                            stack.push_back(value_item);
+                        }
+                    }
+                }
+                StackState::ProcessListItem { item_index } => {
+                    if let Peek::List(list) = item.peek {
+                        if item_index >= list.len() {
+                            // All items processed, write closing bracket
+                            write!(
+                                f,
+                                "{:width$}",
+                                "",
+                                width = (item.format_depth - 1) * self.indent_size
+                            )?;
+                            self.write_punctuation(f, "]")?;
+                            continue;
+                        }
+
+                        // Indent
+                        write!(
+                            f,
+                            "{:width$}",
+                            "",
+                            width = item.format_depth * self.indent_size
+                        )?;
+
+                        // Push back current item to continue after formatting list item
+                        item.state = StackState::ProcessListItem {
+                            item_index: item_index + 1,
+                        };
+                        let next_format_depth = item.format_depth;
+                        let next_type_depth = item.type_depth + 1;
+                        stack.push_back(item);
+
+                        // Push list item to format first
+                        let list_item = list.iter().nth(item_index).unwrap();
+                        stack.push_back(StackItem {
+                            peek: list_item,
+                            format_depth: next_format_depth,
+                            type_depth: next_type_depth,
+                            state: StackState::Finish,
+                        });
+                    }
+                }
+                StackState::ProcessMapEntry => {
+                    if let Peek::Map(map) = item.peek {
+                        // TODO: Implement proper map iteration when available in facet_peek
+
+                        // Indent
+                        write!(
+                            f,
+                            "{:width$}",
+                            "",
+                            width = item.format_depth * self.indent_size
+                        )?;
+                        write!(f, "{}", self.style_comment("/* Map contents */"))?;
+                        writeln!(f)?;
+
+                        // Closing brace with proper indentation
+                        write!(
+                            f,
+                            "{:width$}{}",
+                            "",
+                            self.style_punctuation("}"),
+                            width = (item.format_depth - 1) * self.indent_size
+                        )?;
+                    }
+                }
+                StackState::Finish => {
+                    // This state is reached after processing a field or list item
+                    // Add comma and newline for struct fields and list items
+                    self.write_punctuation(f, ",")?;
+                    writeln!(f)?;
+                }
             }
         }
 
