@@ -169,11 +169,12 @@ impl PrettyPrinter {
                         Peek::Struct(struct_) => {
                             // When recursing into a struct, always increment format_depth
                             // Only increment type_depth if we're moving to a different address
-                            let new_type_depth = if unsafe { struct_.data().as_ptr() } == ptr {
-                                item.type_depth // Same pointer, don't increment type_depth
-                            } else {
-                                item.type_depth + 1 // Different pointer, increment type_depth
-                            };
+                            let new_type_depth =
+                                if std::ptr::eq(unsafe { struct_.data().as_ptr() }, ptr) {
+                                    item.type_depth // Same pointer, don't increment type_depth
+                                } else {
+                                    item.type_depth + 1 // Different pointer, increment type_depth
+                                };
 
                             // Print the struct name
                             self.write_type_name(f, &struct_)?;
@@ -195,11 +196,12 @@ impl PrettyPrinter {
                         Peek::List(list) => {
                             // When recursing into a list, always increment format_depth
                             // Only increment type_depth if we're moving to a different address
-                            let new_type_depth = if unsafe { list.data().as_ptr() } == ptr {
-                                item.type_depth // Same pointer, don't increment type_depth
-                            } else {
-                                item.type_depth + 1 // Different pointer, increment type_depth
-                            };
+                            let new_type_depth =
+                                if std::ptr::eq(unsafe { list.data().as_ptr() }, ptr) {
+                                    item.type_depth // Same pointer, don't increment type_depth
+                                } else {
+                                    item.type_depth + 1 // Different pointer, increment type_depth
+                                };
 
                             // Print the list name
                             self.write_type_name(f, &list)?;
@@ -223,7 +225,7 @@ impl PrettyPrinter {
                             item.format_depth += 1;
                             // When recursing into a map, always increment format_depth
                             // Only increment type_depth if we're moving to a different address
-                            item.type_depth = if unsafe { map.data().as_ptr() } == ptr {
+                            item.type_depth = if std::ptr::eq(unsafe { map.data().as_ptr() }, ptr) {
                                 item.type_depth // Same pointer, don't increment type_depth
                             } else {
                                 item.type_depth + 1 // Different pointer, increment type_depth
