@@ -19,13 +19,13 @@ use log::trace;
 ///
 /// # Example
 /// ```
-/// # use facet_trait::Facet, ;
+/// # use facet_trait::Facet;
 /// # use facet_derive::Facet;
 /// # use facet_trait as facet;
 /// # #[derive(Facet)]
 /// # struct Person { name: String, age: u64 }
 /// let json = r#"{"name":"Alice","age":30}"#;
-/// let person: Person = facet_json::from_str(json).unwrap();
+/// let person: Person = facet_json_read::from_str(json).unwrap();
 /// ```
 pub fn from_str<T: Facet>(json: &str) -> Result<T, JsonParseErrorWithContext<'_>> {
     let (poke, _guard) = Poke::alloc::<T>();
