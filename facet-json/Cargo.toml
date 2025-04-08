@@ -8,8 +8,8 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-facet-json-read = { version = "0.1.0", path = "../facet-json-read", optional = true }
-facet-json-write = { version = "0.1.0", path = "../facet-json-write", optional = true }
+facet-json-read = { version = "0.1.3", path = "../facet-json-read", optional = true }
+facet-json-write = { version = "0.1.3", path = "../facet-json-write", optional = true }
 
 [features]
 read = ["dep:facet-json-read"]

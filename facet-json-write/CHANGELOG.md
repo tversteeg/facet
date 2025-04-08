@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3](https://github.com/facet-rs/facet/releases/tag/facet-json-write-v0.1.3) - 2025-04-08
+
+### Other
+
+- Less experimental now
+- non-exhaustive enums
+- Update
+- Update
+- Split json-read and json-write
+
 ## [0.1.0](https://github.com/facet-rs/facet/releases/tag/facet-json-write-v0.1.0) - 2025-04-08
 
 ### Other

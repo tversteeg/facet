@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/facet-rs/facet/compare/facet-types-v0.1.2...facet-types-v0.2.0) - 2025-04-08
+
+### Other
+
+- Run checks in Ci without std
+- facet-types is now no_std friendly :)
+- Less experimental now
+- non-exhaustive enums
+- Def is nonexhaustive too
+- close
+- more nonexhaustive
+- More builder pattern (valuevtable)
+- mapvtable and mapitervtable non_exhauastive
+- listvtable builder pattern + non exhaustive
+- more non-exhaustive stuff
+- Use builder pattern for Shape in tuples impl
+- make types non-exhaustive
+
 ## [0.1.2](https://github.com/facet-rs/facet/compare/facet-types-v0.1.1...facet-types-v0.1.2) - 2025-04-08
 
 ### Other

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3](https://github.com/facet-rs/facet/compare/facet-v0.1.2...facet-v0.1.3) - 2025-04-08
+
+### Other
+
+- More nostd
+- nostd facet-trait
+- facet-types is now no_std friendly :)
+- Less experimental now
+- woo almost everything is non-exhaustive
+
 ## [0.1.2](https://github.com/facet-rs/facet/compare/facet-v0.1.1...facet-v0.1.2) - 2025-04-08
 
 ### Other

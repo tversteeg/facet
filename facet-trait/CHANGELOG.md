@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3](https://github.com/facet-rs/facet/compare/facet-trait-v0.1.2...facet-trait-v0.1.3) - 2025-04-08
+
+### Other
+
+- Complete nostd
+- More nostd
+- nostd facet-trait
+- Less experimental now
+- woo almost everything is non-exhaustive
+- close
+- more nonexhaustive
+- More builder pattern (valuevtable)
+- mapvtable and mapitervtable non_exhauastive
+- listvtable builder pattern + non exhaustive
+- more non-exhaustive stuff
+- Use builder pattern for Shape in tuples impl
+
 ## [0.1.2](https://github.com/facet-rs/facet/compare/facet-trait-v0.1.1...facet-trait-v0.1.2) - 2025-04-08
 
 ### Other
