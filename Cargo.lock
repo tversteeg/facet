@@ -231,7 +231,7 @@ dependencies = [
 
 [[package]]
 name = "facet-json"
-version = "0.1.0"
+version = "0.1.3"
 dependencies = [
  "facet-json-read",
  "facet-json-write",
@@ -239,7 +239,7 @@ dependencies = [
 
 [[package]]
 name = "facet-json-read"
-version = "0.1.0"
+version = "0.1.3"
 dependencies = [
  "color-backtrace",
  "ctor",
@@ -252,7 +252,7 @@ dependencies = [
 
 [[package]]
 name = "facet-json-write"
-version = "0.1.0"
+version = "0.1.3"
 dependencies = [
  "color-backtrace",
  "ctor",
