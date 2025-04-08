@@ -8,7 +8,6 @@
 use core::alloc::Layout;
 use core::fmt;
 
-use facet_opaque::OpaqueUninit;
 use typeid::ConstTypeId;
 
 mod list;
@@ -218,8 +217,8 @@ impl Shape {
     /// Heap-allocate a value of this shape
     #[cfg(feature = "std")]
     #[inline]
-    pub fn allocate(&self) -> OpaqueUninit<'static> {
-        OpaqueUninit::new(unsafe { std::alloc::alloc(self.layout) })
+    pub fn allocate(&self) -> facet_opaque::OpaqueUninit<'static> {
+        facet_opaque::OpaqueUninit::new(unsafe { std::alloc::alloc(self.layout) })
     }
 }
 

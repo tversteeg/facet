@@ -4,6 +4,7 @@ quickcheck:
     just veryquickcheck
     just clippy
     just test
+    just nostd
     just doc-tests
 
 veryquickcheck:
@@ -12,6 +13,12 @@ veryquickcheck:
     just codegen-check
     just rustfmt
     just absolve
+
+nostd:
+    #!/usr/bin/env -S bash -euo pipefail
+    source .envrc
+    echo -e "\033[1;33m🧪 Checking without std...\033[0m"
+    cargo check --no-default-features -p facet-types
 
 ci:
     #!/usr/bin/env -S bash -euo pipefail
