@@ -12,5 +12,5 @@ categories = ["development-tools", "rust-patterns"]
 
 [dependencies]
 impls = "1.0.3"
-facet-opaque = { workspace = true }
-facet-types = { workspace = true }
+facet-opaque.workspace = true
+facet-types.workspace = true

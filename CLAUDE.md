@@ -18,3 +18,13 @@ Run `just quickcheck` to make sure that tests pass.
 DON'T FIX DIAGNOSTICS BY YOURSELF. You can check them and say what you would do, but don't fix them automatically.
 
 Don't keep going. Ask for the next thing to do.
+
+In crates like `facet-yaml`, `facet-json`, etc. — we cannot
+depend on `facet` directly. For tests to pass, we have to do:
+
+```rust
+use facet_derive::Facet;
+use facet_trait as facet;
+```
+
+On top. This makes the derive macro work.

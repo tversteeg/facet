@@ -11,8 +11,8 @@ keywords = ["reflection", "introspection", "builder", "facet"]
 categories = ["development-tools", "rust-patterns", "memory-management"]
 
 [dependencies]
-facet-peek = { workspace = true }
-facet-trait = { workspace = true }
+facet-peek.workspace = true
+facet-trait.workspace = true
 
 [dev-dependencies]
 color-backtrace = { version = "0.7.0", default-features = false, features = [
@@ -21,4 +21,4 @@ color-backtrace = { version = "0.7.0", default-features = false, features = [
 ctor = "0.4.1"
 owo-colors = "4.2.0"
 facet-derive.workspace = true
-facet-samplelibc = { workspace = true }
+facet-samplelibc.workspace = true

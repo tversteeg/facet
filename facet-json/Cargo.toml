@@ -12,8 +12,8 @@ rust-version.workspace = true
 
 [dependencies]
 log = "0.4.27"
-facet-trait = { workspace = true }
-facet-poke = { workspace = true }
+facet-trait.workspace = true
+facet-poke.workspace = true
 
 [dev-dependencies]
 color-backtrace = { version = "0.7.0", default-features = false, features = [

@@ -11,6 +11,6 @@ keywords = ["reflection", "traits"]
 categories = ["development-tools"]
 
 [dependencies]
-facet-opaque = { workspace = true }
-facet-spez = { workspace = true }
-facet-types = { workspace = true }
+facet-opaque.workspace = true
+facet-spez.workspace = true
+facet-types.workspace = true

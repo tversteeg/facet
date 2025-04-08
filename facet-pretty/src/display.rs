@@ -5,7 +5,7 @@ use std::fmt::{self, Display, Formatter};
 use crate::printer::PrettyPrinter;
 
 /// Display wrapper for any type that implements Facet
-pub struct PrettyDisplay<'a, T: facet_core::Facet> {
+pub struct PrettyDisplay<'a, T: Facet> {
     pub(crate) value: &'a T,
     pub(crate) printer: PrettyPrinter,
 }

@@ -1,7 +1,5 @@
 use super::*;
 use facet_derive::Facet;
-use facet_trait::Facet;
-
 use facet_trait as facet;
 
 #[derive(Debug, Facet, PartialEq)]

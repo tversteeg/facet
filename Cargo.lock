@@ -196,7 +196,7 @@ dependencies = [
 name = "facet-pretty"
 version = "0.1.0"
 dependencies = [
- "facet",
+ "facet-derive",
  "facet-trait",
 ]
 
@@ -239,11 +239,9 @@ dependencies = [
 name = "facet-yaml"
 version = "0.1.0"
 dependencies = [
- "facet",
  "facet-derive",
  "facet-poke",
  "facet-trait",
- "facet-types",
  "yaml-rust2",
 ]
 

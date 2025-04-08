@@ -7,8 +7,6 @@ use std::{
     str,
 };
 
-use facet_core::{Def, Facet, FieldFlags, Scalar, Shape, ShapeFn};
-
 use crate::{
     ansi,
     color::{self, ColorGenerator},
