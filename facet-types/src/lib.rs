@@ -115,6 +115,64 @@ impl Shape {
     pub fn write_type_name(&self, f: &mut fmt::Formatter<'_>, opts: TypeNameOpts) -> fmt::Result {
         (self.vtable.type_name)(f, opts)
     }
+
+    pub const fn builder() -> ShapeBuilder {
+        ShapeBuilder::new()
+    }
+}
+
+/// Builder for [`Shape`]
+pub struct ShapeBuilder {
+    layout: Option<Layout>,
+    vtable: Option<&'static ValueVTable>,
+    def: Option<Def>,
+}
+
+impl ShapeBuilder {
+    /// Creates a new `ShapeBuilder` with all fields set to `None`.
+    #[allow(clippy::new_without_default)]
+    pub const fn new() -> Self {
+        Self {
+            layout: None,
+            vtable: None,
+            def: None,
+        }
+    }
+
+    /// Sets the `layout` field of the `ShapeBuilder`.
+    #[inline]
+    pub const fn layout(mut self, layout: Layout) -> Self {
+        self.layout = Some(layout);
+        self
+    }
+
+    /// Sets the `vtable` field of the `ShapeBuilder`.
+    #[inline]
+    pub const fn vtable(mut self, vtable: &'static ValueVTable) -> Self {
+        self.vtable = Some(vtable);
+        self
+    }
+
+    /// Sets the `def` field of the `ShapeBuilder`.
+    #[inline]
+    pub const fn def(mut self, def: Def) -> Self {
+        self.def = Some(def);
+        self
+    }
+
+    /// Builds a `Shape` from the `ShapeBuilder`.
+    ///
+    /// # Panics
+    ///
+    /// This method will panic if any of the required fields (`layout`, `vtable`, or `def`) are `None`.
+    #[inline]
+    pub const fn build(self) -> Shape {
+        Shape {
+            layout: self.layout.unwrap(),
+            vtable: self.vtable.unwrap(),
+            def: self.def.unwrap(),
+        }
+    }
 }
 
 impl PartialEq for Shape {
