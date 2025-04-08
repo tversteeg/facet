@@ -1,6 +1,7 @@
-use facet::Facet;
-use facet_core::{Def, Field, FieldFlags, Shape, ShapeFn};
+use facet_derive::Facet;
 use facet_pretty::{FacetPretty, PrettyPrinter};
+use facet_trait as facet;
+use facet_trait::{Def, Facet, Field, FieldFlags, Shape};
 use std::{alloc::Layout, fmt::Write};
 
 #[derive(Debug, Facet)]
@@ -18,7 +19,7 @@ struct Address {
 }
 
 // Used for testing sensitive fields with a real structure
-#[derive(Debug)]
+#[derive(Debug, Facet)]
 struct TestSecrets {
     // these are only read through reflection
     #[allow(dead_code)]
@@ -26,36 +27,8 @@ struct TestSecrets {
 
     // these are only read through reflection
     #[allow(dead_code)]
+    #[facet(sensitive)]
     sensitive_field: String,
-}
-
-// Manual Facet implementation with a sensitive field
-impl Facet for TestSecrets {
-    fn shape() -> Shape {
-        Shape {
-            name: |f, _opts| write!(f, "TestSecrets"),
-            typeid: std::any::TypeId::of::<Self>(),
-            layout: Layout::new::<Self>(),
-            def: Def::Struct {
-                fields: &[
-                    Field {
-                        name: "normal_field",
-                        shape_fn: ShapeFn(String::shape),
-                        offset: 0,
-                        flags: FieldFlags::EMPTY,
-                    },
-                    Field {
-                        name: "sensitive_field",
-                        shape_fn: ShapeFn(String::shape),
-                        offset: std::mem::size_of::<String>(),
-                        flags: FieldFlags::SENSITIVE,
-                    },
-                ],
-            },
-            set_to_default: None,
-            drop_in_place: Some(|ptr| unsafe { std::ptr::drop_in_place(ptr as *mut Self) }),
-        }
-    }
 }
 
 #[test]

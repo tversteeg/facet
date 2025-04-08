@@ -1,6 +1,8 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
+mod process_struct;
+
 use unsynn::*;
 
 keyword! {
@@ -12,6 +14,8 @@ keyword! {
     KCrate = "crate";
     KConst = "const";
     KMut = "mut";
+    KFacet = "facet";
+    KSensitive = "sensitive";
 }
 
 operator! {
@@ -33,9 +37,20 @@ unsynn! {
     }
 
     enum AttributeInner {
+        Facet(FacetAttr),
         Doc(DocInner),
         Repr(ReprInner),
         Any(Vec<TokenTree>)
+    }
+
+    struct FacetAttr {
+        _facet: KFacet,
+        _sensitive: ParenthesisGroupContaining<FacetInner>,
+    }
+
+    enum FacetInner {
+        Sensitive(KSensitive),
+        Other(Vec<TokenTree>)
     }
 
     struct DocInner {
@@ -158,14 +173,14 @@ unsynn! {
 ///
 /// This uses unsynn, so it's light, but it _will_ choke on some Rust syntax because...
 /// there's a lot of Rust syntax.
-#[proc_macro_derive(Facet)]
+#[proc_macro_derive(Facet, attributes(facet))]
 pub fn facet_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = TokenStream::from(input);
     let mut i = input.to_token_iter();
 
     // Try to parse as struct first
     if let Ok(parsed) = i.parse::<Struct>() {
-        return process_struct(parsed);
+        return process_struct::process_struct(parsed);
     }
     let struct_tokens_left = i.count();
 
@@ -225,63 +240,6 @@ pub fn facet_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     // If we get here, couldn't parse as struct, tuple struct, or enum
     panic!("{msg}");
-}
-
-/// Processes a regular struct to implement Facet
-///
-/// Example input:
-/// ```rust
-/// struct Blah {
-///     foo: u32,
-///     bar: String,
-/// }
-/// ```
-fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
-    let struct_name = parsed.name.to_string();
-    let fields = parsed
-        .body
-        .content
-        .0
-        .iter()
-        .map(|field| field.value.name.to_string())
-        .collect::<Vec<String>>()
-        .join(", ");
-
-    // Generate dummy fields
-    let dummy_fields = parsed
-        .body
-        .content
-        .0
-        .iter()
-        .map(|field| field.value.name.to_string())
-        .map(|field| format!("{field}: Facet::DUMMY"))
-        .collect::<Vec<String>>()
-        .join(", ");
-
-    // Generate the impl
-    let output = format!(
-        r#"
-#[automatically_derived]
-unsafe impl facet::Facet for {struct_name} {{
-    const DUMMY: Self = Self {{
-        {dummy_fields}
-    }};
-    const SHAPE: &'static facet::Shape = &const {{
-        facet::Shape {{
-            layout: std::alloc::Layout::new::<Self>(),
-            vtable: facet::value_vtable!(
-                {struct_name},
-                |f, _opts| std::fmt::Write::write_str(f, "{struct_name}")
-            ),
-            def: facet::Def::Struct(facet::StructDef {{
-                fields: facet::struct_fields!({struct_name}, ({fields})),
-            }}),
-        }}
-    }};
-}}
-        "#
-    );
-    output.into_token_stream().into()
 }
 
 /// Processes a tuple struct to implement Facet

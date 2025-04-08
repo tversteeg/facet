@@ -7,10 +7,10 @@ use std::{
     str,
 };
 
-use crate::{
-    ansi,
-    color::{self, ColorGenerator},
-};
+use facet_peek::Peek;
+use facet_trait::Facet;
+
+use crate::{ansi, color::ColorGenerator};
 
 /// A formatter for pretty-printing Facet types
 pub struct PrettyPrinter {
@@ -63,11 +63,10 @@ impl PrettyPrinter {
 
     /// Pretty-print a value that implements Facet
     pub fn print<T: Facet>(&self, value: &T) {
-        let shape_fn = T::SHAPE_FN;
-        let ptr = value as *const T as *mut u8;
+        let peek = Peek::new(value);
 
         let mut output = String::new();
-        self.format_value(ptr, shape_fn, &mut output, 0, &mut HashSet::new())
+        self.format_peek(peek, &mut output, 0, &mut HashSet::<*const ()>::new())
             .expect("Formatting failed");
 
         print!("{}", output);
@@ -75,11 +74,10 @@ impl PrettyPrinter {
 
     /// Format a value to a string
     pub fn format<T: Facet>(&self, value: &T) -> String {
-        let shape_fn = T::SHAPE_FN;
-        let ptr = value as *const T as *mut u8;
+        let peek = Peek::new(value);
 
         let mut output = String::new();
-        self.format_value(ptr, shape_fn, &mut output, 0, &mut HashSet::new())
+        self.format_peek(peek, &mut output, 0, &mut HashSet::<*const ()>::new())
             .expect("Formatting failed");
 
         output
@@ -87,20 +85,17 @@ impl PrettyPrinter {
 
     /// Format a value to a formatter
     pub fn format_to<T: Facet>(&self, value: &T, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let shape_fn = T::SHAPE_FN;
-        let ptr = value as *const T as *mut u8;
-
-        self.format_value(ptr, shape_fn, f, 0, &mut HashSet::new())
+        let peek = Peek::new(value);
+        self.format_peek(peek, f, 0, &mut HashSet::<*const ()>::new())
     }
 
-    /// Internal method to format a value at a specific memory address
-    pub(crate) fn format_value(
+    /// Internal method to format a Peek value
+    pub(crate) fn format_peek<'mem>(
         &self,
-        ptr: *mut u8,
-        shape_fn: ShapeFn,
+        peek: Peek<'mem>,
         f: &mut impl Write,
         depth: usize,
-        visited: &mut HashSet<*mut u8>,
+        visited: &mut HashSet<*const ()>,
     ) -> fmt::Result {
         // Check if we've reached the maximum depth
         if let Some(max_depth) = self.max_depth {
@@ -111,91 +106,63 @@ impl PrettyPrinter {
             }
         }
 
-        // Get the shape
-        let shape = shape_fn.get();
+        // Get the data pointer for cycle detection
+        let ptr = unsafe { peek.data().as_ptr() as *const () };
 
-        // Generate a color for this shape
-        let mut hasher = DefaultHasher::new();
-        shape.typeid.hash(&mut hasher);
-        let hash = hasher.finish();
-        let color = self.color_generator.generate_color(hash);
-
-        // Format based on the shape's innards
-        match &shape.def {
-            Def::Scalar(scalar) => self.format_scalar(ptr, *scalar, f, color),
-            Def::Struct { fields } | Def::TupleStruct { fields } | Def::Tuple { fields } => {
-                self.format_struct(ptr, shape, fields, f, depth, visited)
-            }
-            Def::Map {
-                vtable: _,
-                value_shape,
-            } => self.format_hashmap(ptr, shape, *value_shape, f, depth, visited),
-            Def::List {
-                vtable: _,
-                item_shape,
-            } => self.format_array(ptr, shape, *item_shape, f, depth, visited),
-            Def::Transparent(inner_shape) => {
-                self.format_transparent(ptr, shape, *inner_shape, f, depth, visited)
-            }
-            Def::Enum { variants, repr: _ } => {
-                self.format_enum(ptr, shape, variants, f, depth, visited)
-            }
+        // Check for cycles
+        if !visited.insert(ptr) {
+            self.write_type_name(f, &peek)?;
+            self.write_punctuation(f, " { ")?;
+            self.write_comment(f, "/* cycle detected */")?;
+            self.write_punctuation(f, " }")?;
+            return Ok(());
         }
+
+        // Format based on the peek variant
+        match peek {
+            Peek::Value(value) => self.format_value(value, f)?,
+            Peek::Struct(struct_) => self.format_struct(struct_, f, depth, visited)?,
+            Peek::List(list) => self.format_list(list, f, depth, visited)?,
+            Peek::Map(map) => self.format_map(map, f, depth, visited)?,
+        }
+
+        // Remove from visited set when we're done
+        visited.remove(&ptr);
+
+        Ok(())
     }
 
     /// Format a scalar value
-    fn format_scalar(
-        &self,
-        ptr: *mut u8,
-        scalar: Scalar,
-        f: &mut impl Write,
-        color: color::RGB,
-    ) -> fmt::Result {
-        // Use Scalar::get_contents for safe access to the scalar value
-        let contents = unsafe { scalar.get_contents(ptr) };
+    fn format_value(&self, value: facet_peek::PeekValue, f: &mut impl Write) -> fmt::Result {
+        // Generate a color for this shape
+        let mut hasher = DefaultHasher::new();
+        value.shape().def.hash(&mut hasher);
+        let hash = hasher.finish();
+        let color = self.color_generator.generate_color(hash);
 
         // Apply color if needed
         if self.use_colors {
             color.write_fg(f)?;
         }
 
-        // Format the content
-        match contents {
-            ScalarContents::String(s) => {
-                write!(f, "\"")?;
-                for c in s.escape_debug() {
-                    write!(f, "{}", c)?;
+        // Display the value
+        struct DisplayWrapper<'a>(&'a facet_peek::PeekValue<'a>);
+
+        impl fmt::Display for DisplayWrapper<'_> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                if self.0.display(f).is_none() {
+                    // If the value doesn't implement Display, use Debug
+                    if self.0.debug(f).is_none() {
+                        // If the value doesn't implement Debug either, just show the type name
+                        self.0.type_name(f, facet_trait::TypeNameOpts::infinite())?;
+                        write!(f, "(⋯)")?;
+                    }
                 }
-                write!(f, "\"")?;
+                Ok(())
             }
-            ScalarContents::Bytes(b) => {
-                write!(f, "b\"")?;
-                for &byte in b.iter().take(64) {
-                    write!(f, "\\x{:02x}", byte)?;
-                }
-                if b.len() > 64 {
-                    write!(f, "...")?;
-                }
-                write!(f, "\"")?;
-            }
-            ScalarContents::I8(v) => write!(f, "{}", v)?,
-            ScalarContents::I16(v) => write!(f, "{}", v)?,
-            ScalarContents::I32(v) => write!(f, "{}", v)?,
-            ScalarContents::I64(v) => write!(f, "{}", v)?,
-            ScalarContents::I128(v) => write!(f, "{}", v)?,
-            ScalarContents::U8(v) => write!(f, "{}", v)?,
-            ScalarContents::U16(v) => write!(f, "{}", v)?,
-            ScalarContents::U32(v) => write!(f, "{}", v)?,
-            ScalarContents::U64(v) => write!(f, "{}", v)?,
-            ScalarContents::U128(v) => write!(f, "{}", v)?,
-            ScalarContents::F32(v) => write!(f, "{}", v)?,
-            ScalarContents::F64(v) => write!(f, "{}", v)?,
-            ScalarContents::Boolean(v) => write!(f, "{}", v)?,
-            ScalarContents::Nothing => write!(f, "()")?,
-            ScalarContents::Unknown => write!(f, "<unknown scalar>")?,
-            // Handle future variants that might be added to the non-exhaustive enum
-            _ => write!(f, "<unknown scalar type>")?,
         }
+
+        write!(f, "{}", DisplayWrapper(&value))?;
 
         // Reset color if needed
         if self.use_colors {
@@ -205,215 +172,143 @@ impl PrettyPrinter {
         Ok(())
     }
 
-    /// Format a struct
+    /// Format a struct value
     fn format_struct(
         &self,
-        ptr: *mut u8,
-        shape: Shape,
-        fields: &'static [facet_core::Field],
+        struct_: facet_peek::PeekStruct<'_>,
         f: &mut impl Write,
         depth: usize,
-        visited: &mut HashSet<*mut u8>,
+        visited: &mut HashSet<*const ()>,
     ) -> fmt::Result {
-        // Check for cycles
-        if !visited.insert(ptr) {
-            self.write_type_name(f, &shape.to_string())?;
-            self.write_punctuation(f, " { ")?;
-            self.write_comment(f, "/* cycle detected */")?;
-            self.write_punctuation(f, " }")?;
-            return Ok(());
-        }
-
         // Print the struct name
-        self.write_type_name(f, &shape.to_string())?;
+        self.write_type_name(f, &struct_)?;
         self.write_punctuation(f, " {")?;
 
-        if fields.is_empty() {
+        if struct_.field_count() == 0 {
             self.write_punctuation(f, " }")?;
-            visited.remove(&ptr);
             return Ok(());
         }
 
         writeln!(f)?;
 
         // Print each field
-        for field in fields {
+        for (_, field_name, field_value, flags) in struct_.fields_with_metadata() {
             // Indent
             write!(f, "{:width$}", "", width = (depth + 1) * self.indent_size)?;
 
             // Field name
-            write!(f, "{}: ", self.style_field_name(field.name))?;
+            self.write_field_name(f, field_name)?;
+            self.write_punctuation(f, ": ")?;
 
             // Check if field is sensitive
-            if field.flags.contains(FieldFlags::SENSITIVE) {
-                // For sensitive fields, display [REDACTED] instead of the actual value
-                write!(f, "{}", self.style_redacted("[REDACTED]"))?;
+            if flags.contains(facet_trait::FieldFlags::SENSITIVE) {
+                // Field value is sensitive, use write_redacted
+                self.write_redacted(f, "[REDACTED]")?;
             } else {
-                // Field value - compute the field address
-                let field_ptr = unsafe { ptr.add(field.offset) };
-                self.format_value(field_ptr, field.shape_fn, f, depth + 1, visited)?;
+                // Field value is not sensitive, format normally
+                self.format_peek(Peek::Value(field_value), f, depth + 1, visited)?;
             }
 
-            writeln!(f, "{}", self.style_punctuation(","))?;
+            self.write_punctuation(f, ",")?;
+            writeln!(f)?;
         }
 
         // Closing brace with proper indentation
-        write!(
-            f,
-            "{:width$}{}",
-            "",
-            self.style_punctuation("}"),
-            width = depth * self.indent_size
-        )?;
-
-        // Remove from visited set when we're done with this struct
-        visited.remove(&ptr);
-
-        Ok(())
+        write!(f, "{:width$}", "", width = depth * self.indent_size)?;
+        self.write_punctuation(f, "}")
     }
 
-    /// Format a HashMap
-    fn format_hashmap(
+    /// Format a list value
+    fn format_list(
         &self,
-        _ptr: *mut u8,
-        shape: Shape,
-        _value_shape: ShapeFn,
+        list: facet_peek::PeekList<'_>,
         f: &mut impl Write,
         depth: usize,
-        _visited: &mut HashSet<*mut u8>,
+        visited: &mut HashSet<*const ()>,
     ) -> fmt::Result {
-        // In a real implementation, we would need to iterate over the HashMap
-        // For now, we'll just print a placeholder
-
-        write!(f, "{}", self.style_type_name(&shape.to_string()))?;
-        write!(f, "{}", self.style_punctuation(" {"))?;
+        // Print the list name
+        self.write_type_name(f, &list)?;
+        self.write_punctuation(f, " [")?;
         writeln!(f)?;
 
-        // Indent
-        write!(f, "{:width$}", "", width = (depth + 1) * self.indent_size)?;
-        write!(f, "{}", self.style_comment("/* HashMap contents */"))?;
-        writeln!(f)?;
+        // Iterate through list items
+        for (index, item) in list.iter().enumerate() {
+            // Indent
+            write!(f, "{:width$}", "", width = (depth + 1) * self.indent_size)?;
 
-        // Closing brace with proper indentation
-        write!(
-            f,
-            "{:width$}{}",
-            "",
-            self.style_punctuation("}"),
-            width = depth * self.indent_size
-        )
-    }
+            // Format item
+            self.format_peek(Peek::Value(item), f, depth + 1, visited)?;
 
-    /// Format an array
-    fn format_array(
-        &self,
-        _ptr: *mut u8,
-        shape: Shape,
-        _elem_shape: ShapeFn,
-        f: &mut impl Write,
-        depth: usize,
-        _visited: &mut HashSet<*mut u8>,
-    ) -> fmt::Result {
-        // In a real implementation, we would need to iterate over the array
-        // For now, we'll just print a placeholder
-
-        write!(f, "{}", self.style_type_name(&shape.to_string()))?;
-        write!(f, "{}", self.style_punctuation(" ["))?;
-        writeln!(f)?;
-
-        // Indent
-        write!(f, "{:width$}", "", width = (depth + 1) * self.indent_size)?;
-        write!(f, "{}", self.style_comment("/* Array contents */"))?;
-        writeln!(f)?;
+            // Add comma if not the last item
+            if index < list.len() - 1 {
+                self.write_punctuation(f, ",")?;
+            }
+            writeln!(f)?;
+        }
 
         // Closing bracket with proper indentation
+        write!(f, "{:width$}", "", width = depth * self.indent_size)?;
+        self.write_punctuation(f, "]")
+    }
+
+    /// Format a map value
+    fn format_map(
+        &self,
+        map: facet_peek::PeekMap<'_>,
+        f: &mut impl Write,
+        depth: usize,
+        _visited: &mut HashSet<*const ()>,
+    ) -> fmt::Result {
+        // Print the map name
+        self.write_type_name(f, &map)?;
+        self.write_punctuation(f, " {")?;
+        writeln!(f)?;
+
+        // TODO: Implement proper map iteration when available in facet_peek
+
+        // Indent
+        write!(f, "{:width$}", "", width = (depth + 1) * self.indent_size)?;
+        write!(f, "{}", self.style_comment("/* Map contents */"))?;
+        writeln!(f)?;
+
+        // Closing brace with proper indentation
         write!(
             f,
             "{:width$}{}",
             "",
-            self.style_punctuation("]"),
+            self.style_punctuation("}"),
             width = depth * self.indent_size
         )
-    }
-
-    /// Format a transparent wrapper
-    fn format_transparent(
-        &self,
-        ptr: *mut u8,
-        shape: Shape,
-        inner_shape: ShapeFn,
-        f: &mut impl Write,
-        depth: usize,
-        visited: &mut HashSet<*mut u8>,
-    ) -> fmt::Result {
-        // Print the wrapper type name
-        write!(f, "{}", self.style_type_name(&shape.to_string()))?;
-        write!(f, "{}", self.style_punctuation("("))?;
-
-        // Format the inner value
-        self.format_value(ptr, inner_shape, f, depth, visited)?;
-
-        // Closing parenthesis
-        write!(f, "{}", self.style_punctuation(")"))
-    }
-
-    /// Formats an enum value
-    fn format_enum(
-        &self,
-        _ptr: *mut u8,
-        shape: Shape,
-        _variants: &'static [facet_core::Variant],
-        f: &mut impl Write,
-        depth: usize,
-        _visited: &mut HashSet<*mut u8>,
-    ) -> fmt::Result {
-        // Basic enum rendering for now - just show the type name with {} placeholder
-        // since we don't have runtime variant/field access implemented yet
-        self.write_type_name(f, &format!("{}", shape))?;
-        writeln!(f, " {{")?;
-        if let Some(max_depth) = self.max_depth {
-            if depth >= max_depth {
-                writeln!(
-                    f,
-                    "{}{}",
-                    " ".repeat(self.indent_size),
-                    self.style_comment("// Enum contents omitted due to depth limit")
-                )?;
-                writeln!(f, "}}")?;
-                return Ok(());
-            }
-        }
-        writeln!(
-            f,
-            "{}{}",
-            " ".repeat(self.indent_size),
-            self.style_comment(
-                format!(
-                    "// Enum with {} variants (variant access not yet implemented)",
-                    _variants.len()
-                )
-                .as_str()
-            )
-        )?;
-        writeln!(f, "}}")?;
-        Ok(())
     }
 
     /// Write styled type name to formatter
-    fn write_type_name<W: fmt::Write>(&self, f: &mut W, name: &str) -> fmt::Result {
+    fn write_type_name<W: fmt::Write>(
+        &self,
+        f: &mut W,
+        peek: &facet_peek::PeekValue,
+    ) -> fmt::Result {
+        struct TypeNameWriter<'a, 'b: 'a>(&'b facet_peek::PeekValue<'a>);
+
+        impl std::fmt::Display for TypeNameWriter<'_, '_> {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                self.0.type_name(f, facet_trait::TypeNameOpts::infinite())
+            }
+        }
+        let type_name = TypeNameWriter(peek);
+
         if self.use_colors {
             ansi::write_bold(f)?;
-            write!(f, "{}", name)?;
+            write!(f, "{}", type_name)?;
             ansi::write_reset(f)
         } else {
-            write!(f, "{}", name)
+            write!(f, "{}", type_name)
         }
     }
 
     /// Style a type name and return it as a string
-    fn style_type_name(&self, name: &str) -> String {
+    fn style_type_name(&self, peek: &facet_peek::PeekValue) -> String {
         let mut result = String::new();
-        self.write_type_name(&mut result, name).unwrap();
+        self.write_type_name(&mut result, peek).unwrap();
         result
     }
 
@@ -426,13 +321,6 @@ impl PrettyPrinter {
         } else {
             write!(f, "{}", name)
         }
-    }
-
-    /// Style a field name and return it as a string
-    fn style_field_name(&self, name: &str) -> String {
-        let mut result = String::new();
-        self.write_field_name(&mut result, name).unwrap();
-        result
     }
 
     /// Write styled punctuation to formatter
@@ -514,20 +402,5 @@ mod tests {
         assert_eq!(printer.indent_size, 4);
         assert_eq!(printer.max_depth, Some(3));
         assert!(!printer.use_colors);
-    }
-
-    #[test]
-    fn test_style_methods() {
-        let printer_with_colors = PrettyPrinter::new().with_colors(true);
-        let printer_without_colors = PrettyPrinter::new().with_colors(false);
-
-        // With colors
-        assert_eq!(
-            printer_with_colors.style_type_name("Test"),
-            format!("{}Test{}", ansi::BOLD, ansi::RESET)
-        );
-
-        // Without colors
-        assert_eq!(printer_without_colors.style_type_name("Test"), "Test");
     }
 }

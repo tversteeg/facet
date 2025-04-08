@@ -3,6 +3,7 @@
 use std::fmt::{self, Display, Formatter};
 
 use crate::printer::PrettyPrinter;
+use facet_trait::Facet;
 
 /// Display wrapper for any type that implements Facet
 pub struct PrettyDisplay<'a, T: Facet> {
@@ -10,14 +11,14 @@ pub struct PrettyDisplay<'a, T: Facet> {
     pub(crate) printer: PrettyPrinter,
 }
 
-impl<T: facet_core::Facet> Display for PrettyDisplay<'_, T> {
+impl<T: Facet> Display for PrettyDisplay<'_, T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         self.printer.format_to(self.value, f)
     }
 }
 
 /// Extension trait for Facet types to easily pretty-print them
-pub trait FacetPretty: facet_core::Facet {
+pub trait FacetPretty: Facet {
     /// Get a displayable wrapper that pretty-prints this value
     fn pretty(&self) -> PrettyDisplay<'_, Self>;
 
@@ -25,7 +26,7 @@ pub trait FacetPretty: facet_core::Facet {
     fn pretty_with(&self, printer: PrettyPrinter) -> PrettyDisplay<'_, Self>;
 }
 
-impl<T: facet_core::Facet> FacetPretty for T {
+impl<T: Facet> FacetPretty for T {
     fn pretty(&self) -> PrettyDisplay<'_, Self> {
         PrettyDisplay {
             value: self,
@@ -44,7 +45,10 @@ impl<T: facet_core::Facet> FacetPretty for T {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use facet::Facet;
+
+    use facet_derive::Facet;
+    use facet_trait as facet;
+
     use std::fmt::Write;
 
     // Use the derive macro from facet

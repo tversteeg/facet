@@ -1,5 +1,5 @@
-use facet::{Def, Facet, StructDef};
-use std::mem::offset_of;
+use facet::{Def, Facet, FieldFlags, StructDef};
+use std::{fmt::Debug, mem::offset_of};
 
 #[test]
 fn simple_struct() {
@@ -32,6 +32,34 @@ fn simple_struct() {
             assert_eq!(bar_field.shape.layout.size(), 24);
             assert_eq!(bar_field.shape.layout.align(), 8);
             assert_eq!(bar_field.offset, offset_of!(Blah, bar));
+        } else {
+            panic!("Expected Struct innards");
+        }
+    }
+}
+
+#[test]
+fn struct_with_sensitive_field() {
+    #[derive(Debug, Facet)]
+    struct Blah {
+        foo: u32,
+        #[facet(sensitive)]
+        bar: String,
+    }
+
+    if !cfg!(miri) {
+        let shape = Blah::SHAPE;
+
+        if let Def::Struct(StructDef { fields }) = shape.def {
+            let bar_field = &fields[1];
+            assert_eq!(bar_field.name, "bar");
+            match shape.def {
+                Def::Struct(struct_def) => {
+                    assert!(!struct_def.fields[0].flags.contains(FieldFlags::SENSITIVE));
+                    assert!(struct_def.fields[1].flags.contains(FieldFlags::SENSITIVE));
+                }
+                _ => panic!("Expected struct"),
+            }
         } else {
             panic!("Expected Struct innards");
         }

@@ -65,4 +65,30 @@ impl<'mem> PeekStruct<'mem> {
             Some((name, value))
         })
     }
+
+    /// Returns the struct definition
+    #[inline(always)]
+    pub fn def(&self) -> &StructDef {
+        &self.def
+    }
+
+    /// Iterates over all fields in this struct, providing index, name, value, and flags
+    #[inline]
+    pub fn fields_with_metadata(
+        &self,
+    ) -> impl Iterator<
+        Item = (
+            usize,
+            &'static str,
+            PeekValue<'mem>,
+            facet_trait::FieldFlags,
+        ),
+    > + '_ {
+        (0..self.field_count()).filter_map(|i| {
+            let name = self.field_name(i)?;
+            let value = self.field_value(i)?;
+            let flags = self.def.fields[i].flags;
+            Some((i, name, value, flags))
+        })
+    }
 }

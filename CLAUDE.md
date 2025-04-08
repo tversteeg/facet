@@ -27,4 +27,6 @@ use facet_derive::Facet;
 use facet_trait as facet;
 ```
 
-On top. This makes the derive macro work.
+On top. This makes the derive macro work. This is only for tests.
+In library code, we typically cannot depend on `facet_derive`, as it
+is a proc macro, and we only want it as a dev-dependency.

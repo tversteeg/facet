@@ -1,11 +1,46 @@
 use super::PeekValue;
 use facet_trait::ListDef;
 
+/// Iterator over a `PeekList`
+pub struct PeekListIter<'mem> {
+    list: &'mem PeekList<'mem>,
+    index: usize,
+    len: usize,
+}
+
+impl<'mem> Iterator for PeekListIter<'mem> {
+    type Item = PeekValue<'mem>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.len {
+            return None;
+        }
+        let item = self.list.get(self.index);
+        self.index += 1;
+        Some(item)
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.len.saturating_sub(self.index);
+        (remaining, Some(remaining))
+    }
+}
+
+impl<'mem> ExactSizeIterator for PeekListIter<'mem> {}
+
+impl<'mem> IntoIterator for &'mem PeekList<'mem> {
+    type Item = PeekValue<'mem>;
+    type IntoIter = PeekListIter<'mem>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
 /// Lets you read from a list (implements read-only [`ListVTable`] proxies)
 #[derive(Clone, Copy)]
 pub struct PeekList<'mem> {
     value: PeekValue<'mem>,
-    #[expect(dead_code)]
     def: ListDef,
 }
 
@@ -22,5 +57,35 @@ impl<'mem> PeekList<'mem> {
     /// Creates a new peek list
     pub fn new(value: PeekValue<'mem>, def: ListDef) -> Self {
         Self { value, def }
+    }
+
+    /// Get the length of the list
+    pub fn len(&self) -> usize {
+        unsafe { (self.def.vtable.len)(self.value.data()) }
+    }
+
+    /// Returns true if the list is empty
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Get an item from the list at the specified index
+    ///
+    /// # Panics
+    ///
+    /// Panics if the index is out of bounds
+    pub fn get(&self, index: usize) -> PeekValue<'mem> {
+        assert!(index < self.len(), "index out of bounds");
+        let item_ptr = unsafe { (self.def.vtable.get_item_ptr)(self.value.data(), index) };
+        PeekValue::new(item_ptr, self.def.t)
+    }
+
+    /// Returns an iterator over the list
+    pub fn iter(&'mem self) -> PeekListIter<'mem> {
+        PeekListIter {
+            list: self,
+            index: 0,
+            len: self.len(),
+        }
     }
 }

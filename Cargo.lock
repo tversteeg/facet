@@ -197,6 +197,7 @@ name = "facet-pretty"
 version = "0.1.0"
 dependencies = [
  "facet-derive",
+ "facet-peek",
  "facet-trait",
 ]
 

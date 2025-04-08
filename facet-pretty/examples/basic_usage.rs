@@ -1,4 +1,7 @@
-use facet::Facet;
+use facet_derive::Facet;
+use facet_trait as facet;
+use facet_trait::Facet;
+
 use facet_pretty::{FacetPretty, PrettyPrinter};
 
 #[derive(Debug, Facet)]
