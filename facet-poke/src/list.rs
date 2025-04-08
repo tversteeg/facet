@@ -48,6 +48,7 @@ impl<'mem> PokeListUninit<'mem> {
 }
 
 /// Allows poking a list (appending, etc.)
+#[derive(Clone)]
 pub struct PokeList<'mem> {
     data: Opaque<'mem>,
     #[allow(dead_code)]

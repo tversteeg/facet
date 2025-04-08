@@ -86,7 +86,7 @@ where
                     None
                 },
                 drop_in_place: Some(|value| unsafe {
-                    std::ptr::drop_in_place(value.as_mut_ptr::<[T; 1]>());
+                    std::ptr::drop_in_place(value.as_mut::<[T; 1]>());
                 }),
                 parse: None,
                 try_from: None,

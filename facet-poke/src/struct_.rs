@@ -4,13 +4,12 @@ use std::ptr::NonNull;
 use super::{Guard, ISet, PokeValue};
 
 /// Allows poking a struct (setting fields, etc.)
+#[derive(Clone)]
 pub struct PokeStruct<'mem> {
     data: OpaqueUninit<'mem>,
     shape: &'static Shape,
     def: StructDef,
-
     iset: ISet,
-    guard_for_build: Option<Guard>,
 }
 
 impl<'mem> PokeStruct<'mem> {
@@ -36,7 +35,6 @@ impl<'mem> PokeStruct<'mem> {
             iset: Default::default(),
             shape,
             def,
-            guard_for_build: None,
         }
     }
 
@@ -81,20 +79,23 @@ impl<'mem> PokeStruct<'mem> {
     /// This function will panic if:
     /// - Not all the fields have been initialized.
     /// - The generic type parameter T does not match the shape that this PokeStruct is building.
-    pub fn build<T: crate::Facet>(mut self, guard: Option<Guard>) -> T {
-        self.guard_for_build = guard;
-        self.assert_all_fields_initialized();
-        self.shape.assert_type::<T>();
-        if let Some(guard) = &self.guard_for_build {
+    pub fn build<T: crate::Facet>(self, guard: Option<Guard>) -> T {
+        let mut guard = guard;
+        let this = self;
+        // this changes drop order: guard must be dropped _after_ this.
+
+        this.assert_all_fields_initialized();
+        this.shape.assert_type::<T>();
+        if let Some(guard) = &guard {
             guard.shape.assert_type::<T>();
         }
 
         let result = unsafe {
-            let ptr = self.data.as_mut_ptr() as *const T;
+            let ptr = this.data.as_mut_ptr() as *const T;
             std::ptr::read(ptr)
         };
-        self.guard_for_build.take(); // dealloc
-        std::mem::forget(self);
+        guard.take(); // dealloc
+        std::mem::forget(this);
         result
     }
 
@@ -139,10 +140,7 @@ impl<'mem> PokeStruct<'mem> {
     }
 
     /// Gets a field, by name
-    pub fn field_by_name<'s>(
-        &'s mut self,
-        name: &str,
-    ) -> Result<(usize, crate::Poke<'s>), FieldError> {
+    pub fn field_by_name(&mut self, name: &str) -> Result<(usize, crate::Poke<'mem>), FieldError> {
         let index = self
             .def
             .fields
@@ -159,7 +157,7 @@ impl<'mem> PokeStruct<'mem> {
     /// Returns an error if:
     /// - The shape doesn't represent a struct.
     /// - The index is out of bounds.
-    pub fn field(&mut self, index: usize) -> Result<crate::Poke<'_>, FieldError> {
+    pub fn field(&mut self, index: usize) -> Result<crate::Poke<'mem>, FieldError> {
         if index >= self.def.fields.len() {
             return Err(FieldError::IndexOutOfBounds);
         }

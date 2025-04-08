@@ -17,9 +17,9 @@ impl<'mem> Iterator for PeekListIter<'mem> {
         if self.index >= self.len {
             return None;
         }
-        let item = self.list.get(self.index);
+        let item = self.list.item_at(self.index);
         self.index += 1;
-        Some(item)
+        item
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -76,10 +76,13 @@ impl<'mem> PeekList<'mem> {
     /// # Panics
     ///
     /// Panics if the index is out of bounds
-    pub fn get(&self, index: usize) -> Peek<'mem> {
-        assert!(index < self.len(), "index out of bounds");
+    pub fn item_at(&self, index: usize) -> Option<Peek<'mem>> {
+        if index >= self.len() {
+            return None;
+        }
+
         let item_ptr = unsafe { (self.def.vtable.get_item_ptr)(self.value.data(), index) };
-        unsafe { Peek::unchecked_new(item_ptr, self.def.t) }
+        Some(unsafe { Peek::unchecked_new(item_ptr, self.def.t) })
     }
 
     /// Returns an iterator over the list

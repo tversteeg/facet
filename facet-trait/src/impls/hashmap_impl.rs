@@ -4,7 +4,7 @@ use std::{
     hash::{Hash, RandomState},
 };
 
-use facet_opaque::OpaqueConst;
+use facet_opaque::{Opaque, OpaqueConst};
 
 use crate::{
     Def, Facet, MapDef, MapIterVTable, MapVTable, MarkerTraits, ScalarDef, Shape, ValueVTable,
@@ -124,7 +124,7 @@ where
                 None
             },
             drop_in_place: Some(|value| unsafe {
-                std::ptr::drop_in_place(value.as_mut_ptr::<HashMap<K, V>>());
+                std::ptr::drop_in_place(value.as_mut::<HashMap<K, V>>());
             }),
             parse: None,
             try_from: None,
@@ -137,7 +137,7 @@ where
                     Ok(uninit.write(Self::with_capacity_and_hasher(capacity, S::default())))
                 },
                 insert_fn: |ptr, key, value| unsafe {
-                    let map = ptr.as_mut_ptr::<HashMap<K, V>>();
+                    let map = ptr.as_mut::<HashMap<K, V>>();
                     let key = key.read::<K>();
                     let value = value.read::<V>();
                     map.insert(key, value);
@@ -159,13 +159,12 @@ where
                     let map = ptr.as_ref::<HashMap<K, V>>();
                     let keys: VecDeque<&K> = map.keys().collect();
                     let iter_state = Box::new(HashMapIterator { map: ptr, keys });
-                    OpaqueConst::new_unchecked(Box::into_raw(iter_state) as *mut u8)
+                    Opaque::new_unchecked(Box::into_raw(iter_state) as *mut u8)
                 },
-                iter_vtable_fn: MapIterVTable {
+                iter_vtable: MapIterVTable {
                     next: |iter_ptr| unsafe {
-                        let state = iter_ptr.as_mut_ptr::<HashMapIterator<'_, K>>();
+                        let state = iter_ptr.as_mut::<HashMapIterator<'_, K>>();
                         let map = state.map.as_ref::<HashMap<K, V>>();
-
                         while let Some(key) = state.keys.pop_front() {
                             if let Some(value) = map.get(key) {
                                 return Some((

@@ -80,7 +80,7 @@ where
                     None
                 },
                 drop_in_place: Some(|value| unsafe {
-                    std::ptr::drop_in_place(value.as_mut_ptr::<Vec<T>>());
+                    std::ptr::drop_in_place(value.as_mut::<Vec<T>>());
                 }),
                 parse: None,
                 try_from: None,
@@ -106,7 +106,7 @@ where
                         Ok(data.write(Self::with_capacity(capacity)))
                     },
                     push: |ptr, item| unsafe {
-                        let vec = ptr.as_mut_ptr::<Vec<T>>();
+                        let vec = ptr.as_mut::<Vec<T>>();
                         let item = item.read::<T>();
                         (*vec).push(item);
                     },

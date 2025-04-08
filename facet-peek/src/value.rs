@@ -208,7 +208,7 @@ impl<'mem> PeekValue<'mem> {
             if let Some(hash_fn) = self.shape.vtable.hash {
                 let hasher_opaque = Opaque::from_ref(hasher);
                 hash_fn(self.data, hasher_opaque, |opaque, bytes| {
-                    opaque.as_mut_ptr::<H>().write(bytes)
+                    opaque.as_mut::<H>().write(bytes)
                 });
                 true
             } else {

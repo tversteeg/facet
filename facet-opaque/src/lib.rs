@@ -188,7 +188,7 @@ impl<'mem> Opaque<'mem> {
     /// # Safety
     ///
     /// `T` must be the _actual_ iunderlying type. You're downcasting with no guardrails.
-    pub unsafe fn as_mut_ptr<'borrow: 'mem, T>(self) -> &'borrow mut T {
+    pub unsafe fn as_mut<'borrow: 'mem, T>(self) -> &'borrow mut T {
         unsafe { &mut *(self.0.as_ptr() as *mut T) }
     }
 
@@ -213,7 +213,7 @@ impl<'mem> Opaque<'mem> {
     /// `T` must be the actual underlying type of the pointed-to memory.
     /// The memory must be properly initialized and aligned for type `T`.
     pub unsafe fn read<T>(self) -> T {
-        unsafe { std::ptr::read(self.as_mut_ptr()) }
+        unsafe { std::ptr::read(self.as_mut()) }
     }
 
     /// Exposes [`std::ptr::drop_in_place`]
@@ -225,6 +225,6 @@ impl<'mem> Opaque<'mem> {
     /// After calling this function, the memory should not be accessed again
     /// until it is properly reinitialized.
     pub unsafe fn drop_in_place<T>(self) {
-        unsafe { std::ptr::drop_in_place(self.as_mut_ptr::<T>()) }
+        unsafe { std::ptr::drop_in_place(self.as_mut::<T>()) }
     }
 }

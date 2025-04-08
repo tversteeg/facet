@@ -49,7 +49,7 @@ pub type MapGetValuePtrFn = for<'map, 'key> unsafe fn(
 /// # Safety
 ///
 /// The `map` parameter must point to aligned, initialized memory of the correct type.
-pub type MapIterFn = for<'map> unsafe fn(map: OpaqueConst<'map>) -> OpaqueConst<'map>;
+pub type MapIterFn = for<'map> unsafe fn(map: OpaqueConst<'map>) -> Opaque<'map>;
 
 /// Get the next key-value pair from the iterator
 ///
@@ -98,5 +98,5 @@ pub struct MapVTable {
     pub iter_fn: MapIterFn,
 
     /// Virtual table for map iterator operations
-    pub iter_vtable_fn: MapIterVTable,
+    pub iter_vtable: MapIterVTable,
 }

@@ -44,6 +44,7 @@ impl<'mem> PokeMapUninit<'mem> {
 }
 
 /// Allows poking a map (inserting, etc.)
+#[derive(Clone)]
 pub struct PokeMap<'mem> {
     data: Opaque<'mem>,
     #[allow(dead_code)]
@@ -61,6 +62,12 @@ impl<'mem> PokeMap<'mem> {
     #[inline]
     pub(crate) unsafe fn new(data: Opaque<'mem>, shape: &'static Shape, def: MapDef) -> Self {
         Self { data, shape, def }
+    }
+
+    /// Get the shape of the map
+    #[inline(always)]
+    pub fn shape(&self) -> &'static Shape {
+        self.shape
     }
 
     /// Gets the vtable for the map
