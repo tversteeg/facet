@@ -1,8 +1,9 @@
 use facet_derive::Facet;
+use facet_trait::Facet;
+
 use facet_pretty::{FacetPretty, PrettyPrinter};
 use facet_trait as facet;
-use facet_trait::{Def, Facet, Field, FieldFlags, Shape};
-use std::{alloc::Layout, fmt::Write};
+use std::fmt::Write;
 
 #[derive(Debug, Facet)]
 struct Person {

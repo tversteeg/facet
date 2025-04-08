@@ -55,7 +55,12 @@ impl std::cmp::PartialOrd for PeekValue<'_> {
 
 impl<'mem> PeekValue<'mem> {
     /// Creates a new `PeekValue` instance.
-    pub(crate) fn new(data: OpaqueConst<'mem>, shape: &'static Shape) -> Self {
+    ///
+    /// # Safety
+    ///
+    /// `data` must be initialized and well-aligned, and point to a value
+    /// of the type described by `shape`.
+    pub(crate) unsafe fn unchecked_new(data: OpaqueConst<'mem>, shape: &'static Shape) -> Self {
         Self { data, shape }
     }
 

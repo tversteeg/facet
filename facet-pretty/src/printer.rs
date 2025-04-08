@@ -267,7 +267,7 @@ impl PrettyPrinter {
             } else {
                 // Field value is not sensitive, format normally
                 self.format_peek_internal(
-                    Peek::Value(field_value),
+                    field_value,
                     f,
                     format_depth + 1,
                     type_depth + 1,
@@ -309,13 +309,7 @@ impl PrettyPrinter {
             )?;
 
             // Format item
-            self.format_peek_internal(
-                Peek::Value(item),
-                f,
-                format_depth + 1,
-                type_depth + 1,
-                visited,
-            )?;
+            self.format_peek_internal(item, f, format_depth + 1, type_depth + 1, visited)?;
 
             // Add comma if not the last item
             if index < list.len() - 1 {

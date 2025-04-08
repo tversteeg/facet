@@ -1,3 +1,5 @@
+use crate::Peek;
+
 use super::PeekValue;
 use facet_trait::ListDef;
 
@@ -9,7 +11,7 @@ pub struct PeekListIter<'mem> {
 }
 
 impl<'mem> Iterator for PeekListIter<'mem> {
-    type Item = PeekValue<'mem>;
+    type Item = Peek<'mem>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.index >= self.len {
@@ -26,10 +28,10 @@ impl<'mem> Iterator for PeekListIter<'mem> {
     }
 }
 
-impl<'mem> ExactSizeIterator for PeekListIter<'mem> {}
+impl ExactSizeIterator for PeekListIter<'_> {}
 
 impl<'mem> IntoIterator for &'mem PeekList<'mem> {
-    type Item = PeekValue<'mem>;
+    type Item = Peek<'mem>;
     type IntoIter = PeekListIter<'mem>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -74,10 +76,10 @@ impl<'mem> PeekList<'mem> {
     /// # Panics
     ///
     /// Panics if the index is out of bounds
-    pub fn get(&self, index: usize) -> PeekValue<'mem> {
+    pub fn get(&self, index: usize) -> Peek<'mem> {
         assert!(index < self.len(), "index out of bounds");
         let item_ptr = unsafe { (self.def.vtable.get_item_ptr)(self.value.data(), index) };
-        PeekValue::new(item_ptr, self.def.t)
+        unsafe { Peek::unchecked_new(item_ptr, self.def.t) }
     }
 
     /// Returns an iterator over the list

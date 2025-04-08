@@ -54,7 +54,7 @@ pub fn to_json<W: Write>(peek: Peek<'_>, writer: &mut W, indent: bool) -> io::Re
                         write!(writer, " ")?;
                     }
 
-                    serialize_value(Peek::Value(field.1), writer, indent, level + 1)?;
+                    serialize_value(field.1, writer, indent, level + 1)?;
                 }
 
                 if !first && indent {
