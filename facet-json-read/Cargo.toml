@@ -6,6 +6,9 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
+description = "Provides JSON reading functionality for the Facet introspection library"
+keywords = ["facet", "json", "introspection", "reflection"]
+categories = ["development-tools", "parsing"]
 
 [dependencies]
 facet-poke.workspace = true

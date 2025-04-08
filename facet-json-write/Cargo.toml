@@ -6,6 +6,9 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
+description = "JSON writer implementation for the Facet introspection framework"
+keywords = ["facet", "json", "serialization", "introspection"]
+categories = ["development-tools", "encoding"]
 
 [dependencies]
 facet-poke.workspace = true
