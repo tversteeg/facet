@@ -46,7 +46,6 @@ unsafe impl facet::Facet for {struct_name} {{
                 fields: facet::struct_fields!({struct_name}, ({fields_str})),
             }}))
             .build()
-        }}
     }};
 }}
     "#
