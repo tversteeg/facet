@@ -19,7 +19,7 @@ use log::trace;
 ///
 /// # Example
 /// ```
-/// # use facet_trait::Facet;
+/// # use facet_trait::Facet, ;
 /// # use facet_derive::Facet;
 /// # use facet_trait as facet;
 /// # #[derive(Facet)]
@@ -68,6 +68,11 @@ fn deserialize_value<'input, 'mem>(
         StructField {
             ps: facet_poke::PokeStruct<'mem>,
             key: String,
+        },
+        // For handling operations after processing a struct field's value
+        AfterStructField {
+            ps: facet_poke::PokeStruct<'mem>,
+            index: usize,
         },
         // For finishing a list after processing its items
         FinishList {
@@ -231,25 +236,34 @@ fn deserialize_value<'input, 'mem>(
                     Ok((index, field_poke)) => {
                         trace!("Found field, it's at index: \x1b[1;33m{index}\x1b[0m");
 
+                        // After we process the field value, we need to handle post-processing
+                        stack.push_front(StackItem::AfterStructField {
+                            ps: ps.clone(),
+                            index,
+                        });
+
                         // Push the field value to be processed next
                         stack.push_front(StackItem::Value { poke: field_poke });
-
-                        // After processing the field value, we need to mark it as initialized
-                        // and potentially get the next field
-                        let next_key = parser.parse_object_key()?; // FIXME: this is wrong because we need to read the value before we can parse the next key.
-                        if let Some(next_key) = next_key {
-                            stack.push_front(StackItem::StructField {
-                                ps: ps.clone(),
-                                key: next_key,
-                            });
-                        }
-
-                        unsafe { ps.mark_initialized(index) };
                     }
                     Err(_) => {
                         trace!("No field named \x1b[1;36m{}\x1b[0m", key);
                         return Err(parser.make_error(JsonParseErrorKind::UnknownField(key)));
                     }
+                }
+            }
+            StackItem::AfterStructField { mut ps, index } => {
+                trace!("After processing struct field at index: \x1b[1;33m{index}\x1b[0m");
+
+                // Mark the field as initialized now that we've processed its value
+                unsafe { ps.mark_initialized(index) };
+
+                // Now it's the correct time to parse the next key, if there is one
+                let next_key = parser.parse_object_key()?;
+                if let Some(next_key) = next_key {
+                    stack.push_front(StackItem::StructField {
+                        ps: ps.clone(),
+                        key: next_key,
+                    });
                 }
             }
             StackItem::FinishStruct { ps } => {
