@@ -206,7 +206,7 @@ dependencies = [
 
 [[package]]
 name = "facet"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "facet-derive",
  "facet-spez",
@@ -223,10 +223,18 @@ dependencies = [
 
 [[package]]
 name = "facet-derive"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "facet-trait",
  "unsynn",
+]
+
+[[package]]
+name = "facet-json"
+version = "0.1.0"
+dependencies = [
+ "facet-json-read",
+ "facet-json-write",
 ]
 
 [[package]]
@@ -273,18 +281,18 @@ dependencies = [
 
 [[package]]
 name = "facet-opaque"
-version = "0.1.1"
+version = "0.1.2"
 
 [[package]]
 name = "facet-peek"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "facet-trait",
 ]
 
 [[package]]
 name = "facet-poke"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "color-backtrace",
  "ctor",
@@ -315,7 +323,7 @@ dependencies = [
 
 [[package]]
 name = "facet-spez"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "facet-opaque",
  "facet-types",
@@ -324,7 +332,7 @@ dependencies = [
 
 [[package]]
 name = "facet-trait"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "facet-opaque",
  "facet-spez",
@@ -333,7 +341,7 @@ dependencies = [
 
 [[package]]
 name = "facet-types"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "bitflags",
  "facet-opaque",

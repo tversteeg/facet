@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2](https://github.com/facet-rs/facet/compare/facet-v0.1.1...facet-v0.1.2) - 2025-04-08
+
+### Other
+
+- preparing for json tuples
+- Add support for sensitive fields
+- not using namespace runners for now
+- Fix links to other repos
+
 ## [3.1.1](https://github.com/facet-rs/facet/compare/facet-v3.1.0...facet-v3.1.1) - 2025-04-05
 
 ### Fixed

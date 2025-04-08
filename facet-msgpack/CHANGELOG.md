@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0](https://github.com/facet-rs/facet/releases/tag/facet-msgpack-v0.1.0) - 2025-04-08
+
+### Other
+
+- pretty printer is pretty
+- WIP pretty
+- not using namespace runners for now
+- formatting
+- msgpack missing docs
+- msgpack wip
+- Wow, msgpack works again
+- WIP msgpack
+- more docs
+- Regen all READMEs
+- docs updates
+- more shapely => facet renames
+- 0.1.0
+
 ## [3.1.0](https://github.com/facet-rs/facet/compare/facet-msgpack-v3.0.0...facet-msgpack-v3.1.0) - 2025-03-31
 
 ### Other

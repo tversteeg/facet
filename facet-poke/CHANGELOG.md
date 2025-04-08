@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2](https://github.com/facet-rs/facet/compare/facet-poke-v0.1.1...facet-poke-v0.1.2) - 2025-04-08
+
+### Other
+
+- preparing for json tuples
+- oh mh
+- clean up list/map
+- No cloning PokeStruct
+- wip json iterative
+- Fix indentation etc.
+- mhmhmh pretty is not doing its job
+- WIP pretty
+- not using namespace runners for now
+
 ## [3.1.1](https://github.com/facet-rs/facet/compare/facet-poke-v3.1.0...facet-poke-v3.1.1) - 2025-04-05
 
 ### Other

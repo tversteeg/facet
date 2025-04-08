@@ -2,7 +2,7 @@
 members = [
     "facet",
     "facet-codegen",
-    "facet-derive",
+    "facet-derive", "facet-json",
     "facet-json-read",
     "facet-json-write",
     "facet-msgpack",
@@ -27,13 +27,13 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/facet-rs/facet"
 
 [workspace.dependencies]
-facet = { version = "0.1.1", path = "facet" }
-facet-trait = { version = "0.1.1", path = "facet-trait" }
-facet-derive = { version = "0.1.1", path = "facet-derive" }
-facet-opaque = { version = "0.1.1", path = "facet-opaque" }
-facet-peek = { version = "0.1.1", path = "facet-peek" }
-facet-poke = { version = "0.1.1", path = "facet-poke" }
-facet-spez = { version = "0.1.1", path = "facet-spez" }
-facet-types = { version = "0.1.1", path = "facet-types" }
+facet = { version = "0.1.2", path = "facet" }
+facet-trait = { version = "0.1.2", path = "facet-trait" }
+facet-derive = { version = "0.1.2", path = "facet-derive" }
+facet-opaque = { version = "0.1.2", path = "facet-opaque" }
+facet-peek = { version = "0.1.2", path = "facet-peek" }
+facet-poke = { version = "0.1.2", path = "facet-poke" }
+facet-spez = { version = "0.1.2", path = "facet-spez" }
+facet-types = { version = "0.1.2", path = "facet-types" }
 facet-samplelibc = { version = "0.1.1", path = "facet-samplelibc" }
 unsynn = "0.0.25"

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0](https://github.com/facet-rs/facet/releases/tag/facet-yaml-v0.1.0) - 2025-04-08
+
+### Other
+
+- WIP pretty
+- Basic YAML support
+- wip YAML
+- not using namespace runners for now
+- Wow, msgpack works again
+- More READMEs
+- quicksave
+- more shapely => facet renames
+- 0.1.0
+
 ## [3.1.0](https://github.com/facet-rs/facet/compare/facet-yaml-v3.0.0...facet-yaml-v3.1.0) - 2025-03-31
 
 ### Other

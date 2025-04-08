@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0](https://github.com/facet-rs/facet/releases/tag/facet-pretty-v0.1.0) - 2025-04-08
+
+### Fixed
+
+- fix pretty printing tests with redacted field
+
+### Other
+
+- clippy fixes
+- Remove old code
+- hurray, the iterative approach works
+- wip iterative printer
+- Fix indentation etc.
+- pretty printer is pretty
+- mhmhmh pretty is not doing its job
+- Add support for sensitive fields
+- WIP pretty
+- wip facet-pretty
+- not using namespace runners for now
+- More READMEs
+- quicksave
+- more shapely => facet renames
+- 0.1.0
+
 ## [3.1.0](https://github.com/facet-rs/facet/compare/facet-pretty-v3.0.0...facet-pretty-v3.1.0) - 2025-03-31
 
 ### Added
