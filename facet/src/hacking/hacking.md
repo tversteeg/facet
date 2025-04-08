@@ -41,7 +41,7 @@ The specialization technique uses Rust's method resolution rules to our advantag
 For example, in our code:
 
 ```rust
-# use std::fmt::{self, Debug};
+# use core::fmt::{self, Debug};
 // Wrapper struct for the specialization trick
 struct Spez<T>(T);
 
@@ -96,7 +96,7 @@ For arrays like `[T; 1]`, we need to check if the inner type `T` implements `Par
 
 ```rust
 # use facet::{OpaqueConst, Shape, Facet};
-# use std::cmp::Ordering;
+# use core::cmp::Ordering;
 fn create_array_shape<T: Facet>() {
     let vtable = {
         // Implementation of partial_ord for arrays
@@ -140,7 +140,7 @@ For non-generic types, we use the `value_vtable` macro which leverages auto-dere
 #     ($type_name:ty) => {
 #         {
 #             // Other vtable fields would be here...
-            let partial_ord = if facet_spez::impls!($type_name: std::cmp::PartialOrd) {
+            let partial_ord = if facet_spez::impls!($type_name: core::cmp::PartialOrd) {
                 Some(|left: OpaqueConst, right: OpaqueConst| {
                     use facet_spez::*;
                     (&&Spez(unsafe { left.as_ref::<$type_name>() }))

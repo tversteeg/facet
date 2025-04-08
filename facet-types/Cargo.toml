@@ -14,3 +14,7 @@ categories = ["development-tools"]
 bitflags = "2.9.0"
 facet-opaque = { version = "0.1.2", path = "../facet-opaque" }
 typeid = "1.0.3"
+
+[features]
+default = ["std"]
+std = []

@@ -5,8 +5,8 @@
 
 // TODO: mark `non_exhaustive`, add `const fn` builder patterns
 
+use core::alloc::Layout;
 use core::fmt;
-use std::alloc::Layout;
 
 use facet_opaque::OpaqueUninit;
 use typeid::ConstTypeId;
@@ -185,8 +185,8 @@ impl PartialEq for Shape {
 
 impl Eq for Shape {}
 
-impl std::hash::Hash for Shape {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+impl core::hash::Hash for Shape {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.def.hash(state);
         self.layout.hash(state);
     }
@@ -208,14 +208,15 @@ impl Shape {
 }
 
 // Helper struct to format the name for display
-impl std::fmt::Display for Shape {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for Shape {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         (self.vtable.type_name)(f, TypeNameOpts::default())
     }
 }
 
 impl Shape {
     /// Heap-allocate a value of this shape
+    #[cfg(feature = "std")]
     #[inline]
     pub fn allocate(&self) -> OpaqueUninit<'static> {
         OpaqueUninit::new(unsafe { std::alloc::alloc(self.layout) })
@@ -243,10 +244,10 @@ pub enum FieldError {
     NotAStruct,
 }
 
-impl std::error::Error for FieldError {}
+impl core::error::Error for FieldError {}
 
-impl std::fmt::Display for FieldError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for FieldError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             FieldError::NoStaticFields => write!(f, "No static fields available"),
             FieldError::NoSuchStaticField => write!(f, "No such static field"),
@@ -335,7 +336,7 @@ pub struct Field {
     /// schema of the inner type
     pub shape: &'static Shape,
 
-    /// offset of the field in the struct (obtained through `std::mem::offset_of`)
+    /// offset of the field in the struct (obtained through `core::mem::offset_of`)
     pub offset: usize,
 
     /// flags for the field (e.g. sensitive, etc.)
@@ -426,8 +427,8 @@ impl Default for FieldFlags {
     }
 }
 
-impl std::fmt::Display for FieldFlags {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for FieldFlags {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         if self.is_empty() {
             return write!(f, "none");
         }

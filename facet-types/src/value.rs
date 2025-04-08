@@ -1,6 +1,6 @@
 use bitflags::bitflags;
+use core::cmp::Ordering;
 use facet_opaque::{Opaque, OpaqueConst, OpaqueUninit};
-use std::cmp::Ordering;
 
 use crate::Shape;
 
@@ -9,7 +9,7 @@ use crate::Shape;
 /// A function that formats the name of a type.
 ///
 /// This helps avoid allocations, and it takes options.
-pub type TypeNameFn = fn(f: &mut std::fmt::Formatter, opts: TypeNameOpts) -> std::fmt::Result;
+pub type TypeNameFn = fn(f: &mut core::fmt::Formatter, opts: TypeNameOpts) -> core::fmt::Result;
 
 /// Options for formatting the name of a type
 #[non_exhaustive]
@@ -127,7 +127,7 @@ pub type ParseFn =
     for<'mem> unsafe fn(s: &str, target: OpaqueUninit<'mem>) -> Result<Opaque<'mem>, ParseError>;
 
 /// Generates a [`ParseFn`] for a concrete type
-pub const fn parse_fn_for<T: std::str::FromStr>() -> Option<ParseFn> {
+pub const fn parse_fn_for<T: core::str::FromStr>() -> Option<ParseFn> {
     Some(|s: &str, target: OpaqueUninit<'_>| unsafe {
         match s.parse::<T>() {
             Ok(value) => Ok(target.write(value)),
@@ -144,15 +144,15 @@ pub enum ParseError {
     Generic(&'static str),
 }
 
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             ParseError::Generic(msg) => write!(f, "Parse failed: {}", msg),
         }
     }
 }
 
-impl std::error::Error for ParseError {}
+impl core::error::Error for ParseError {}
 
 /// Function to try converting from another type
 ///
@@ -183,8 +183,8 @@ pub enum TryFromError {
     },
 }
 
-impl std::fmt::Display for TryFromError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for TryFromError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             TryFromError::Generic(msg) => write!(f, "Conversion failed: {}", msg),
             TryFromError::Unimplemented(shape) => write!(
@@ -201,7 +201,7 @@ impl std::fmt::Display for TryFromError {
     }
 }
 
-impl std::error::Error for TryFromError {}
+impl core::error::Error for TryFromError {}
 
 //======== Comparison ========
 
@@ -273,7 +273,7 @@ pub type HashFn = for<'mem> unsafe fn(
 );
 
 /// Generates a [`HashFn`] for a concrete type
-pub const fn hash_fn_for<T: std::hash::Hash>() -> Option<HashFn> {
+pub const fn hash_fn_for<T: core::hash::Hash>() -> Option<HashFn> {
     Some(
         |value: OpaqueConst<'_>, hasher_this: Opaque<'_>, hasher_write_fn: HasherWriteFn| unsafe {
             let val = value.as_ref::<T>();
@@ -289,7 +289,7 @@ pub const fn hash_fn_for<T: std::hash::Hash>() -> Option<HashFn> {
 /// The `hasher_self` parameter must be a valid pointer to a hasher
 pub type HasherWriteFn = for<'mem> unsafe fn(hasher_self: Opaque<'mem>, bytes: &[u8]);
 
-/// Provides an implementation of [`std::hash::Hasher`] for a given hasher pointer and write function
+/// Provides an implementation of [`core::hash::Hasher`] for a given hasher pointer and write function
 ///
 /// See [`HashFn`] for more details on the parameters.
 ///
@@ -322,7 +322,7 @@ impl<'a> HasherProxy<'a> {
     }
 }
 
-impl std::hash::Hasher for HasherProxy<'_> {
+impl core::hash::Hasher for HasherProxy<'_> {
     fn finish(&self) -> u64 {
         unimplemented!("finish is not needed for this implementation")
     }
@@ -357,13 +357,15 @@ bitflags! {
 /// # Safety
 ///
 /// The `value` parameter must point to aligned, initialized memory of the correct type.
-pub type DisplayFn =
-    for<'mem> unsafe fn(value: OpaqueConst<'mem>, f: &mut std::fmt::Formatter) -> std::fmt::Result;
+pub type DisplayFn = for<'mem> unsafe fn(
+    value: OpaqueConst<'mem>,
+    f: &mut core::fmt::Formatter,
+) -> core::fmt::Result;
 
 /// Generates a [`DisplayFn`] for a concrete type
-pub const fn display_fn_for<T: std::fmt::Display>() -> Option<DisplayFn> {
+pub const fn display_fn_for<T: core::fmt::Display>() -> Option<DisplayFn> {
     Some(
-        |value: OpaqueConst<'_>, f: &mut std::fmt::Formatter| -> std::fmt::Result {
+        |value: OpaqueConst<'_>, f: &mut core::fmt::Formatter| -> core::fmt::Result {
             let val = unsafe { value.as_ref::<T>() };
             write!(f, "{val}")
         },
@@ -376,13 +378,15 @@ pub const fn display_fn_for<T: std::fmt::Display>() -> Option<DisplayFn> {
 /// # Safety
 ///
 /// The `value` parameter must point to aligned, initialized memory of the correct type.
-pub type DebugFn =
-    for<'mem> unsafe fn(value: OpaqueConst<'mem>, f: &mut std::fmt::Formatter) -> std::fmt::Result;
+pub type DebugFn = for<'mem> unsafe fn(
+    value: OpaqueConst<'mem>,
+    f: &mut core::fmt::Formatter,
+) -> core::fmt::Result;
 
 /// Generates a [`DebugFn`] for a concrete type
-pub const fn debug_fn_for<T: std::fmt::Debug>() -> Option<DebugFn> {
+pub const fn debug_fn_for<T: core::fmt::Debug>() -> Option<DebugFn> {
     Some(
-        |value: OpaqueConst<'_>, f: &mut std::fmt::Formatter| -> std::fmt::Result {
+        |value: OpaqueConst<'_>, f: &mut core::fmt::Formatter| -> core::fmt::Result {
             let val = unsafe { value.as_ref::<T>() };
             write!(f, "{val:?}")
         },

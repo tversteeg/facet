@@ -1,5 +1,5 @@
+use core::{fmt::Debug, mem::offset_of};
 use facet::{Def, Facet, FieldFlags, StructDef, StructKind};
-use std::{fmt::Debug, mem::offset_of};
 
 #[test]
 fn simple_struct() {
