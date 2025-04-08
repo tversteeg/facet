@@ -61,17 +61,6 @@ impl PrettyPrinter {
         self
     }
 
-    /// Pretty-print a value that implements Facet
-    pub fn print<T: Facet>(&self, value: &T) {
-        let peek = Peek::new(value);
-
-        let mut output = String::new();
-        self.format_peek_internal(peek, &mut output, 0, 0, &mut HashMap::new())
-            .expect("Formatting failed");
-
-        print!("{}", output);
-    }
-
     /// Format a value to a string
     pub fn format<T: Facet>(&self, value: &T) -> String {
         let peek = Peek::new(value);
@@ -95,14 +84,6 @@ impl PrettyPrinter {
         self.format_peek_internal(peek, &mut output, 0, 0, &mut HashMap::new())
             .expect("Formatting failed");
         output
-    }
-
-    /// Print a Peek value to stdout
-    pub fn print_peek(&self, peek: Peek<'_>) {
-        let mut output = String::new();
-        self.format_peek_internal(peek, &mut output, 0, 0, &mut HashMap::new())
-            .expect("Formatting failed");
-        print!("{}", output);
     }
 
     /// Internal method to format a Peek value
@@ -280,8 +261,13 @@ impl PrettyPrinter {
         }
 
         // Closing brace with proper indentation
-        write!(f, "{:width$}", "", width = format_depth * self.indent_size)?;
-        self.write_punctuation(f, "}")
+        write!(
+            f,
+            "{:width$}{}",
+            "",
+            self.style_punctuation("}"),
+            width = (format_depth - 1) * self.indent_size
+        )
     }
 
     /// Format a list value

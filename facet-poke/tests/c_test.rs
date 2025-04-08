@@ -6,11 +6,9 @@ fn test_sample_libc() {
     if !cfg!(miri) {
         let (data, shape) = facet_samplelibc::get_foo_and_shape();
         let peek = unsafe { Peek::unchecked_new(data.as_const(), shape) };
+        eprintln!("{}", facet_pretty::PrettyPrinter::new().format_peek(peek),);
         eprintln!("🔍 Display: {}", format!("{}", peek).bright_green());
         eprintln!("🐛 Debug: {}", format!("{:?}", peek).bright_blue());
-
-        eprint!("Pretty: ");
-        facet_pretty::PrettyPrinter::new().print_peek(peek);
 
         inspect(peek);
     }
