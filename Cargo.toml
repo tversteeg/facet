@@ -2,7 +2,8 @@
 members = [
     "facet",
     "facet-codegen",
-    "facet-derive", "facet-json",
+    "facet-derive",
+    "facet-json",
     "facet-json-read",
     "facet-json-write",
     "facet-msgpack",
