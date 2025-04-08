@@ -1,7 +1,9 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
+mod process_enum;
 mod process_struct;
+mod process_tuple_struct;
 
 use unsynn::*;
 
@@ -187,14 +189,14 @@ pub fn facet_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     // Try to parse as tuple struct
     i = input.to_token_iter(); // Reset iterator
     if let Ok(parsed) = i.parse::<TupleStruct>() {
-        return process_tuple_struct(parsed);
+        return process_tuple_struct::process_tuple_struct(parsed);
     }
     let tuple_struct_tokens_left = i.count();
 
     // Try to parse as enum
     i = input.to_token_iter(); // Reset iterator
     if let Ok(parsed) = i.parse::<Enum>() {
-        return process_enum(parsed);
+        return process_enum::process_enum(parsed);
     }
     let enum_tokens_left = i.count();
 
@@ -240,175 +242,6 @@ pub fn facet_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     // If we get here, couldn't parse as struct, tuple struct, or enum
     panic!("{msg}");
-}
-
-/// Processes a tuple struct to implement Facet
-///
-/// Example input:
-/// ```rust
-/// struct Point(f32, f32);
-/// ```
-fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStream {
-    let struct_name = parsed.name.to_string();
-
-    // Generate field names for tuple elements (0, 1, 2, etc.)
-    let fields = parsed
-        .body
-        .content
-        .0
-        .iter()
-        .enumerate()
-        .map(|(idx, _)| idx.to_string())
-        .collect::<Vec<String>>();
-
-    // Create the fields string for struct_fields! macro
-    let fields_str = fields.join(", ");
-
-    let dummy_fields = (0..parsed.body.content.0.len())
-        .map(|_| String::from("Facet::DUMMY"))
-        .collect::<Vec<String>>()
-        .join(", ");
-
-    // Generate the impl
-    let output = format!(
-        r#"
-#[automatically_derived]
-unsafe impl facet::Facet for {struct_name} {{
-    const DUMMY: Self = Self({dummy_fields});
-    const SHAPE: &'static facet::Shape = &const {{
-        facet::Shape {{
-            layout: std::alloc::Layout::new::<Self>(),
-            vtable: facet::value_vtable!(
-                {struct_name},
-                |f, _opts| std::fmt::Write::write_str(f, "{struct_name}")
-            ),
-            def: facet::Def::Struct(facet::StructDef {{
-                kind: facet::StructKind::TupleStruct,
-                fields: facet::struct_fields!({struct_name}, ({fields_str})),
-            }}),
-        }}
-    }};
-}}
-    "#
-    );
-    output.into_token_stream().into()
-}
-
-/// Processes an enum to implement Facet
-///
-/// Example input:
-/// ```rust
-/// #[repr(u8)]
-/// enum Color {
-///     Red,
-///     Green,
-///     Blue(u8, u8),
-///     Custom { r: u8, g: u8, b: u8 }
-/// }
-/// ```
-fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
-    let enum_name = parsed.name.to_string();
-
-    // Check for explicit repr attribute
-    let has_repr = parsed
-        .attributes
-        .iter()
-        .any(|attr| matches!(attr.body.content, AttributeInner::Repr(_)));
-
-    if !has_repr {
-        return r#"compile_error!("Enums must have an explicit representation (e.g. #[repr(u8)]) to be used with Facet")"#
-            .into_token_stream()
-            .into();
-    }
-
-    // Process each variant
-    let variants = parsed
-        .body
-        .content
-        .0
-        .iter()
-        .map(|var_like| match &var_like.value {
-            EnumVariantLike::Unit(unit) => {
-                let variant_name = unit.name.to_string();
-                format!("facet::enum_unit_variant!({enum_name}, {variant_name})")
-            }
-            EnumVariantLike::Tuple(tuple) => {
-                let variant_name = tuple.name.to_string();
-                let field_types = tuple
-                    ._paren
-                    .content
-                    .0
-                    .iter()
-                    .map(|field| field.value.typ.to_string())
-                    .collect::<Vec<String>>()
-                    .join(", ");
-
-                format!("facet::enum_tuple_variant!({enum_name}, {variant_name}, [{field_types}])")
-            }
-            EnumVariantLike::Struct(struct_var) => {
-                let variant_name = struct_var.name.to_string();
-                let fields = struct_var
-                    ._brace
-                    .content
-                    .0
-                    .iter()
-                    .map(|field| {
-                        let name = field.value.name.to_string();
-                        let typ = field.value.typ.to_string();
-                        format!("{name}: {typ}")
-                    })
-                    .collect::<Vec<String>>()
-                    .join(", ");
-
-                format!("facet::enum_struct_variant!({enum_name}, {variant_name}, {{{fields}}})")
-            }
-        })
-        .collect::<Vec<String>>()
-        .join(", ");
-
-    // Extract the repr type
-    let mut repr_type = "Default"; // Default fallback
-    for attr in &parsed.attributes {
-        if let AttributeInner::Repr(repr_attr) = &attr.body.content {
-            repr_type = match repr_attr.attr.content.to_string().as_str() {
-                "u8" => "U8",
-                "u16" => "U16",
-                "u32" => "U32",
-                "u64" => "U64",
-                "usize" => "USize",
-                "i8" => "I8",
-                "i16" => "I16",
-                "i32" => "I32",
-                "i64" => "I64",
-                "isize" => "ISize",
-                _ => "Default", // Unknown repr type
-            };
-            break;
-        }
-    }
-
-    // Generate the impl
-    let output = format!(
-        r#"
-#[automatically_derived]
-unsafe impl facet::Facet for {enum_name} {{
-    const SHAPE: &'static facet::Shape = &const {{
-        facet::Shape {{
-            layout: std::alloc::Layout::new::<Self>(),
-            vtable: facet::value_vtable!(
-                {enum_name},
-                |f, _opts| std::fmt::Write::write_str(f, "{enum_name}")
-            ),
-            def: facet::Def::Enum(facet::EnumDef {{
-                variants: facet::enum_variants!({enum_name}, [{variants}]),
-                repr: facet::EnumRepr::{repr_type},
-            }}),
-        }}
-    }};
-}}
-        "#
-    );
-    output.into_token_stream().into()
 }
 
 impl std::fmt::Display for Type {

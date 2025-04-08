@@ -48,8 +48,7 @@ pub struct PokeMap<'mem> {
     data: Opaque<'mem>,
     #[allow(dead_code)]
     shape: &'static Shape,
-    /// The definition of the map
-    pub def: MapDef,
+    def: MapDef,
 }
 
 impl<'mem> PokeMap<'mem> {
@@ -115,5 +114,11 @@ impl<'mem> PokeMap<'mem> {
     /// Takes ownership of this `PokeList` and returns the underlying data.
     pub fn build_in_place(self) -> Opaque<'mem> {
         self.data
+    }
+
+    /// Returns a reference to the `MapDef` of this `PokeMap`.
+    #[inline]
+    pub fn def(&self) -> &MapDef {
+        &self.def
     }
 }

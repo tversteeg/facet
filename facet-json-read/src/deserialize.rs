@@ -169,7 +169,7 @@ fn deserialize_value<'input, 'mem>(
                         if let Some(true) = has_element {
                             let item_shape = pl.def().t;
                             let item_data =
-                                OpaqueUninit::new(unsafe { std::alloc::alloc(shape.layout) });
+                                OpaqueUninit::new(unsafe { std::alloc::alloc(item_shape.layout) });
                             let item_poke = unsafe { Poke::unchecked_new(item_data, item_shape) };
 
                             stack.push_front(StackItem::FinishList { pl });
@@ -188,7 +188,7 @@ fn deserialize_value<'input, 'mem>(
                         });
 
                         if let Some(key) = first_key {
-                            let value_shape = pm.def.v;
+                            let value_shape = pm.def().v;
                             let value_data =
                                 OpaqueUninit::new(unsafe { std::alloc::alloc(value_shape.layout) });
                             let value_poke =
@@ -273,9 +273,11 @@ fn deserialize_value<'input, 'mem>(
                     StackItem::FinishList { pl } => pl,
                     _ => unreachable!(),
                 };
+                let item = unsafe { item.assume_init() };
                 unsafe {
-                    pl.push(item.assume_init());
+                    pl.push(item);
                 }
+                unsafe { std::alloc::dealloc(item.as_mut_byte_ptr(), pl.def().t.layout) };
 
                 let has_next = parser.parse_array_element()?;
                 if let Some(true) = has_next {
@@ -301,14 +303,16 @@ fn deserialize_value<'input, 'mem>(
                     _ => unreachable!(),
                 };
                 let key_data = Opaque::from_ref(&mut key);
+                let value = unsafe { value.assume_init() };
                 unsafe {
-                    pm.insert(key_data, value.assume_init());
+                    pm.insert(key_data, value);
                 }
                 std::mem::forget(key); // key has been moved out of
+                unsafe { std::alloc::dealloc(value.as_mut_byte_ptr(), pm.def().v.layout) };
 
                 let next_key = parser.parse_object_key()?;
                 if let Some(next_key) = next_key {
-                    let value_shape = pm.def.v;
+                    let value_shape = pm.def().v;
                     let value_data =
                         OpaqueUninit::new(unsafe { std::alloc::alloc(value_shape.layout) });
                     let value_poke = unsafe { Poke::unchecked_new(value_data, value_shape) };

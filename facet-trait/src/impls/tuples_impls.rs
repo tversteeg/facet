@@ -56,59 +56,63 @@ where
             write_type_name_list(f, opts, "(", ", ", ")", &[T0::SHAPE])
         }
 
-        Shape {
-            layout: Layout::new::<(T0,)>(),
-            vtable: &ValueVTable {
-                type_name: type_name::<T0>,
-                display: None,
-                debug: const {
-                    if Characteristic::Eq.all(&[T0::SHAPE]) {
-                        Some(|value, f| {
-                            let value = unsafe { value.as_ref::<(T0,)>() };
-                            write!(f, "(")?;
-                            unsafe {
-                                (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ")")
-                        })
-                    } else {
-                        None
+        Shape::builder()
+            .layout(Layout::new::<(T0,)>())
+            .vtable(
+                &const {
+                    ValueVTable {
+                        type_name: type_name::<T0>,
+                        display: None,
+                        debug: const {
+                            if Characteristic::Eq.all(&[T0::SHAPE]) {
+                                Some(|value, f| {
+                                    let value = unsafe { value.as_ref::<(T0,)>() };
+                                    write!(f, "(")?;
+                                    unsafe {
+                                        (T0::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.0),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ")")
+                                })
+                            } else {
+                                None
+                            }
+                        },
+                        default_in_place: None,
+                        clone_into: None,
+                        marker_traits: MarkerTraits::empty(),
+                        eq: if Characteristic::Eq.all(&[T0::SHAPE]) {
+                            Some(|a, b| {
+                                let a = unsafe { a.as_ref::<(T0,)>() };
+                                let b = unsafe { b.as_ref::<(T0,)>() };
+
+                                // Compare last element
+                                unsafe {
+                                    (T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.0),
+                                        OpaqueConst::from_ref(&b.0),
+                                    )
+                                }
+                            })
+                        } else {
+                            None
+                        },
+                        partial_ord: None,
+                        ord: None,
+                        hash: None,
+                        drop_in_place: None,
+                        parse: None,
+                        try_from: None,
                     }
                 },
-                default_in_place: None,
-                clone_into: None,
-                marker_traits: MarkerTraits::empty(),
-                eq: if Characteristic::Eq.all(&[T0::SHAPE]) {
-                    Some(|a, b| {
-                        let a = unsafe { a.as_ref::<(T0,)>() };
-                        let b = unsafe { b.as_ref::<(T0,)>() };
-
-                        // Compare last element
-                        unsafe {
-                            (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.0),
-                                OpaqueConst::from_ref(&b.0),
-                            )
-                        }
-                    })
-                } else {
-                    None
-                },
-                partial_ord: None,
-                ord: None,
-                hash: None,
-                drop_in_place: None,
-                parse: None,
-                try_from: None,
-            },
-            def: Def::Struct(StructDef {
+            )
+            .def(Def::Struct(StructDef {
                 kind: StructKind::Tuple,
                 fields: &const { [field!(0, (T0,),)] },
-            }),
-        }
+            }))
+            .build()
     };
 }
 unsafe impl<T0, T1> Facet for (T0, T1)
@@ -126,76 +130,80 @@ where
             write_type_name_list(f, opts, "(", ", ", ")", &[T0::SHAPE, T1::SHAPE])
         }
 
-        Shape {
-            layout: Layout::new::<(T0, T1)>(),
-            vtable: &ValueVTable {
-                type_name: type_name::<T0, T1>,
-                display: None,
-                debug: const {
-                    if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE]) {
-                        Some(|value, f| {
-                            let value = unsafe { value.as_ref::<(T0, T1)>() };
-                            write!(f, "(")?;
-                            unsafe {
-                                (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ")")
-                        })
-                    } else {
-                        None
+        Shape::builder()
+            .layout(Layout::new::<(T0, T1)>())
+            .vtable(
+                &const {
+                    ValueVTable {
+                        type_name: type_name::<T0, T1>,
+                        display: None,
+                        debug: const {
+                            if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE]) {
+                                Some(|value, f| {
+                                    let value = unsafe { value.as_ref::<(T0, T1)>() };
+                                    write!(f, "(")?;
+                                    unsafe {
+                                        (T0::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.0),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T1::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.1),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ")")
+                                })
+                            } else {
+                                None
+                            }
+                        },
+                        default_in_place: None,
+                        clone_into: None,
+                        marker_traits: MarkerTraits::empty(),
+                        eq: if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE]) {
+                            Some(|a, b| {
+                                let a = unsafe { a.as_ref::<(T0, T1)>() };
+                                let b = unsafe { b.as_ref::<(T0, T1)>() };
+
+                                // Compare element 0
+                                if !unsafe {
+                                    (T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.0),
+                                        OpaqueConst::from_ref(&b.0),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare last element
+                                unsafe {
+                                    (T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.1),
+                                        OpaqueConst::from_ref(&b.1),
+                                    )
+                                }
+                            })
+                        } else {
+                            None
+                        },
+                        partial_ord: None,
+                        ord: None,
+                        hash: None,
+                        drop_in_place: None,
+                        parse: None,
+                        try_from: None,
                     }
                 },
-                default_in_place: None,
-                clone_into: None,
-                marker_traits: MarkerTraits::empty(),
-                eq: if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE]) {
-                    Some(|a, b| {
-                        let a = unsafe { a.as_ref::<(T0, T1)>() };
-                        let b = unsafe { b.as_ref::<(T0, T1)>() };
-
-                        // Compare element 0
-                        if !unsafe {
-                            (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.0),
-                                OpaqueConst::from_ref(&b.0),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare last element
-                        unsafe {
-                            (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.1),
-                                OpaqueConst::from_ref(&b.1),
-                            )
-                        }
-                    })
-                } else {
-                    None
-                },
-                partial_ord: None,
-                ord: None,
-                hash: None,
-                drop_in_place: None,
-                parse: None,
-                try_from: None,
-            },
-            def: Def::Struct(StructDef {
+            )
+            .def(Def::Struct(StructDef {
                 kind: StructKind::Tuple,
                 fields: &const { [field!(0, (T0, T1,),), field!(1, (T0, T1,),)] },
-            }),
-        }
+            }))
+            .build()
     };
 }
 unsafe impl<T0, T1, T2> Facet for (T0, T1, T2)
@@ -215,89 +223,93 @@ where
             write_type_name_list(f, opts, "(", ", ", ")", &[T0::SHAPE, T1::SHAPE, T2::SHAPE])
         }
 
-        Shape {
-            layout: Layout::new::<(T0, T1, T2)>(),
-            vtable: &ValueVTable {
-                type_name: type_name::<T0, T1, T2>,
-                display: None,
-                debug: const {
-                    if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE, T2::SHAPE]) {
-                        Some(|value, f| {
-                            let value = unsafe { value.as_ref::<(T0, T1, T2)>() };
-                            write!(f, "(")?;
-                            unsafe {
-                                (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ")")
-                        })
-                    } else {
-                        None
+        Shape::builder()
+            .layout(Layout::new::<(T0, T1, T2)>())
+            .vtable(
+                &const {
+                    ValueVTable {
+                        type_name: type_name::<T0, T1, T2>,
+                        display: None,
+                        debug: const {
+                            if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE, T2::SHAPE]) {
+                                Some(|value, f| {
+                                    let value = unsafe { value.as_ref::<(T0, T1, T2)>() };
+                                    write!(f, "(")?;
+                                    unsafe {
+                                        (T0::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.0),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T1::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.1),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T2::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.2),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ")")
+                                })
+                            } else {
+                                None
+                            }
+                        },
+                        default_in_place: None,
+                        clone_into: None,
+                        marker_traits: MarkerTraits::empty(),
+                        eq: if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE, T2::SHAPE]) {
+                            Some(|a, b| {
+                                let a = unsafe { a.as_ref::<(T0, T1, T2)>() };
+                                let b = unsafe { b.as_ref::<(T0, T1, T2)>() };
+
+                                // Compare element 0
+                                if !unsafe {
+                                    (T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.0),
+                                        OpaqueConst::from_ref(&b.0),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 1
+                                if !unsafe {
+                                    (T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.1),
+                                        OpaqueConst::from_ref(&b.1),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare last element
+                                unsafe {
+                                    (T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.2),
+                                        OpaqueConst::from_ref(&b.2),
+                                    )
+                                }
+                            })
+                        } else {
+                            None
+                        },
+                        partial_ord: None,
+                        ord: None,
+                        hash: None,
+                        drop_in_place: None,
+                        parse: None,
+                        try_from: None,
                     }
                 },
-                default_in_place: None,
-                clone_into: None,
-                marker_traits: MarkerTraits::empty(),
-                eq: if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE, T2::SHAPE]) {
-                    Some(|a, b| {
-                        let a = unsafe { a.as_ref::<(T0, T1, T2)>() };
-                        let b = unsafe { b.as_ref::<(T0, T1, T2)>() };
-
-                        // Compare element 0
-                        if !unsafe {
-                            (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.0),
-                                OpaqueConst::from_ref(&b.0),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 1
-                        if !unsafe {
-                            (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.1),
-                                OpaqueConst::from_ref(&b.1),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare last element
-                        unsafe {
-                            (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.2),
-                                OpaqueConst::from_ref(&b.2),
-                            )
-                        }
-                    })
-                } else {
-                    None
-                },
-                partial_ord: None,
-                ord: None,
-                hash: None,
-                drop_in_place: None,
-                parse: None,
-                try_from: None,
-            },
-            def: Def::Struct(StructDef {
+            )
+            .def(Def::Struct(StructDef {
                 kind: StructKind::Tuple,
                 fields: &const {
                     [
@@ -306,8 +318,8 @@ where
                         field!(2, (T0, T1, T2,),),
                     ]
                 },
-            }),
-        }
+            }))
+            .build()
     };
 }
 unsafe impl<T0, T1, T2, T3> Facet for (T0, T1, T2, T3)
@@ -336,106 +348,112 @@ where
             )
         }
 
-        Shape {
-            layout: Layout::new::<(T0, T1, T2, T3)>(),
-            vtable: &ValueVTable {
-                type_name: type_name::<T0, T1, T2, T3>,
-                display: None,
-                debug: const {
-                    if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE, T2::SHAPE, T3::SHAPE]) {
-                        Some(|value, f| {
-                            let value = unsafe { value.as_ref::<(T0, T1, T2, T3)>() };
-                            write!(f, "(")?;
-                            unsafe {
-                                (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ")")
-                        })
-                    } else {
-                        None
+        Shape::builder()
+            .layout(Layout::new::<(T0, T1, T2, T3)>())
+            .vtable(
+                &const {
+                    ValueVTable {
+                        type_name: type_name::<T0, T1, T2, T3>,
+                        display: None,
+                        debug: const {
+                            if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE, T2::SHAPE, T3::SHAPE])
+                            {
+                                Some(|value, f| {
+                                    let value = unsafe { value.as_ref::<(T0, T1, T2, T3)>() };
+                                    write!(f, "(")?;
+                                    unsafe {
+                                        (T0::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.0),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T1::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.1),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T2::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.2),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T3::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.3),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ")")
+                                })
+                            } else {
+                                None
+                            }
+                        },
+                        default_in_place: None,
+                        clone_into: None,
+                        marker_traits: MarkerTraits::empty(),
+                        eq: if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE, T2::SHAPE, T3::SHAPE])
+                        {
+                            Some(|a, b| {
+                                let a = unsafe { a.as_ref::<(T0, T1, T2, T3)>() };
+                                let b = unsafe { b.as_ref::<(T0, T1, T2, T3)>() };
+
+                                // Compare element 0
+                                if !unsafe {
+                                    (T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.0),
+                                        OpaqueConst::from_ref(&b.0),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 1
+                                if !unsafe {
+                                    (T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.1),
+                                        OpaqueConst::from_ref(&b.1),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 2
+                                if !unsafe {
+                                    (T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.2),
+                                        OpaqueConst::from_ref(&b.2),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare last element
+                                unsafe {
+                                    (T3::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.3),
+                                        OpaqueConst::from_ref(&b.3),
+                                    )
+                                }
+                            })
+                        } else {
+                            None
+                        },
+                        partial_ord: None,
+                        ord: None,
+                        hash: None,
+                        drop_in_place: None,
+                        parse: None,
+                        try_from: None,
                     }
                 },
-                default_in_place: None,
-                clone_into: None,
-                marker_traits: MarkerTraits::empty(),
-                eq: if Characteristic::Eq.all(&[T0::SHAPE, T1::SHAPE, T2::SHAPE, T3::SHAPE]) {
-                    Some(|a, b| {
-                        let a = unsafe { a.as_ref::<(T0, T1, T2, T3)>() };
-                        let b = unsafe { b.as_ref::<(T0, T1, T2, T3)>() };
-
-                        // Compare element 0
-                        if !unsafe {
-                            (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.0),
-                                OpaqueConst::from_ref(&b.0),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 1
-                        if !unsafe {
-                            (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.1),
-                                OpaqueConst::from_ref(&b.1),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 2
-                        if !unsafe {
-                            (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.2),
-                                OpaqueConst::from_ref(&b.2),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare last element
-                        unsafe {
-                            (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.3),
-                                OpaqueConst::from_ref(&b.3),
-                            )
-                        }
-                    })
-                } else {
-                    None
-                },
-                partial_ord: None,
-                ord: None,
-                hash: None,
-                drop_in_place: None,
-                parse: None,
-                try_from: None,
-            },
-            def: Def::Struct(StructDef {
+            )
+            .def(Def::Struct(StructDef {
                 kind: StructKind::Tuple,
                 fields: &const {
                     [
@@ -445,8 +463,8 @@ where
                         field!(3, (T0, T1, T2, T3,),),
                     ]
                 },
-            }),
-        }
+            }))
+            .build()
     };
 }
 unsafe impl<T0, T1, T2, T3, T4> Facet for (T0, T1, T2, T3, T4)
@@ -477,135 +495,139 @@ where
             )
         }
 
-        Shape {
-            layout: Layout::new::<(T0, T1, T2, T3, T4)>(),
-            vtable: &ValueVTable {
-                type_name: type_name::<T0, T1, T2, T3, T4>,
-                display: None,
-                debug: const {
-                    if Characteristic::Eq.all(&[
-                        T0::SHAPE,
-                        T1::SHAPE,
-                        T2::SHAPE,
-                        T3::SHAPE,
-                        T4::SHAPE,
-                    ]) {
-                        Some(|value, f| {
-                            let value = unsafe { value.as_ref::<(T0, T1, T2, T3, T4)>() };
-                            write!(f, "(")?;
-                            unsafe {
-                                (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.4),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ")")
-                        })
-                    } else {
-                        None
+        Shape::builder()
+            .layout(Layout::new::<(T0, T1, T2, T3, T4)>())
+            .vtable(
+                &const {
+                    ValueVTable {
+                        type_name: type_name::<T0, T1, T2, T3, T4>,
+                        display: None,
+                        debug: const {
+                            if Characteristic::Eq.all(&[
+                                T0::SHAPE,
+                                T1::SHAPE,
+                                T2::SHAPE,
+                                T3::SHAPE,
+                                T4::SHAPE,
+                            ]) {
+                                Some(|value, f| {
+                                    let value = unsafe { value.as_ref::<(T0, T1, T2, T3, T4)>() };
+                                    write!(f, "(")?;
+                                    unsafe {
+                                        (T0::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.0),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T1::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.1),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T2::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.2),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T3::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.3),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T4::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.4),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ")")
+                                })
+                            } else {
+                                None
+                            }
+                        },
+                        default_in_place: None,
+                        clone_into: None,
+                        marker_traits: MarkerTraits::empty(),
+                        eq: if Characteristic::Eq.all(&[
+                            T0::SHAPE,
+                            T1::SHAPE,
+                            T2::SHAPE,
+                            T3::SHAPE,
+                            T4::SHAPE,
+                        ]) {
+                            Some(|a, b| {
+                                let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4)>() };
+                                let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4)>() };
+
+                                // Compare element 0
+                                if !unsafe {
+                                    (T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.0),
+                                        OpaqueConst::from_ref(&b.0),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 1
+                                if !unsafe {
+                                    (T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.1),
+                                        OpaqueConst::from_ref(&b.1),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 2
+                                if !unsafe {
+                                    (T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.2),
+                                        OpaqueConst::from_ref(&b.2),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 3
+                                if !unsafe {
+                                    (T3::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.3),
+                                        OpaqueConst::from_ref(&b.3),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare last element
+                                unsafe {
+                                    (T4::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.4),
+                                        OpaqueConst::from_ref(&b.4),
+                                    )
+                                }
+                            })
+                        } else {
+                            None
+                        },
+                        partial_ord: None,
+                        ord: None,
+                        hash: None,
+                        drop_in_place: None,
+                        parse: None,
+                        try_from: None,
                     }
                 },
-                default_in_place: None,
-                clone_into: None,
-                marker_traits: MarkerTraits::empty(),
-                eq: if Characteristic::Eq.all(&[
-                    T0::SHAPE,
-                    T1::SHAPE,
-                    T2::SHAPE,
-                    T3::SHAPE,
-                    T4::SHAPE,
-                ]) {
-                    Some(|a, b| {
-                        let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4)>() };
-                        let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4)>() };
-
-                        // Compare element 0
-                        if !unsafe {
-                            (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.0),
-                                OpaqueConst::from_ref(&b.0),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 1
-                        if !unsafe {
-                            (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.1),
-                                OpaqueConst::from_ref(&b.1),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 2
-                        if !unsafe {
-                            (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.2),
-                                OpaqueConst::from_ref(&b.2),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 3
-                        if !unsafe {
-                            (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.3),
-                                OpaqueConst::from_ref(&b.3),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare last element
-                        unsafe {
-                            (T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.4),
-                                OpaqueConst::from_ref(&b.4),
-                            )
-                        }
-                    })
-                } else {
-                    None
-                },
-                partial_ord: None,
-                ord: None,
-                hash: None,
-                drop_in_place: None,
-                parse: None,
-                try_from: None,
-            },
-            def: Def::Struct(StructDef {
+            )
+            .def(Def::Struct(StructDef {
                 kind: StructKind::Tuple,
                 fields: &const {
                     [
@@ -616,8 +638,8 @@ where
                         field!(4, (T0, T1, T2, T3, T4,),),
                     ]
                 },
-            }),
-        }
+            }))
+            .build()
     };
 }
 unsafe impl<T0, T1, T2, T3, T4, T5> Facet for (T0, T1, T2, T3, T4, T5)
@@ -667,154 +689,159 @@ where
             )
         }
 
-        Shape {
-            layout: Layout::new::<(T0, T1, T2, T3, T4, T5)>(),
-            vtable: &ValueVTable {
-                type_name: type_name::<T0, T1, T2, T3, T4, T5>,
-                display: None,
-                debug: const {
-                    if Characteristic::Eq.all(&[
-                        T0::SHAPE,
-                        T1::SHAPE,
-                        T2::SHAPE,
-                        T3::SHAPE,
-                        T4::SHAPE,
-                        T5::SHAPE,
-                    ]) {
-                        Some(|value, f| {
-                            let value = unsafe { value.as_ref::<(T0, T1, T2, T3, T4, T5)>() };
-                            write!(f, "(")?;
-                            unsafe {
-                                (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.4),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.5),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ")")
-                        })
-                    } else {
-                        None
+        Shape::builder()
+            .layout(Layout::new::<(T0, T1, T2, T3, T4, T5)>())
+            .vtable(
+                &const {
+                    ValueVTable {
+                        type_name: type_name::<T0, T1, T2, T3, T4, T5>,
+                        display: None,
+                        debug: const {
+                            if Characteristic::Eq.all(&[
+                                T0::SHAPE,
+                                T1::SHAPE,
+                                T2::SHAPE,
+                                T3::SHAPE,
+                                T4::SHAPE,
+                                T5::SHAPE,
+                            ]) {
+                                Some(|value, f| {
+                                    let value =
+                                        unsafe { value.as_ref::<(T0, T1, T2, T3, T4, T5)>() };
+                                    write!(f, "(")?;
+                                    unsafe {
+                                        (T0::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.0),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T1::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.1),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T2::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.2),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T3::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.3),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T4::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.4),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T5::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.5),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ")")
+                                })
+                            } else {
+                                None
+                            }
+                        },
+                        default_in_place: None,
+                        clone_into: None,
+                        marker_traits: MarkerTraits::empty(),
+                        eq: if Characteristic::Eq.all(&[
+                            T0::SHAPE,
+                            T1::SHAPE,
+                            T2::SHAPE,
+                            T3::SHAPE,
+                            T4::SHAPE,
+                            T5::SHAPE,
+                        ]) {
+                            Some(|a, b| {
+                                let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5)>() };
+                                let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5)>() };
+
+                                // Compare element 0
+                                if !unsafe {
+                                    (T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.0),
+                                        OpaqueConst::from_ref(&b.0),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 1
+                                if !unsafe {
+                                    (T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.1),
+                                        OpaqueConst::from_ref(&b.1),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 2
+                                if !unsafe {
+                                    (T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.2),
+                                        OpaqueConst::from_ref(&b.2),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 3
+                                if !unsafe {
+                                    (T3::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.3),
+                                        OpaqueConst::from_ref(&b.3),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 4
+                                if !unsafe {
+                                    (T4::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.4),
+                                        OpaqueConst::from_ref(&b.4),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare last element
+                                unsafe {
+                                    (T5::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.5),
+                                        OpaqueConst::from_ref(&b.5),
+                                    )
+                                }
+                            })
+                        } else {
+                            None
+                        },
+                        partial_ord: None,
+                        ord: None,
+                        hash: None,
+                        drop_in_place: None,
+                        parse: None,
+                        try_from: None,
                     }
                 },
-                default_in_place: None,
-                clone_into: None,
-                marker_traits: MarkerTraits::empty(),
-                eq: if Characteristic::Eq.all(&[
-                    T0::SHAPE,
-                    T1::SHAPE,
-                    T2::SHAPE,
-                    T3::SHAPE,
-                    T4::SHAPE,
-                    T5::SHAPE,
-                ]) {
-                    Some(|a, b| {
-                        let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5)>() };
-                        let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5)>() };
-
-                        // Compare element 0
-                        if !unsafe {
-                            (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.0),
-                                OpaqueConst::from_ref(&b.0),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 1
-                        if !unsafe {
-                            (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.1),
-                                OpaqueConst::from_ref(&b.1),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 2
-                        if !unsafe {
-                            (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.2),
-                                OpaqueConst::from_ref(&b.2),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 3
-                        if !unsafe {
-                            (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.3),
-                                OpaqueConst::from_ref(&b.3),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 4
-                        if !unsafe {
-                            (T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.4),
-                                OpaqueConst::from_ref(&b.4),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare last element
-                        unsafe {
-                            (T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.5),
-                                OpaqueConst::from_ref(&b.5),
-                            )
-                        }
-                    })
-                } else {
-                    None
-                },
-                partial_ord: None,
-                ord: None,
-                hash: None,
-                drop_in_place: None,
-                parse: None,
-                try_from: None,
-            },
-            def: Def::Struct(StructDef {
+            )
+            .def(Def::Struct(StructDef {
                 kind: StructKind::Tuple,
                 fields: &const {
                     [
@@ -826,8 +853,8 @@ where
                         field!(5, (T0, T1, T2, T3, T4, T5,),),
                     ]
                 },
-            }),
-        }
+            }))
+            .build()
     };
 }
 unsafe impl<T0, T1, T2, T3, T4, T5, T6> Facet for (T0, T1, T2, T3, T4, T5, T6)
@@ -881,173 +908,178 @@ where
             )
         }
 
-        Shape {
-            layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6)>(),
-            vtable: &ValueVTable {
-                type_name: type_name::<T0, T1, T2, T3, T4, T5, T6>,
-                display: None,
-                debug: const {
-                    if Characteristic::Eq.all(&[
-                        T0::SHAPE,
-                        T1::SHAPE,
-                        T2::SHAPE,
-                        T3::SHAPE,
-                        T4::SHAPE,
-                        T5::SHAPE,
-                        T6::SHAPE,
-                    ]) {
-                        Some(|value, f| {
-                            let value = unsafe { value.as_ref::<(T0, T1, T2, T3, T4, T5, T6)>() };
-                            write!(f, "(")?;
-                            unsafe {
-                                (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.4),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.5),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.6),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ")")
-                        })
-                    } else {
-                        None
+        Shape::builder()
+            .layout(Layout::new::<(T0, T1, T2, T3, T4, T5, T6)>())
+            .vtable(
+                &const {
+                    ValueVTable {
+                        type_name: type_name::<T0, T1, T2, T3, T4, T5, T6>,
+                        display: None,
+                        debug: const {
+                            if Characteristic::Eq.all(&[
+                                T0::SHAPE,
+                                T1::SHAPE,
+                                T2::SHAPE,
+                                T3::SHAPE,
+                                T4::SHAPE,
+                                T5::SHAPE,
+                                T6::SHAPE,
+                            ]) {
+                                Some(|value, f| {
+                                    let value =
+                                        unsafe { value.as_ref::<(T0, T1, T2, T3, T4, T5, T6)>() };
+                                    write!(f, "(")?;
+                                    unsafe {
+                                        (T0::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.0),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T1::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.1),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T2::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.2),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T3::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.3),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T4::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.4),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T5::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.5),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T6::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.6),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ")")
+                                })
+                            } else {
+                                None
+                            }
+                        },
+                        default_in_place: None,
+                        clone_into: None,
+                        marker_traits: MarkerTraits::empty(),
+                        eq: if Characteristic::Eq.all(&[
+                            T0::SHAPE,
+                            T1::SHAPE,
+                            T2::SHAPE,
+                            T3::SHAPE,
+                            T4::SHAPE,
+                            T5::SHAPE,
+                            T6::SHAPE,
+                        ]) {
+                            Some(|a, b| {
+                                let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5, T6)>() };
+                                let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6)>() };
+
+                                // Compare element 0
+                                if !unsafe {
+                                    (T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.0),
+                                        OpaqueConst::from_ref(&b.0),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 1
+                                if !unsafe {
+                                    (T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.1),
+                                        OpaqueConst::from_ref(&b.1),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 2
+                                if !unsafe {
+                                    (T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.2),
+                                        OpaqueConst::from_ref(&b.2),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 3
+                                if !unsafe {
+                                    (T3::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.3),
+                                        OpaqueConst::from_ref(&b.3),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 4
+                                if !unsafe {
+                                    (T4::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.4),
+                                        OpaqueConst::from_ref(&b.4),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 5
+                                if !unsafe {
+                                    (T5::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.5),
+                                        OpaqueConst::from_ref(&b.5),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare last element
+                                unsafe {
+                                    (T6::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.6),
+                                        OpaqueConst::from_ref(&b.6),
+                                    )
+                                }
+                            })
+                        } else {
+                            None
+                        },
+                        partial_ord: None,
+                        ord: None,
+                        hash: None,
+                        drop_in_place: None,
+                        parse: None,
+                        try_from: None,
                     }
                 },
-                default_in_place: None,
-                clone_into: None,
-                marker_traits: MarkerTraits::empty(),
-                eq: if Characteristic::Eq.all(&[
-                    T0::SHAPE,
-                    T1::SHAPE,
-                    T2::SHAPE,
-                    T3::SHAPE,
-                    T4::SHAPE,
-                    T5::SHAPE,
-                    T6::SHAPE,
-                ]) {
-                    Some(|a, b| {
-                        let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5, T6)>() };
-                        let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6)>() };
-
-                        // Compare element 0
-                        if !unsafe {
-                            (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.0),
-                                OpaqueConst::from_ref(&b.0),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 1
-                        if !unsafe {
-                            (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.1),
-                                OpaqueConst::from_ref(&b.1),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 2
-                        if !unsafe {
-                            (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.2),
-                                OpaqueConst::from_ref(&b.2),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 3
-                        if !unsafe {
-                            (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.3),
-                                OpaqueConst::from_ref(&b.3),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 4
-                        if !unsafe {
-                            (T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.4),
-                                OpaqueConst::from_ref(&b.4),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 5
-                        if !unsafe {
-                            (T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.5),
-                                OpaqueConst::from_ref(&b.5),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare last element
-                        unsafe {
-                            (T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.6),
-                                OpaqueConst::from_ref(&b.6),
-                            )
-                        }
-                    })
-                } else {
-                    None
-                },
-                partial_ord: None,
-                ord: None,
-                hash: None,
-                drop_in_place: None,
-                parse: None,
-                try_from: None,
-            },
-            def: Def::Struct(StructDef {
+            )
+            .def(Def::Struct(StructDef {
                 kind: StructKind::Tuple,
                 fields: &const {
                     [
@@ -1060,8 +1092,8 @@ where
                         field!(6, (T0, T1, T2, T3, T4, T5, T6,),),
                     ]
                 },
-            }),
-        }
+            }))
+            .build()
     };
 }
 unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7> Facet for (T0, T1, T2, T3, T4, T5, T6, T7)
@@ -1119,193 +1151,198 @@ where
             )
         }
 
-        Shape {
-            layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7)>(),
-            vtable: &ValueVTable {
-                type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7>,
-                display: None,
-                debug: const {
-                    if Characteristic::Eq.all(&[
-                        T0::SHAPE,
-                        T1::SHAPE,
-                        T2::SHAPE,
-                        T3::SHAPE,
-                        T4::SHAPE,
-                        T5::SHAPE,
-                        T6::SHAPE,
-                        T7::SHAPE,
-                    ]) {
-                        Some(|value, f| {
-                            let value =
-                                unsafe { value.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7)>() };
-                            write!(f, "(")?;
-                            unsafe {
-                                (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.4),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.5),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.6),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T7::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.7),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ")")
-                        })
-                    } else {
-                        None
+        Shape::builder()
+            .layout(Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7)>())
+            .vtable(
+                &const {
+                    ValueVTable {
+                        type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7>,
+                        display: None,
+                        debug: const {
+                            if Characteristic::Eq.all(&[
+                                T0::SHAPE,
+                                T1::SHAPE,
+                                T2::SHAPE,
+                                T3::SHAPE,
+                                T4::SHAPE,
+                                T5::SHAPE,
+                                T6::SHAPE,
+                                T7::SHAPE,
+                            ]) {
+                                Some(|value, f| {
+                                    let value = unsafe {
+                                        value.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7)>()
+                                    };
+                                    write!(f, "(")?;
+                                    unsafe {
+                                        (T0::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.0),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T1::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.1),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T2::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.2),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T3::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.3),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T4::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.4),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T5::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.5),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T6::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.6),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T7::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.7),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ")")
+                                })
+                            } else {
+                                None
+                            }
+                        },
+                        default_in_place: None,
+                        clone_into: None,
+                        marker_traits: MarkerTraits::empty(),
+                        eq: if Characteristic::Eq.all(&[
+                            T0::SHAPE,
+                            T1::SHAPE,
+                            T2::SHAPE,
+                            T3::SHAPE,
+                            T4::SHAPE,
+                            T5::SHAPE,
+                            T6::SHAPE,
+                            T7::SHAPE,
+                        ]) {
+                            Some(|a, b| {
+                                let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7)>() };
+                                let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7)>() };
+
+                                // Compare element 0
+                                if !unsafe {
+                                    (T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.0),
+                                        OpaqueConst::from_ref(&b.0),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 1
+                                if !unsafe {
+                                    (T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.1),
+                                        OpaqueConst::from_ref(&b.1),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 2
+                                if !unsafe {
+                                    (T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.2),
+                                        OpaqueConst::from_ref(&b.2),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 3
+                                if !unsafe {
+                                    (T3::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.3),
+                                        OpaqueConst::from_ref(&b.3),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 4
+                                if !unsafe {
+                                    (T4::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.4),
+                                        OpaqueConst::from_ref(&b.4),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 5
+                                if !unsafe {
+                                    (T5::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.5),
+                                        OpaqueConst::from_ref(&b.5),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 6
+                                if !unsafe {
+                                    (T6::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.6),
+                                        OpaqueConst::from_ref(&b.6),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare last element
+                                unsafe {
+                                    (T7::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.7),
+                                        OpaqueConst::from_ref(&b.7),
+                                    )
+                                }
+                            })
+                        } else {
+                            None
+                        },
+                        partial_ord: None,
+                        ord: None,
+                        hash: None,
+                        drop_in_place: None,
+                        parse: None,
+                        try_from: None,
                     }
                 },
-                default_in_place: None,
-                clone_into: None,
-                marker_traits: MarkerTraits::empty(),
-                eq: if Characteristic::Eq.all(&[
-                    T0::SHAPE,
-                    T1::SHAPE,
-                    T2::SHAPE,
-                    T3::SHAPE,
-                    T4::SHAPE,
-                    T5::SHAPE,
-                    T6::SHAPE,
-                    T7::SHAPE,
-                ]) {
-                    Some(|a, b| {
-                        let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7)>() };
-                        let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7)>() };
-
-                        // Compare element 0
-                        if !unsafe {
-                            (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.0),
-                                OpaqueConst::from_ref(&b.0),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 1
-                        if !unsafe {
-                            (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.1),
-                                OpaqueConst::from_ref(&b.1),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 2
-                        if !unsafe {
-                            (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.2),
-                                OpaqueConst::from_ref(&b.2),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 3
-                        if !unsafe {
-                            (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.3),
-                                OpaqueConst::from_ref(&b.3),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 4
-                        if !unsafe {
-                            (T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.4),
-                                OpaqueConst::from_ref(&b.4),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 5
-                        if !unsafe {
-                            (T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.5),
-                                OpaqueConst::from_ref(&b.5),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 6
-                        if !unsafe {
-                            (T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.6),
-                                OpaqueConst::from_ref(&b.6),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare last element
-                        unsafe {
-                            (T7::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.7),
-                                OpaqueConst::from_ref(&b.7),
-                            )
-                        }
-                    })
-                } else {
-                    None
-                },
-                partial_ord: None,
-                ord: None,
-                hash: None,
-                drop_in_place: None,
-                parse: None,
-                try_from: None,
-            },
-            def: Def::Struct(StructDef {
+            )
+            .def(Def::Struct(StructDef {
                 kind: StructKind::Tuple,
                 fields: &const {
                     [
@@ -1319,8 +1356,8 @@ where
                         field!(7, (T0, T1, T2, T3, T4, T5, T6, T7,),),
                     ]
                 },
-            }),
-        }
+            }))
+            .build()
     };
 }
 unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8> Facet for (T0, T1, T2, T3, T4, T5, T6, T7, T8)
@@ -1382,212 +1419,219 @@ where
             )
         }
 
-        Shape {
-            layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>(),
-            vtable: &ValueVTable {
-                type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7, T8>,
-                display: None,
-                debug: const {
-                    if Characteristic::Eq.all(&[
-                        T0::SHAPE,
-                        T1::SHAPE,
-                        T2::SHAPE,
-                        T3::SHAPE,
-                        T4::SHAPE,
-                        T5::SHAPE,
-                        T6::SHAPE,
-                        T7::SHAPE,
-                        T8::SHAPE,
-                    ]) {
-                        Some(|value, f| {
-                            let value =
-                                unsafe { value.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>() };
-                            write!(f, "(")?;
-                            unsafe {
-                                (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.4),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.5),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.6),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T7::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.7),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T8::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.8),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ")")
-                        })
-                    } else {
-                        None
+        Shape::builder()
+            .layout(Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>())
+            .vtable(
+                &const {
+                    ValueVTable {
+                        type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7, T8>,
+                        display: None,
+                        debug: const {
+                            if Characteristic::Eq.all(&[
+                                T0::SHAPE,
+                                T1::SHAPE,
+                                T2::SHAPE,
+                                T3::SHAPE,
+                                T4::SHAPE,
+                                T5::SHAPE,
+                                T6::SHAPE,
+                                T7::SHAPE,
+                                T8::SHAPE,
+                            ]) {
+                                Some(|value, f| {
+                                    let value = unsafe {
+                                        value.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>()
+                                    };
+                                    write!(f, "(")?;
+                                    unsafe {
+                                        (T0::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.0),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T1::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.1),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T2::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.2),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T3::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.3),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T4::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.4),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T5::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.5),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T6::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.6),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T7::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.7),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T8::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.8),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ")")
+                                })
+                            } else {
+                                None
+                            }
+                        },
+                        default_in_place: None,
+                        clone_into: None,
+                        marker_traits: MarkerTraits::empty(),
+                        eq: if Characteristic::Eq.all(&[
+                            T0::SHAPE,
+                            T1::SHAPE,
+                            T2::SHAPE,
+                            T3::SHAPE,
+                            T4::SHAPE,
+                            T5::SHAPE,
+                            T6::SHAPE,
+                            T7::SHAPE,
+                            T8::SHAPE,
+                        ]) {
+                            Some(|a, b| {
+                                let a =
+                                    unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>() };
+                                let b =
+                                    unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>() };
+
+                                // Compare element 0
+                                if !unsafe {
+                                    (T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.0),
+                                        OpaqueConst::from_ref(&b.0),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 1
+                                if !unsafe {
+                                    (T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.1),
+                                        OpaqueConst::from_ref(&b.1),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 2
+                                if !unsafe {
+                                    (T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.2),
+                                        OpaqueConst::from_ref(&b.2),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 3
+                                if !unsafe {
+                                    (T3::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.3),
+                                        OpaqueConst::from_ref(&b.3),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 4
+                                if !unsafe {
+                                    (T4::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.4),
+                                        OpaqueConst::from_ref(&b.4),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 5
+                                if !unsafe {
+                                    (T5::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.5),
+                                        OpaqueConst::from_ref(&b.5),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 6
+                                if !unsafe {
+                                    (T6::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.6),
+                                        OpaqueConst::from_ref(&b.6),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 7
+                                if !unsafe {
+                                    (T7::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.7),
+                                        OpaqueConst::from_ref(&b.7),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare last element
+                                unsafe {
+                                    (T8::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.8),
+                                        OpaqueConst::from_ref(&b.8),
+                                    )
+                                }
+                            })
+                        } else {
+                            None
+                        },
+                        partial_ord: None,
+                        ord: None,
+                        hash: None,
+                        drop_in_place: None,
+                        parse: None,
+                        try_from: None,
                     }
                 },
-                default_in_place: None,
-                clone_into: None,
-                marker_traits: MarkerTraits::empty(),
-                eq: if Characteristic::Eq.all(&[
-                    T0::SHAPE,
-                    T1::SHAPE,
-                    T2::SHAPE,
-                    T3::SHAPE,
-                    T4::SHAPE,
-                    T5::SHAPE,
-                    T6::SHAPE,
-                    T7::SHAPE,
-                    T8::SHAPE,
-                ]) {
-                    Some(|a, b| {
-                        let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>() };
-                        let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>() };
-
-                        // Compare element 0
-                        if !unsafe {
-                            (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.0),
-                                OpaqueConst::from_ref(&b.0),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 1
-                        if !unsafe {
-                            (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.1),
-                                OpaqueConst::from_ref(&b.1),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 2
-                        if !unsafe {
-                            (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.2),
-                                OpaqueConst::from_ref(&b.2),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 3
-                        if !unsafe {
-                            (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.3),
-                                OpaqueConst::from_ref(&b.3),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 4
-                        if !unsafe {
-                            (T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.4),
-                                OpaqueConst::from_ref(&b.4),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 5
-                        if !unsafe {
-                            (T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.5),
-                                OpaqueConst::from_ref(&b.5),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 6
-                        if !unsafe {
-                            (T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.6),
-                                OpaqueConst::from_ref(&b.6),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 7
-                        if !unsafe {
-                            (T7::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.7),
-                                OpaqueConst::from_ref(&b.7),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare last element
-                        unsafe {
-                            (T8::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.8),
-                                OpaqueConst::from_ref(&b.8),
-                            )
-                        }
-                    })
-                } else {
-                    None
-                },
-                partial_ord: None,
-                ord: None,
-                hash: None,
-                drop_in_place: None,
-                parse: None,
-                try_from: None,
-            },
-            def: Def::Struct(StructDef {
+            )
+            .def(Def::Struct(StructDef {
                 kind: StructKind::Tuple,
                 fields: &const {
                     [
@@ -1602,8 +1646,8 @@ where
                         field!(8, (T0, T1, T2, T3, T4, T5, T6, T7, T8,),),
                     ]
                 },
-            }),
-        }
+            }))
+            .build()
     };
 }
 unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> Facet
@@ -1670,232 +1714,240 @@ where
             )
         }
 
-        Shape {
-            layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>(),
-            vtable: &ValueVTable {
-                type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>,
-                display: None,
-                debug: const {
-                    if Characteristic::Eq.all(&[
-                        T0::SHAPE,
-                        T1::SHAPE,
-                        T2::SHAPE,
-                        T3::SHAPE,
-                        T4::SHAPE,
-                        T5::SHAPE,
-                        T6::SHAPE,
-                        T7::SHAPE,
-                        T8::SHAPE,
-                        T9::SHAPE,
-                    ]) {
-                        Some(|value, f| {
-                            let value = unsafe {
-                                value.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>()
-                            };
-                            write!(f, "(")?;
-                            unsafe {
-                                (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.4),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.5),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.6),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T7::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.7),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T8::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.8),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T9::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.9),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ")")
-                        })
-                    } else {
-                        None
+        Shape::builder()
+            .layout(Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>())
+            .vtable(
+                &const {
+                    ValueVTable {
+                        type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+                        display: None,
+                        debug: const {
+                            if Characteristic::Eq.all(&[
+                                T0::SHAPE,
+                                T1::SHAPE,
+                                T2::SHAPE,
+                                T3::SHAPE,
+                                T4::SHAPE,
+                                T5::SHAPE,
+                                T6::SHAPE,
+                                T7::SHAPE,
+                                T8::SHAPE,
+                                T9::SHAPE,
+                            ]) {
+                                Some(|value, f| {
+                                    let value = unsafe {
+                                        value.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>()
+                                    };
+                                    write!(f, "(")?;
+                                    unsafe {
+                                        (T0::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.0),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T1::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.1),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T2::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.2),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T3::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.3),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T4::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.4),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T5::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.5),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T6::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.6),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T7::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.7),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T8::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.8),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T9::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.9),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ")")
+                                })
+                            } else {
+                                None
+                            }
+                        },
+                        default_in_place: None,
+                        clone_into: None,
+                        marker_traits: MarkerTraits::empty(),
+                        eq: if Characteristic::Eq.all(&[
+                            T0::SHAPE,
+                            T1::SHAPE,
+                            T2::SHAPE,
+                            T3::SHAPE,
+                            T4::SHAPE,
+                            T5::SHAPE,
+                            T6::SHAPE,
+                            T7::SHAPE,
+                            T8::SHAPE,
+                            T9::SHAPE,
+                        ]) {
+                            Some(|a, b| {
+                                let a = unsafe {
+                                    a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>()
+                                };
+                                let b = unsafe {
+                                    b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>()
+                                };
+
+                                // Compare element 0
+                                if !unsafe {
+                                    (T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.0),
+                                        OpaqueConst::from_ref(&b.0),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 1
+                                if !unsafe {
+                                    (T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.1),
+                                        OpaqueConst::from_ref(&b.1),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 2
+                                if !unsafe {
+                                    (T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.2),
+                                        OpaqueConst::from_ref(&b.2),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 3
+                                if !unsafe {
+                                    (T3::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.3),
+                                        OpaqueConst::from_ref(&b.3),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 4
+                                if !unsafe {
+                                    (T4::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.4),
+                                        OpaqueConst::from_ref(&b.4),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 5
+                                if !unsafe {
+                                    (T5::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.5),
+                                        OpaqueConst::from_ref(&b.5),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 6
+                                if !unsafe {
+                                    (T6::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.6),
+                                        OpaqueConst::from_ref(&b.6),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 7
+                                if !unsafe {
+                                    (T7::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.7),
+                                        OpaqueConst::from_ref(&b.7),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 8
+                                if !unsafe {
+                                    (T8::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.8),
+                                        OpaqueConst::from_ref(&b.8),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare last element
+                                unsafe {
+                                    (T9::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.9),
+                                        OpaqueConst::from_ref(&b.9),
+                                    )
+                                }
+                            })
+                        } else {
+                            None
+                        },
+                        partial_ord: None,
+                        ord: None,
+                        hash: None,
+                        drop_in_place: None,
+                        parse: None,
+                        try_from: None,
                     }
                 },
-                default_in_place: None,
-                clone_into: None,
-                marker_traits: MarkerTraits::empty(),
-                eq: if Characteristic::Eq.all(&[
-                    T0::SHAPE,
-                    T1::SHAPE,
-                    T2::SHAPE,
-                    T3::SHAPE,
-                    T4::SHAPE,
-                    T5::SHAPE,
-                    T6::SHAPE,
-                    T7::SHAPE,
-                    T8::SHAPE,
-                    T9::SHAPE,
-                ]) {
-                    Some(|a, b| {
-                        let a = unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>() };
-                        let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>() };
-
-                        // Compare element 0
-                        if !unsafe {
-                            (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.0),
-                                OpaqueConst::from_ref(&b.0),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 1
-                        if !unsafe {
-                            (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.1),
-                                OpaqueConst::from_ref(&b.1),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 2
-                        if !unsafe {
-                            (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.2),
-                                OpaqueConst::from_ref(&b.2),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 3
-                        if !unsafe {
-                            (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.3),
-                                OpaqueConst::from_ref(&b.3),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 4
-                        if !unsafe {
-                            (T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.4),
-                                OpaqueConst::from_ref(&b.4),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 5
-                        if !unsafe {
-                            (T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.5),
-                                OpaqueConst::from_ref(&b.5),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 6
-                        if !unsafe {
-                            (T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.6),
-                                OpaqueConst::from_ref(&b.6),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 7
-                        if !unsafe {
-                            (T7::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.7),
-                                OpaqueConst::from_ref(&b.7),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 8
-                        if !unsafe {
-                            (T8::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.8),
-                                OpaqueConst::from_ref(&b.8),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare last element
-                        unsafe {
-                            (T9::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.9),
-                                OpaqueConst::from_ref(&b.9),
-                            )
-                        }
-                    })
-                } else {
-                    None
-                },
-                partial_ord: None,
-                ord: None,
-                hash: None,
-                drop_in_place: None,
-                parse: None,
-                try_from: None,
-            },
-            def: Def::Struct(StructDef {
+            )
+            .def(Def::Struct(StructDef {
                 kind: StructKind::Tuple,
                 fields: &const {
                     [
@@ -1911,8 +1963,8 @@ where
                         field!(9, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9,),),
                     ]
                 },
-            }),
-        }
+            }))
+            .build()
     };
 }
 unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> Facet
@@ -1983,253 +2035,260 @@ where
             )
         }
 
-        Shape {
-            layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>(),
-            vtable: &ValueVTable {
-                type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>,
-                display: None,
-                debug: const {
-                    if Characteristic::Eq.all(&[
-                        T0::SHAPE,
-                        T1::SHAPE,
-                        T2::SHAPE,
-                        T3::SHAPE,
-                        T4::SHAPE,
-                        T5::SHAPE,
-                        T6::SHAPE,
-                        T7::SHAPE,
-                        T8::SHAPE,
-                        T9::SHAPE,
-                        T10::SHAPE,
-                    ]) {
-                        Some(|value, f| {
-                            let value = unsafe {
-                                value.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>()
-                            };
-                            write!(f, "(")?;
-                            unsafe {
-                                (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.4),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.5),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.6),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T7::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.7),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T8::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.8),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T9::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.9),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T10::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.10),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ")")
-                        })
-                    } else {
-                        None
+        Shape::builder()
+            .layout(Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>())
+            .vtable(
+                &const {
+                    ValueVTable {
+                        type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>,
+                        display: None,
+                        debug: const {
+                            if Characteristic::Eq.all(&[
+                                T0::SHAPE,
+                                T1::SHAPE,
+                                T2::SHAPE,
+                                T3::SHAPE,
+                                T4::SHAPE,
+                                T5::SHAPE,
+                                T6::SHAPE,
+                                T7::SHAPE,
+                                T8::SHAPE,
+                                T9::SHAPE,
+                                T10::SHAPE,
+                            ]) {
+                                Some(|value, f| {
+                                    let value = unsafe {
+                                        value.as_ref::<
+        (T0,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,)>()
+                                    };
+                                    write!(f, "(")?;
+                                    unsafe {
+                                        (T0::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.0),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T1::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.1),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T2::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.2),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T3::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.3),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T4::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.4),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T5::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.5),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T6::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.6),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T7::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.7),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T8::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.8),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T9::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.9),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T10::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.10),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ")")
+                                })
+                            } else {
+                                None
+                            }
+                        },
+                        default_in_place: None,
+                        clone_into: None,
+                        marker_traits: MarkerTraits::empty(),
+                        eq: if Characteristic::Eq.all(&[
+                            T0::SHAPE,
+                            T1::SHAPE,
+                            T2::SHAPE,
+                            T3::SHAPE,
+                            T4::SHAPE,
+                            T5::SHAPE,
+                            T6::SHAPE,
+                            T7::SHAPE,
+                            T8::SHAPE,
+                            T9::SHAPE,
+                            T10::SHAPE,
+                        ]) {
+                            Some(|a, b| {
+                                let a = unsafe {
+                                    a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>()
+                                };
+                                let b = unsafe {
+                                    b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>()
+                                };
+
+                                // Compare element 0
+                                if !unsafe {
+                                    (T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.0),
+                                        OpaqueConst::from_ref(&b.0),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 1
+                                if !unsafe {
+                                    (T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.1),
+                                        OpaqueConst::from_ref(&b.1),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 2
+                                if !unsafe {
+                                    (T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.2),
+                                        OpaqueConst::from_ref(&b.2),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 3
+                                if !unsafe {
+                                    (T3::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.3),
+                                        OpaqueConst::from_ref(&b.3),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 4
+                                if !unsafe {
+                                    (T4::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.4),
+                                        OpaqueConst::from_ref(&b.4),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 5
+                                if !unsafe {
+                                    (T5::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.5),
+                                        OpaqueConst::from_ref(&b.5),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 6
+                                if !unsafe {
+                                    (T6::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.6),
+                                        OpaqueConst::from_ref(&b.6),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 7
+                                if !unsafe {
+                                    (T7::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.7),
+                                        OpaqueConst::from_ref(&b.7),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 8
+                                if !unsafe {
+                                    (T8::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.8),
+                                        OpaqueConst::from_ref(&b.8),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 9
+                                if !unsafe {
+                                    (T9::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.9),
+                                        OpaqueConst::from_ref(&b.9),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare last element
+                                unsafe {
+                                    (T10::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.10),
+                                        OpaqueConst::from_ref(&b.10),
+                                    )
+                                }
+                            })
+                        } else {
+                            None
+                        },
+                        partial_ord: None,
+                        ord: None,
+                        hash: None,
+                        drop_in_place: None,
+                        parse: None,
+                        try_from: None,
                     }
                 },
-                default_in_place: None,
-                clone_into: None,
-                marker_traits: MarkerTraits::empty(),
-                eq: if Characteristic::Eq.all(&[
-                    T0::SHAPE,
-                    T1::SHAPE,
-                    T2::SHAPE,
-                    T3::SHAPE,
-                    T4::SHAPE,
-                    T5::SHAPE,
-                    T6::SHAPE,
-                    T7::SHAPE,
-                    T8::SHAPE,
-                    T9::SHAPE,
-                    T10::SHAPE,
-                ]) {
-                    Some(|a, b| {
-                        let a =
-                            unsafe { a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>() };
-                        let b =
-                            unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>() };
-
-                        // Compare element 0
-                        if !unsafe {
-                            (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.0),
-                                OpaqueConst::from_ref(&b.0),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 1
-                        if !unsafe {
-                            (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.1),
-                                OpaqueConst::from_ref(&b.1),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 2
-                        if !unsafe {
-                            (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.2),
-                                OpaqueConst::from_ref(&b.2),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 3
-                        if !unsafe {
-                            (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.3),
-                                OpaqueConst::from_ref(&b.3),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 4
-                        if !unsafe {
-                            (T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.4),
-                                OpaqueConst::from_ref(&b.4),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 5
-                        if !unsafe {
-                            (T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.5),
-                                OpaqueConst::from_ref(&b.5),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 6
-                        if !unsafe {
-                            (T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.6),
-                                OpaqueConst::from_ref(&b.6),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 7
-                        if !unsafe {
-                            (T7::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.7),
-                                OpaqueConst::from_ref(&b.7),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 8
-                        if !unsafe {
-                            (T8::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.8),
-                                OpaqueConst::from_ref(&b.8),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 9
-                        if !unsafe {
-                            (T9::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.9),
-                                OpaqueConst::from_ref(&b.9),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare last element
-                        unsafe {
-                            (T10::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.10),
-                                OpaqueConst::from_ref(&b.10),
-                            )
-                        }
-                    })
-                } else {
-                    None
-                },
-                partial_ord: None,
-                ord: None,
-                hash: None,
-                drop_in_place: None,
-                parse: None,
-                try_from: None,
-            },
-            def: Def::Struct(StructDef {
+            )
+            .def(Def::Struct(StructDef {
                 kind: StructKind::Tuple,
                 fields: &const {
                     [
@@ -2246,8 +2305,8 @@ where
                         field!(10, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,),),
                     ]
                 },
-            }),
-        }
+            }))
+            .build()
     };
 }
 unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> Facet
@@ -2322,274 +2381,292 @@ where
             )
         }
 
-        Shape {
-            layout: Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)>(),
-            vtable: &ValueVTable {
-                type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>,
-                display: None,
-                debug: const {
-                    if Characteristic::Eq.all(&[
-                        T0::SHAPE,
-                        T1::SHAPE,
-                        T2::SHAPE,
-                        T3::SHAPE,
-                        T4::SHAPE,
-                        T5::SHAPE,
-                        T6::SHAPE,
-                        T7::SHAPE,
-                        T8::SHAPE,
-                        T9::SHAPE,
-                        T10::SHAPE,
-                        T11::SHAPE,
-                    ]) {
-                        Some(|value, f| {
-                            let value = unsafe {
-                                value.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)>()
-                            };
-                            write!(f, "(")?;
-                            unsafe {
-                                (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.4),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.5),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.6),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T7::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.7),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T8::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.8),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T9::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.9),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T10::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.10),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ", ")?;
-                            unsafe {
-                                (T11::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.11),
-                                    f,
-                                )
-                            }?;
-                            write!(f, ")")
-                        })
-                    } else {
-                        None
+        Shape::builder()
+            .layout(Layout::new::<(
+                T0,
+                T1,
+                T2,
+                T3,
+                T4,
+                T5,
+                T6,
+                T7,
+                T8,
+                T9,
+                T10,
+                T11,
+            )>())
+            .vtable(
+                &const {
+                    ValueVTable {
+                        type_name: type_name::<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>,
+                        display: None,
+                        debug: const {
+                            if Characteristic::Eq.all(&[
+                                T0::SHAPE,
+                                T1::SHAPE,
+                                T2::SHAPE,
+                                T3::SHAPE,
+                                T4::SHAPE,
+                                T5::SHAPE,
+                                T6::SHAPE,
+                                T7::SHAPE,
+                                T8::SHAPE,
+                                T9::SHAPE,
+                                T10::SHAPE,
+                                T11::SHAPE,
+                            ]) {
+                                Some(|value, f| {
+                                    let value = unsafe {
+                                        value.as_ref::<
+        (T0,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,)>()
+                                    };
+                                    write!(f, "(")?;
+                                    unsafe {
+                                        (T0::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.0),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T1::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.1),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T2::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.2),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T3::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.3),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T4::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.4),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T5::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.5),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T6::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.6),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T7::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.7),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T8::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.8),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T9::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.9),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T10::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.10),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ", ")?;
+                                    unsafe {
+                                        (T11::SHAPE.vtable.debug.unwrap_unchecked())(
+                                            OpaqueConst::from_ref(&value.11),
+                                            f,
+                                        )
+                                    }?;
+                                    write!(f, ")")
+                                })
+                            } else {
+                                None
+                            }
+                        },
+                        default_in_place: None,
+                        clone_into: None,
+                        marker_traits: MarkerTraits::empty(),
+                        eq: if Characteristic::Eq.all(&[
+                            T0::SHAPE,
+                            T1::SHAPE,
+                            T2::SHAPE,
+                            T3::SHAPE,
+                            T4::SHAPE,
+                            T5::SHAPE,
+                            T6::SHAPE,
+                            T7::SHAPE,
+                            T8::SHAPE,
+                            T9::SHAPE,
+                            T10::SHAPE,
+                            T11::SHAPE,
+                        ]) {
+                            Some(|a, b| {
+                                let a = unsafe {
+                                    a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)>()
+                                };
+                                let b = unsafe {
+                                    b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)>()
+                                };
+
+                                // Compare element 0
+                                if !unsafe {
+                                    (T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.0),
+                                        OpaqueConst::from_ref(&b.0),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 1
+                                if !unsafe {
+                                    (T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.1),
+                                        OpaqueConst::from_ref(&b.1),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 2
+                                if !unsafe {
+                                    (T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.2),
+                                        OpaqueConst::from_ref(&b.2),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 3
+                                if !unsafe {
+                                    (T3::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.3),
+                                        OpaqueConst::from_ref(&b.3),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 4
+                                if !unsafe {
+                                    (T4::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.4),
+                                        OpaqueConst::from_ref(&b.4),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 5
+                                if !unsafe {
+                                    (T5::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.5),
+                                        OpaqueConst::from_ref(&b.5),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 6
+                                if !unsafe {
+                                    (T6::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.6),
+                                        OpaqueConst::from_ref(&b.6),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 7
+                                if !unsafe {
+                                    (T7::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.7),
+                                        OpaqueConst::from_ref(&b.7),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 8
+                                if !unsafe {
+                                    (T8::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.8),
+                                        OpaqueConst::from_ref(&b.8),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 9
+                                if !unsafe {
+                                    (T9::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.9),
+                                        OpaqueConst::from_ref(&b.9),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare element 10
+                                if !unsafe {
+                                    (T10::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.10),
+                                        OpaqueConst::from_ref(&b.10),
+                                    )
+                                } {
+                                    return false;
+                                }
+
+                                // Compare last element
+                                unsafe {
+                                    (T11::SHAPE.vtable.eq.unwrap_unchecked())(
+                                        OpaqueConst::from_ref(&a.11),
+                                        OpaqueConst::from_ref(&b.11),
+                                    )
+                                }
+                            })
+                        } else {
+                            None
+                        },
+                        partial_ord: None,
+                        ord: None,
+                        hash: None,
+                        drop_in_place: None,
+                        parse: None,
+                        try_from: None,
                     }
                 },
-                default_in_place: None,
-                clone_into: None,
-                marker_traits: MarkerTraits::empty(),
-                eq: if Characteristic::Eq.all(&[
-                    T0::SHAPE,
-                    T1::SHAPE,
-                    T2::SHAPE,
-                    T3::SHAPE,
-                    T4::SHAPE,
-                    T5::SHAPE,
-                    T6::SHAPE,
-                    T7::SHAPE,
-                    T8::SHAPE,
-                    T9::SHAPE,
-                    T10::SHAPE,
-                    T11::SHAPE,
-                ]) {
-                    Some(|a, b| {
-                        let a = unsafe {
-                            a.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)>()
-                        };
-                        let b = unsafe {
-                            b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)>()
-                        };
-
-                        // Compare element 0
-                        if !unsafe {
-                            (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.0),
-                                OpaqueConst::from_ref(&b.0),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 1
-                        if !unsafe {
-                            (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.1),
-                                OpaqueConst::from_ref(&b.1),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 2
-                        if !unsafe {
-                            (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.2),
-                                OpaqueConst::from_ref(&b.2),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 3
-                        if !unsafe {
-                            (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.3),
-                                OpaqueConst::from_ref(&b.3),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 4
-                        if !unsafe {
-                            (T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.4),
-                                OpaqueConst::from_ref(&b.4),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 5
-                        if !unsafe {
-                            (T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.5),
-                                OpaqueConst::from_ref(&b.5),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 6
-                        if !unsafe {
-                            (T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.6),
-                                OpaqueConst::from_ref(&b.6),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 7
-                        if !unsafe {
-                            (T7::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.7),
-                                OpaqueConst::from_ref(&b.7),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 8
-                        if !unsafe {
-                            (T8::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.8),
-                                OpaqueConst::from_ref(&b.8),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 9
-                        if !unsafe {
-                            (T9::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.9),
-                                OpaqueConst::from_ref(&b.9),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare element 10
-                        if !unsafe {
-                            (T10::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.10),
-                                OpaqueConst::from_ref(&b.10),
-                            )
-                        } {
-                            return false;
-                        }
-
-                        // Compare last element
-                        unsafe {
-                            (T11::SHAPE.vtable.eq.unwrap_unchecked())(
-                                OpaqueConst::from_ref(&a.11),
-                                OpaqueConst::from_ref(&b.11),
-                            )
-                        }
-                    })
-                } else {
-                    None
-                },
-                partial_ord: None,
-                ord: None,
-                hash: None,
-                drop_in_place: None,
-                parse: None,
-                try_from: None,
-            },
-            def: Def::Struct(StructDef {
+            )
+            .def(Def::Struct(StructDef {
                 kind: StructKind::Tuple,
                 fields: &const {
                     [
@@ -2607,7 +2684,7 @@ where
                         field!(11, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,),),
                     ]
                 },
-            }),
-        }
+            }))
+            .build()
     };
 }

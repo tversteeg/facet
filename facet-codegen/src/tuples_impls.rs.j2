@@ -77,9 +77,9 @@ where
             write_type_name_list(f, opts, "(", ", ", ")", {{ shape_slice }})
         }
 
-        Shape {
-            layout: Layout::new::<{{ type_name }}>(),
-            vtable: &ValueVTable {
+        Shape::builder()
+            .layout(Layout::new::<{{ type_name }}>())
+            .vtable(&const { ValueVTable {
                 type_name: type_name::<{{ type_list }}>,
                 display: None,
                 debug: const {
@@ -135,15 +135,15 @@ where
                 drop_in_place: None,
                 parse: None,
                 try_from: None,
-            },
-            def: Def::Struct(StructDef {
+            } })
+            .def(Def::Struct(StructDef {
                 kind: StructKind::Tuple,
                 fields: &const { [
                     {% for i in range(n) %}field!({{ i }}, {{ type_name }},){% if not loop.last %},
                     {% endif %}{% endfor %}
                 ] },
-            }),
-        }
+            }))
+            .build()
     };
 }
 {% endfor %}

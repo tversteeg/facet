@@ -6,47 +6,58 @@ use std::borrow::Cow;
 unsafe impl Facet for () {
     const DUMMY: Self = ();
     const SHAPE: &'static Shape = &const {
-        Shape {
-            layout: Layout::new::<Self>(),
-            def: Def::Scalar(ScalarDef::of::<Self>()),
-            vtable: value_vtable!((), |f, _opts| write!(f, "()")),
-        }
+        Shape::builder()
+            .layout(Layout::new::<Self>())
+            .def(Def::Scalar(ScalarDef::of::<Self>()))
+            .vtable(value_vtable!((), |f, _opts| write!(f, "()")))
+            .build()
     };
 }
 
 unsafe impl Facet for String {
     const DUMMY: Self = String::new();
-    const SHAPE: &'static Shape = &Shape {
-        layout: Layout::new::<Self>(),
-        def: Def::Scalar(ScalarDef::of::<Self>()),
-        vtable: value_vtable!(String, |f, _opts| write!(f, "String")),
+    const SHAPE: &'static Shape = &const {
+        Shape::builder()
+            .layout(Layout::new::<Self>())
+            .def(Def::Scalar(ScalarDef::of::<Self>()))
+            .vtable(value_vtable!(String, |f, _opts| write!(f, "String")))
+            .build()
     };
 }
 
 unsafe impl Facet for &str {
     const DUMMY: Self = "";
-    const SHAPE: &'static Shape = &Shape {
-        layout: Layout::new::<Self>(),
-        def: Def::Scalar(ScalarDef::of::<Self>()),
-        vtable: value_vtable!(&str, |f, _opts| write!(f, "&str")),
+    const SHAPE: &'static Shape = &const {
+        Shape::builder()
+            .layout(Layout::new::<Self>())
+            .def(Def::Scalar(ScalarDef::of::<Self>()))
+            .vtable(value_vtable!(&str, |f, _opts| write!(f, "&str")))
+            .build()
     };
 }
 
 unsafe impl Facet for Cow<'_, str> {
     const DUMMY: Self = Cow::Borrowed("");
-    const SHAPE: &'static Shape = &Shape {
-        layout: Layout::new::<Self>(),
-        def: Def::Scalar(ScalarDef::of::<Self>()),
-        vtable: value_vtable!(Cow<'_, str>, |f, _opts| write!(f, "Cow<'_, str>")),
+    const SHAPE: &'static Shape = &const {
+        Shape::builder()
+            .layout(Layout::new::<Self>())
+            .def(Def::Scalar(ScalarDef::of::<Self>()))
+            .vtable(value_vtable!(Cow<'_, str>, |f, _opts| write!(
+                f,
+                "Cow<'_, str>"
+            )))
+            .build()
     };
 }
 
 unsafe impl Facet for bool {
     const DUMMY: Self = false;
-    const SHAPE: &'static Shape = &Shape {
-        layout: Layout::new::<Self>(),
-        def: Def::Scalar(ScalarDef::of::<Self>()),
-        vtable: value_vtable!(bool, |f, _opts| write!(f, "bool")),
+    const SHAPE: &'static Shape = &const {
+        Shape::builder()
+            .layout(Layout::new::<Self>())
+            .def(Def::Scalar(ScalarDef::of::<Self>()))
+            .vtable(value_vtable!(bool, |f, _opts| write!(f, "bool")))
+            .build()
     };
 }
 
@@ -54,10 +65,15 @@ macro_rules! impl_facet_for_integer {
     ($type:ty) => {
         unsafe impl Facet for $type {
             const DUMMY: Self = 0;
-            const SHAPE: &'static Shape = &Shape {
-                layout: Layout::new::<Self>(),
-                def: Def::Scalar(ScalarDef::of::<Self>()),
-                vtable: value_vtable!($type, |f, _opts| write!(f, stringify!($type))),
+            const SHAPE: &'static Shape = &const {
+                Shape::builder()
+                    .layout(Layout::new::<Self>())
+                    .def(Def::Scalar(ScalarDef::of::<Self>()))
+                    .vtable(value_vtable!($type, |f, _opts| write!(
+                        f,
+                        stringify!($type)
+                    )))
+                    .build()
             };
         }
     };
@@ -78,10 +94,15 @@ macro_rules! impl_facet_for_float {
     ($type:ty) => {
         unsafe impl Facet for $type {
             const DUMMY: Self = 0.0;
-            const SHAPE: &'static Shape = &Shape {
-                layout: Layout::new::<Self>(),
-                def: Def::Scalar(ScalarDef::of::<Self>()),
-                vtable: value_vtable!($type, |f, _opts| write!(f, stringify!($type))),
+            const SHAPE: &'static Shape = &const {
+                Shape::builder()
+                    .layout(Layout::new::<Self>())
+                    .def(Def::Scalar(ScalarDef::of::<Self>()))
+                    .vtable(value_vtable!($type, |f, _opts| write!(
+                        f,
+                        stringify!($type)
+                    )))
+                    .build()
             };
         }
     };

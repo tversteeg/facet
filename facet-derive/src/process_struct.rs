@@ -71,17 +71,17 @@ unsafe impl facet::Facet for {struct_name} {{
             {field_definitions}
         ];
 
-        facet::Shape {{
-            layout: std::alloc::Layout::new::<Self>(),
-            vtable: facet::value_vtable!(
+        facet::Shape::builder()
+            .layout(std::alloc::Layout::new::<Self>())
+            .vtable(facet::value_vtable!(
                 {struct_name},
                 |f, _opts| std::fmt::Write::write_str(f, "{struct_name}")
-            ),
-            def: facet::Def::Struct(facet::StructDef {{
+            ))
+            .def(facet::Def::Struct(facet::StructDef {{
                 kind: facet::StructKind::Struct,
                 fields: FIELDS,
-            }}),
-        }}
+            }}))
+            .build()
     }};
 }}
         "#
