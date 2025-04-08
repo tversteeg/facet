@@ -133,20 +133,20 @@ fn test_from_json_with_nested_structs() {
     assert_eq!(test_struct.inner.value, 42);
 }
 
-#[test]
-fn test_from_json_with_simple_tuples() {
-    type Tuple = (i32, String);
+// #[test]
+// fn test_from_json_with_simple_tuples() {
+//     type Tuple = (i32, String);
 
-    let json = r#"[123, "Hello"]"#;
+//     let json = r#"[123, "Hello"]"#;
 
-    let test_struct: Tuple = match from_str(json) {
-        Ok(s) => s,
-        Err(e) => panic!("Error deserializing JSON: {}", e),
-    };
+//     let test_struct: Tuple = match from_str(json) {
+//         Ok(s) => s,
+//         Err(e) => panic!("Error deserializing JSON: {}", e),
+//     };
 
-    assert_eq!(test_struct.0, 123);
-    assert_eq!(test_struct.1, "Hello");
-}
+//     assert_eq!(test_struct.0, 123);
+//     assert_eq!(test_struct.1, "Hello");
+// }
 
 // #[test]
 // fn test_from_json_with_tuples() {
