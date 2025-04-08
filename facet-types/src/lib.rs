@@ -22,6 +22,7 @@ pub use value::*;
 
 /// Schema for reflection of a type
 #[derive(Clone, Copy, Debug)]
+#[non_exhaustive]
 pub struct Shape {
     /// Size, alignment
     pub layout: Layout,

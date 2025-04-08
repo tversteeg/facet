@@ -163,7 +163,7 @@ macro_rules! enum_variants {
 #[macro_export]
 macro_rules! value_vtable {
     ($type_name:ty, $type_name_fn:expr) => {
-        &$crate::ValueVTable {
+        &const { $crate::ValueVTable {
             type_name: $type_name_fn,
             display: if $crate::facet_spez::impls!($type_name: std::fmt::Display) {
                 Some(|data, f| {
@@ -256,6 +256,6 @@ macro_rules! value_vtable {
             drop_in_place: Some(|data| unsafe { data.drop_in_place::<$type_name>() }),
             parse: None,
             try_from: None,
-        }
+        } }
     };
 }
