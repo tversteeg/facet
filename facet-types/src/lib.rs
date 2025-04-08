@@ -116,6 +116,7 @@ impl Shape {
         (self.vtable.type_name)(f, opts)
     }
 
+    /// Returns a builder for shape
     pub const fn builder() -> ShapeBuilder {
         ShapeBuilder::new()
     }
