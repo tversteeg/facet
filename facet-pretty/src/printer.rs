@@ -280,16 +280,23 @@ impl PrettyPrinter {
                             item.state = StackState::ProcessStructField {
                                 field_index: field_index + 1,
                             };
-                            let value_item = StackItem {
+
+                            let finish_item = StackItem {
                                 peek: *field_value,
                                 format_depth: item.format_depth,
                                 type_depth: item.type_depth + 1,
                                 state: StackState::Finish,
                             };
-                            stack.push_back(item);
+                            let start_item = StackItem {
+                                peek: *field_value,
+                                format_depth: item.format_depth,
+                                type_depth: item.type_depth + 1,
+                                state: StackState::Start,
+                            };
 
-                            // Push field value to format first
-                            stack.push_back(value_item);
+                            stack.push_back(item);
+                            stack.push_back(finish_item);
+                            stack.push_back(start_item);
                         }
                     }
                 }
@@ -330,6 +337,14 @@ impl PrettyPrinter {
                             format_depth: next_format_depth,
                             type_depth: next_type_depth,
                             state: StackState::Finish,
+                        });
+
+                        // When we push a list item to format, we need to process it from the beginning
+                        stack.push_back(StackItem {
+                            peek: list_item,
+                            format_depth: next_format_depth,
+                            type_depth: next_type_depth,
+                            state: StackState::Start, // Use Start state to properly process the item
                         });
                     }
                 }
