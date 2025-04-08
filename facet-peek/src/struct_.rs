@@ -10,7 +10,7 @@ pub struct PeekStruct<'mem> {
     def: StructDef,
 }
 
-impl<'mem> std::ops::Deref for PeekStruct<'mem> {
+impl<'mem> core::ops::Deref for PeekStruct<'mem> {
     type Target = PeekValue<'mem>;
 
     #[inline(always)]

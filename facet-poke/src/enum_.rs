@@ -1,7 +1,7 @@
+use core::ptr::NonNull;
 use facet_trait::{
     EnumDef, EnumRepr, Facet, FieldError, Opaque, OpaqueUninit, Shape, ShapeExt as _, VariantKind,
 };
-use std::ptr::NonNull;
 
 use super::{ISet, Poke, PokeValue};
 
@@ -73,7 +73,7 @@ impl<'mem> PokeEnumNoVariant<'mem> {
         // Prepare memory for the enum
         unsafe {
             // Zero out the memory first to ensure clean state
-            std::ptr::write_bytes(self.data.as_mut_ptr(), 0, self.shape.layout.size());
+            core::ptr::write_bytes(self.data.as_mut_ptr(), 0, self.shape.layout.size());
 
             // Set up the discriminant (tag)
             // For enums in Rust, the first bytes contain the discriminant
@@ -282,7 +282,7 @@ impl<'mem> PokeEnum<'mem> {
         self.assert_all_fields_initialized();
         let data = unsafe { self.data.assume_init() };
         // prevent field drops when the PokeEnum is dropped
-        std::mem::forget(self);
+        core::mem::forget(self);
         data
     }
 
@@ -299,9 +299,9 @@ impl<'mem> PokeEnum<'mem> {
 
         let result = unsafe {
             let ptr = self.data.as_ptr() as *const T;
-            std::ptr::read(ptr)
+            core::ptr::read(ptr)
         };
-        std::mem::forget(self);
+        core::mem::forget(self);
         result
     }
 
@@ -317,7 +317,7 @@ impl<'mem> PokeEnum<'mem> {
         self.assert_matching_shape::<T>();
 
         let boxed = unsafe { Box::from_raw(self.data.as_mut_ptr() as *mut T) };
-        std::mem::forget(self);
+        core::mem::forget(self);
         boxed
     }
 
@@ -332,13 +332,13 @@ impl<'mem> PokeEnum<'mem> {
     pub unsafe fn move_into(self, target: NonNull<u8>) {
         self.assert_all_fields_initialized();
         unsafe {
-            std::ptr::copy_nonoverlapping(
+            core::ptr::copy_nonoverlapping(
                 self.data.as_mut_ptr(),
                 target.as_ptr(),
                 self.shape.layout.size(),
             );
         }
-        std::mem::forget(self);
+        core::mem::forget(self);
     }
 }
 
@@ -386,8 +386,8 @@ pub enum VariantError {
 
 impl std::error::Error for VariantError {}
 
-impl std::fmt::Display for VariantError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for VariantError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             VariantError::IndexOutOfBounds => write!(f, "Variant index out of bounds"),
             VariantError::NotAnEnum => write!(f, "Not an enum"),

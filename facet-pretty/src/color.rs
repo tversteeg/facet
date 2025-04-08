@@ -20,12 +20,12 @@ impl RGB {
     }
 
     /// Write the RGB color as ANSI foreground color code to the formatter
-    pub fn write_fg<W: std::fmt::Write>(&self, f: &mut W) -> std::fmt::Result {
+    pub fn write_fg<W: core::fmt::Write>(&self, f: &mut W) -> core::fmt::Result {
         write!(f, "\x1b[38;2;{};{};{}m", self.r, self.g, self.b)
     }
 
     /// Write the RGB color as ANSI background color code to the formatter
-    pub fn write_bg<W: std::fmt::Write>(&self, f: &mut W) -> std::fmt::Result {
+    pub fn write_bg<W: core::fmt::Write>(&self, f: &mut W) -> core::fmt::Result {
         write!(f, "\x1b[48;2;{};{};{}m", self.r, self.g, self.b)
     }
 }

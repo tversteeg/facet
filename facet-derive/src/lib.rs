@@ -244,8 +244,8 @@ pub fn facet_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     panic!("{msg}");
 }
 
-impl std::fmt::Display for Type {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for Type {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Type::Path(path) => {
                 write!(f, "{}::{}", path.prefix, path.rest)
@@ -281,8 +281,8 @@ impl std::fmt::Display for Type {
     }
 }
 
-impl std::fmt::Display for ConstOrMut {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for ConstOrMut {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             ConstOrMut::Const(_) => write!(f, "const"),
             ConstOrMut::Mut(_) => write!(f, "mut"),
@@ -290,14 +290,14 @@ impl std::fmt::Display for ConstOrMut {
     }
 }
 
-impl std::fmt::Display for Lifetime {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for Lifetime {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "'{}", self.name)
     }
 }
 
-impl std::fmt::Display for Expr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for Expr {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Expr::Integer(int) => write!(f, "{}", int.value()),
         }

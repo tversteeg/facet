@@ -46,7 +46,7 @@ pub struct PeekList<'mem> {
     def: ListDef,
 }
 
-impl<'mem> std::ops::Deref for PeekList<'mem> {
+impl<'mem> core::ops::Deref for PeekList<'mem> {
     type Target = PeekValue<'mem>;
 
     #[inline(always)]

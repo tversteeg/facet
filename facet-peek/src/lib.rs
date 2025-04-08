@@ -39,7 +39,7 @@ pub enum Peek<'mem> {
     Struct(PeekStruct<'mem>),
 }
 
-impl<'mem> std::ops::Deref for Peek<'mem> {
+impl<'mem> core::ops::Deref for Peek<'mem> {
     type Target = PeekValue<'mem>;
 
     fn deref(&self) -> &Self::Target {
@@ -90,8 +90,8 @@ impl<'mem> Peek<'mem> {
     }
 }
 
-impl std::fmt::Debug for Peek<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for Peek<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let value = self.as_value();
         if value.debug(f).is_none() {
             value.type_name(f, TypeNameOpts::infinite())?;
@@ -101,8 +101,8 @@ impl std::fmt::Debug for Peek<'_> {
     }
 }
 
-impl std::fmt::Display for Peek<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for Peek<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let value = self.as_value();
         if value.display(f).is_none() {
             value.type_name(f, TypeNameOpts::infinite())?;

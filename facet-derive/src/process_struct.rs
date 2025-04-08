@@ -46,7 +46,7 @@ pub(crate) fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
                 "facet::Field::builder()
                 .name(\"{field_name}\")
                 .shape(facet::shape_of(&|s: {struct_name}| s.{field_name}))
-                .offset(::std::mem::offset_of!({struct_name}, {field_name}))
+                .offset(::core::mem::offset_of!({struct_name}, {field_name}))
                 .flags({flags})
                 .build()"
             )
@@ -72,10 +72,10 @@ unsafe impl facet::Facet for {struct_name} {{
         ];
 
         facet::Shape::builder()
-            .layout(std::alloc::Layout::new::<Self>())
+            .layout(core::alloc::Layout::new::<Self>())
             .vtable(facet::value_vtable!(
                 {struct_name},
-                |f, _opts| std::fmt::Write::write_str(f, "{struct_name}")
+                |f, _opts| core::fmt::Write::write_str(f, "{struct_name}")
             ))
             .def(facet::Def::Struct(facet::StructDef::builder()
                 .kind(facet::StructKind::Struct)

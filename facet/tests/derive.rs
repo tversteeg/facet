@@ -221,7 +221,7 @@ fn derive_real_life_cub_config() {
 //             assert_eq!(data_field.name, "data");
 
 //             // Get the layout from the tuple type itself
-//             let tuple_layout = std::alloc::Layout::new::<(u32, String, bool)>();
+//             let tuple_layout = core::alloc::Layout::new::<(u32, String, bool)>();
 
 //             assert_eq!(data_field.shape.layout.size(), tuple_layout.size());
 //             assert_eq!(data_field.shape.layout.align(), tuple_layout.align());

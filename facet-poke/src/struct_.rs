@@ -1,5 +1,5 @@
+use core::ptr::NonNull;
 use facet_trait::{FieldError, Opaque, OpaqueConst, OpaqueUninit, Shape, ShapeExt as _, StructDef};
-use std::ptr::NonNull;
 
 use super::{Guard, ISet, PokeValue};
 
@@ -65,7 +65,7 @@ impl<'mem> PokeStruct<'mem> {
         let data = unsafe { self.data.assume_init() };
 
         // prevent field drops when the PokeStruct is dropped
-        std::mem::forget(self);
+        core::mem::forget(self);
 
         data
     }
@@ -91,10 +91,10 @@ impl<'mem> PokeStruct<'mem> {
 
         let result = unsafe {
             let ptr = this.data.as_mut_ptr() as *const T;
-            std::ptr::read(ptr)
+            core::ptr::read(ptr)
         };
         guard.take(); // dealloc
-        std::mem::forget(this);
+        core::mem::forget(this);
         result
     }
 
@@ -110,7 +110,7 @@ impl<'mem> PokeStruct<'mem> {
         self.shape.assert_type::<T>();
 
         let boxed = unsafe { Box::from_raw(self.data.as_mut_ptr() as *mut T) };
-        std::mem::forget(self);
+        core::mem::forget(self);
         boxed
     }
 
@@ -129,13 +129,13 @@ impl<'mem> PokeStruct<'mem> {
         }
 
         unsafe {
-            std::ptr::copy_nonoverlapping(
+            core::ptr::copy_nonoverlapping(
                 self.data.as_mut_ptr(),
                 target.as_ptr(),
                 self.shape.layout.size(),
             );
         }
-        std::mem::forget(self);
+        core::mem::forget(self);
     }
 
     /// Gets a field, by name
@@ -186,7 +186,7 @@ impl<'mem> PokeStruct<'mem> {
         let field_shape = field.shape;
 
         unsafe {
-            std::ptr::copy_nonoverlapping(
+            core::ptr::copy_nonoverlapping(
                 value.as_ptr(),
                 self.data.field_uninit(field.offset).as_mut_ptr(),
                 field_shape.layout.size(),

@@ -78,7 +78,7 @@ impl<'mem> PokeMap<'mem> {
     ///
     /// # Safety
     ///
-    /// `key` and `value` are moved out of (with [`std::ptr::read`]) — they should be deallocated
+    /// `key` and `value` are moved out of (with [`core::ptr::read`]) — they should be deallocated
     /// afterwards but NOT dropped.
     #[inline]
     pub unsafe fn insert(&mut self, key: Opaque<'_>, value: Opaque<'_>) {

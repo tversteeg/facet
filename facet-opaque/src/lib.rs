@@ -5,7 +5,7 @@
 //!
 //! TODO: should these carry a Layout around? That would be neat actually.
 
-use std::{marker::PhantomData, ptr::NonNull};
+use core::{marker::PhantomData, ptr::NonNull};
 
 /// A type-erased pointer to an uninitialized value
 #[derive(Clone, Copy)]
@@ -20,7 +20,7 @@ impl<'mem> OpaqueUninit<'mem> {
     /// Creates a new opaque pointer from a reference to a MaybeUninit<T>
     ///
     /// The pointer will point to the potentially uninitialized contents
-    pub fn from_maybe_uninit<T>(borrow: &'mem mut std::mem::MaybeUninit<T>) -> Self {
+    pub fn from_maybe_uninit<T>(borrow: &'mem mut core::mem::MaybeUninit<T>) -> Self {
         Self(borrow.as_mut_ptr() as *mut u8, PhantomData)
     }
 
@@ -42,7 +42,7 @@ impl<'mem> OpaqueUninit<'mem> {
     /// that can be safely written to.
     pub unsafe fn write<T>(self, value: T) -> Opaque<'mem> {
         unsafe {
-            std::ptr::write(self.0 as *mut T, value);
+            core::ptr::write(self.0 as *mut T, value);
             self.assume_init()
         }
     }
@@ -206,17 +206,17 @@ impl<'mem> Opaque<'mem> {
         OpaqueConst(self.0, PhantomData)
     }
 
-    /// Exposes [`std::ptr::read`]
+    /// Exposes [`core::ptr::read`]
     ///
     /// # Safety
     ///
     /// `T` must be the actual underlying type of the pointed-to memory.
     /// The memory must be properly initialized and aligned for type `T`.
     pub unsafe fn read<T>(self) -> T {
-        unsafe { std::ptr::read(self.as_mut()) }
+        unsafe { core::ptr::read(self.as_mut()) }
     }
 
-    /// Exposes [`std::ptr::drop_in_place`]
+    /// Exposes [`core::ptr::drop_in_place`]
     ///
     /// # Safety
     ///
@@ -225,6 +225,6 @@ impl<'mem> Opaque<'mem> {
     /// After calling this function, the memory should not be accessed again
     /// until it is properly reinitialized.
     pub unsafe fn drop_in_place<T>(self) {
-        unsafe { std::ptr::drop_in_place(self.as_mut::<T>()) }
+        unsafe { core::ptr::drop_in_place(self.as_mut::<T>()) }
     }
 }

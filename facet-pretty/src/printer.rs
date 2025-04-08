@@ -170,7 +170,7 @@ impl PrettyPrinter {
                             // When recursing into a struct, always increment format_depth
                             // Only increment type_depth if we're moving to a different address
                             let new_type_depth =
-                                if std::ptr::eq(unsafe { struct_.data().as_ptr() }, ptr) {
+                                if core::ptr::eq(unsafe { struct_.data().as_ptr() }, ptr) {
                                     item.type_depth // Same pointer, don't increment type_depth
                                 } else {
                                     item.type_depth + 1 // Different pointer, increment type_depth
@@ -197,7 +197,7 @@ impl PrettyPrinter {
                             // When recursing into a list, always increment format_depth
                             // Only increment type_depth if we're moving to a different address
                             let new_type_depth =
-                                if std::ptr::eq(unsafe { list.data().as_ptr() }, ptr) {
+                                if core::ptr::eq(unsafe { list.data().as_ptr() }, ptr) {
                                     item.type_depth // Same pointer, don't increment type_depth
                                 } else {
                                     item.type_depth + 1 // Different pointer, increment type_depth
@@ -225,7 +225,8 @@ impl PrettyPrinter {
                             item.format_depth += 1;
                             // When recursing into a map, always increment format_depth
                             // Only increment type_depth if we're moving to a different address
-                            item.type_depth = if std::ptr::eq(unsafe { map.data().as_ptr() }, ptr) {
+                            item.type_depth = if core::ptr::eq(unsafe { map.data().as_ptr() }, ptr)
+                            {
                                 item.type_depth // Same pointer, don't increment type_depth
                             } else {
                                 item.type_depth + 1 // Different pointer, increment type_depth
@@ -437,8 +438,8 @@ impl PrettyPrinter {
     ) -> fmt::Result {
         struct TypeNameWriter<'a, 'b: 'a>(&'b facet_peek::PeekValue<'a>);
 
-        impl std::fmt::Display for TypeNameWriter<'_, '_> {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        impl core::fmt::Display for TypeNameWriter<'_, '_> {
+            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                 self.0.type_name(f, facet_trait::TypeNameOpts::infinite())
             }
         }

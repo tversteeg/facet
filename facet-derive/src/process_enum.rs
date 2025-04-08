@@ -101,10 +101,10 @@ pub(crate) fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
 unsafe impl facet::Facet for {enum_name} {{
     const SHAPE: &'static facet::Shape = &const {{
         facet::Shape.builder()
-            .layout(std::alloc::Layout::new::<Self>())
+            .layout(core::alloc::Layout::new::<Self>())
             .vtable(facet::value_vtable!(
                 {enum_name},
-                |f, _opts| std::fmt::Write::write_str(f, "{enum_name}")
+                |f, _opts| core::fmt::Write::write_str(f, "{enum_name}")
             ))
             .def(facet::Def::Enum(facet::EnumDef {{
                 variants: facet::enum_variants!({enum_name}, [{variants}]),

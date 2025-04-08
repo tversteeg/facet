@@ -1,4 +1,4 @@
-use std::fmt::{Debug, Display};
+use core::fmt::{Debug, Display};
 
 #[test]
 fn test_spez1() {
@@ -66,8 +66,7 @@ fn test_spez2() {
     #[allow(clippy::needless_borrow)]
     (&Wrap(NoDefaultHere)).default_fn(238);
 
-    // that's UB, btw
-    let v: i32 = unsafe { std::mem::zeroed() };
+    let v: i32 = 1;
     #[allow(clippy::needless_borrow)]
     (&Wrap(v)).default_fn(238);
 }

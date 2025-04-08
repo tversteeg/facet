@@ -1,6 +1,6 @@
 //! Display trait implementations for pretty-printing Facet types
 
-use std::fmt::{self, Display, Formatter};
+use core::fmt::{self, Display, Formatter};
 
 use crate::printer::PrettyPrinter;
 use facet_trait::Facet;
@@ -49,7 +49,7 @@ mod tests {
     use facet_derive::Facet;
     use facet_trait as facet;
 
-    use std::fmt::Write;
+    use core::fmt::Write;
 
     // Use the derive macro from facet
     #[derive(Facet)]

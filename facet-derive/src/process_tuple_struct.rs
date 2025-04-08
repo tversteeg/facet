@@ -36,10 +36,10 @@ unsafe impl facet::Facet for {struct_name} {{
     const DUMMY: Self = Self({dummy_fields});
     const SHAPE: &'static facet::Shape = &const {{
         facet::Shape::builder()
-            .layout(std::alloc::Layout::new::<Self>())
+            .layout(core::alloc::Layout::new::<Self>())
             .vtable(facet::value_vtable!(
                 {struct_name},
-                |f, _opts| std::fmt::Write::write_str(f, "{struct_name}")
+                |f, _opts| core::fmt::Write::write_str(f, "{struct_name}")
             ))
             .def(facet::Def::Struct(facet::StructDef::builder()
                 .kind(facet::StructKind::TupleStruct)

@@ -7,8 +7,8 @@ pub struct PokeValue<'mem> {
     shape: &'static Shape,
 }
 
-impl std::fmt::Debug for PokeValue<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for PokeValue<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("PokeValue")
             .field("shape", &self.shape)
             .finish_non_exhaustive()
@@ -85,7 +85,7 @@ impl<'mem> PokeValue<'mem> {
     /// anymore — it should be deallocated, but it should not be "dropped" anymore.
     pub unsafe fn put<'src>(self, source: OpaqueConst<'src>) -> Opaque<'mem> {
         unsafe {
-            std::ptr::copy_nonoverlapping(
+            core::ptr::copy_nonoverlapping(
                 source.as_ptr(),
                 self.data.as_mut_ptr(),
                 self.shape.layout.size(),

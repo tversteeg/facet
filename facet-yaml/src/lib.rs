@@ -19,8 +19,8 @@ pub fn from_str<T: Facet>(yaml: &str) -> Result<T, AnyErr> {
 #[derive(Debug, Clone)]
 pub struct AnyErr(String);
 
-impl std::fmt::Display for AnyErr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for AnyErr {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
@@ -89,7 +89,7 @@ fn deserialize_value<'mem>(poke: Poke<'mem>, value: &Yaml) -> Result<Opaque<'mem
                     .to_string();
                 let opaque = OpaqueConst::from_ref(&s);
                 let res = unsafe { ps.put(opaque) };
-                std::mem::forget(s);
+                core::mem::forget(s);
                 res
             } else {
                 return Err(format!("Unsupported scalar type: {}", ps.shape()).into());

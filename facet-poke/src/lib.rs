@@ -3,7 +3,7 @@
 
 //! Allows poking (writing to) shapes
 
-use std::alloc::Layout;
+use core::alloc::Layout;
 
 pub use facet_peek::*;
 

@@ -19,6 +19,10 @@ nostd:
     source .envrc
     echo -e "\033[1;33m🧪 Checking without std...\033[0m"
     cargo check --no-default-features -p facet-types
+    cargo check --no-default-features -p facet-trait
+    cargo check --no-default-features -p facet
+    cargo check --no-default-features -p facet-spez
+    cargo check --no-default-features -p facet-peek
 
 ci:
     #!/usr/bin/env -S bash -euo pipefail

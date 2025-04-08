@@ -49,6 +49,8 @@ The `Peek` type helps perform read operations on any Facet type.
 It comes with a derive macro that uses [unsynn](https://crates.io/crates/unsynn)
 for speed of compilation.
 
+The core crates, `facet-trait`, `facet-types` etc. are nostd-friendly.
+
 ## Ecosystem
 
 The main `facet` crate re-exports symbols from:

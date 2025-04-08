@@ -1,14 +1,14 @@
 //! ANSI color codes and formatting utilities for direct writing to formatters
 
-use std::fmt::Write;
+use core::fmt::Write;
 
 /// Write ANSI reset code to the formatter
-pub fn write_reset<W: Write>(f: &mut W) -> std::fmt::Result {
+pub fn write_reset<W: Write>(f: &mut W) -> core::fmt::Result {
     f.write_str("\x1b[0m")
 }
 
 /// Write ANSI bold formatting to the formatter
-pub fn write_bold<W: Write>(f: &mut W) -> std::fmt::Result {
+pub fn write_bold<W: Write>(f: &mut W) -> core::fmt::Result {
     f.write_str("\x1b[1m")
 }
 
@@ -22,27 +22,27 @@ pub const BOLD: &str = "\x1b[1m";
 pub const DIM: &str = "\x1b[2m";
 
 /// Write ANSI dim formatting to the formatter
-pub fn write_dim<W: Write>(f: &mut W) -> std::fmt::Result {
+pub fn write_dim<W: Write>(f: &mut W) -> core::fmt::Result {
     f.write_str(DIM)
 }
 
 /// Write ANSI italic formatting to the formatter
-pub fn write_italic<W: Write>(f: &mut W) -> std::fmt::Result {
+pub fn write_italic<W: Write>(f: &mut W) -> core::fmt::Result {
     f.write_str("\x1b[3m")
 }
 
 /// Write ANSI underline formatting to the formatter
-pub fn write_underline<W: Write>(f: &mut W) -> std::fmt::Result {
+pub fn write_underline<W: Write>(f: &mut W) -> core::fmt::Result {
     f.write_str("\x1b[4m")
 }
 
 /// Write RGB foreground color code to the formatter
-pub fn write_rgb<W: Write>(f: &mut W, r: u8, g: u8, b: u8) -> std::fmt::Result {
+pub fn write_rgb<W: Write>(f: &mut W, r: u8, g: u8, b: u8) -> core::fmt::Result {
     write!(f, "\x1b[38;2;{};{};{}m", r, g, b)
 }
 
 /// Write RGB background color code to the formatter
-pub fn write_rgb_bg<W: Write>(f: &mut W, r: u8, g: u8, b: u8) -> std::fmt::Result {
+pub fn write_rgb_bg<W: Write>(f: &mut W, r: u8, g: u8, b: u8) -> core::fmt::Result {
     write!(f, "\x1b[48;2;{};{};{}m", r, g, b)
 }
 

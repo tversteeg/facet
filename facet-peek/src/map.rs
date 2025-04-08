@@ -42,7 +42,7 @@ pub struct PeekMap<'mem> {
     def: MapDef,
 }
 
-impl<'mem> std::ops::Deref for PeekMap<'mem> {
+impl<'mem> core::ops::Deref for PeekMap<'mem> {
     type Target = PeekValue<'mem>;
 
     #[inline(always)]

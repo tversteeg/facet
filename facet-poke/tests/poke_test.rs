@@ -36,7 +36,7 @@ fn build_foobar_through_reflection() {
         poke.set_by_name("bar", OpaqueConst::from_ref(&bar))
             .unwrap();
         // bar has been moved out of
-        std::mem::forget(bar);
+        core::mem::forget(bar);
     }
 
     let foo_bar = poke.build::<FooBar>(Some(guard));
@@ -94,7 +94,7 @@ fn build_foobar_after_default() {
         poke.set_by_name("bar", OpaqueConst::from_ref(&bar))
             .unwrap();
         // bar has been moved out of
-        std::mem::forget(bar);
+        core::mem::forget(bar);
     }
     poke.build_in_place();
 
@@ -770,7 +770,7 @@ enum Fact {
     Clone,
 }
 
-use std::fmt::{Display, Formatter, Result};
+use core::fmt::{Display, Formatter, Result};
 
 impl Display for Fact {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {

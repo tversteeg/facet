@@ -50,8 +50,8 @@ impl JsonParseErrorWithContext<'_> {
     }
 }
 
-impl std::fmt::Display for JsonParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for JsonParseError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let error_message = match &self.kind {
             JsonParseErrorKind::ExpectedOpeningQuote => "Expected opening quote for string",
             JsonParseErrorKind::UnterminatedString => "Unterminated string",
@@ -79,8 +79,8 @@ impl std::fmt::Display for JsonParseError {
     }
 }
 
-impl std::fmt::Display for JsonParseErrorWithContext<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for JsonParseErrorWithContext<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let context_start = self.error.position.saturating_sub(20);
         let context_end = (self.error.position + 20).min(self.input.len());
         let context = &self.input[context_start..context_end];
@@ -92,7 +92,7 @@ impl std::fmt::Display for JsonParseErrorWithContext<'_> {
     }
 }
 
-impl std::error::Error for JsonParseError {}
+impl core::error::Error for JsonParseError {}
 
 pub struct JsonParser<'input> {
     pub input: &'input str,
@@ -187,8 +187,8 @@ impl<'a> JsonParser<'a> {
     // Generic number parsing helper
     fn parse_number<T>(&mut self) -> Result<T, JsonParseErrorWithContext<'a>>
     where
-        T: std::str::FromStr,
-        <T as std::str::FromStr>::Err: std::fmt::Debug, // Ensure the error type can be debug printed
+        T: core::str::FromStr,
+        <T as core::str::FromStr>::Err: core::fmt::Debug, // Ensure the error type can be debug printed
     {
         self.skip_whitespace();
         let start = self.position;

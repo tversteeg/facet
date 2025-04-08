@@ -1,5 +1,5 @@
+use core::cmp::Ordering;
 use facet_trait::{Opaque, OpaqueConst, Shape, TypeNameOpts, ValueVTable};
-use std::cmp::Ordering;
 
 use crate::Peek;
 
@@ -10,8 +10,8 @@ pub struct PeekValue<'mem> {
     shape: &'static Shape,
 }
 
-impl std::fmt::Display for PeekValue<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for PeekValue<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         if let Some(display_fn) = self.vtable().display {
             unsafe { display_fn(self.data, f) }
         } else {
@@ -20,8 +20,8 @@ impl std::fmt::Display for PeekValue<'_> {
     }
 }
 
-impl std::fmt::Debug for PeekValue<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for PeekValue<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         if let Some(debug_fn) = self.vtable().debug {
             unsafe { debug_fn(self.data, f) }
         } else {
@@ -30,7 +30,7 @@ impl std::fmt::Debug for PeekValue<'_> {
     }
 }
 
-impl std::cmp::PartialEq for PeekValue<'_> {
+impl core::cmp::PartialEq for PeekValue<'_> {
     fn eq(&self, other: &Self) -> bool {
         if self.shape != other.shape {
             return false;
@@ -43,8 +43,8 @@ impl std::cmp::PartialEq for PeekValue<'_> {
     }
 }
 
-impl std::cmp::PartialOrd for PeekValue<'_> {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+impl core::cmp::PartialOrd for PeekValue<'_> {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
         if self.shape != other.shape {
             return None;
         }
@@ -173,7 +173,7 @@ impl<'mem> PeekValue<'mem> {
     ///
     /// `None` if display formatting is not supported for this scalar type
     #[inline(always)]
-    pub fn display(&self, f: &mut std::fmt::Formatter<'_>) -> Option<std::fmt::Result> {
+    pub fn display(&self, f: &mut core::fmt::Formatter<'_>) -> Option<core::fmt::Result> {
         unsafe {
             self.shape
                 .vtable
@@ -188,7 +188,7 @@ impl<'mem> PeekValue<'mem> {
     ///
     /// `None` if debug formatting is not supported for this scalar type
     #[inline(always)]
-    pub fn debug(&self, f: &mut std::fmt::Formatter<'_>) -> Option<std::fmt::Result> {
+    pub fn debug(&self, f: &mut core::fmt::Formatter<'_>) -> Option<core::fmt::Result> {
         unsafe {
             self.shape
                 .vtable
@@ -203,7 +203,7 @@ impl<'mem> PeekValue<'mem> {
     ///
     /// `false` if hashing is not supported for this scalar type, `true` otherwise
     #[inline(always)]
-    pub fn hash<H: std::hash::Hasher>(&self, hasher: &mut H) -> bool {
+    pub fn hash<H: core::hash::Hasher>(&self, hasher: &mut H) -> bool {
         unsafe {
             if let Some(hash_fn) = self.shape.vtable.hash {
                 let hasher_opaque = Opaque::from_ref(hasher);
@@ -221,7 +221,7 @@ impl<'mem> PeekValue<'mem> {
     ///
     /// # Arguments
     ///
-    /// * `f` - A mutable reference to a `std::fmt::Formatter`
+    /// * `f` - A mutable reference to a `core::fmt::Formatter`
     /// * `opts` - The `TypeNameOpts` to use for formatting
     ///
     /// # Returns
@@ -230,9 +230,9 @@ impl<'mem> PeekValue<'mem> {
     #[inline(always)]
     pub fn type_name(
         &self,
-        f: &mut std::fmt::Formatter<'_>,
+        f: &mut core::fmt::Formatter<'_>,
         opts: TypeNameOpts,
-    ) -> std::fmt::Result {
+    ) -> core::fmt::Result {
         (self.shape.vtable.type_name)(f, opts)
     }
 
