@@ -1,5 +1,3 @@
-use std::mem::ManuallyDrop;
-
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
 
 use facet_poke::Poke;
@@ -80,9 +78,6 @@ fn deserialize_value<'input, 'mem>(
         },
         // For processing a list item
         ListItem {
-            // TODO: just find the `PokeList` from the stack instaed of
-            // cloning it.
-            pl: ManuallyDrop<facet_poke::PokeList<'mem>>,
             shape: &'static facet_trait::Shape,
             index: usize,
         },
@@ -92,7 +87,6 @@ fn deserialize_value<'input, 'mem>(
         },
         // For processing a map entry
         MapEntry {
-            pm: ManuallyDrop<facet_poke::PokeMap<'mem>>,
             key: String,
         },
     }
@@ -151,8 +145,8 @@ fn deserialize_value<'input, 'mem>(
                         let has_element = parser.parse_array_element()?;
 
                         if let Some(true) = has_element {
-                            // Store the list in the finish item first - use Clone
-                            stack.push_front(StackItem::FinishList { pl: pl.clone() });
+                            // Store the list in the finish item first
+                            stack.push_front(StackItem::FinishList { pl });
 
                             // Process first item - create a new allocation for it
                             let item_data =
@@ -163,11 +157,7 @@ fn deserialize_value<'input, 'mem>(
                             stack.push_front(StackItem::Value { poke: item_poke });
 
                             // Then we'll process the ListItem that will handle the result
-                            stack.push_front(StackItem::ListItem {
-                                pl: ManuallyDrop::new(pl),
-                                shape,
-                                index: 0,
-                            });
+                            stack.push_front(StackItem::ListItem { shape, index: 0 });
                         } else {
                             // No items, just finish the list
                             stack.push_front(StackItem::FinishList { pl });
@@ -179,18 +169,16 @@ fn deserialize_value<'input, 'mem>(
                         let first_key = parser.expect_object_start()?;
 
                         // Initialize the map with no size hint
-                        let initialized_map = map_uninit.init(None).unwrap_or_else(|_| {
+                        let pm = map_uninit.init(None).unwrap_or_else(|_| {
                             panic!("Failed to initialize map"); // TODO: map errors
                         });
 
                         if let Some(key) = first_key {
                             // Now that we have Clone for PokeMap, we can simplify this
-                            let value_shape = initialized_map.def.v;
+                            let value_shape = pm.def.v;
 
                             // Put our initialized map in the FinishMap entry
-                            stack.push_front(StackItem::FinishMap {
-                                pm: initialized_map.clone(),
-                            });
+                            stack.push_front(StackItem::FinishMap { pm });
 
                             // Create a poke for the value
                             let value_data =
@@ -202,15 +190,10 @@ fn deserialize_value<'input, 'mem>(
                             stack.push_front(StackItem::Value { poke: value_poke });
 
                             // After processing the value, handle the insertion
-                            stack.push_front(StackItem::MapEntry {
-                                pm: ManuallyDrop::new(initialized_map),
-                                key,
-                            });
+                            stack.push_front(StackItem::MapEntry { key });
                         } else {
                             // No entries, just finish the map
-                            stack.push_front(StackItem::FinishMap {
-                                pm: initialized_map,
-                            });
+                            stack.push_front(StackItem::FinishMap { pm });
                         }
                     }
                     Poke::Enum(pe) => {
@@ -236,7 +219,7 @@ fn deserialize_value<'input, 'mem>(
 
                 let ps = match stack.front_mut().unwrap() {
                     StackItem::FinishStruct { ps } => ps,
-                    _ => unreachable!("AfterStructField should only be called on FinishStruct"),
+                    _ => unreachable!(),
                 };
 
                 match ps.field_by_name(&key) {
@@ -260,7 +243,7 @@ fn deserialize_value<'input, 'mem>(
 
                 let ps = match stack.front_mut().unwrap() {
                     StackItem::FinishStruct { ps } => ps,
-                    _ => unreachable!("AfterStructField should only be called on FinishStruct"),
+                    _ => unreachable!(),
                 };
 
                 unsafe {
@@ -279,16 +262,23 @@ fn deserialize_value<'input, 'mem>(
                 let opaque = ps.build_in_place();
                 result = Some(opaque);
             }
-            StackItem::ListItem {
-                mut pl,
-                shape,
-                index,
-            } => {
+            StackItem::ListItem { shape, index } => {
                 trace!("Processing array item at index: \x1b[1;33m{}\x1b[0m", index);
+
+                let pl = match stack.front_mut().unwrap() {
+                    StackItem::FinishList { pl } => pl,
+                    _ => unreachable!(),
+                };
 
                 // Allocate memory for the item
                 let data = OpaqueUninit::new(unsafe { std::alloc::alloc(shape.layout) });
                 let item_poke = unsafe { Poke::unchecked_new(data, shape) };
+
+                // After processing the item value, add it to the list
+                let opaque = result.take().expect("Expected an item result");
+                unsafe {
+                    pl.push(opaque);
+                }
 
                 // Push the item to be processed next
                 stack.push_front(StackItem::Value { poke: item_poke });
@@ -298,16 +288,9 @@ fn deserialize_value<'input, 'mem>(
                 if let Some(true) = has_next {
                     // Use Clone to create a copy of the list for the next item
                     stack.push_front(StackItem::ListItem {
-                        pl: pl.clone(),
                         shape,
                         index: index + 1,
                     });
-                }
-
-                // After processing the item value, add it to the list
-                let opaque = result.take().expect("Expected an item result");
-                unsafe {
-                    pl.push(opaque);
                 }
             }
             StackItem::FinishList { pl } => {
@@ -315,8 +298,13 @@ fn deserialize_value<'input, 'mem>(
                 let opaque = pl.build_in_place();
                 result = Some(opaque);
             }
-            StackItem::MapEntry { mut pm, key } => {
+            StackItem::MapEntry { key } => {
                 trace!("Processing hashmap key: \x1b[1;33m{}\x1b[0m", key);
+
+                let pm = match stack.front_mut().unwrap() {
+                    StackItem::FinishMap { pm } => pm,
+                    _ => unreachable!(),
+                };
 
                 // Create a poke for the key (string type)
                 let key_data = OpaqueUninit::new(unsafe { std::alloc::alloc(pm.def.k.layout) });
@@ -328,6 +316,12 @@ fn deserialize_value<'input, 'mem>(
                 let value_data = OpaqueUninit::new(unsafe { std::alloc::alloc(pm.def.v.layout) });
                 let value_poke = unsafe { Poke::unchecked_new(value_data, pm.def.v) };
 
+                // After processing the value, insert the key-value pair into the map
+                let value_opaque = result.take().expect("Expected a value result");
+                unsafe {
+                    pm.insert(key_data.assume_init(), value_opaque);
+                }
+
                 // Push the value to be processed next
                 stack.push_front(StackItem::Value { poke: value_poke });
 
@@ -335,16 +329,7 @@ fn deserialize_value<'input, 'mem>(
                 let next_key = parser.parse_object_key()?;
                 if let Some(next_key) = next_key {
                     // We can clone the map for the next entry since Clone is available
-                    stack.push_front(StackItem::MapEntry {
-                        pm: pm.clone(),
-                        key: next_key,
-                    });
-                }
-
-                // After processing the value, insert the key-value pair into the map
-                let value_opaque = result.take().expect("Expected a value result");
-                unsafe {
-                    pm.insert(key_data.assume_init(), value_opaque);
+                    stack.push_front(StackItem::MapEntry { key: next_key });
                 }
             }
             StackItem::FinishMap { pm } => {

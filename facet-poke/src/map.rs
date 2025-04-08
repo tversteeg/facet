@@ -44,7 +44,6 @@ impl<'mem> PokeMapUninit<'mem> {
 }
 
 /// Allows poking a map (inserting, etc.)
-#[derive(Clone)]
 pub struct PokeMap<'mem> {
     data: Opaque<'mem>,
     #[allow(dead_code)]
