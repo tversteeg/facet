@@ -229,12 +229,14 @@ fn deserialize_value<'input, 'mem>(
 
                 match ps.field_by_name(&key) {
                     Ok((index, field_poke)) => {
+                        trace!("Found field, it's at index: \x1b[1;33m{index}\x1b[0m");
+
                         // Push the field value to be processed next
                         stack.push_front(StackItem::Value { poke: field_poke });
 
                         // After processing the field value, we need to mark it as initialized
                         // and potentially get the next field
-                        let next_key = parser.parse_object_key()?;
+                        let next_key = parser.parse_object_key()?; // FIXME: this is wrong because we need to read the value before we can parse the next key.
                         if let Some(next_key) = next_key {
                             stack.push_front(StackItem::StructField {
                                 ps: ps.clone(),
@@ -245,6 +247,7 @@ fn deserialize_value<'input, 'mem>(
                         unsafe { ps.mark_initialized(index) };
                     }
                     Err(_) => {
+                        trace!("No field named \x1b[1;36m{}\x1b[0m", key);
                         return Err(parser.make_error(JsonParseErrorKind::UnknownField(key)));
                     }
                 }
