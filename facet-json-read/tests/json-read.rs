@@ -26,7 +26,10 @@ fn json_read_simple_strut() {
     }
     let json = r#"{"name": "Alice", "age": 30}"#;
 
-    let s: TestStruct = from_str(json).unwrap();
+    let s: TestStruct = match from_str(json) {
+        Ok(s) => s,
+        Err(e) => panic!("Error deserializing JSON: {}", e),
+    };
     assert_eq!(s.name, "Alice");
     assert_eq!(s.age, 30);
 }

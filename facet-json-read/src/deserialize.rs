@@ -100,7 +100,7 @@ fn deserialize_value<'input, 'mem>(
         match item {
             StackItem::Value { poke } => {
                 let shape = poke.shape();
-                trace!("Deserializing {:?}", shape);
+                trace!("Deserializing {shape}");
 
                 match poke {
                     Poke::Scalar(pv) => {
