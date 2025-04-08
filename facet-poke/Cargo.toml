@@ -22,3 +22,4 @@ ctor = "0.4.1"
 owo-colors = "4.2.0"
 facet-derive.workspace = true
 facet-samplelibc.workspace = true
+facet-pretty = { path = "../facet-pretty" }

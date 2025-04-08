@@ -66,7 +66,7 @@ impl PrettyPrinter {
         let peek = Peek::new(value);
 
         let mut output = String::new();
-        self.format_peek(peek, &mut output, 0, 0, &mut HashMap::new())
+        self.format_peek_internal(peek, &mut output, 0, 0, &mut HashMap::new())
             .expect("Formatting failed");
 
         print!("{}", output);
@@ -77,7 +77,7 @@ impl PrettyPrinter {
         let peek = Peek::new(value);
 
         let mut output = String::new();
-        self.format_peek(peek, &mut output, 0, 0, &mut HashMap::new())
+        self.format_peek_internal(peek, &mut output, 0, 0, &mut HashMap::new())
             .expect("Formatting failed");
 
         output
@@ -86,11 +86,27 @@ impl PrettyPrinter {
     /// Format a value to a formatter
     pub fn format_to<T: Facet>(&self, value: &T, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let peek = Peek::new(value);
-        self.format_peek(peek, f, 0, 0, &mut HashMap::new())
+        self.format_peek_internal(peek, f, 0, 0, &mut HashMap::new())
+    }
+
+    /// Format a Peek value to a string
+    pub fn format_peek(&self, peek: Peek<'_>) -> String {
+        let mut output = String::new();
+        self.format_peek_internal(peek, &mut output, 0, 0, &mut HashMap::new())
+            .expect("Formatting failed");
+        output
+    }
+
+    /// Print a Peek value to stdout
+    pub fn print_peek(&self, peek: Peek<'_>) {
+        let mut output = String::new();
+        self.format_peek_internal(peek, &mut output, 0, 0, &mut HashMap::new())
+            .expect("Formatting failed");
+        print!("{}", output);
     }
 
     /// Internal method to format a Peek value
-    pub(crate) fn format_peek(
+    pub(crate) fn format_peek_internal(
         &self,
         peek: Peek<'_>,
         f: &mut impl Write,
@@ -250,7 +266,7 @@ impl PrettyPrinter {
                 self.write_redacted(f, "[REDACTED]")?;
             } else {
                 // Field value is not sensitive, format normally
-                self.format_peek(
+                self.format_peek_internal(
                     Peek::Value(field_value),
                     f,
                     format_depth + 1,
@@ -293,7 +309,7 @@ impl PrettyPrinter {
             )?;
 
             // Format item
-            self.format_peek(
+            self.format_peek_internal(
                 Peek::Value(item),
                 f,
                 format_depth + 1,

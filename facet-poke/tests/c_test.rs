@@ -9,6 +9,9 @@ fn test_sample_libc() {
         eprintln!("🔍 Display: {}", format!("{}", peek).bright_green());
         eprintln!("🐛 Debug: {}", format!("{:?}", peek).bright_blue());
 
+        eprint!("Pretty: ");
+        facet_pretty::PrettyPrinter::new().print_peek(peek);
+
         inspect(peek);
     }
 }

@@ -187,6 +187,7 @@ dependencies = [
  "ctor",
  "facet-derive",
  "facet-peek",
+ "facet-pretty",
  "facet-samplelibc",
  "facet-trait",
  "owo-colors",
