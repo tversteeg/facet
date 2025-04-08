@@ -266,7 +266,7 @@ dependencies = [
 
 [[package]]
 name = "facet-msgpack"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "color-backtrace",
  "ctor",
@@ -306,7 +306,7 @@ dependencies = [
 
 [[package]]
 name = "facet-pretty"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "facet-derive",
  "facet-peek",
@@ -350,7 +350,7 @@ dependencies = [
 
 [[package]]
 name = "facet-yaml"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "facet-derive",
  "facet-poke",
