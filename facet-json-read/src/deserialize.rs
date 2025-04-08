@@ -169,7 +169,7 @@ fn deserialize_value<'input, 'mem>(
                         if let Some(true) = has_element {
                             let item_shape = pl.def().t;
                             let item_data =
-                                OpaqueUninit::new(unsafe { core::alloc::alloc(item_shape.layout) });
+                                OpaqueUninit::new(unsafe { std::alloc::alloc(item_shape.layout) });
                             let item_poke = unsafe { Poke::unchecked_new(item_data, item_shape) };
 
                             stack.push_front(StackItem::FinishList { pl });
@@ -189,9 +189,8 @@ fn deserialize_value<'input, 'mem>(
 
                         if let Some(key) = first_key {
                             let value_shape = pm.def().v;
-                            let value_data = OpaqueUninit::new(unsafe {
-                                core::alloc::alloc(value_shape.layout)
-                            });
+                            let value_data =
+                                OpaqueUninit::new(unsafe { std::alloc::alloc(value_shape.layout) });
                             let value_poke =
                                 unsafe { Poke::unchecked_new(value_data, value_shape) };
 
@@ -279,13 +278,13 @@ fn deserialize_value<'input, 'mem>(
                 unsafe {
                     pl.push(item);
                 }
-                unsafe { core::alloc::dealloc(item.as_mut_byte_ptr(), pl.def().t.layout) };
+                unsafe { std::alloc::dealloc(item.as_mut_byte_ptr(), pl.def().t.layout) };
 
                 let has_next = parser.parse_array_element()?;
                 if let Some(true) = has_next {
                     let item_shape = pl.def().t;
                     let item_data =
-                        OpaqueUninit::new(unsafe { core::alloc::alloc(item_shape.layout) });
+                        OpaqueUninit::new(unsafe { std::alloc::alloc(item_shape.layout) });
                     let item_poke = unsafe { Poke::unchecked_new(item_data, item_shape) };
 
                     stack.push_front(StackItem::AfterListItem { item: item_data });
@@ -310,13 +309,13 @@ fn deserialize_value<'input, 'mem>(
                     pm.insert(key_data, value);
                 }
                 core::mem::forget(key); // key has been moved out of
-                unsafe { core::alloc::dealloc(value.as_mut_byte_ptr(), pm.def().v.layout) };
+                unsafe { std::alloc::dealloc(value.as_mut_byte_ptr(), pm.def().v.layout) };
 
                 let next_key = parser.parse_object_key()?;
                 if let Some(next_key) = next_key {
                     let value_shape = pm.def().v;
                     let value_data =
-                        OpaqueUninit::new(unsafe { core::alloc::alloc(value_shape.layout) });
+                        OpaqueUninit::new(unsafe { std::alloc::alloc(value_shape.layout) });
                     let value_poke = unsafe { Poke::unchecked_new(value_data, value_shape) };
 
                     stack.push_front(StackItem::AfterMapValue {

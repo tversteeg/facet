@@ -10,11 +10,11 @@ description = "Core traits for the facet ecosystem"
 keywords = ["reflection", "traits"]
 categories = ["development-tools"]
 
-[features]
-std = []
-default = ["std"]
-
 [dependencies]
 facet-opaque.workspace = true
 facet-spez.workspace = true
 facet-types.workspace = true
+
+[features]
+std = ["facet-opaque/std", "facet-spez/std", "facet-types/std"]
+default = ["std"]

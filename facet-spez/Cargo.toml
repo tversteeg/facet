@@ -14,3 +14,7 @@ categories = ["development-tools", "rust-patterns"]
 impls = "1.0.3"
 facet-opaque.workspace = true
 facet-types.workspace = true
+
+[features]
+std = []
+default = ["std"]

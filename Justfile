@@ -23,6 +23,7 @@ nostd:
     cargo check --no-default-features -p facet
     cargo check --no-default-features -p facet-spez
     cargo check --no-default-features -p facet-peek
+    cargo check --no-default-features -p facet-opaque
 
 ci:
     #!/usr/bin/env -S bash -euo pipefail

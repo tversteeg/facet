@@ -14,5 +14,5 @@ categories = ["development-tools", "rust-patterns", "parsing"]
 facet-trait.workspace = true
 
 [features]
-std = []
+std = ["facet-trait/std"]
 default = ["std"]

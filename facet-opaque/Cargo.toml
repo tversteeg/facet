@@ -11,3 +11,7 @@ keywords = ["pointer", "type-erasure", "reflection", "facet"]
 categories = ["rust-patterns", "memory-management", "development-tools"]
 
 [dependencies]
+
+[features]
+std = []
+default = ["std"]
