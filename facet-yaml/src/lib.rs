@@ -1,77 +1,115 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-use facet_core::Partial;
-use yaml_rust2::YamlLoader;
-
-/// Deserializes YAML data into a Facet Partial.
-///
-/// # Example
-///
-/// ```
-/// use facet::Facet;
-/// use facet_yaml::from_yaml;
-///
-/// #[derive(Debug, Facet, PartialEq)]
-/// struct Config {
-///     name: String,
-///     version: u64,
-/// }
-///
-/// let yaml = r#"
-/// name: MyApp
-/// version: 1
-/// "#;
-///
-/// let mut partial = Config::partial();
-/// from_yaml(&mut partial, yaml).expect("Failed to parse YAML");
-///
-/// let config = partial.build::<Config>();
-/// assert_eq!(config, Config { name: "MyApp".to_string(), version: 1 });
-/// ```
-pub fn from_yaml(partial: &mut Partial, yaml: &str) -> Result<(), String> {
-    let docs = YamlLoader::load_from_str(yaml).map_err(|e| e.to_string())?;
-
-    // Assuming only one document in the YAML string
-    let doc = &docs[0];
-    match doc {
-        yaml_rust2::Yaml::Hash(hash) => {
-            for (key, value) in hash {
-                let key_str = match key.as_str() {
-                    Some(s) => s,
-                    None => return Err("Expected string key".to_string()),
-                };
-
-                let slot = partial
-                    .slot_by_name(key_str)
-                    .map_err(|_| format!("Unknown field: {}", key_str))?;
-
-                match value {
-                    yaml_rust2::Yaml::String(s) => {
-                        slot.fill(s.clone());
-                    }
-                    yaml_rust2::Yaml::Integer(i) => {
-                        slot.fill(*i as u64);
-                    }
-                    _ => {
-                        println!("Unsupported YAML type for field: {}", key_str);
-                        unimplemented!()
-                    }
-                }
-            }
-        }
-        _ => {
-            return Err("Expected a YAML hash".to_string());
-        }
-    }
-
-    Ok(())
-}
+use facet_poke::Poke;
+use facet_trait::{Facet, Opaque, OpaqueConst, ShapeExt};
+use yaml_rust2::{Yaml, YamlLoader};
 
 #[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+mod tests;
+
+/// Deserializes a YAML string into a value of type `T` that implements `Facet`.
+pub fn from_str<T: Facet>(yaml: &str) -> Result<T, AnyErr> {
+    let (poke, _guard) = Poke::alloc::<T>();
+    let opaque = from_str_opaque(poke, yaml)?;
+    Ok(unsafe { opaque.read::<T>() })
+}
+
+/// Any error
+#[derive(Debug, Clone)]
+pub struct AnyErr(String);
+
+impl std::fmt::Display for AnyErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
+}
+
+impl std::error::Error for AnyErr {}
+
+impl From<String> for AnyErr {
+    fn from(s: String) -> Self {
+        Self(s)
+    }
+}
+
+impl From<&str> for AnyErr {
+    fn from(s: &str) -> Self {
+        Self(s.to_string())
+    }
+}
+
+fn yaml_type(ty: &Yaml) -> &'static str {
+    match ty {
+        Yaml::Real(_) => "real number",
+        Yaml::Integer(_) => "integer",
+        Yaml::String(_) => "string",
+        Yaml::Boolean(_) => "boolean",
+        Yaml::Array(_) => "array",
+        Yaml::Hash(_) => "hash/map",
+        Yaml::Alias(_) => "alias",
+        Yaml::Null => "null",
+        Yaml::BadValue => "bad value",
+    }
+}
+
+fn yaml_to_u64(ty: &Yaml) -> Result<u64, AnyErr> {
+    match ty {
+        Yaml::Real(r) => r
+            .parse::<u64>()
+            .map_err(|_| AnyErr("Failed to parse real as u64".into())),
+        Yaml::Integer(i) => Ok(*i as u64),
+        Yaml::String(s) => s
+            .parse::<u64>()
+            .map_err(|_| AnyErr("Failed to parse string as u64".into())),
+        Yaml::Boolean(b) => Ok(if *b { 1 } else { 0 }),
+        _ => Err(AnyErr(format!("Cannot convert {} to u64", yaml_type(ty)))),
+    }
+}
+
+fn from_str_opaque<'mem>(poke: Poke<'mem>, yaml: &str) -> Result<Opaque<'mem>, AnyErr> {
+    let docs = YamlLoader::load_from_str(yaml).map_err(|e| e.to_string())?;
+    if docs.len() != 1 {
+        return Err("Expected exactly one YAML document".into());
+    }
+    deserialize_value(poke, &docs[0])
+}
+
+fn deserialize_value<'mem>(poke: Poke<'mem>, value: &Yaml) -> Result<Opaque<'mem>, AnyErr> {
+    let opaque = match poke {
+        Poke::Scalar(ps) => {
+            if ps.shape().is_type::<u64>() {
+                let u = yaml_to_u64(value)?;
+                let opaque = OpaqueConst::from_ref(&u);
+                unsafe { ps.put(opaque) }
+            } else {
+                return Err(format!("Unsupported scalar type: {}", ps.shape()).into());
+            }
+        }
+        Poke::List(_) => todo!(),
+        Poke::Map(_) => todo!(),
+        Poke::Struct(mut ps) => match value {
+            Yaml::Hash(hash) => {
+                for (k, v) in hash {
+                    let k = k
+                        .as_str()
+                        .ok_or_else(|| format!("Expected string key, got: {}", yaml_type(k)))?;
+                    let (index, field_poke) = ps
+                        .field_by_name(k)
+                        .map_err(|e| format!("Field '{}' error: {}", k, e))?;
+                    let _v = deserialize_value(field_poke, v)
+                        .map_err(|e| format!("Error deserializing field '{}': {}", k, e))?;
+                    unsafe {
+                        ps.mark_initialized(index);
+                    }
+                }
+                ps.build_in_place()
+            }
+            _ => {
+                return Err(format!("Expected a YAML hash, got: {:?}", value).into());
+            }
+        },
+        Poke::Enum(_) => todo!(),
+    };
+    Ok(opaque)
 }

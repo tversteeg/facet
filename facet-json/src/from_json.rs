@@ -28,16 +28,9 @@ use log::trace;
 /// let person: Person = facet_json::from_str(json).unwrap();
 /// ```
 pub fn from_str<T: Facet>(json: &str) -> Result<T, JsonParseErrorWithContext<'_>> {
-    // Allocate a Poke for type T
     let (poke, _guard) = Poke::alloc::<T>();
-
-    // Deserialize the JSON into the Poke
     let opaque = from_str_opaque(poke, json)?;
-
-    // Convert the Opaque to the concrete type T
-    let result = unsafe { opaque.read::<T>() };
-
-    Ok(result)
+    Ok(unsafe { opaque.read::<T>() })
 }
 
 /// Deserialize a `Poke` object from a JSON string.

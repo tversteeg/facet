@@ -2,16 +2,17 @@
 members = [
     "facet",
     "facet-codegen",
-    "facet-trait",
     "facet-derive",
     "facet-json",
     "facet-msgpack",
     "facet-opaque",
     "facet-peek",
     "facet-poke",
-    "facet-spez",
-    "facet-types",
     "facet-samplelibc",
+    "facet-spez",
+    "facet-trait",
+    "facet-types",
+    "facet-yaml",
 ]
 resolver = "3"
 

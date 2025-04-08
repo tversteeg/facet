@@ -14,6 +14,8 @@ categories = ["encoding", "parsing", "data-structures"]
 yaml-rust2 = "0.10.0"
 facet-trait = { workspace = true }
 facet-types = { workspace = true }
+facet-poke.workspace = true
 
 [dev-dependencies]
 facet = { workspace = true }
+facet-derive.workspace = true
