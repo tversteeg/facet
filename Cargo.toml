@@ -8,6 +8,7 @@ members = [
     "facet-opaque",
     "facet-peek",
     "facet-poke",
+    "facet-pretty",
     "facet-samplelibc",
     "facet-spez",
     "facet-trait",
