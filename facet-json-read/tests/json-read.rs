@@ -18,7 +18,7 @@ fn init() {
 }
 
 #[test]
-fn json_read_simple_strut() {
+fn json_read_simple_struct() {
     #[derive(Facet)]
     struct TestStruct {
         name: String,
@@ -32,6 +32,17 @@ fn json_read_simple_strut() {
     };
     assert_eq!(s.name, "Alice");
     assert_eq!(s.age, 30);
+}
+
+#[test]
+fn json_read_vec() {
+    let json = r#"[1, 2, 3, 4, 5]"#;
+
+    let v: Vec<i32> = match from_str(json) {
+        Ok(v) => v,
+        Err(e) => panic!("Error deserializing JSON: {}", e),
+    };
+    assert_eq!(v, vec![1, 2, 3, 4, 5]);
 }
 
 // #[test]

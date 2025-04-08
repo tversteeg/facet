@@ -104,4 +104,9 @@ impl<'mem> PokeList<'mem> {
     pub fn build_in_place(self) -> Opaque<'mem> {
         self.data
     }
+
+    /// Gets the def for that list
+    pub fn def(&self) -> &ListDef {
+        &self.def
+    }
 }

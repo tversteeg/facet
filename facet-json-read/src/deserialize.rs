@@ -54,49 +54,21 @@ fn deserialize_value<'input, 'mem>(
 ) -> Result<Opaque<'mem>, JsonParseErrorWithContext<'input>> {
     use std::collections::VecDeque;
 
-    // Define various states for the deserialization process
     enum StackItem<'mem> {
-        // For processing a value
-        Value {
-            poke: Poke<'mem>,
-        },
-        // For finishing a struct after processing its fields
-        FinishStruct {
-            ps: facet_poke::PokeStruct<'mem>,
-        },
-        // For processing a struct field
-        StructField {
-            key: String,
-        },
-        // For handling operations after processing a struct field's value
-        AfterStructField {
-            index: usize,
-        },
-        // For finishing a list after processing its items
-        FinishList {
-            pl: facet_poke::PokeList<'mem>,
-        },
-        // For processing a list item
-        ListItem {
-            shape: &'static facet_trait::Shape,
-            index: usize,
-        },
-        // For finishing a map after processing its entries
-        FinishMap {
-            pm: facet_poke::PokeMap<'mem>,
-        },
-        // For processing a map entry
-        MapEntry {
-            key: String,
-        },
+        Value { poke: Poke<'mem> },
+        FinishStruct { ps: facet_poke::PokeStruct<'mem> },
+        StructField { key: String },
+        AfterStructField { index: usize },
+        FinishList { pl: facet_poke::PokeList<'mem> },
+        AfterListItem { item: OpaqueUninit<'mem> },
+        FinishMap { pm: facet_poke::PokeMap<'mem> },
+        AfterMapEntry { key: String },
     }
 
-    // Initialize the result and the stack
     let mut result = None;
     let mut stack = VecDeque::new();
     stack.push_back(StackItem::Value { poke: root_poke });
 
-    // Process the stack until it's empty
     while let Some(item) = stack.pop_front() {
         match item {
             StackItem::Value { poke } => {
@@ -121,84 +93,63 @@ fn deserialize_value<'input, 'mem>(
                     }
                     Poke::Struct(ps) => {
                         trace!("Deserializing \x1b[1;36mstruct\x1b[0m");
-                        // First, push a FinishStruct item to build the struct in place after processing all fields
                         stack.push_front(StackItem::FinishStruct { ps });
 
-                        // Then, prepare to process the first field
                         let first_key = parser.expect_object_start()?;
                         if let Some(key) = first_key {
-                            // Since we now have Clone, this is much simpler
                             stack.push_front(StackItem::StructField { key });
                         }
                     }
                     Poke::List(list_uninit) => {
                         trace!("Deserializing \x1b[1;36marray\x1b[0m");
-                        // Parse array start
                         parser.expect_array_start()?;
 
-                        // Initialize the list with no size hint
                         let pl = list_uninit.init(None).unwrap_or_else(|_| {
                             panic!("Failed to initialize list");
                         });
 
-                        // Prepare to process the first item
                         let has_element = parser.parse_array_element()?;
 
                         if let Some(true) = has_element {
-                            // Store the list in the finish item first
                             stack.push_front(StackItem::FinishList { pl });
 
-                            // Process first item - create a new allocation for it
                             let item_data =
                                 OpaqueUninit::new(unsafe { std::alloc::alloc(shape.layout) });
                             let item_poke = unsafe { Poke::unchecked_new(item_data, shape) };
 
-                            // Value needs to be processed next, so put it at the front
+                            stack.push_front(StackItem::AfterListItem { item: item_data });
                             stack.push_front(StackItem::Value { poke: item_poke });
-
-                            // Then we'll process the ListItem that will handle the result
-                            stack.push_front(StackItem::ListItem { shape, index: 0 });
                         } else {
-                            // No items, just finish the list
                             stack.push_front(StackItem::FinishList { pl });
                         }
                     }
                     Poke::Map(map_uninit) => {
                         trace!("Deserializing \x1b[1;36mhashmap\x1b[0m");
-                        // Parse object start and get first key if it exists
                         let first_key = parser.expect_object_start()?;
 
-                        // Initialize the map with no size hint
                         let pm = map_uninit.init(None).unwrap_or_else(|_| {
                             panic!("Failed to initialize map"); // TODO: map errors
                         });
 
                         if let Some(key) = first_key {
-                            // Now that we have Clone for PokeMap, we can simplify this
                             let value_shape = pm.def.v;
 
-                            // Put our initialized map in the FinishMap entry
                             stack.push_front(StackItem::FinishMap { pm });
 
-                            // Create a poke for the value
                             let value_data =
                                 OpaqueUninit::new(unsafe { std::alloc::alloc(value_shape.layout) });
                             let value_poke =
                                 unsafe { Poke::unchecked_new(value_data, value_shape) };
 
-                            // Value needs to be processed first
                             stack.push_front(StackItem::Value { poke: value_poke });
 
-                            // After processing the value, handle the insertion
-                            stack.push_front(StackItem::MapEntry { key });
+                            stack.push_front(StackItem::AfterMapEntry { key });
                         } else {
-                            // No entries, just finish the map
                             stack.push_front(StackItem::FinishMap { pm });
                         }
                     }
                     Poke::Enum(pe) => {
                         trace!("Deserializing \x1b[1;36menum\x1b[0m");
-                        // Assuming enums are serialized as JSON strings representing the variant name
                         let variant_str = parser.parse_string()?;
 
                         let pe = pe.set_variant_by_name(&variant_str).map_err(|_| {
@@ -226,10 +177,8 @@ fn deserialize_value<'input, 'mem>(
                     Ok((index, field_poke)) => {
                         trace!("Found field, it's at index: \x1b[1;33m{index}\x1b[0m");
 
-                        // After we process the field value, we need to handle post-processing
                         stack.push_front(StackItem::AfterStructField { index });
 
-                        // Push the field value to be processed next
                         stack.push_front(StackItem::Value { poke: field_poke });
                     }
                     Err(_) => {
@@ -250,7 +199,6 @@ fn deserialize_value<'input, 'mem>(
                     ps.mark_initialized(index);
                 }
 
-                // Now it's the correct time to parse the next key, if there is one
                 let next_key = parser.parse_object_key()?;
                 if let Some(next_key) = next_key {
                     stack.push_front(StackItem::StructField { key: next_key });
@@ -262,35 +210,26 @@ fn deserialize_value<'input, 'mem>(
                 let opaque = ps.build_in_place();
                 result = Some(opaque);
             }
-            StackItem::ListItem { shape, index } => {
-                trace!("Processing array item at index: \x1b[1;33m{}\x1b[0m", index);
+            StackItem::AfterListItem { item } => {
+                trace!("Processing array item at index");
 
                 let pl = match stack.front_mut().unwrap() {
                     StackItem::FinishList { pl } => pl,
                     _ => unreachable!(),
                 };
-
-                // Allocate memory for the item
-                let data = OpaqueUninit::new(unsafe { std::alloc::alloc(shape.layout) });
-                let item_poke = unsafe { Poke::unchecked_new(data, shape) };
-
-                // After processing the item value, add it to the list
-                let opaque = result.take().expect("Expected an item result");
                 unsafe {
-                    pl.push(opaque);
+                    pl.push(item.assume_init());
                 }
 
-                // Push the item to be processed next
-                stack.push_front(StackItem::Value { poke: item_poke });
-
-                // Check if there's another element after this one
                 let has_next = parser.parse_array_element()?;
                 if let Some(true) = has_next {
-                    // Use Clone to create a copy of the list for the next item
-                    stack.push_front(StackItem::ListItem {
-                        shape,
-                        index: index + 1,
-                    });
+                    let item_shape = pl.def().t;
+                    let item_data =
+                        OpaqueUninit::new(unsafe { std::alloc::alloc(item_shape.layout) });
+                    let item_poke = unsafe { Poke::unchecked_new(item_data, item_shape) };
+
+                    stack.push_front(StackItem::AfterListItem { item: item_data });
+                    stack.push_front(StackItem::Value { poke: item_poke });
                 }
             }
             StackItem::FinishList { pl } => {
@@ -298,7 +237,7 @@ fn deserialize_value<'input, 'mem>(
                 let opaque = pl.build_in_place();
                 result = Some(opaque);
             }
-            StackItem::MapEntry { key } => {
+            StackItem::AfterMapEntry { key } => {
                 trace!("Processing hashmap key: \x1b[1;33m{}\x1b[0m", key);
 
                 let pm = match stack.front_mut().unwrap() {
@@ -306,30 +245,24 @@ fn deserialize_value<'input, 'mem>(
                     _ => unreachable!(),
                 };
 
-                // Create a poke for the key (string type)
                 let key_data = OpaqueUninit::new(unsafe { std::alloc::alloc(pm.def.k.layout) });
                 let key_poke = unsafe { Poke::unchecked_new(key_data, pm.def.k) };
                 let scalar_key_poke = key_poke.into_scalar();
                 scalar_key_poke.parse(&key).unwrap(); // TODO: map errors
 
-                // Create a poke for the value based on map def
                 let value_data = OpaqueUninit::new(unsafe { std::alloc::alloc(pm.def.v.layout) });
                 let value_poke = unsafe { Poke::unchecked_new(value_data, pm.def.v) };
 
-                // After processing the value, insert the key-value pair into the map
                 let value_opaque = result.take().expect("Expected a value result");
                 unsafe {
                     pm.insert(key_data.assume_init(), value_opaque);
                 }
 
-                // Push the value to be processed next
                 stack.push_front(StackItem::Value { poke: value_poke });
 
-                // Get the next key if there is one
                 let next_key = parser.parse_object_key()?;
                 if let Some(next_key) = next_key {
-                    // We can clone the map for the next entry since Clone is available
-                    stack.push_front(StackItem::MapEntry { key: next_key });
+                    stack.push_front(StackItem::AfterMapEntry { key: next_key });
                 }
             }
             StackItem::FinishMap { pm } => {
@@ -340,7 +273,6 @@ fn deserialize_value<'input, 'mem>(
         }
     }
 
-    // Return the final result
     result.ok_or_else(|| {
         parser.make_error(JsonParseErrorKind::Custom(
             "Unexpected end of input".to_string(),
