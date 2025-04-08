@@ -68,12 +68,10 @@ fn deserialize_value<'input, 'mem>(
         },
         // For processing a struct field
         StructField {
-            ps: facet_poke::PokeStruct<'mem>,
             key: String,
         },
         // For handling operations after processing a struct field's value
         AfterStructField {
-            ps: facet_poke::PokeStruct<'mem>,
             index: usize,
         },
         // For finishing a list after processing its items
@@ -130,13 +128,13 @@ fn deserialize_value<'input, 'mem>(
                     Poke::Struct(ps) => {
                         trace!("Deserializing \x1b[1;36mstruct\x1b[0m");
                         // First, push a FinishStruct item to build the struct in place after processing all fields
-                        stack.push_front(StackItem::FinishStruct { ps: ps.clone() });
+                        stack.push_front(StackItem::FinishStruct { ps });
 
                         // Then, prepare to process the first field
                         let first_key = parser.expect_object_start()?;
                         if let Some(key) = first_key {
                             // Since we now have Clone, this is much simpler
-                            stack.push_front(StackItem::StructField { ps, key });
+                            stack.push_front(StackItem::StructField { key });
                         }
                     }
                     Poke::List(list_uninit) => {
@@ -233,18 +231,20 @@ fn deserialize_value<'input, 'mem>(
                     }
                 }
             }
-            StackItem::StructField { mut ps, key } => {
+            StackItem::StructField { key } => {
                 trace!("Processing struct key: \x1b[1;33m{}\x1b[0m", key);
+
+                let ps = match stack.front_mut().unwrap() {
+                    StackItem::FinishStruct { ps } => ps,
+                    _ => unreachable!("AfterStructField should only be called on FinishStruct"),
+                };
 
                 match ps.field_by_name(&key) {
                     Ok((index, field_poke)) => {
                         trace!("Found field, it's at index: \x1b[1;33m{index}\x1b[0m");
 
                         // After we process the field value, we need to handle post-processing
-                        stack.push_front(StackItem::AfterStructField {
-                            ps: ps.clone(),
-                            index,
-                        });
+                        stack.push_front(StackItem::AfterStructField { index });
 
                         // Push the field value to be processed next
                         stack.push_front(StackItem::Value { poke: field_poke });
@@ -255,24 +255,22 @@ fn deserialize_value<'input, 'mem>(
                     }
                 }
             }
-            StackItem::AfterStructField { ps, index } => {
+            StackItem::AfterStructField { index } => {
                 trace!("After processing struct field at index: \x1b[1;33m{index}\x1b[0m");
 
-                let parent = stack.front_mut().unwrap();
-                match parent {
-                    StackItem::FinishStruct { ps } => {
-                        // this is the PokeStruct that matters re: field initialization
-                        unsafe { ps.mark_initialized(index) };
-                    }
-                    _ => {
-                        unreachable!("AfterStructField should only be called on FinishStruct");
-                    }
+                let ps = match stack.front_mut().unwrap() {
+                    StackItem::FinishStruct { ps } => ps,
+                    _ => unreachable!("AfterStructField should only be called on FinishStruct"),
+                };
+
+                unsafe {
+                    ps.mark_initialized(index);
                 }
 
                 // Now it's the correct time to parse the next key, if there is one
                 let next_key = parser.parse_object_key()?;
                 if let Some(next_key) = next_key {
-                    stack.push_front(StackItem::StructField { ps, key: next_key });
+                    stack.push_front(StackItem::StructField { key: next_key });
                 }
             }
             StackItem::FinishStruct { ps } => {

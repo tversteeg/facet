@@ -4,7 +4,6 @@ use std::ptr::NonNull;
 use super::{Guard, ISet, PokeValue};
 
 /// Allows poking a struct (setting fields, etc.)
-#[derive(Clone)]
 pub struct PokeStruct<'mem> {
     data: OpaqueUninit<'mem>,
     shape: &'static Shape,
