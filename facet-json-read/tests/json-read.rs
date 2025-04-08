@@ -58,77 +58,111 @@ fn json_read_hashmap() {
     assert_eq!(m.get("key3").unwrap(), "value3");
 }
 
+#[test]
+fn json_read_more_types() {
+    #[derive(Facet)]
+    struct TestStructWithMoreTypes {
+        u8_val: u8,
+        u16_val: u16,
+        i8_val: i8,
+        i16_val: i16,
+        u32_val: u32,
+        i32_val: i32,
+        u64_val: u64,
+        i64_val: i64,
+        f32_val: f32,
+        f64_val: f64,
+    }
+
+    let json = r#"{
+        "u8_val": 255,
+        "u16_val": 65535,
+        "i8_val": -128,
+        "i16_val": -32768,
+        "u32_val": 4294967295,
+        "i32_val": -2147483648,
+        "u64_val": 18446744073709551615,
+        "i64_val": -9223372036854775808,
+        "f32_val": 3.141592653589793,
+        "f64_val": 3.141592653589793
+    }"#;
+
+    let test_struct: TestStructWithMoreTypes = match from_str(json) {
+        Ok(s) => s,
+        Err(e) => panic!("Error deserializing JSON: {}", e),
+    };
+
+    assert_eq!(test_struct.u8_val, 255);
+    assert_eq!(test_struct.u16_val, 65535);
+    assert_eq!(test_struct.i8_val, -128);
+    assert_eq!(test_struct.i16_val, -32768);
+    assert_eq!(test_struct.u32_val, 4294967295);
+    assert_eq!(test_struct.i32_val, -2147483648);
+    assert_eq!(test_struct.u64_val, 18446744073709551615);
+    assert_eq!(test_struct.i64_val, -9223372036854775808);
+    assert!((test_struct.f32_val - std::f32::consts::PI).abs() < f32::EPSILON);
+    assert!((test_struct.f64_val - std::f64::consts::PI).abs() < f64::EPSILON);
+}
+
+#[test]
+fn test_from_json_with_nested_structs() {
+    #[derive(Facet)]
+    struct InnerStruct {
+        value: i32,
+    }
+
+    #[derive(Facet)]
+    struct OuterStruct {
+        name: String,
+        inner: InnerStruct,
+    }
+
+    let json = r#"{
+        "name": "Outer",
+        "inner": {
+            "value": 42
+        }
+    }"#;
+
+    let test_struct: OuterStruct = match from_str(json) {
+        Ok(s) => s,
+        Err(e) => panic!("Error deserializing JSON: {}", e),
+    };
+
+    assert_eq!(test_struct.name, "Outer");
+    assert_eq!(test_struct.inner.value, 42);
+}
+
+#[test]
+fn test_from_json_with_simple_tuples() {
+    type Tuple = (i32, String);
+
+    let json = r#"[123, "Hello"]"#;
+
+    let test_struct: Tuple = match from_str(json) {
+        Ok(s) => s,
+        Err(e) => panic!("Error deserializing JSON: {}", e),
+    };
+
+    assert_eq!(test_struct.0, 123);
+    assert_eq!(test_struct.1, "Hello");
+}
+
 // #[test]
-// fn json_read_more_types() {
-//     #[derive(Facet)]
-//     struct TestStructWithMoreTypes {
-//         u8_val: u8,
-//         u16_val: u16,
-//         i8_val: i8,
-//         i16_val: i16,
-//         u32_val: u32,
-//         i32_val: i32,
-//         u64_val: u64,
-//         i64_val: i64,
-//         f32_val: f32,
-//         f64_val: f64,
-//     }
+// fn test_from_json_with_tuples() {
+//     type Tuple = (i32, String, (f64, bool));
 
-//     let json = r#"{
-//         "u8_val": 255,
-//         "u16_val": 65535,
-//         "i8_val": -128,
-//         "i16_val": -32768,
-//         "u32_val": 4294967295,
-//         "i32_val": -2147483648,
-//         "u64_val": 18446744073709551615,
-//         "i64_val": -9223372036854775808,
-//         "f32_val": 3.141592653589793,
-//         "f64_val": 3.141592653589793
-//     }"#;
+//     let json = r#"[123, "Hello", [3.69, true]]"#;
 
-//     let mut test_struct = TestStructWithMoreTypes::partial();
-//     from_json(&mut test_struct, json).unwrap();
+//     let test_struct: Tuple = match from_str(json) {
+//         Ok(s) => s,
+//         Err(e) => panic!("Error deserializing JSON: {}", e),
+//     };
 
-//     let built_struct = test_struct.build::<TestStructWithMoreTypes>();
-//     assert_eq!(built_struct.u8_val, 255);
-//     assert_eq!(built_struct.u16_val, 65535);
-//     assert_eq!(built_struct.i8_val, -128);
-//     assert_eq!(built_struct.i16_val, -32768);
-//     assert_eq!(built_struct.u32_val, 4294967295);
-//     assert_eq!(built_struct.i32_val, -2147483648);
-//     assert_eq!(built_struct.u64_val, 18446744073709551615);
-//     assert_eq!(built_struct.i64_val, -9223372036854775808);
-//     assert!((built_struct.f32_val - std::f32::consts::PI).abs() < f32::EPSILON);
-//     assert!((built_struct.f64_val - std::f64::consts::PI).abs() < f64::EPSILON);
-// }
-
-// #[test]
-// fn test_from_json_with_nested_structs() {
-//     #[derive(Facet)]
-//     struct InnerStruct {
-//         value: i32,
-//     }
-
-//     #[derive(Facet)]
-//     struct OuterStruct {
-//         name: String,
-//         inner: InnerStruct,
-//     }
-
-//     let json = r#"{
-//         "name": "Outer",
-//         "inner": {
-//             "value": 42
-//         }
-//     }"#;
-
-//     let mut test_struct = OuterStruct::partial();
-//     from_json(&mut test_struct, json).unwrap();
-
-//     let built_struct = test_struct.build::<OuterStruct>();
-//     assert_eq!(built_struct.name, "Outer");
-//     assert_eq!(built_struct.inner.value, 42);
+//     assert_eq!(test_struct.0, 123);
+//     assert_eq!(test_struct.1, "Hello");
+//     assert!((test_struct.2.0 - 3.69).abs() < f64::EPSILON);
+//     assert!(test_struct.2.1);
 // }
 
 // #[test]
@@ -138,14 +172,15 @@ fn json_read_hashmap() {
 
 //     let json = r#"[123, "Hello", [3.69, true]]"#;
 
-//     let mut test_struct = TupleStruct::partial();
-//     from_str(&mut test_struct, json).unwrap();
+//     let test_struct: TupleStruct = match from_str(json) {
+//         Ok(s) => s,
+//         Err(e) => panic!("Error deserializing JSON: {}", e),
+//     };
 
-//     let built_struct = test_struct.build::<TupleStruct>();
-//     assert_eq!(built_struct.0, 123);
-//     assert_eq!(built_struct.1, "Hello");
-//     assert!((built_struct.2.0 - 3.69).abs() < f64::EPSILON);
-//     assert!(built_struct.2.1);
+//     assert_eq!(test_struct.0, 123);
+//     assert_eq!(test_struct.1, "Hello");
+//     assert!((test_struct.2.0 - 3.69).abs() < f64::EPSILON);
+//     assert!(test_struct.2.1);
 // }
 
 // #[test]

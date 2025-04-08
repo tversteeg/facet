@@ -36,7 +36,7 @@ macro_rules! field {
     ($idx:tt, $ty:ty,) => {
         Field {
             name: stringify!($idx),
-            shape: <$ty>::SHAPE,
+            shape: $crate::shape_of(&|t: $ty| t.$idx),
             offset: std::mem::offset_of!($ty, $idx),
             flags: FieldFlags::EMPTY,
         }
