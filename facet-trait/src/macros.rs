@@ -12,7 +12,7 @@ macro_rules! struct_field {
         $crate::Field::builder()
             .name(stringify!($field))
             .shape($crate::shape_of(&|s: $struct| s.$field))
-            .offset(::std::mem::offset_of!($struct, $field))
+            .offset(::core::mem::offset_of!($struct, $field))
             .flags($crate::FieldFlags::EMPTY)
             .build()
     };
@@ -151,7 +151,7 @@ macro_rules! enum_variants {
 ///
 /// ```
 /// use facet_trait::value_vtable;
-/// use std::fmt::{self, Formatter};
+/// use core::fmt::{self, Formatter};
 /// use facet_types::TypeNameOpts;
 ///
 /// let vtable = value_vtable!(String, |f: &mut Formatter<'_>, _opts: TypeNameOpts| write!(f, "String"));
@@ -168,28 +168,28 @@ macro_rules! value_vtable {
                 .type_name($type_name_fn)
                 .drop_in_place(|data| unsafe { data.drop_in_place::<$type_name>() });
 
-            if $crate::facet_spez::impls!($type_name: std::fmt::Display) {
+            if $crate::facet_spez::impls!($type_name: core::fmt::Display) {
                 builder = builder.display(|data, f| {
                     use $crate::facet_spez::*;
                     (&&Spez(unsafe { data.as_ref::<$type_name>() })).spez_display(f)
                 });
             }
 
-            if $crate::facet_spez::impls!($type_name: std::fmt::Debug) {
+            if $crate::facet_spez::impls!($type_name: core::fmt::Debug) {
                 builder = builder.debug(|data, f| {
                     use $crate::facet_spez::*;
                     (&&Spez(unsafe { data.as_ref::<$type_name>() })).spez_debug(f)
                 });
             }
 
-            if $crate::facet_spez::impls!($type_name: std::default::Default) {
+            if $crate::facet_spez::impls!($type_name: core::default::Default) {
                 builder = builder.default_in_place(|target| {
                     use $crate::facet_spez::*;
                     (&&Spez(<$type_name as $crate::Facet>::DUMMY)).spez_default_in_place(target)
                 });
             }
 
-            if $crate::facet_spez::impls!($type_name: std::clone::Clone) {
+            if $crate::facet_spez::impls!($type_name: core::clone::Clone) {
                 builder = builder.clone_into(|src, dst| {
                     use $crate::facet_spez::*;
                     (&&Spez(unsafe { src.as_ref::<$type_name>() })).spez_clone_into(dst)
@@ -198,22 +198,22 @@ macro_rules! value_vtable {
 
             {
                 let mut traits = $crate::MarkerTraits::empty();
-                if $crate::facet_spez::impls!($type_name: std::cmp::Eq) {
+                if $crate::facet_spez::impls!($type_name: core::cmp::Eq) {
                     traits = traits.union($crate::MarkerTraits::EQ);
                 }
-                if $crate::facet_spez::impls!($type_name: std::marker::Send) {
+                if $crate::facet_spez::impls!($type_name: core::marker::Send) {
                     traits = traits.union($crate::MarkerTraits::SEND);
                 }
-                if $crate::facet_spez::impls!($type_name: std::marker::Sync) {
+                if $crate::facet_spez::impls!($type_name: core::marker::Sync) {
                     traits = traits.union($crate::MarkerTraits::SYNC);
                 }
-                if $crate::facet_spez::impls!($type_name: std::marker::Copy) {
+                if $crate::facet_spez::impls!($type_name: core::marker::Copy) {
                     traits = traits.union($crate::MarkerTraits::COPY);
                 }
                 builder = builder.marker_traits(traits);
             }
 
-            if $crate::facet_spez::impls!($type_name: std::cmp::PartialEq) {
+            if $crate::facet_spez::impls!($type_name: core::cmp::PartialEq) {
                 builder = builder.eq(|left, right| {
                     use $crate::facet_spez::*;
                     (&&Spez(unsafe { left.as_ref::<$type_name>() }))
@@ -221,7 +221,7 @@ macro_rules! value_vtable {
                 });
             }
 
-            if $crate::facet_spez::impls!($type_name: std::cmp::PartialOrd) {
+            if $crate::facet_spez::impls!($type_name: core::cmp::PartialOrd) {
                 builder = builder.partial_ord(|left, right| {
                     use $crate::facet_spez::*;
                     (&&Spez(unsafe { left.as_ref::<$type_name>() }))
@@ -229,7 +229,7 @@ macro_rules! value_vtable {
                 });
             }
 
-            if $crate::facet_spez::impls!($type_name: std::cmp::Ord) {
+            if $crate::facet_spez::impls!($type_name: core::cmp::Ord) {
                 builder = builder.ord(|left, right| {
                     use $crate::facet_spez::*;
                     (&&Spez(unsafe { left.as_ref::<$type_name>() }))
@@ -237,7 +237,7 @@ macro_rules! value_vtable {
                 });
             }
 
-            if $crate::facet_spez::impls!($type_name: std::hash::Hash) {
+            if $crate::facet_spez::impls!($type_name: core::hash::Hash) {
                 builder = builder.hash(|value, hasher_this, hasher_write_fn| {
                     use $crate::facet_spez::*;
                     use $crate::HasherProxy;

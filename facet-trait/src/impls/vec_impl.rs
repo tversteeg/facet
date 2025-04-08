@@ -1,5 +1,5 @@
 use crate::*;
-use std::{alloc::Layout, hash::Hash as _};
+use core::{alloc::Layout, hash::Hash as _};
 
 unsafe impl<T> Facet for Vec<T>
 where
@@ -22,7 +22,7 @@ where
                             }
                         })
                         .drop_in_place(|value| unsafe {
-                            std::ptr::drop_in_place(value.as_mut::<Vec<T>>());
+                            core::ptr::drop_in_place(value.as_mut::<Vec<T>>());
                         })
                         .default_in_place(|target| unsafe { target.write(Self::default()) })
                         .clone_into(|src, dst| unsafe { dst.write(src.as_ref::<Vec<T>>()) });

@@ -1,8 +1,6 @@
-use std::{
-    alloc::Layout,
-    collections::{HashMap, VecDeque},
-    hash::{Hash, RandomState},
-};
+use core::{alloc::Layout, hash::Hash};
+use std::collections::{HashMap, VecDeque};
+use std::hash::RandomState;
 
 use facet_opaque::{Opaque, OpaqueConst};
 
@@ -18,7 +16,7 @@ struct HashMapIterator<'mem, K> {
 
 unsafe impl<K, V, S> Facet for HashMap<K, V, S>
 where
-    K: Facet + std::cmp::Eq + std::hash::Hash + 'static,
+    K: Facet + core::cmp::Eq + core::hash::Hash + 'static,
     V: Facet + 'static,
     S: Facet + Default,
 {
@@ -60,7 +58,7 @@ where
                             }
                         })
                         .drop_in_place(|value| unsafe {
-                            std::ptr::drop_in_place(value.as_mut::<HashMap<K, V>>());
+                            core::ptr::drop_in_place(value.as_mut::<HashMap<K, V>>());
                         });
 
                     if K::SHAPE.vtable.debug.is_some() && V::SHAPE.vtable.debug.is_some() {
@@ -206,7 +204,7 @@ struct RandomStateInnards {
 }
 
 unsafe impl Facet for RandomState {
-    const DUMMY: Self = unsafe { std::mem::transmute(RandomStateInnards { k0: 0, k1: 0 }) };
+    const DUMMY: Self = unsafe { core::mem::transmute(RandomStateInnards { k0: 0, k1: 0 }) };
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .layout(Layout::new::<Self>())

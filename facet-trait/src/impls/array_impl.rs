@@ -1,5 +1,5 @@
 use crate::*;
-use std::alloc::Layout;
+use core::alloc::Layout;
 
 unsafe impl<T> Facet for [T; 1]
 where
@@ -23,7 +23,7 @@ where
                             }
                         })
                         .drop_in_place(|value| unsafe {
-                            std::ptr::drop_in_place(value.as_mut::<[T; 1]>());
+                            core::ptr::drop_in_place(value.as_mut::<[T; 1]>());
                         });
                     if T::SHAPE.vtable.debug.is_some() {
                         builder = builder.debug(|value, f| {

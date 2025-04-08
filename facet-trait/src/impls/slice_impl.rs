@@ -1,5 +1,5 @@
 use crate::*;
-use std::alloc::Layout;
+use core::alloc::Layout;
 
 unsafe impl<T> Facet for &[T]
 where
@@ -109,7 +109,7 @@ where
                                         OpaqueConst::from_ref(y),
                                     )
                                 };
-                                if ord != std::cmp::Ordering::Equal {
+                                if ord != core::cmp::Ordering::Equal {
                                     return ord;
                                 }
                             }
@@ -129,7 +129,7 @@ where
                                     )
                                 };
                                 match ord {
-                                    Some(std::cmp::Ordering::Equal) => continue,
+                                    Some(core::cmp::Ordering::Equal) => continue,
                                     Some(order) => return Some(order),
                                     None => return None,
                                 }

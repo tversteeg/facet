@@ -1,7 +1,6 @@
 use crate::value_vtable;
 use crate::*;
-use std::alloc::Layout;
-use std::borrow::Cow;
+use core::alloc::Layout;
 
 unsafe impl Facet for () {
     const DUMMY: Self = ();
@@ -36,13 +35,14 @@ unsafe impl Facet for &str {
     };
 }
 
-unsafe impl Facet for Cow<'_, str> {
-    const DUMMY: Self = Cow::Borrowed("");
+#[cfg(feature = "std")]
+unsafe impl Facet for std::borrow::Cow<'_, str> {
+    const DUMMY: Self = std::borrow::Cow::Borrowed("");
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .layout(Layout::new::<Self>())
             .def(Def::Scalar(ScalarDef::of::<Self>()))
-            .vtable(value_vtable!(Cow<'_, str>, |f, _opts| write!(
+            .vtable(value_vtable!(std::borrow::Cow<'_, str>, |f, _opts| write!(
                 f,
                 "Cow<'_, str>"
             )))
