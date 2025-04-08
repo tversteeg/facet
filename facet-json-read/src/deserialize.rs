@@ -1,3 +1,5 @@
+use std::mem::ManuallyDrop;
+
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
 
 use facet_poke::Poke;
@@ -80,7 +82,9 @@ fn deserialize_value<'input, 'mem>(
         },
         // For processing a list item
         ListItem {
-            pl: facet_poke::PokeList<'mem>,
+            // TODO: just find the `PokeList` from the stack instaed of
+            // cloning it.
+            pl: ManuallyDrop<facet_poke::PokeList<'mem>>,
             shape: &'static facet_trait::Shape,
             index: usize,
         },
@@ -90,7 +94,7 @@ fn deserialize_value<'input, 'mem>(
         },
         // For processing a map entry
         MapEntry {
-            pm: facet_poke::PokeMap<'mem>,
+            pm: ManuallyDrop<facet_poke::PokeMap<'mem>>,
             key: String,
         },
     }
@@ -162,7 +166,7 @@ fn deserialize_value<'input, 'mem>(
 
                             // Then we'll process the ListItem that will handle the result
                             stack.push_front(StackItem::ListItem {
-                                pl,
+                                pl: ManuallyDrop::new(pl),
                                 shape,
                                 index: 0,
                             });
@@ -201,7 +205,7 @@ fn deserialize_value<'input, 'mem>(
 
                             // After processing the value, handle the insertion
                             stack.push_front(StackItem::MapEntry {
-                                pm: initialized_map,
+                                pm: ManuallyDrop::new(initialized_map),
                                 key,
                             });
                         } else {
@@ -251,23 +255,29 @@ fn deserialize_value<'input, 'mem>(
                     }
                 }
             }
-            StackItem::AfterStructField { mut ps, index } => {
+            StackItem::AfterStructField { ps, index } => {
                 trace!("After processing struct field at index: \x1b[1;33m{index}\x1b[0m");
 
-                // Mark the field as initialized now that we've processed its value
-                unsafe { ps.mark_initialized(index) };
+                let parent = stack.front_mut().unwrap();
+                match parent {
+                    StackItem::FinishStruct { ps } => {
+                        // this is the PokeStruct that matters re: field initialization
+                        unsafe { ps.mark_initialized(index) };
+                    }
+                    _ => {
+                        unreachable!("AfterStructField should only be called on FinishStruct");
+                    }
+                }
 
                 // Now it's the correct time to parse the next key, if there is one
                 let next_key = parser.parse_object_key()?;
                 if let Some(next_key) = next_key {
-                    stack.push_front(StackItem::StructField {
-                        ps: ps.clone(),
-                        key: next_key,
-                    });
+                    stack.push_front(StackItem::StructField { ps, key: next_key });
                 }
             }
             StackItem::FinishStruct { ps } => {
                 trace!("Finished deserializing \x1b[1;36mstruct\x1b[0m");
+
                 let opaque = ps.build_in_place();
                 result = Some(opaque);
             }
