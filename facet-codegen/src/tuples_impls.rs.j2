@@ -6,7 +6,7 @@
 
 use std::{alloc::Layout, fmt};
 
-use crate::{Field, FieldFlags, Def, StructDef, Shape, Facet, TypeNameOpts, ValueVTable, Characteristic, OpaqueConst, MarkerTraits};
+use crate::{Field, FieldFlags, Def, StructDef, StructKind, Shape, Facet, TypeNameOpts, ValueVTable, Characteristic, OpaqueConst, MarkerTraits};
 
 #[inline(always)]
 pub fn write_type_name_list(
@@ -136,7 +136,8 @@ where
                 parse: None,
                 try_from: None,
             },
-            def: Def::Tuple(StructDef {
+            def: Def::Struct(StructDef {
+                kind: StructKind::Tuple,
                 fields: &const { [
                     {% for i in range(n) %}field!({{ i }}, {{ type_name }},){% if not loop.last %},
                     {% endif %}{% endfor %}

@@ -75,7 +75,7 @@ impl<'mem> Poke<'mem> {
     /// of the type described by `shape`.
     pub unsafe fn unchecked_new(data: OpaqueUninit<'mem>, shape: &'static Shape) -> Self {
         match shape.def {
-            Def::Struct(struct_def) | Def::TupleStruct(struct_def) | Def::Tuple(struct_def) => {
+            Def::Struct(struct_def) => {
                 Poke::Struct(unsafe { PokeStruct::new(data, shape, struct_def) })
             }
             Def::Map(map_def) => {

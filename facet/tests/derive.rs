@@ -1,4 +1,4 @@
-use facet::{Def, Facet, FieldFlags, StructDef};
+use facet::{Def, Facet, FieldFlags, StructDef, StructKind};
 use std::{fmt::Debug, mem::offset_of};
 
 #[test]
@@ -18,7 +18,8 @@ fn simple_struct() {
         assert_eq!(shape.layout.size(), 32);
         assert_eq!(shape.layout.align(), 8);
 
-        if let Def::Struct(StructDef { fields }) = shape.def {
+        if let Def::Struct(StructDef { kind, fields }) = shape.def {
+            assert_eq!(kind, StructKind::Struct);
             assert_eq!(fields.len(), 2);
 
             let foo_field = &fields[0];
@@ -50,7 +51,7 @@ fn struct_with_sensitive_field() {
     if !cfg!(miri) {
         let shape = Blah::SHAPE;
 
-        if let Def::Struct(StructDef { fields }) = shape.def {
+        if let Def::Struct(StructDef { fields, .. }) = shape.def {
             let bar_field = &fields[1];
             assert_eq!(bar_field.name, "bar");
             match shape.def {
@@ -268,7 +269,7 @@ fn derive_real_life_cub_config() {
 
 //     let shape = Point::SHAPE;
 //     assert_eq!(format!("{}", shape), "Point");
-//     if let Def::TupleStruct(StructDef { fields }) = shape.def {
+//     if let Def::Struct(StructDef { fields }) = shape.def {
 //         assert_eq!(fields.len(), 2);
 //         assert_eq!(fields[0].name, "0");
 //         assert_eq!(fields[1].name, "1");

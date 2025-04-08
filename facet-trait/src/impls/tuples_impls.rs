@@ -5,7 +5,7 @@ use std::{alloc::Layout, fmt};
 
 use crate::{
     Characteristic, Def, Facet, Field, FieldFlags, MarkerTraits, OpaqueConst, Shape, StructDef,
-    TypeNameOpts, ValueVTable,
+    StructKind, TypeNameOpts, ValueVTable,
 };
 
 #[inline(always)]
@@ -104,7 +104,8 @@ where
                 parse: None,
                 try_from: None,
             },
-            def: Def::Tuple(StructDef {
+            def: Def::Struct(StructDef {
+                kind: StructKind::Tuple,
                 fields: &const { [field!(0, (T0,),)] },
             }),
         }
@@ -190,7 +191,8 @@ where
                 parse: None,
                 try_from: None,
             },
-            def: Def::Tuple(StructDef {
+            def: Def::Struct(StructDef {
+                kind: StructKind::Tuple,
                 fields: &const { [field!(0, (T0, T1,),), field!(1, (T0, T1,),)] },
             }),
         }
@@ -295,7 +297,8 @@ where
                 parse: None,
                 try_from: None,
             },
-            def: Def::Tuple(StructDef {
+            def: Def::Struct(StructDef {
+                kind: StructKind::Tuple,
                 fields: &const {
                     [
                         field!(0, (T0, T1, T2,),),
@@ -432,7 +435,8 @@ where
                 parse: None,
                 try_from: None,
             },
-            def: Def::Tuple(StructDef {
+            def: Def::Struct(StructDef {
+                kind: StructKind::Tuple,
                 fields: &const {
                     [
                         field!(0, (T0, T1, T2, T3,),),
@@ -601,7 +605,8 @@ where
                 parse: None,
                 try_from: None,
             },
-            def: Def::Tuple(StructDef {
+            def: Def::Struct(StructDef {
+                kind: StructKind::Tuple,
                 fields: &const {
                     [
                         field!(0, (T0, T1, T2, T3, T4,),),
@@ -809,7 +814,8 @@ where
                 parse: None,
                 try_from: None,
             },
-            def: Def::Tuple(StructDef {
+            def: Def::Struct(StructDef {
+                kind: StructKind::Tuple,
                 fields: &const {
                     [
                         field!(0, (T0, T1, T2, T3, T4, T5,),),
@@ -1041,7 +1047,8 @@ where
                 parse: None,
                 try_from: None,
             },
-            def: Def::Tuple(StructDef {
+            def: Def::Struct(StructDef {
+                kind: StructKind::Tuple,
                 fields: &const {
                     [
                         field!(0, (T0, T1, T2, T3, T4, T5, T6,),),
@@ -1298,7 +1305,8 @@ where
                 parse: None,
                 try_from: None,
             },
-            def: Def::Tuple(StructDef {
+            def: Def::Struct(StructDef {
+                kind: StructKind::Tuple,
                 fields: &const {
                     [
                         field!(0, (T0, T1, T2, T3, T4, T5, T6, T7,),),
@@ -1579,7 +1587,8 @@ where
                 parse: None,
                 try_from: None,
             },
-            def: Def::Tuple(StructDef {
+            def: Def::Struct(StructDef {
+                kind: StructKind::Tuple,
                 fields: &const {
                     [
                         field!(0, (T0, T1, T2, T3, T4, T5, T6, T7, T8,),),
@@ -1886,7 +1895,8 @@ where
                 parse: None,
                 try_from: None,
             },
-            def: Def::Tuple(StructDef {
+            def: Def::Struct(StructDef {
+                kind: StructKind::Tuple,
                 fields: &const {
                     [
                         field!(0, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9,),),
@@ -2219,7 +2229,8 @@ where
                 parse: None,
                 try_from: None,
             },
-            def: Def::Tuple(StructDef {
+            def: Def::Struct(StructDef {
+                kind: StructKind::Tuple,
                 fields: &const {
                     [
                         field!(0, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,),),
@@ -2578,7 +2589,8 @@ where
                 parse: None,
                 try_from: None,
             },
-            def: Def::Tuple(StructDef {
+            def: Def::Struct(StructDef {
+                kind: StructKind::Tuple,
                 fields: &const {
                     [
                         field!(0, (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,),),

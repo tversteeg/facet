@@ -69,9 +69,7 @@ impl<'mem> Peek<'mem> {
     pub unsafe fn unchecked_new(data: OpaqueConst<'mem>, shape: &'static Shape) -> Self {
         let value = unsafe { PeekValue::unchecked_new(data, shape) };
         match shape.def {
-            Def::Struct(def) | Def::TupleStruct(def) | Def::Tuple(def) => {
-                Peek::Struct(PeekStruct::new(value, def))
-            }
+            Def::Struct(def) => Peek::Struct(PeekStruct::new(value, def)),
             Def::Map(def) => Peek::Map(PeekMap::new(value, def)),
             Def::List(def) => Peek::List(PeekList::new(value, def)),
             Def::Scalar { .. } => Peek::Value(value),

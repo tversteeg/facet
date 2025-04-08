@@ -78,6 +78,7 @@ unsafe impl facet::Facet for {struct_name} {{
                 |f, _opts| std::fmt::Write::write_str(f, "{struct_name}")
             ),
             def: facet::Def::Struct(facet::StructDef {{
+                kind: facet::StructKind::Struct,
                 fields: FIELDS,
             }}),
         }}

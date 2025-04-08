@@ -198,8 +198,24 @@ impl std::fmt::Display for FieldError {
 /// Common fields for struct-like types
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct StructDef {
+    /// the kind of struct (e.g. struct, tuple struct, tuple)
+    pub kind: StructKind,
+
     /// all fields, in declaration order (not necessarily in memory order)
     pub fields: &'static [Field],
+}
+
+/// Describes the kind of struct (useful for deserializing)
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum StructKind {
+    /// struct S { t0: T0, t1: T1 }
+    Struct,
+
+    /// struct TupleStruct(T0, T1);
+    TupleStruct,
+
+    /// (T0, T1)
+    Tuple,
 }
 
 /// Describes a field in a struct or tuple
@@ -386,20 +402,10 @@ pub enum Def {
     /// e.g. `u32`, `String`, `bool`, `SocketAddr`, etc.
     Scalar(ScalarDef),
 
-    /// Struct with statically-known, named fields
+    /// Various kinds of structs, see [`StructKind`]
     ///
-    /// e.g. `struct Struct { field: u32 }`
+    /// e.g. `struct Struct { field: u32 }`, `struct TupleStruct(u32, u32);`, `(u32, u32)`
     Struct(StructDef),
-
-    /// Tuple-struct, with numbered fields
-    ///
-    /// e.g. `struct TupleStruct(u32, u32);`
-    TupleStruct(StructDef),
-
-    /// Tuple, with numbered fields
-    ///
-    /// e.g. `(u32, u32);`
-    Tuple(StructDef),
 
     /// Map — keys are dynamic (and strings, sorry), values are homogeneous
     ///

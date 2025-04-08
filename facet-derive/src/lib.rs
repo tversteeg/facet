@@ -282,7 +282,8 @@ unsafe impl facet::Facet for {struct_name} {{
                 {struct_name},
                 |f, _opts| std::fmt::Write::write_str(f, "{struct_name}")
             ),
-            def: facet::Def::TupleStruct(facet::StructDef {{
+            def: facet::Def::Struct(facet::StructDef {{
+                kind: facet::StructKind::TupleStruct,
                 fields: facet::struct_fields!({struct_name}, ({fields_str})),
             }}),
         }}
