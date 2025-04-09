@@ -110,3 +110,21 @@ macro_rules! impl_facet_for_float {
 
 impl_facet_for_float!(f32);
 impl_facet_for_float!(f64);
+
+#[cfg(feature = "std")]
+unsafe impl Facet for std::net::SocketAddr {
+    const ARCHETYPE: Self = std::net::SocketAddr::V4(std::net::SocketAddrV4::new(
+        std::net::Ipv4Addr::new(0, 0, 0, 0),
+        0,
+    ));
+    const SHAPE: &'static Shape = &const {
+        Shape::builder()
+            .layout(Layout::new::<Self>())
+            .def(Def::Scalar(ScalarDef::of::<Self>()))
+            .vtable(value_vtable!(std::net::SocketAddr, |f, _opts| write!(
+                f,
+                "SocketAddr"
+            )))
+            .build()
+    };
+}
