@@ -66,7 +66,7 @@ The main `facet` crate re-exports symbols from:
 facet supports deserialization from multiple data formats through dedicated crates:
 
 - [facet-json](https://github.com/facet-rs/facet/tree/main/facet-json): JSON deserialization
-- [facet-yaml](https://github.com/facet-rs/facet/tree./facet-yaml): YAML deserialization
+- [facet-yaml](https://github.com/facet-rs/facet/tree/main/facet-yaml): YAML deserialization
 - [facet-msgpack](https://github.com/facet-rs/facet/tree/main/facet-msgpack): MessagePack deserialization
 - [facet-urlencoded](https://github.com/facet-rs/facet/tree/main/facet-urlencoded): URL-encoded form data deserialization
 
