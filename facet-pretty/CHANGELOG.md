@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3](https://github.com/facet-rs/facet/compare/facet-pretty-v0.1.2...facet-pretty-v0.1.3) - 2025-04-09
+
+### Other
+
+- updated the following local packages: facet-trait, facet-derive, facet-peek
+
 ## [0.1.1](https://github.com/facet-rs/facet/compare/facet-pretty-v0.1.0...facet-pretty-v0.1.1) - 2025-04-08
 
 ### Other
