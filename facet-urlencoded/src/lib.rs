@@ -76,7 +76,7 @@ pub fn from_str<T: Facet>(urlencoded: &str) -> Result<T, UrlEncodedError> {
 }
 
 /// Deserializes a URL encoded form data string into an `Opaque` value.
-/// 
+///
 /// This is the lower-level function that works with `Poke` directly.
 fn from_str_opaque<'mem>(
     poke: Poke<'mem>,
@@ -119,12 +119,14 @@ impl NestedValues {
             if let Some(close_bracket) = key.find(']') {
                 if open_bracket < close_bracket {
                     let parent_key = &key[0..open_bracket];
-                    let nested_key = &key[(open_bracket+1)..close_bracket];
-                    let remainder = &key[(close_bracket+1)..];
-                    
-                    let nested = self.nested.entry(parent_key.to_string())
+                    let nested_key = &key[(open_bracket + 1)..close_bracket];
+                    let remainder = &key[(close_bracket + 1)..];
+
+                    let nested = self
+                        .nested
+                        .entry(parent_key.to_string())
                         .or_insert_with(NestedValues::new);
-                    
+
                     if remainder.is_empty() {
                         // Simple case: user[name]=value
                         nested.flat.insert(nested_key.to_string(), value);
@@ -137,23 +139,23 @@ impl NestedValues {
                 }
             }
         }
-        
+
         // If we get here, it's a flat key-value pair
         self.flat.insert(key.to_string(), value);
     }
-    
+
     fn get(&self, key: &str) -> Option<&String> {
         self.flat.get(key)
     }
-    
+
     fn get_nested(&self, key: &str) -> Option<&NestedValues> {
         self.nested.get(key)
     }
-    
+
     fn keys(&self) -> impl Iterator<Item = &String> {
         self.flat.keys()
     }
-    
+
     fn nested_keys(&self) -> impl Iterator<Item = &String> {
         self.nested.keys()
     }
@@ -167,7 +169,7 @@ fn deserialize_value<'mem>(
     match poke {
         Poke::Struct(mut ps) => {
             trace!("Deserializing struct");
-            
+
             // Process flat fields
             for key in values.keys() {
                 if let Ok((index, field_poke)) = ps.field_by_name(key) {
@@ -178,7 +180,7 @@ fn deserialize_value<'mem>(
                     // Skip unknown fields
                 }
             }
-            
+
             // Process nested fields
             for key in values.nested_keys() {
                 if let Ok((index, field_poke)) = ps.field_by_name(key) {
@@ -186,12 +188,15 @@ fn deserialize_value<'mem>(
                         match field_poke {
                             Poke::Struct(_) => {
                                 let _nested_opaque = deserialize_value(field_poke, nested_values)?;
-                                unsafe { ps.mark_initialized(index); }
-                            },
+                                unsafe {
+                                    ps.mark_initialized(index);
+                                }
+                            }
                             _ => {
-                                return Err(UrlEncodedError::UnsupportedShape(
-                                    format!("Expected struct for nested field '{}'", key)
-                                ));
+                                return Err(UrlEncodedError::UnsupportedShape(format!(
+                                    "Expected struct for nested field '{}'",
+                                    key
+                                )));
                             }
                         }
                     }
@@ -203,11 +208,11 @@ fn deserialize_value<'mem>(
 
             trace!("Finished deserializing struct");
             Ok(ps.build_in_place())
-        },
+        }
         _ => {
             error!("Unsupported root type");
             Err(UrlEncodedError::UnsupportedShape(
-                "Unsupported root type".to_string()
+                "Unsupported root type".to_string(),
             ))
         }
     }
@@ -233,25 +238,30 @@ fn deserialize_scalar_field<'mem>(
                     Ok(num) => {
                         let opaque = OpaqueConst::from_ref(&num);
                         unsafe { ps_scalar.put(opaque) };
-                    },
+                    }
                     Err(_) => {
-                        return Err(UrlEncodedError::InvalidNumber(key.to_string(), value.to_string()));
+                        return Err(UrlEncodedError::InvalidNumber(
+                            key.to_string(),
+                            value.to_string(),
+                        ));
                     }
                 }
             } else {
                 warn!("Unsupported scalar type: {}", ps_scalar.shape());
-                return Err(UrlEncodedError::UnsupportedType(
-                    format!("{}", ps_scalar.shape())
-                ));
+                return Err(UrlEncodedError::UnsupportedType(format!(
+                    "{}",
+                    ps_scalar.shape()
+                )));
             }
             unsafe { ps.mark_initialized(index) };
             Ok(())
-        },
+        }
         _ => {
             error!("Expected scalar field");
-            Err(UrlEncodedError::UnsupportedShape(
-                format!("Expected scalar for field '{}'", key)
-            ))
+            Err(UrlEncodedError::UnsupportedShape(format!(
+                "Expected scalar for field '{}'",
+                key
+            )))
         }
     }
 }

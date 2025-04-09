@@ -103,7 +103,7 @@ fn test_nested_struct() {
     let query_string = "user[name]=John+Doe&user[age]=30&user[address][street]=123+Main+St&user[address][city]=Anytown&user[address][zip]=12345&product_id=ABC123&quantity=2";
 
     let order: OrderForm = from_str(query_string).expect("Failed to parse URL encoded data");
-    
+
     assert_eq!(
         order,
         OrderForm {
@@ -135,35 +135,35 @@ fn test_partial_nested_struct() {
 #[test]
 fn test_deep_nesting() {
     let query_string = "very[very][deeply][nested][field]=value&simple=data";
-    
+
     #[derive(Debug, Facet, PartialEq)]
     struct DeepNested {
         field: String,
     }
-    
+
     #[derive(Debug, Facet, PartialEq)]
     struct Nested {
         nested: DeepNested,
     }
-    
+
     #[derive(Debug, Facet, PartialEq)]
     struct Deeply {
         deeply: Nested,
     }
-    
+
     #[derive(Debug, Facet, PartialEq)]
     struct Very {
         very: Deeply,
     }
-    
+
     #[derive(Debug, Facet, PartialEq)]
     struct DeepTest {
         very: Very,
         simple: String,
     }
-    
+
     let deep_test: DeepTest = from_str(query_string).expect("Failed to parse deeply nested data");
-    
+
     assert_eq!(
         deep_test,
         DeepTest {
