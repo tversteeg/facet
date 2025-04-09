@@ -20,7 +20,7 @@ where
     V: Facet + 'static,
     S: Facet + Default,
 {
-    const DUMMY: Self = HashMap::with_hasher(S::DUMMY);
+    const ARCHETYPE: Self = HashMap::with_hasher(S::ARCHETYPE);
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .layout(Layout::new::<HashMap<K, V>>())
@@ -204,7 +204,7 @@ struct RandomStateInnards {
 }
 
 unsafe impl Facet for RandomState {
-    const DUMMY: Self = unsafe { core::mem::transmute(RandomStateInnards { k0: 0, k1: 0 }) };
+    const ARCHETYPE: Self = unsafe { core::mem::transmute(RandomStateInnards { k0: 0, k1: 0 }) };
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .layout(Layout::new::<Self>())

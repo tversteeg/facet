@@ -19,7 +19,7 @@ pub(crate) fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
         .0
         .iter()
         .map(|field| field.value.name.to_string())
-        .map(|field| format!("{field}: Facet::DUMMY"))
+        .map(|field| format!("{field}: Facet::ARCHETYPE"))
         .collect::<Vec<String>>()
         .join(", ");
 
@@ -62,7 +62,7 @@ pub(crate) fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
         r#"
 #[automatically_derived]
 unsafe impl facet::Facet for {struct_name} {{
-    const DUMMY: Self = Self {{
+    const ARCHETYPE: Self = Self {{
         {dummy_fields}
     }};
 

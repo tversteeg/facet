@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - errors gone
 - restore json test a little?? not much
 - everything... works?
-- DUMMY
+- ARCHETYPE
 - 29 tests passed aw yiss
 - clone in place => clone into
 - mhhh getting somewhere

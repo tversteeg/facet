@@ -185,7 +185,7 @@ macro_rules! value_vtable {
             if $crate::facet_spez::impls!($type_name: core::default::Default) {
                 builder = builder.default_in_place(|target| {
                     use $crate::facet_spez::*;
-                    (&&Spez(<$type_name as $crate::Facet>::DUMMY)).spez_default_in_place(target)
+                    (&&Spez(<$type_name as $crate::Facet>::ARCHETYPE)).spez_default_in_place(target)
                 });
             }
 

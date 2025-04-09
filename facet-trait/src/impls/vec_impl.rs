@@ -5,7 +5,7 @@ unsafe impl<T> Facet for Vec<T>
 where
     T: Facet,
 {
-    const DUMMY: Self = Vec::new(); // oh this is const, fantastic
+    const ARCHETYPE: Self = Vec::new(); // oh this is const, fantastic
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .layout(Layout::new::<Vec<T>>())

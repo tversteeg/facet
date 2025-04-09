@@ -3,7 +3,7 @@ use crate::*;
 use core::alloc::Layout;
 
 unsafe impl Facet for () {
-    const DUMMY: Self = ();
+    const ARCHETYPE: Self = ();
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .layout(Layout::new::<Self>())
@@ -14,7 +14,7 @@ unsafe impl Facet for () {
 }
 
 unsafe impl Facet for String {
-    const DUMMY: Self = String::new();
+    const ARCHETYPE: Self = String::new();
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .layout(Layout::new::<Self>())
@@ -25,7 +25,7 @@ unsafe impl Facet for String {
 }
 
 unsafe impl Facet for &str {
-    const DUMMY: Self = "";
+    const ARCHETYPE: Self = "";
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .layout(Layout::new::<Self>())
@@ -37,7 +37,7 @@ unsafe impl Facet for &str {
 
 #[cfg(feature = "std")]
 unsafe impl Facet for std::borrow::Cow<'_, str> {
-    const DUMMY: Self = std::borrow::Cow::Borrowed("");
+    const ARCHETYPE: Self = std::borrow::Cow::Borrowed("");
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .layout(Layout::new::<Self>())
@@ -51,7 +51,7 @@ unsafe impl Facet for std::borrow::Cow<'_, str> {
 }
 
 unsafe impl Facet for bool {
-    const DUMMY: Self = false;
+    const ARCHETYPE: Self = false;
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .layout(Layout::new::<Self>())
@@ -64,7 +64,7 @@ unsafe impl Facet for bool {
 macro_rules! impl_facet_for_integer {
     ($type:ty) => {
         unsafe impl Facet for $type {
-            const DUMMY: Self = 0;
+            const ARCHETYPE: Self = 0;
             const SHAPE: &'static Shape = &const {
                 Shape::builder()
                     .layout(Layout::new::<Self>())
@@ -93,7 +93,7 @@ impl_facet_for_integer!(i128);
 macro_rules! impl_facet_for_float {
     ($type:ty) => {
         unsafe impl Facet for $type {
-            const DUMMY: Self = 0.0;
+            const ARCHETYPE: Self = 0.0;
             const SHAPE: &'static Shape = &const {
                 Shape::builder()
                     .layout(Layout::new::<Self>())

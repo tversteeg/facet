@@ -24,7 +24,7 @@ pub(crate) fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStre
     let fields_str = fields.join(", ");
 
     let dummy_fields = (0..parsed.body.content.0.len())
-        .map(|_| String::from("Facet::DUMMY"))
+        .map(|_| String::from("Facet::ARCHETYPE"))
         .collect::<Vec<String>>()
         .join(", ");
 
@@ -33,7 +33,7 @@ pub(crate) fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStre
         r#"
 #[automatically_derived]
 unsafe impl facet::Facet for {struct_name} {{
-    const DUMMY: Self = Self({dummy_fields});
+    const ARCHETYPE: Self = Self({dummy_fields});
     const SHAPE: &'static facet::Shape = &const {{
         facet::Shape::builder()
             .layout(core::alloc::Layout::new::<Self>())
