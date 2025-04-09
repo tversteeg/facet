@@ -1,18 +1,21 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-use facet::{Partial, error, trace, warn};
+use facet_poke::Poke;
+use facet_trait::{Facet, Opaque, OpaqueConst, ShapeExt};
+use log::*;
 
 #[cfg(test)]
 mod tests;
 
-/// Deserializes URL encoded form data into a Facet Partial.
+/// Deserializes a URL encoded form data string into a value of type `T` that implements `Facet`.
 ///
 /// # Example
 ///
 /// ```
-/// use facet::Facet;
-/// use facet_urlencoded::from_urlencoded;
+/// use facet_derive::Facet;
+/// use facet_trait::{self as facet, Facet};
+/// use facet_urlencoded::from_str;
 ///
 /// #[derive(Debug, Facet, PartialEq)]
 /// struct SearchParams {
@@ -22,19 +25,26 @@ mod tests;
 ///
 /// let query_string = "query=rust+programming&page=2";
 ///
-/// let mut partial = SearchParams::partial();
-/// from_urlencoded(&mut partial, query_string).expect("Failed to parse URL encoded data");
-///
-/// let params = partial.build::<SearchParams>();
+/// let params: SearchParams = from_str(query_string).expect("Failed to parse URL encoded data");
 /// assert_eq!(params, SearchParams { query: "rust programming".to_string(), page: 2 });
 /// ```
-pub fn from_urlencoded(partial: &mut Partial, input: &str) -> Result<(), UrlEncodedError> {
-    use facet::{Def, Scalar};
+pub fn from_str<T: Facet>(urlencoded: &str) -> Result<T, UrlEncodedError> {
+    let (poke, _guard) = Poke::alloc::<T>();
+    let opaque = from_str_opaque(poke, urlencoded)?;
+    Ok(unsafe { opaque.read::<T>() })
+}
 
+/// Deserializes a URL encoded form data string into an `Opaque` value.
+/// 
+/// This is the lower-level function that works with `Poke` directly.
+fn from_str_opaque<'mem>(
+    poke: Poke<'mem>,
+    urlencoded: &str,
+) -> Result<Opaque<'mem>, UrlEncodedError> {
     trace!("Starting URL encoded form data deserialization");
 
     // Parse the URL encoded string into key-value pairs
-    let pairs = form_urlencoded::parse(input.as_bytes());
+    let pairs = form_urlencoded::parse(urlencoded.as_bytes());
 
     // Create a map to store the parsed key-value pairs
     let mut pairs_map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
@@ -42,84 +52,65 @@ pub fn from_urlencoded(partial: &mut Partial, input: &str) -> Result<(), UrlEnco
         pairs_map.insert(key.to_string(), value.to_string());
     }
 
-    // Process the struct fields
-    let shape_desc = partial.shape();
-    let shape = shape_desc.get();
-    trace!("Deserializing value with shape:\n{:?}", shape);
-
-    match &shape.innards {
-        Def::Struct { .. } => {
-            trace!("Deserializing \x1b[1;36mstruct\x1b[0m");
+    match poke {
+        Poke::Struct(mut ps) => {
+            trace!("Deserializing struct");
 
             for (key, value) in pairs_map {
-                trace!("Processing field key: \x1b[1;33m{}\x1b[0m", key);
+                trace!("Processing field key: {}", key);
 
-                let slot = match partial.slot_by_name(&key) {
-                    Ok(slot) => slot,
-                    Err(_) => {
-                        warn!("Unknown field: {}", key);
-                        continue; // Skip unknown fields
-                    }
-                };
-
-                let slot_shape = slot.shape();
-                let slot_shape_ref = slot_shape.get();
-
-                match &slot_shape_ref.innards {
-                    Def::Scalar(scalar) => {
-                        let mut partial_field = Partial::alloc(slot.shape());
-                        let field_slot = partial_field.scalar_slot().expect("Scalar slot");
-
-                        match scalar {
-                            Scalar::String => {
-                                field_slot.fill(value);
-                            }
-                            Scalar::U64 => match value.parse::<u64>() {
-                                Ok(num) => field_slot.fill(num),
-                                Err(_) => {
-                                    return Err(UrlEncodedError::InvalidNumber(key.clone(), value));
+                match ps.field_by_name(&key) {
+                    Ok((index, field_poke)) => {
+                        match field_poke {
+                            Poke::Scalar(ps) => {
+                                if ps.shape().is_type::<String>() {
+                                    let s = value;
+                                    let opaque = OpaqueConst::from_ref(&s);
+                                    unsafe { ps.put(opaque) };
+                                    core::mem::forget(s);
+                                } else if ps.shape().is_type::<u64>() {
+                                    match value.parse::<u64>() {
+                                        Ok(num) => {
+                                            let opaque = OpaqueConst::from_ref(&num);
+                                            unsafe { ps.put(opaque) };
+                                        },
+                                        Err(_) => {
+                                            return Err(UrlEncodedError::InvalidNumber(key, value));
+                                        }
+                                    }
+                                } else {
+                                    warn!("Unsupported scalar type: {}", ps.shape());
+                                    return Err(UrlEncodedError::UnsupportedType(
+                                        format!("{}", ps.shape())
+                                    ));
                                 }
                             },
-                            // Add other scalar types as needed
                             _ => {
-                                warn!("Unsupported scalar type: {:?}", scalar);
-                                return Err(UrlEncodedError::UnsupportedType(format!(
-                                    "{:?}",
-                                    scalar
-                                )));
+                                error!("Unsupported field type");
+                                return Err(UrlEncodedError::UnsupportedShape(
+                                    "Unsupported field type".to_string()
+                                ));
                             }
                         }
-
-                        slot.fill_from_partial(partial_field);
+                        unsafe { ps.mark_initialized(index) };
+                    },
+                    Err(_) => {
+                        warn!("Unknown field: {}", key);
+                        // Skip unknown fields
                     }
-                    // Add support for other shapes (Array, Transparent) as needed
-                    _ => {
-                        error!("Unsupported shape: {:?}", slot_shape_ref.innards);
-                        return Err(UrlEncodedError::UnsupportedShape(format!(
-                            "{:?}",
-                            slot_shape_ref.innards
-                        )));
-                    }
-                }
+                };
             }
 
-            trace!("Finished deserializing \x1b[1;36mstruct\x1b[0m");
-        }
+            trace!("Finished deserializing struct");
+            Ok(ps.build_in_place())
+        },
         _ => {
-            error!("Unsupported shape: {:?}", shape.innards);
-            return Err(UrlEncodedError::UnsupportedShape(format!(
-                "{:?}",
-                shape.innards
-            )));
+            error!("Unsupported root type");
+            Err(UrlEncodedError::UnsupportedShape(
+                "Unsupported root type".to_string()
+            ))
         }
     }
-
-    trace!(
-        "Successfully deserialized URL encoded form data for shape: \x1b[1;32m{}\x1b[0m at address \x1b[1;34m{:?}\x1b[0m\n",
-        shape,
-        partial.addr()
-    );
-    Ok(())
 }
 
 /// Errors that can occur during URL encoded form data deserialization.

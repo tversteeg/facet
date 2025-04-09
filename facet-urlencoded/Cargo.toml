@@ -11,5 +11,10 @@ categories = ["encoding", "parsing", "data-structures"]
 rust-version.workspace = true
 
 [dependencies]
-facet = { workspace = true }
-form_urlencoded = { workspace = true }
+facet-trait = { workspace = true }
+facet-poke = { workspace = true }
+form_urlencoded = "1.2.1"
+log = "0.4.27"
+
+[dev-dependencies]
+facet-derive = { workspace = true }

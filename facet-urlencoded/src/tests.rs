@@ -1,5 +1,6 @@
-use crate::from_urlencoded;
-use facet::Facet;
+use crate::from_str;
+use facet_derive::Facet;
+use facet_trait::{self as facet, Facet};
 
 #[derive(Debug, Facet, PartialEq)]
 struct SearchParams {
@@ -11,10 +12,7 @@ struct SearchParams {
 fn test_basic_urlencoded() {
     let query_string = "query=rust+programming&page=2";
 
-    let mut partial = SearchParams::partial();
-    from_urlencoded(&mut partial, query_string).expect("Failed to parse URL encoded data");
-
-    let params = partial.build::<SearchParams>();
+    let params: SearchParams = from_str(query_string).expect("Failed to parse URL encoded data");
     assert_eq!(
         params,
         SearchParams {
@@ -28,10 +26,7 @@ fn test_basic_urlencoded() {
 fn test_encoded_characters() {
     let query_string = "query=rust%20programming%21&page=3";
 
-    let mut partial = SearchParams::partial();
-    from_urlencoded(&mut partial, query_string).expect("Failed to parse URL encoded data");
-
-    let params = partial.build::<SearchParams>();
+    let params: SearchParams = from_str(query_string).expect("Failed to parse URL encoded data");
     assert_eq!(
         params,
         SearchParams {
@@ -46,21 +41,15 @@ fn test_encoded_characters() {
 fn test_missing_field() {
     let query_string = "query=rust+programming";
 
-    let mut partial = SearchParams::partial();
-    from_urlencoded(&mut partial, query_string).expect("Failed to parse URL encoded data");
-
     // This should panic because the 'page' field is not initialized
-    let _params = partial.build::<SearchParams>();
+    let _params: SearchParams = from_str(query_string).expect("Failed to parse URL encoded data");
 }
 
 #[test]
 fn test_unknown_field() {
     let query_string = "query=rust+programming&page=2&unknown=value";
 
-    let mut partial = SearchParams::partial();
-    from_urlencoded(&mut partial, query_string).expect("Failed to parse URL encoded data");
-
-    let params = partial.build::<SearchParams>();
+    let params: SearchParams = from_str(query_string).expect("Failed to parse URL encoded data");
     assert_eq!(
         params,
         SearchParams {
@@ -74,8 +63,7 @@ fn test_unknown_field() {
 fn test_invalid_number() {
     let query_string = "query=rust+programming&page=not_a_number";
 
-    let mut partial = SearchParams::partial();
-    let result = from_urlencoded(&mut partial, query_string);
+    let result = from_str::<SearchParams>(query_string);
 
     assert!(result.is_err());
     if let Err(err) = result {
