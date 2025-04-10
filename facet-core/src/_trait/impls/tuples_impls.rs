@@ -71,7 +71,7 @@ where
                             unsafe {
                                 let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -85,8 +85,8 @@ where
                             // Compare last element
                             unsafe {
                                 (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(&a.0 as *const T0),
-                                    OpaqueConst::from_ptr(&b.0 as *const T0),
+                                    OpaqueConst::new(&a.0 as *const T0),
+                                    OpaqueConst::new(&b.0 as *const T0),
                                 )
                             }
                         });
@@ -134,7 +134,7 @@ where
                             unsafe {
                                 let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -142,7 +142,7 @@ where
                             unsafe {
                                 let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -158,8 +158,8 @@ where
                                 let a_ptr = &a.0 as *const T0;
                                 let b_ptr = &b.0 as *const T0;
                                 if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -168,8 +168,8 @@ where
                             // Compare last element
                             unsafe {
                                 (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(&a.1 as *const T1),
-                                    OpaqueConst::from_ptr(&b.1 as *const T1),
+                                    OpaqueConst::new(&a.1 as *const T1),
+                                    OpaqueConst::new(&b.1 as *const T1),
                                 )
                             }
                         });
@@ -219,7 +219,7 @@ where
                             unsafe {
                                 let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -227,7 +227,7 @@ where
                             unsafe {
                                 let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -235,7 +235,7 @@ where
                             unsafe {
                                 let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -251,8 +251,8 @@ where
                                 let a_ptr = &a.0 as *const T0;
                                 let b_ptr = &b.0 as *const T0;
                                 if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -263,8 +263,8 @@ where
                                 let a_ptr = &a.1 as *const T1;
                                 let b_ptr = &b.1 as *const T1;
                                 if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -273,8 +273,8 @@ where
                             // Compare last element
                             unsafe {
                                 (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(&a.2 as *const T2),
-                                    OpaqueConst::from_ptr(&b.2 as *const T2),
+                                    OpaqueConst::new(&a.2 as *const T2),
+                                    OpaqueConst::new(&b.2 as *const T2),
                                 )
                             }
                         });
@@ -341,7 +341,7 @@ where
                             unsafe {
                                 let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -349,7 +349,7 @@ where
                             unsafe {
                                 let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -357,7 +357,7 @@ where
                             unsafe {
                                 let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -365,7 +365,7 @@ where
                             unsafe {
                                 let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -381,8 +381,8 @@ where
                                 let a_ptr = &a.0 as *const T0;
                                 let b_ptr = &b.0 as *const T0;
                                 if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -393,8 +393,8 @@ where
                                 let a_ptr = &a.1 as *const T1;
                                 let b_ptr = &b.1 as *const T1;
                                 if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -405,8 +405,8 @@ where
                                 let a_ptr = &a.2 as *const T2;
                                 let b_ptr = &b.2 as *const T2;
                                 if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -415,8 +415,8 @@ where
                             // Compare last element
                             unsafe {
                                 (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(&a.3 as *const T3),
-                                    OpaqueConst::from_ptr(&b.3 as *const T3),
+                                    OpaqueConst::new(&a.3 as *const T3),
+                                    OpaqueConst::new(&b.3 as *const T3),
                                 )
                             }
                         });
@@ -498,7 +498,7 @@ where
                             unsafe {
                                 let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -506,7 +506,7 @@ where
                             unsafe {
                                 let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -514,7 +514,7 @@ where
                             unsafe {
                                 let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -522,7 +522,7 @@ where
                             unsafe {
                                 let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -530,7 +530,7 @@ where
                             unsafe {
                                 let ptr = &value.4 as *const T4;
                                 (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -546,8 +546,8 @@ where
                                 let a_ptr = &a.0 as *const T0;
                                 let b_ptr = &b.0 as *const T0;
                                 if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -558,8 +558,8 @@ where
                                 let a_ptr = &a.1 as *const T1;
                                 let b_ptr = &b.1 as *const T1;
                                 if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -570,8 +570,8 @@ where
                                 let a_ptr = &a.2 as *const T2;
                                 let b_ptr = &b.2 as *const T2;
                                 if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -582,8 +582,8 @@ where
                                 let a_ptr = &a.3 as *const T3;
                                 let b_ptr = &b.3 as *const T3;
                                 if !(T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -592,8 +592,8 @@ where
                             // Compare last element
                             unsafe {
                                 (T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(&a.4 as *const T4),
-                                    OpaqueConst::from_ptr(&b.4 as *const T4),
+                                    OpaqueConst::new(&a.4 as *const T4),
+                                    OpaqueConst::new(&b.4 as *const T4),
                                 )
                             }
                         });
@@ -690,7 +690,7 @@ where
                             unsafe {
                                 let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -698,7 +698,7 @@ where
                             unsafe {
                                 let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -706,7 +706,7 @@ where
                             unsafe {
                                 let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -714,7 +714,7 @@ where
                             unsafe {
                                 let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -722,7 +722,7 @@ where
                             unsafe {
                                 let ptr = &value.4 as *const T4;
                                 (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -730,7 +730,7 @@ where
                             unsafe {
                                 let ptr = &value.5 as *const T5;
                                 (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -746,8 +746,8 @@ where
                                 let a_ptr = &a.0 as *const T0;
                                 let b_ptr = &b.0 as *const T0;
                                 if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -758,8 +758,8 @@ where
                                 let a_ptr = &a.1 as *const T1;
                                 let b_ptr = &b.1 as *const T1;
                                 if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -770,8 +770,8 @@ where
                                 let a_ptr = &a.2 as *const T2;
                                 let b_ptr = &b.2 as *const T2;
                                 if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -782,8 +782,8 @@ where
                                 let a_ptr = &a.3 as *const T3;
                                 let b_ptr = &b.3 as *const T3;
                                 if !(T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -794,8 +794,8 @@ where
                                 let a_ptr = &a.4 as *const T4;
                                 let b_ptr = &b.4 as *const T4;
                                 if !(T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -804,8 +804,8 @@ where
                             // Compare last element
                             unsafe {
                                 (T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(&a.5 as *const T5),
-                                    OpaqueConst::from_ptr(&b.5 as *const T5),
+                                    OpaqueConst::new(&a.5 as *const T5),
+                                    OpaqueConst::new(&b.5 as *const T5),
                                 )
                             }
                         });
@@ -908,7 +908,7 @@ where
                             unsafe {
                                 let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -916,7 +916,7 @@ where
                             unsafe {
                                 let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -924,7 +924,7 @@ where
                             unsafe {
                                 let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -932,7 +932,7 @@ where
                             unsafe {
                                 let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -940,7 +940,7 @@ where
                             unsafe {
                                 let ptr = &value.4 as *const T4;
                                 (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -948,7 +948,7 @@ where
                             unsafe {
                                 let ptr = &value.5 as *const T5;
                                 (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -956,7 +956,7 @@ where
                             unsafe {
                                 let ptr = &value.6 as *const T6;
                                 (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -972,8 +972,8 @@ where
                                 let a_ptr = &a.0 as *const T0;
                                 let b_ptr = &b.0 as *const T0;
                                 if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -984,8 +984,8 @@ where
                                 let a_ptr = &a.1 as *const T1;
                                 let b_ptr = &b.1 as *const T1;
                                 if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -996,8 +996,8 @@ where
                                 let a_ptr = &a.2 as *const T2;
                                 let b_ptr = &b.2 as *const T2;
                                 if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1008,8 +1008,8 @@ where
                                 let a_ptr = &a.3 as *const T3;
                                 let b_ptr = &b.3 as *const T3;
                                 if !(T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1020,8 +1020,8 @@ where
                                 let a_ptr = &a.4 as *const T4;
                                 let b_ptr = &b.4 as *const T4;
                                 if !(T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1032,8 +1032,8 @@ where
                                 let a_ptr = &a.5 as *const T5;
                                 let b_ptr = &b.5 as *const T5;
                                 if !(T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1042,8 +1042,8 @@ where
                             // Compare last element
                             unsafe {
                                 (T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(&a.6 as *const T6),
-                                    OpaqueConst::from_ptr(&b.6 as *const T6),
+                                    OpaqueConst::new(&a.6 as *const T6),
+                                    OpaqueConst::new(&b.6 as *const T6),
                                 )
                             }
                         });
@@ -1153,7 +1153,7 @@ where
                             unsafe {
                                 let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1161,7 +1161,7 @@ where
                             unsafe {
                                 let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1169,7 +1169,7 @@ where
                             unsafe {
                                 let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1177,7 +1177,7 @@ where
                             unsafe {
                                 let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1185,7 +1185,7 @@ where
                             unsafe {
                                 let ptr = &value.4 as *const T4;
                                 (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1193,7 +1193,7 @@ where
                             unsafe {
                                 let ptr = &value.5 as *const T5;
                                 (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1201,7 +1201,7 @@ where
                             unsafe {
                                 let ptr = &value.6 as *const T6;
                                 (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1209,7 +1209,7 @@ where
                             unsafe {
                                 let ptr = &value.7 as *const T7;
                                 (T7::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1225,8 +1225,8 @@ where
                                 let a_ptr = &a.0 as *const T0;
                                 let b_ptr = &b.0 as *const T0;
                                 if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1237,8 +1237,8 @@ where
                                 let a_ptr = &a.1 as *const T1;
                                 let b_ptr = &b.1 as *const T1;
                                 if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1249,8 +1249,8 @@ where
                                 let a_ptr = &a.2 as *const T2;
                                 let b_ptr = &b.2 as *const T2;
                                 if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1261,8 +1261,8 @@ where
                                 let a_ptr = &a.3 as *const T3;
                                 let b_ptr = &b.3 as *const T3;
                                 if !(T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1273,8 +1273,8 @@ where
                                 let a_ptr = &a.4 as *const T4;
                                 let b_ptr = &b.4 as *const T4;
                                 if !(T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1285,8 +1285,8 @@ where
                                 let a_ptr = &a.5 as *const T5;
                                 let b_ptr = &b.5 as *const T5;
                                 if !(T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1297,8 +1297,8 @@ where
                                 let a_ptr = &a.6 as *const T6;
                                 let b_ptr = &b.6 as *const T6;
                                 if !(T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1307,8 +1307,8 @@ where
                             // Compare last element
                             unsafe {
                                 (T7::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(&a.7 as *const T7),
-                                    OpaqueConst::from_ptr(&b.7 as *const T7),
+                                    OpaqueConst::new(&a.7 as *const T7),
+                                    OpaqueConst::new(&b.7 as *const T7),
                                 )
                             }
                         });
@@ -1424,7 +1424,7 @@ where
                             unsafe {
                                 let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1432,7 +1432,7 @@ where
                             unsafe {
                                 let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1440,7 +1440,7 @@ where
                             unsafe {
                                 let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1448,7 +1448,7 @@ where
                             unsafe {
                                 let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1456,7 +1456,7 @@ where
                             unsafe {
                                 let ptr = &value.4 as *const T4;
                                 (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1464,7 +1464,7 @@ where
                             unsafe {
                                 let ptr = &value.5 as *const T5;
                                 (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1472,7 +1472,7 @@ where
                             unsafe {
                                 let ptr = &value.6 as *const T6;
                                 (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1480,7 +1480,7 @@ where
                             unsafe {
                                 let ptr = &value.7 as *const T7;
                                 (T7::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1488,7 +1488,7 @@ where
                             unsafe {
                                 let ptr = &value.8 as *const T8;
                                 (T8::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1504,8 +1504,8 @@ where
                                 let a_ptr = &a.0 as *const T0;
                                 let b_ptr = &b.0 as *const T0;
                                 if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1516,8 +1516,8 @@ where
                                 let a_ptr = &a.1 as *const T1;
                                 let b_ptr = &b.1 as *const T1;
                                 if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1528,8 +1528,8 @@ where
                                 let a_ptr = &a.2 as *const T2;
                                 let b_ptr = &b.2 as *const T2;
                                 if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1540,8 +1540,8 @@ where
                                 let a_ptr = &a.3 as *const T3;
                                 let b_ptr = &b.3 as *const T3;
                                 if !(T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1552,8 +1552,8 @@ where
                                 let a_ptr = &a.4 as *const T4;
                                 let b_ptr = &b.4 as *const T4;
                                 if !(T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1564,8 +1564,8 @@ where
                                 let a_ptr = &a.5 as *const T5;
                                 let b_ptr = &b.5 as *const T5;
                                 if !(T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1576,8 +1576,8 @@ where
                                 let a_ptr = &a.6 as *const T6;
                                 let b_ptr = &b.6 as *const T6;
                                 if !(T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1588,8 +1588,8 @@ where
                                 let a_ptr = &a.7 as *const T7;
                                 let b_ptr = &b.7 as *const T7;
                                 if !(T7::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1598,8 +1598,8 @@ where
                             // Compare last element
                             unsafe {
                                 (T8::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(&a.8 as *const T8),
-                                    OpaqueConst::from_ptr(&b.8 as *const T8),
+                                    OpaqueConst::new(&a.8 as *const T8),
+                                    OpaqueConst::new(&b.8 as *const T8),
                                 )
                             }
                         });
@@ -1723,7 +1723,7 @@ where
                             unsafe {
                                 let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1731,7 +1731,7 @@ where
                             unsafe {
                                 let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1739,7 +1739,7 @@ where
                             unsafe {
                                 let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1747,7 +1747,7 @@ where
                             unsafe {
                                 let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1755,7 +1755,7 @@ where
                             unsafe {
                                 let ptr = &value.4 as *const T4;
                                 (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1763,7 +1763,7 @@ where
                             unsafe {
                                 let ptr = &value.5 as *const T5;
                                 (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1771,7 +1771,7 @@ where
                             unsafe {
                                 let ptr = &value.6 as *const T6;
                                 (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1779,7 +1779,7 @@ where
                             unsafe {
                                 let ptr = &value.7 as *const T7;
                                 (T7::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1787,7 +1787,7 @@ where
                             unsafe {
                                 let ptr = &value.8 as *const T8;
                                 (T8::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1795,7 +1795,7 @@ where
                             unsafe {
                                 let ptr = &value.9 as *const T9;
                                 (T9::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1813,8 +1813,8 @@ where
                                 let a_ptr = &a.0 as *const T0;
                                 let b_ptr = &b.0 as *const T0;
                                 if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1825,8 +1825,8 @@ where
                                 let a_ptr = &a.1 as *const T1;
                                 let b_ptr = &b.1 as *const T1;
                                 if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1837,8 +1837,8 @@ where
                                 let a_ptr = &a.2 as *const T2;
                                 let b_ptr = &b.2 as *const T2;
                                 if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1849,8 +1849,8 @@ where
                                 let a_ptr = &a.3 as *const T3;
                                 let b_ptr = &b.3 as *const T3;
                                 if !(T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1861,8 +1861,8 @@ where
                                 let a_ptr = &a.4 as *const T4;
                                 let b_ptr = &b.4 as *const T4;
                                 if !(T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1873,8 +1873,8 @@ where
                                 let a_ptr = &a.5 as *const T5;
                                 let b_ptr = &b.5 as *const T5;
                                 if !(T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1885,8 +1885,8 @@ where
                                 let a_ptr = &a.6 as *const T6;
                                 let b_ptr = &b.6 as *const T6;
                                 if !(T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1897,8 +1897,8 @@ where
                                 let a_ptr = &a.7 as *const T7;
                                 let b_ptr = &b.7 as *const T7;
                                 if !(T7::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1909,8 +1909,8 @@ where
                                 let a_ptr = &a.8 as *const T8;
                                 let b_ptr = &b.8 as *const T8;
                                 if !(T8::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -1919,8 +1919,8 @@ where
                             // Compare last element
                             unsafe {
                                 (T9::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(&a.9 as *const T9),
-                                    OpaqueConst::from_ptr(&b.9 as *const T9),
+                                    OpaqueConst::new(&a.9 as *const T9),
+                                    OpaqueConst::new(&b.9 as *const T9),
                                 )
                             }
                         });
@@ -2050,7 +2050,7 @@ where
                             unsafe {
                                 let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2058,7 +2058,7 @@ where
                             unsafe {
                                 let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2066,7 +2066,7 @@ where
                             unsafe {
                                 let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2074,7 +2074,7 @@ where
                             unsafe {
                                 let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2082,7 +2082,7 @@ where
                             unsafe {
                                 let ptr = &value.4 as *const T4;
                                 (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2090,7 +2090,7 @@ where
                             unsafe {
                                 let ptr = &value.5 as *const T5;
                                 (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2098,7 +2098,7 @@ where
                             unsafe {
                                 let ptr = &value.6 as *const T6;
                                 (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2106,7 +2106,7 @@ where
                             unsafe {
                                 let ptr = &value.7 as *const T7;
                                 (T7::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2114,7 +2114,7 @@ where
                             unsafe {
                                 let ptr = &value.8 as *const T8;
                                 (T8::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2122,7 +2122,7 @@ where
                             unsafe {
                                 let ptr = &value.9 as *const T9;
                                 (T9::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2130,7 +2130,7 @@ where
                             unsafe {
                                 let ptr = &value.10 as *const T10;
                                 (T10::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2150,8 +2150,8 @@ where
                                 let a_ptr = &a.0 as *const T0;
                                 let b_ptr = &b.0 as *const T0;
                                 if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2162,8 +2162,8 @@ where
                                 let a_ptr = &a.1 as *const T1;
                                 let b_ptr = &b.1 as *const T1;
                                 if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2174,8 +2174,8 @@ where
                                 let a_ptr = &a.2 as *const T2;
                                 let b_ptr = &b.2 as *const T2;
                                 if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2186,8 +2186,8 @@ where
                                 let a_ptr = &a.3 as *const T3;
                                 let b_ptr = &b.3 as *const T3;
                                 if !(T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2198,8 +2198,8 @@ where
                                 let a_ptr = &a.4 as *const T4;
                                 let b_ptr = &b.4 as *const T4;
                                 if !(T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2210,8 +2210,8 @@ where
                                 let a_ptr = &a.5 as *const T5;
                                 let b_ptr = &b.5 as *const T5;
                                 if !(T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2222,8 +2222,8 @@ where
                                 let a_ptr = &a.6 as *const T6;
                                 let b_ptr = &b.6 as *const T6;
                                 if !(T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2234,8 +2234,8 @@ where
                                 let a_ptr = &a.7 as *const T7;
                                 let b_ptr = &b.7 as *const T7;
                                 if !(T7::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2246,8 +2246,8 @@ where
                                 let a_ptr = &a.8 as *const T8;
                                 let b_ptr = &b.8 as *const T8;
                                 if !(T8::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2258,8 +2258,8 @@ where
                                 let a_ptr = &a.9 as *const T9;
                                 let b_ptr = &b.9 as *const T9;
                                 if !(T9::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2268,8 +2268,8 @@ where
                             // Compare last element
                             unsafe {
                                 (T10::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(&a.10 as *const T10),
-                                    OpaqueConst::from_ptr(&b.10 as *const T10),
+                                    OpaqueConst::new(&a.10 as *const T10),
+                                    OpaqueConst::new(&b.10 as *const T10),
                                 )
                             }
                         });
@@ -2418,7 +2418,7 @@ where
                             unsafe {
                                 let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2426,7 +2426,7 @@ where
                             unsafe {
                                 let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2434,7 +2434,7 @@ where
                             unsafe {
                                 let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2442,7 +2442,7 @@ where
                             unsafe {
                                 let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2450,7 +2450,7 @@ where
                             unsafe {
                                 let ptr = &value.4 as *const T4;
                                 (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2458,7 +2458,7 @@ where
                             unsafe {
                                 let ptr = &value.5 as *const T5;
                                 (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2466,7 +2466,7 @@ where
                             unsafe {
                                 let ptr = &value.6 as *const T6;
                                 (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2474,7 +2474,7 @@ where
                             unsafe {
                                 let ptr = &value.7 as *const T7;
                                 (T7::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2482,7 +2482,7 @@ where
                             unsafe {
                                 let ptr = &value.8 as *const T8;
                                 (T8::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2490,7 +2490,7 @@ where
                             unsafe {
                                 let ptr = &value.9 as *const T9;
                                 (T9::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2498,7 +2498,7 @@ where
                             unsafe {
                                 let ptr = &value.10 as *const T10;
                                 (T10::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2506,7 +2506,7 @@ where
                             unsafe {
                                 let ptr = &value.11 as *const T11;
                                 (T11::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(ptr),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2526,8 +2526,8 @@ where
                                 let a_ptr = &a.0 as *const T0;
                                 let b_ptr = &b.0 as *const T0;
                                 if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2538,8 +2538,8 @@ where
                                 let a_ptr = &a.1 as *const T1;
                                 let b_ptr = &b.1 as *const T1;
                                 if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2550,8 +2550,8 @@ where
                                 let a_ptr = &a.2 as *const T2;
                                 let b_ptr = &b.2 as *const T2;
                                 if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2562,8 +2562,8 @@ where
                                 let a_ptr = &a.3 as *const T3;
                                 let b_ptr = &b.3 as *const T3;
                                 if !(T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2574,8 +2574,8 @@ where
                                 let a_ptr = &a.4 as *const T4;
                                 let b_ptr = &b.4 as *const T4;
                                 if !(T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2586,8 +2586,8 @@ where
                                 let a_ptr = &a.5 as *const T5;
                                 let b_ptr = &b.5 as *const T5;
                                 if !(T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2598,8 +2598,8 @@ where
                                 let a_ptr = &a.6 as *const T6;
                                 let b_ptr = &b.6 as *const T6;
                                 if !(T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2610,8 +2610,8 @@ where
                                 let a_ptr = &a.7 as *const T7;
                                 let b_ptr = &b.7 as *const T7;
                                 if !(T7::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2622,8 +2622,8 @@ where
                                 let a_ptr = &a.8 as *const T8;
                                 let b_ptr = &b.8 as *const T8;
                                 if !(T8::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2634,8 +2634,8 @@ where
                                 let a_ptr = &a.9 as *const T9;
                                 let b_ptr = &b.9 as *const T9;
                                 if !(T9::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2646,8 +2646,8 @@ where
                                 let a_ptr = &a.10 as *const T10;
                                 let b_ptr = &b.10 as *const T10;
                                 if !(T10::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(a_ptr),
-                                    OpaqueConst::from_ptr(b_ptr),
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
                                 ) {
                                     return false;
                                 }
@@ -2656,8 +2656,8 @@ where
                             // Compare last element
                             unsafe {
                                 (T11::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ptr(&a.11 as *const T11),
-                                    OpaqueConst::from_ptr(&b.11 as *const T11),
+                                    OpaqueConst::new(&a.11 as *const T11),
+                                    OpaqueConst::new(&b.11 as *const T11),
                                 )
                             }
                         });
