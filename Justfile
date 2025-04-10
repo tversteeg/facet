@@ -77,11 +77,7 @@ miri *args:
     #!/usr/bin/env -S bash -euo pipefail
     source .envrc
     export CARGO_TARGET_DIR=target/miri
-    if [ -n "${CI:-}" ]; then
-        export RUSTUP_TOOLCHAIN=nightly
-    else
-        export RUSTUP_TOOLCHAIN=nightly-2025-04-05
-    fi
+    export RUSTUP_TOOLCHAIN=nightly-2025-04-05
     echo -e "\033[1;31m🧪 Running tests under Miri...\033[0m"
     rustup toolchain install
     rustup component add miri rust-src
