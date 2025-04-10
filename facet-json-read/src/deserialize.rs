@@ -19,9 +19,9 @@ use log::trace;
 ///
 /// # Example
 /// ```
-/// # use facet_trait::Facet;
+/// # use facet_core::Facet;
 /// # use facet_derive::Facet;
-/// # use facet_trait as facet;
+/// # use facet_core as facet;
 /// # #[derive(Facet)]
 /// # struct Person { name: String, age: u64 }
 /// let json = r#"{"name":"Alice","age":30}"#;

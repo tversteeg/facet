@@ -24,7 +24,7 @@ mod tests;
 ///
 /// ```
 /// use facet_derive::Facet;
-/// use facet_trait::{self as facet, Facet};
+/// use facet_core::{self as facet, Facet};
 /// use facet_urlencoded::from_str;
 ///
 /// #[derive(Debug, Facet, PartialEq)]
@@ -43,7 +43,7 @@ mod tests;
 ///
 /// ```
 /// use facet_derive::Facet;
-/// use facet_trait::{self as facet, Facet};
+/// use facet_core::{self as facet, Facet};
 /// use facet_urlencoded::from_str;
 ///
 /// #[derive(Debug, Facet, PartialEq)]

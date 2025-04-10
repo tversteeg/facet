@@ -140,9 +140,9 @@ For non-generic types, we use the `value_vtable` macro which leverages auto-dere
 #     ($type_name:ty) => {
 #         {
 #             // Other vtable fields would be here...
-            let partial_ord = if facet_spez::impls!($type_name: core::cmp::PartialOrd) {
+            let partial_ord = if facet::spez::impls!($type_name: core::cmp::PartialOrd) {
                 Some(|left: OpaqueConst, right: OpaqueConst| {
-                    use facet_spez::*;
+                    use facet::spez::*;
                     (&&Spez(unsafe { left.as_ref::<$type_name>() }))
                         .spez_partial_cmp(&&Spez(unsafe { right.as_ref::<$type_name>() }))
                 })
