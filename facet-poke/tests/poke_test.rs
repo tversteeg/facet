@@ -857,49 +857,56 @@ fn test_tuple_structs() {
     );
 }
 
-// Commented out enum tests for now as they may need special handling
-/*
 #[test]
 fn test_enums() {
-    #[derive(Facet, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    #[derive(Facet, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+    #[repr(u8)]
     enum TestEnum {
         Variant1,
         Variant2(i32),
         Variant3 { field: String },
     }
 
+    // Unit variant with equal values
     test_peek_pair(
-        "Enum-Unit",
         TestEnum::Variant1,
         TestEnum::Variant1,
-        true,
-        true,
-        true,
+        FactBuilder::new()
+            .debug()
+            .equal_and(true)
+            .ord_and(Ordering::Equal)
+            .clone()
+            .build(),
     );
 
+    // Tuple variant with different values
     test_peek_pair(
-        "Enum-Tuple",
         TestEnum::Variant2(42),
         TestEnum::Variant2(24),
-        true,
-        true,
-        true,
+        FactBuilder::new()
+            .debug()
+            .equal_and(false)
+            .ord_and(Ordering::Greater)
+            .clone()
+            .build(),
     );
 
+    // Struct variant with different values
     test_peek_pair(
-        "Enum-Struct",
         TestEnum::Variant3 {
             field: "Hello".to_string(),
         },
         TestEnum::Variant3 {
             field: "World".to_string(),
         },
-        true,
-        true,
-        true,
+        FactBuilder::new()
+            .debug()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .clone()
+            .build(),
     );
 }
-*/
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Fact {
