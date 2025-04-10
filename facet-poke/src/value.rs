@@ -1,6 +1,28 @@
 use facet_core::{Facet, Opaque, OpaqueConst, OpaqueUninit, Shape, TryFromError, ValueVTable};
 use facet_peek::Peek;
 
+/// A strongly-typed value writer that ensures type safety at compile-time
+pub struct TypedPokeValue<'mem, T: Facet> {
+    poke_value: PokeValue<'mem>,
+    _phantom: core::marker::PhantomData<T>,
+}
+
+impl<'mem, T: Facet> TypedPokeValue<'mem, T> {
+    /// Create a new TypedPokeValue from a PokeValue
+    fn new(poke_value: PokeValue<'mem>) -> Self {
+        Self {
+            poke_value,
+            _phantom: core::marker::PhantomData,
+        }
+    }
+
+    /// Place a value of type T in the space provided
+    pub fn put(self, value: T) -> Opaque<'mem> {
+        // We already verified the shape matches T when we created this TypedPokeValue
+        unsafe { self.poke_value.data.put(value) }
+    }
+}
+
 /// Lets you write to a value (implements write-only [`ValueVTable`] proxies)
 pub struct PokeValue<'mem> {
     data: OpaqueUninit<'mem>,
@@ -20,6 +42,17 @@ impl<'mem> PokeValue<'mem> {
     /// Coerce back into a `PokeValue`
     pub fn into_value(self) -> Self {
         self
+    }
+
+    /// Converts to a type-checked [`TypedPokeValue<T>`] if the shape matches type `T`
+    ///
+    /// Returns `None` if the shape doesn't match the type `T`.
+    pub fn typed<T: Facet>(self) -> Option<TypedPokeValue<'mem, T>> {
+        if self.shape.is_type::<T>() {
+            Some(TypedPokeValue::new(self))
+        } else {
+            None
+        }
     }
 
     /// Shape getter
