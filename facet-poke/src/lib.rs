@@ -31,7 +31,7 @@ pub use option::*;
 #[non_exhaustive]
 pub enum Poke<'mem> {
     /// A scalar value. See [`PokeValue`].
-    Scalar(PokeValue<'mem>),
+    Scalar(PokeValueUninit<'mem>),
     /// A list (array/vec/etc). See [`PokeList`].
     List(PokeListUninit<'mem>),
     /// A map (HashMap/BTreeMap/etc). See [`PokeMap`].
@@ -107,7 +107,7 @@ impl<'mem> Poke<'mem> {
                 let plu = unsafe { PokeListUninit::new(data, shape, list_def) };
                 Poke::List(plu)
             }
-            Def::Scalar { .. } => Poke::Scalar(unsafe { PokeValue::new(data, shape) }),
+            Def::Scalar { .. } => Poke::Scalar(unsafe { PokeValueUninit::new(data, shape) }),
             Def::Enum(enum_def) => {
                 Poke::Enum(unsafe { PokeEnumNoVariant::new(data, shape, enum_def) })
             }
@@ -144,7 +144,7 @@ impl<'mem> Poke<'mem> {
     }
 
     /// Converts this Poke into a PokeValue, panicking if it's not a Scalar variant
-    pub fn into_scalar(self) -> PokeValue<'mem> {
+    pub fn into_scalar(self) -> PokeValueUninit<'mem> {
         match self {
             Poke::Scalar(s) => s,
             _ => panic!("expected Scalar variant"),
@@ -169,7 +169,7 @@ impl<'mem> Poke<'mem> {
 
     /// Converts into a value, so we can manipulate it
     #[inline(always)]
-    pub fn into_value(self) -> PokeValue<'mem> {
+    pub fn into_value(self) -> PokeValueUninit<'mem> {
         match self {
             Poke::Scalar(s) => s.into_value(),
             Poke::List(l) => l.into_value(),

@@ -57,9 +57,7 @@ where
                                 write!(f, "HashMap<⋯>")
                             }
                         })
-                        .drop_in_place(|value| unsafe {
-                            core::ptr::drop_in_place(value.as_mut::<HashMap<K, V>>());
-                        });
+                        .drop_in_place(|value| unsafe { value.drop_in_place::<HashMap<K, V>>() });
 
                     if K::SHAPE.vtable.debug.is_some() && V::SHAPE.vtable.debug.is_some() {
                         builder = builder.debug(|value, f| unsafe {

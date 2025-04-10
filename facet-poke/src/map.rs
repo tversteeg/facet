@@ -1,4 +1,4 @@
-use crate::PokeValue;
+use crate::PokeValueUninit;
 use facet_core::{MapDef, MapVTable, Opaque, OpaqueConst, OpaqueUninit, Shape};
 
 /// Allows initializing an uninitialized map
@@ -11,8 +11,8 @@ pub struct PokeMapUninit<'mem> {
 impl<'mem> PokeMapUninit<'mem> {
     #[inline(always)]
     /// Coerce back into a `PokeValue`
-    pub fn into_value(self) -> PokeValue<'mem> {
-        unsafe { PokeValue::new(self.data, self.shape) }
+    pub fn into_value(self) -> PokeValueUninit<'mem> {
+        unsafe { PokeValueUninit::new(self.data, self.shape) }
     }
 
     #[inline(always)]
@@ -35,7 +35,7 @@ impl<'mem> PokeMapUninit<'mem> {
             let init_in_place_with_capacity = self.def.vtable.init_in_place_with_capacity_fn;
             unsafe { init_in_place_with_capacity(self.data, capacity) }
         } else {
-            let pv = unsafe { PokeValue::new(self.data, self.shape) };
+            let pv = unsafe { PokeValueUninit::new(self.data, self.shape) };
             pv.default_in_place().map_err(|_| ())
         };
         let data = res.map_err(|_| self.data)?;

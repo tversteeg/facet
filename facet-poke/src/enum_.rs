@@ -3,7 +3,7 @@ use facet_core::{EnumDef, EnumRepr, Facet, FieldError, Opaque, OpaqueUninit, Sha
 
 use crate::Guard;
 
-use super::{ISet, PokeValue};
+use super::{ISet, PokeValueUninit};
 
 /// Represents an enum before a variant has been selected
 pub struct PokeEnumNoVariant<'mem> {
@@ -15,8 +15,8 @@ pub struct PokeEnumNoVariant<'mem> {
 impl<'mem> PokeEnumNoVariant<'mem> {
     /// Coerce back into a `PokeValue`
     #[inline(always)]
-    pub fn into_value(self) -> PokeValue<'mem> {
-        unsafe { PokeValue::new(self.data, self.shape) }
+    pub fn into_value(self) -> PokeValueUninit<'mem> {
+        unsafe { PokeValueUninit::new(self.data, self.shape) }
     }
 
     /// Shape getter

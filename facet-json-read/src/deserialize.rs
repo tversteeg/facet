@@ -3,7 +3,7 @@ use std::num::NonZero;
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
 
 use facet_core::{Facet, Opaque, OpaqueUninit};
-use facet_poke::{Poke, PokeValue};
+use facet_poke::{Poke, PokeValueUninit};
 use log::trace;
 
 /// Deserializes a JSON string into a value of type `T` that implements `Facet`.
@@ -150,7 +150,7 @@ fn deserialize_value<'input, 'mem>(
                         trace!("Deserializing \x1b[1;36mscalar\x1b[0m");
                         fn aux<'input, 'mem>(
                             parser: &mut JsonParser<'input>,
-                            pv: PokeValue<'mem>,
+                            pv: PokeValueUninit<'mem>,
                         ) -> Result<Opaque<'mem>, JsonParseErrorWithContext<'input>>
                         {
                             if pv.shape().is_type::<String>() {

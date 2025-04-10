@@ -70,14 +70,7 @@ impl TypeNameOpts {
 /// # Safety
 ///
 /// The `value` parameter must point to aligned, initialized memory of the correct type.
-pub type DropInPlaceFn = for<'mem> unsafe fn(value: Opaque<'mem>);
-
-/// Generates a [`DropInPlaceFn`] for a concrete type
-pub const fn drop_in_place_fn_for<T>() -> Option<DropInPlaceFn> {
-    Some(|value: Opaque<'_>| unsafe {
-        value.drop_in_place::<T>();
-    })
-}
+pub type DropInPlaceFn = for<'mem> unsafe fn(value: Opaque<'mem>) -> OpaqueUninit<'mem>;
 
 /// Function to clone a value into another already-allocated value
 ///
@@ -91,14 +84,6 @@ pub type CloneIntoFn = for<'src, 'dst> unsafe fn(
     target: OpaqueUninit<'dst>,
 ) -> Opaque<'dst>;
 
-/// Generates a [`CloneInPlaceFn`] for a concrete type
-pub const fn clone_into_fn_for<T: Clone>() -> Option<CloneIntoFn> {
-    Some(|source: OpaqueConst<'_>, target: OpaqueUninit<'_>| unsafe {
-        let source_val = source.as_ref::<T>();
-        target.put(source_val.clone())
-    })
-}
-
 /// Function to set a value to its default in-place
 ///
 /// # Safety
@@ -106,11 +91,6 @@ pub const fn clone_into_fn_for<T: Clone>() -> Option<CloneIntoFn> {
 /// The `target` parameter has the correct layout and alignment, but points to
 /// uninitialized memory. The function returns the same pointer wrapped in an [`Opaque`].
 pub type DefaultInPlaceFn = for<'mem> unsafe fn(target: OpaqueUninit<'mem>) -> Opaque<'mem>;
-
-/// Generates a [`DefaultInPlaceFn`] for a concrete type
-pub const fn default_in_place_fn_for<T: Default>() -> Option<DefaultInPlaceFn> {
-    Some(|target: OpaqueUninit<'_>| unsafe { target.put(T::default()) })
-}
 
 //======== Conversion ========
 
@@ -125,16 +105,6 @@ pub const fn default_in_place_fn_for<T: Default>() -> Option<DefaultInPlaceFn> {
 /// same pointer wrapped in an [`Opaque`]. If parsing fails, it returns `Err` with an error.
 pub type ParseFn =
     for<'mem> unsafe fn(s: &str, target: OpaqueUninit<'mem>) -> Result<Opaque<'mem>, ParseError>;
-
-/// Generates a [`ParseFn`] for a concrete type
-pub const fn parse_fn_for<T: core::str::FromStr>() -> Option<ParseFn> {
-    Some(|s: &str, target: OpaqueUninit<'_>| unsafe {
-        match s.parse::<T>() {
-            Ok(value) => Ok(target.put(value)),
-            Err(_) => Err(ParseError::Generic("failed to parse string")),
-        }
-    })
-}
 
 /// Error returned by [`ParseFn`]
 #[non_exhaustive]
@@ -212,15 +182,6 @@ impl core::error::Error for TryFromError {}
 /// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
 pub type PartialEqFn = for<'l, 'r> unsafe fn(left: OpaqueConst<'l>, right: OpaqueConst<'r>) -> bool;
 
-/// Generates a [`PartialEqFn`] for a concrete type
-pub const fn partial_eq_fn_for<T: PartialEq>() -> Option<PartialEqFn> {
-    Some(|left: OpaqueConst<'_>, right: OpaqueConst<'_>| -> bool {
-        let left_val = unsafe { left.as_ref::<T>() };
-        let right_val = unsafe { right.as_ref::<T>() };
-        left_val == right_val
-    })
-}
-
 /// Function to compare two values and return their ordering if comparable
 ///
 /// # Safety
@@ -229,34 +190,12 @@ pub const fn partial_eq_fn_for<T: PartialEq>() -> Option<PartialEqFn> {
 pub type PartialOrdFn =
     for<'l, 'r> unsafe fn(left: OpaqueConst<'l>, right: OpaqueConst<'r>) -> Option<Ordering>;
 
-/// Generates a [`PartialOrdFn`] for a concrete type
-pub const fn partial_ord_fn_for<T: PartialOrd>() -> Option<PartialOrdFn> {
-    Some(
-        |left: OpaqueConst<'_>, right: OpaqueConst<'_>| -> Option<Ordering> {
-            let left_val = unsafe { left.as_ref::<T>() };
-            let right_val = unsafe { right.as_ref::<T>() };
-            left_val.partial_cmp(right_val)
-        },
-    )
-}
-
 /// Function to compare two values and return their ordering
 ///
 /// # Safety
 ///
 /// Both `left` and `right` parameters must point to aligned, initialized memory of the correct type.
 pub type CmpFn = for<'l, 'r> unsafe fn(left: OpaqueConst<'l>, right: OpaqueConst<'r>) -> Ordering;
-
-/// Generates a [`CmpFn`] for a concrete type
-pub const fn cmp_fn_for<T: Ord>() -> Option<CmpFn> {
-    Some(
-        |left: OpaqueConst<'_>, right: OpaqueConst<'_>| -> Ordering {
-            let left_val = unsafe { left.as_ref::<T>() };
-            let right_val = unsafe { right.as_ref::<T>() };
-            left_val.cmp(right_val)
-        },
-    )
-}
 
 //======== Hashing ========
 
@@ -271,16 +210,6 @@ pub type HashFn = for<'mem> unsafe fn(
     hasher_this: Opaque<'mem>,
     hasher_write_fn: HasherWriteFn,
 );
-
-/// Generates a [`HashFn`] for a concrete type
-pub const fn hash_fn_for<T: core::hash::Hash>() -> Option<HashFn> {
-    Some(
-        |value: OpaqueConst<'_>, hasher_this: Opaque<'_>, hasher_write_fn: HasherWriteFn| unsafe {
-            let val = value.as_ref::<T>();
-            val.hash(&mut HasherProxy::new(hasher_this, hasher_write_fn));
-        },
-    )
-}
 
 /// Function to write bytes to a hasher
 ///
@@ -362,16 +291,6 @@ pub type DisplayFn = for<'mem> unsafe fn(
     f: &mut core::fmt::Formatter,
 ) -> core::fmt::Result;
 
-/// Generates a [`DisplayFn`] for a concrete type
-pub const fn display_fn_for<T: core::fmt::Display>() -> Option<DisplayFn> {
-    Some(
-        |value: OpaqueConst<'_>, f: &mut core::fmt::Formatter| -> core::fmt::Result {
-            let val = unsafe { value.as_ref::<T>() };
-            write!(f, "{val}")
-        },
-    )
-}
-
 /// Function to format a value for debug.
 /// If this returns None, the shape did not implement Debug.
 ///
@@ -382,16 +301,6 @@ pub type DebugFn = for<'mem> unsafe fn(
     value: OpaqueConst<'mem>,
     f: &mut core::fmt::Formatter,
 ) -> core::fmt::Result;
-
-/// Generates a [`DebugFn`] for a concrete type
-pub const fn debug_fn_for<T: core::fmt::Debug>() -> Option<DebugFn> {
-    Some(
-        |value: OpaqueConst<'_>, f: &mut core::fmt::Formatter| -> core::fmt::Result {
-            let val = unsafe { value.as_ref::<T>() };
-            write!(f, "{val:?}")
-        },
-    )
-}
 
 /// VTable for common operations that can be performed on any shape
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

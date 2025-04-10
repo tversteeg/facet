@@ -2,14 +2,14 @@ use facet_core::{Facet, Opaque, OpaqueConst, OpaqueUninit, Shape, TryFromError, 
 use facet_peek::Peek;
 
 /// A strongly-typed value writer that ensures type safety at compile-time
-pub struct TypedPokeValue<'mem, T: Facet> {
-    poke_value: PokeValue<'mem>,
+pub struct TypedPokeValueUninit<'mem, T: Facet> {
+    poke_value: PokeValueUninit<'mem>,
     _phantom: core::marker::PhantomData<T>,
 }
 
-impl<'mem, T: Facet> TypedPokeValue<'mem, T> {
+impl<'mem, T: Facet> TypedPokeValueUninit<'mem, T> {
     /// Create a new TypedPokeValue from a PokeValue
-    fn new(poke_value: PokeValue<'mem>) -> Self {
+    fn new(poke_value: PokeValueUninit<'mem>) -> Self {
         Self {
             poke_value,
             _phantom: core::marker::PhantomData,
@@ -24,12 +24,12 @@ impl<'mem, T: Facet> TypedPokeValue<'mem, T> {
 }
 
 /// Lets you write to a value (implements write-only [`ValueVTable`] proxies)
-pub struct PokeValue<'mem> {
+pub struct PokeValueUninit<'mem> {
     data: OpaqueUninit<'mem>,
     shape: &'static Shape,
 }
 
-impl core::fmt::Debug for PokeValue<'_> {
+impl core::fmt::Debug for PokeValueUninit<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("PokeValue")
             .field("shape", &self.shape)
@@ -37,7 +37,7 @@ impl core::fmt::Debug for PokeValue<'_> {
     }
 }
 
-impl<'mem> PokeValue<'mem> {
+impl<'mem> PokeValueUninit<'mem> {
     #[inline(always)]
     /// Coerce back into a `PokeValue`
     pub fn into_value(self) -> Self {
@@ -47,9 +47,9 @@ impl<'mem> PokeValue<'mem> {
     /// Converts to a type-checked [`TypedPokeValue<T>`] if the shape matches type `T`
     ///
     /// Returns `None` if the shape doesn't match the type `T`.
-    pub fn typed<T: Facet>(self) -> Result<TypedPokeValue<'mem, T>, Self> {
+    pub fn typed<T: Facet>(self) -> Result<TypedPokeValueUninit<'mem, T>, Self> {
         if self.shape.is_type::<T>() {
-            Ok(TypedPokeValue::new(self))
+            Ok(TypedPokeValueUninit::new(self))
         } else {
             Err(self)
         }
@@ -151,6 +151,127 @@ impl<'mem> PokeValue<'mem> {
             Ok(unsafe { Peek::unchecked_new(cloned_val.as_const(), self.shape) })
         } else {
             Err(self)
+        }
+    }
+}
+
+/// A strongly-typed value writer for initialized values that ensures type safety at compile-time
+pub struct TypedPokeValue<'mem, T: Facet> {
+    poke_value: PokeValue<'mem>,
+    _phantom: core::marker::PhantomData<T>,
+}
+
+impl<'mem, T: Facet> TypedPokeValue<'mem, T> {
+    /// Create a new TypedPokeValue from a PokeValue
+    fn new(poke_value: PokeValue<'mem>) -> Self {
+        Self {
+            poke_value,
+            _phantom: core::marker::PhantomData,
+        }
+    }
+
+    /// Replace the existing value with a new one of type T
+    pub fn replace(self, value: T) -> Opaque<'mem> {
+        // We already verified the shape matches T when we created this TypedPokeValue
+        unsafe { self.poke_value.data.replace(value) }
+    }
+}
+
+/// Lets you modify an initialized value (implements read-write [`ValueVTable`] proxies)
+pub struct PokeValue<'mem> {
+    data: Opaque<'mem>,
+    shape: &'static Shape,
+}
+
+impl core::fmt::Debug for PokeValue<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("PokeValue")
+            .field("shape", &self.shape)
+            .field("data", &self.as_peek())
+            .finish()
+    }
+}
+
+impl<'mem> PokeValue<'mem> {
+    #[inline(always)]
+    /// Coerce back into a `PokeValue`
+    pub fn into_value(self) -> Self {
+        self
+    }
+
+    /// Converts to a type-checked [`TypedPokeValue<T>`] if the shape matches type `T`
+    ///
+    /// Returns `None` if the shape doesn't match the type `T`.
+    pub fn typed<T: Facet>(self) -> Result<TypedPokeValue<'mem, T>, Self> {
+        if self.shape.is_type::<T>() {
+            Ok(TypedPokeValue::new(self))
+        } else {
+            Err(self)
+        }
+    }
+
+    /// Shape getter
+    #[inline(always)]
+    pub fn shape(&self) -> &'static Shape {
+        self.shape
+    }
+
+    /// Creates a value write-proxy from its essential components
+    ///
+    /// # Safety
+    ///
+    /// The data must be a valid, initialized instance of the type described by shape.
+    pub(crate) unsafe fn new(data: Opaque<'mem>, shape: &'static Shape) -> Self {
+        Self { data, shape }
+    }
+
+    /// Gets the vtable for the value
+    #[inline(always)]
+    fn vtable(&self) -> &'static ValueVTable {
+        self.shape.vtable
+    }
+
+    /// Gets a read-only view of the value
+    pub fn as_peek(&self) -> Peek<'_> {
+        unsafe { Peek::unchecked_new(self.data.as_const(), self.shape) }
+    }
+
+    /// Exposes the internal data buffer as a mutable reference
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that they don't violate any invariants of the underlying type.
+    pub unsafe fn data(&mut self) -> Opaque<'mem> {
+        self.data
+    }
+
+    /// Replace the current value with a new one of the same type
+    ///
+    /// This function replaces the existing value with a new one of type T,
+    /// checking that T exactly matches the expected shape.
+    pub fn replace<'src, T>(self, value: T) -> Opaque<'mem>
+    where
+        T: Facet + 'src,
+    {
+        self.shape.assert_type::<T>();
+        unsafe { self.data.replace(value) }
+    }
+
+    /// Format the value using its Debug implementation
+    pub fn debug_fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        if let Some(debug_fn) = self.vtable().debug {
+            unsafe { debug_fn(self.data.as_const(), f) }
+        } else {
+            f.write_str("<no debug impl>")
+        }
+    }
+
+    /// Format the value using its Display implementation
+    pub fn display_fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        if let Some(display_fn) = self.vtable().display {
+            unsafe { display_fn(self.data.as_const(), f) }
+        } else {
+            f.write_str("<no display impl>")
         }
     }
 }

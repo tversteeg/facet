@@ -40,8 +40,8 @@ impl<'mem> PokeOptionUninit<'mem> {
 
     /// Get a reference to the underlying PokeValue
     #[inline(always)]
-    pub fn into_value(self) -> crate::PokeValue<'mem> {
-        unsafe { crate::PokeValue::new(self.data, self.shape) }
+    pub fn into_value(self) -> crate::PokeValueUninit<'mem> {
+        unsafe { crate::PokeValueUninit::new(self.data, self.shape) }
     }
 
     /// Initialize the option as None
@@ -133,8 +133,8 @@ impl<'mem> PokeOption<'mem> {
 
     /// Get a reference to the underlying value
     #[inline(always)]
-    pub fn into_value(self) -> crate::PokeValue<'mem> {
-        unsafe { crate::PokeValue::new(OpaqueUninit::new(self.data.as_mut_byte_ptr()), self.shape) }
+    pub fn into_value(self) -> crate::PokeValueUninit<'mem> {
+        unsafe { crate::PokeValueUninit::new(OpaqueUninit::new(self.data.as_mut_byte_ptr()), self.shape) }
     }
 
     /// Builds an Option<T> from the PokeOption, then deallocates the memory
