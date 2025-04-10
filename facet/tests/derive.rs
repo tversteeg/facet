@@ -110,6 +110,35 @@ fn struct_doc_comment() {
 }
 
 #[test]
+fn struct_doc_comment2() {
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
+    /// yes
+    /// no
+    struct Foo {}
+
+    assert_eq!(Foo::SHAPE.doc, Some(" yes\n no"));
+}
+
+#[test]
+fn struct_doc_comment3() {
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
+    /// yes 😄
+    /// no
+    struct Foo {}
+
+    assert_eq!(Foo::SHAPE.doc, Some(" yes 😄\n no"));
+}
+
+#[test]
+fn struct_doc_comment4() {
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
+    /// what about "quotes"
+    struct Foo {}
+
+    assert_eq!(Foo::SHAPE.doc, Some(r#" what about "quotes""#));
+}
+
+#[test]
 fn struct_field_doc_comment() {
     #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
     struct Foo {

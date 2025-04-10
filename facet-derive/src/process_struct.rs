@@ -75,24 +75,7 @@ pub(crate) fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
     };
 
     let static_decl = generate_static_decl(&struct_name);
-
-    let doc_lines: Vec<_> = parsed
-        .attributes
-        .iter()
-        .filter_map(|attr| match &attr.body.content {
-            AttributeInner::Doc(doc_inner) => {
-                // Remove quotes from the string value
-                let unquoted_val = doc_inner.value.value().trim_matches('"');
-                Some(unquoted_val)
-            }
-            _ => None,
-        })
-        .collect();
-    let maybe_container_doc = if doc_lines.is_empty() {
-        String::new()
-    } else {
-        format!(r#".doc({:?})"#, doc_lines.join("\n"))
-    };
+    let maybe_container_doc = build_maybe_doc_string(&parsed.attributes);
 
     // Generate the impl
     let output = format!(
@@ -123,5 +106,6 @@ unsafe impl facet::Facet for {struct_name} {{
 }}
         "#
     );
+
     output.into_token_stream().into()
 }
