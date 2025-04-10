@@ -73,7 +73,6 @@ unsynn! {
     }
 
     struct Struct {
-        // Skip any doc attributes by consuming them
         attributes: Vec<Attribute>,
         _vis: Option<Vis>,
         _kw_struct: KStruct,
@@ -128,7 +127,6 @@ unsynn! {
     }
 
     struct TupleStruct {
-        // Skip any doc attributes by consuming them
         attributes: Vec<Attribute>,
         _vis: Option<Vis>,
         _kw_struct: KStruct,
@@ -143,7 +141,6 @@ unsynn! {
     }
 
     struct Enum {
-        // Skip any doc attributes by consuming them
         attributes: Vec<Attribute>,
         _pub: Option<KPub>,
         _kw_enum: KEnum,
@@ -163,14 +160,12 @@ unsynn! {
     }
 
     struct TupleVariant {
-        // Skip any doc comments on variants
         attributes: Vec<Attribute>,
         name: Ident,
         _paren: ParenthesisGroupContaining<CommaDelimitedVec<TupleField>>,
     }
 
     struct StructVariant {
-        // Skip any doc comments on variants
         attributes: Vec<Attribute>,
         name: Ident,
         fields: BraceGroupContaining<CommaDelimitedVec<StructField>>,

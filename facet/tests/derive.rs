@@ -105,6 +105,8 @@ fn struct_doc_comment() {
     #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
     /// yes
     struct Foo {}
+
+    assert_eq!(Foo::SHAPE.doc, Some(" yes"));
 }
 
 #[test]
