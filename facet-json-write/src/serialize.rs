@@ -2,55 +2,58 @@ use facet_poke::{Peek, PeekValue};
 use log::trace;
 use std::collections::VecDeque;
 use std::io::{self, Write};
+use std::num::NonZero;
+
+macro_rules! prim {
+    ($pv:expr, $writer:expr, $type:ty) => {
+        if $pv.shape().is_type::<$type>() {
+            let value = unsafe { $pv.data().as_ref::<$type>() };
+            return write!($writer, "{}", value);
+        }
+    };
+}
+
+macro_rules! prims {
+    ($pv:expr, $writer:expr, $type:ty, $($types:ty),*) => {
+        prim!($pv, $writer, $type);
+        prims!($pv, $writer, $($types),*);
+    };
+    ($pv:expr, $writer:expr, $type:ty) => {
+        prim!($pv, $writer, $type);
+    };
+}
+
+macro_rules! int {
+    ($pv:expr, $writer:expr, $type:ty) => {
+        prim!($pv, $writer, $type);
+        prim!($pv, $writer, NonZero<$type>);
+    };
+}
+
+macro_rules! ints {
+    ($pv:expr, $writer:expr, $type:ty, $($types:ty),*) => {
+        int!($pv, $writer, $type);
+        ints!($pv, $writer, $($types),*);
+    };
+    ($pv:expr, $writer:expr, $type:ty) => {
+        int!($pv, $writer, $type);
+    };
+}
 
 fn peek_value_to_json<W: Write>(pv: PeekValue, writer: &mut W) -> io::Result<()> {
     if pv.shape().is_type::<()>() {
-        write!(writer, "null")?;
-    } else if pv.shape().is_type::<bool>() {
-        let value = unsafe { pv.data().as_ref::<bool>() };
-        write!(writer, "{}", value)?;
-    } else if pv.shape().is_type::<u8>() {
-        let value = unsafe { pv.data().as_ref::<u8>() };
-        write!(writer, "{}", value)?;
-    } else if pv.shape().is_type::<u16>() {
-        let value = unsafe { pv.data().as_ref::<u16>() };
-        write!(writer, "{}", value)?;
-    } else if pv.shape().is_type::<u32>() {
-        let value = unsafe { pv.data().as_ref::<u32>() };
-        write!(writer, "{}", value)?;
-    } else if pv.shape().is_type::<u64>() {
-        let value = unsafe { pv.data().as_ref::<u64>() };
-        write!(writer, "{}", value)?;
-    } else if pv.shape().is_type::<u128>() {
-        let value = unsafe { pv.data().as_ref::<u128>() };
-        write!(writer, "{}", value)?;
-    } else if pv.shape().is_type::<i8>() {
-        let value = unsafe { pv.data().as_ref::<i8>() };
-        write!(writer, "{}", value)?;
-    } else if pv.shape().is_type::<i16>() {
-        let value = unsafe { pv.data().as_ref::<i16>() };
-        write!(writer, "{}", value)?;
-    } else if pv.shape().is_type::<i32>() {
-        let value = unsafe { pv.data().as_ref::<i32>() };
-        write!(writer, "{}", value)?;
-    } else if pv.shape().is_type::<i64>() {
-        let value = unsafe { pv.data().as_ref::<i64>() };
-        write!(writer, "{}", value)?;
-    } else if pv.shape().is_type::<i128>() {
-        let value = unsafe { pv.data().as_ref::<i128>() };
-        write!(writer, "{}", value)?;
-    } else if pv.shape().is_type::<f32>() {
-        let value = unsafe { pv.data().as_ref::<f32>() };
-        write!(writer, "{}", value)?;
-    } else if pv.shape().is_type::<f64>() {
-        let value = unsafe { pv.data().as_ref::<f64>() };
-        write!(writer, "{}", value)?;
-    } else if pv.shape().is_type::<String>() {
-        let value = unsafe { pv.data().as_ref::<String>() };
-        write!(writer, "\"{}\"", value.escape_debug())?;
-    } else {
-        write!(writer, "\"<unsupported type>\"")?;
+        return write!(writer, "null");
     }
+    prims!(pv, writer, bool, f32, f64);
+    ints!(
+        pv, writer, u8, i8, u16, i16, u32, i32, u64, i64, u128, i128, usize, isize
+    );
+    if pv.shape().is_type::<String>() {
+        let value = unsafe { pv.data().as_ref::<String>() };
+        return write!(writer, "\"{}\"", value.escape_debug());
+    }
+
+    write!(writer, "\"<unsupported type>\"")?;
     Ok(())
 }
 
