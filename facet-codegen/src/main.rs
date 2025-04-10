@@ -137,14 +137,13 @@ fn generate_readme_files(has_diffs: &mut bool, opts: &Options) {
     // Add template functions
     env.add_function("header", |crate_name: String| {
         format!(r#"
-<picture>
-<source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/logo-v2/facet-dark.webp">
-<source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/logo-v2/facet-dark.png">
-<source media="(prefers-color-scheme: light)" srcset="https://github.com/facet-rs/facet/raw/main/static/logo-v2/facet-light.webp">
-<img src="https://github.com/facet-rs/facet/raw/main/static/logo-v2/facet-light.png" alt="Facet logo - a reflection library for Rust">
-</picture>
 
-# {0}
+<h1>
+<picture>
+<source srcset="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.webp">
+<img src="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.png" alt="Facet logo - a reflection library for Rust">
+</picture> {0}
+</h1>
 
 [![experimental](https://img.shields.io/badge/status-experimental-yellow)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
