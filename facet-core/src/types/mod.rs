@@ -371,6 +371,9 @@ pub enum StructKind {
     /// struct TupleStruct(T0, T1);
     TupleStruct,
 
+    /// struct UnitStruct;
+    Unit,
+
     /// (T0, T1)
     Tuple,
 }

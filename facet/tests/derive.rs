@@ -6,21 +6,19 @@ fn unit_struct() {
     #[derive(Debug, Facet)]
     struct UnitStruct;
 
-    if !cfg!(miri) {
-        let shape = UnitStruct::SHAPE;
+    let shape = UnitStruct::SHAPE;
 
-        // Check the name using Display
-        assert_eq!(format!("{}", shape), "UnitStruct");
+    // Check the name using Display
+    assert_eq!(format!("{}", shape), "UnitStruct");
 
-        assert_eq!(shape.layout.size(), 0);
-        assert_eq!(shape.layout.align(), 1);
+    assert_eq!(shape.layout.size(), 0);
+    assert_eq!(shape.layout.align(), 1);
 
-        if let Def::Struct(StructDef { kind, fields, .. }) = shape.def {
-            assert_eq!(kind, StructKind::Struct);
-            assert_eq!(fields.len(), 0);
-        } else {
-            panic!("Expected Struct innards");
-        }
+    if let Def::Struct(StructDef { kind, fields, .. }) = shape.def {
+        assert_eq!(kind, StructKind::Unit);
+        assert_eq!(fields.len(), 0);
+    } else {
+        panic!("Expected Struct innards");
     }
 }
 
@@ -154,15 +152,6 @@ fn enum_doc_comment() {
 }
 
 #[test]
-fn tuple_struct_doc_comment_test() {
-    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
-    /// This is a tuple struct
-    struct MyTuple(u32, String);
-
-    assert_eq!(MyTuple::SHAPE.doc, &[" This is a tuple struct"]);
-}
-
-#[test]
 fn struct_field_doc_comment() {
     #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
     struct Foo {
@@ -172,6 +161,27 @@ fn struct_field_doc_comment() {
 
     if let Def::Struct(StructDef { fields, .. }) = Foo::SHAPE.def {
         assert_eq!(fields[0].doc, &[" This field has a doc comment"]);
+    } else {
+        panic!("Expected Struct innards");
+    }
+}
+
+#[test]
+fn tuple_struct_field_doc_comment_test() {
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
+    struct MyTupleStruct(
+        /// This is a documented field
+        u32,
+        /// This is another documented field
+        String,
+    );
+
+    let shape = MyTupleStruct::SHAPE;
+
+    if let Def::Struct(StructDef { kind, fields, .. }) = shape.def {
+        assert_eq!(kind, StructKind::TupleStruct);
+        assert_eq!(fields[0].doc, &[" This is a documented field"]);
+        assert_eq!(fields[1].doc, &[" This is another documented field"]);
     } else {
         panic!("Expected Struct innards");
     }
@@ -199,6 +209,8 @@ fn tuple_struct_doc_comment() {
     #[repr(transparent)]
     /// This is a struct for sure
     struct Blah(u32);
+
+    assert_eq!(Blah::SHAPE.doc, &[" This is a struct for sure"]);
 }
 
 #[test]
@@ -344,33 +356,6 @@ fn derive_real_life_cub_config() {
 
 // //     let shape = WithLifetime::shape();
 // //     assert_eq!(format!("{}", shape), "WithLifetime");
-// // }
-
-// #[test]
-// fn tuple_struct() {
-//     #[derive(Debug, ::facet::Facet)]
-//     struct Point(f32, f32);
-
-//     let shape = Point::SHAPE;
-//     assert_eq!(format!("{}", shape), "Point");
-//     if let Def::Struct(StructDef { fields }) = shape.def {
-//         assert_eq!(fields.len(), 2);
-//         assert_eq!(fields[0].name, "0");
-//         assert_eq!(fields[1].name, "1");
-//     } else {
-//         panic!("Expected TupleStruct innards");
-//     }
-// }
-
-// // #[test]
-// // fn unit_struct() {
-// //     /// A unit struct with documentation
-// //     #[derive(Debug, ::facet::Facet)]
-// //     struct Unit;
-
-// //     let shape = Unit::shape();
-// //     assert_eq!(format!("{}", shape), "Unit");
-// //     assert!(matches!(shape.innards, facet::Innards::Struct { fields } if fields.is_empty()));
 // // }
 
 // // // #[test]
