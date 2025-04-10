@@ -177,7 +177,7 @@ Vec<u8>
   d4 36 93 a5 e9 b9 00 de 6a 3f 64 b8 49 05 3f 22
 ```
 
-And because we can make this decicsion at runtime, it can be an option on the pretty-printer itself:
+And because we can make this decision at runtime, it can be an option on the pretty-printer itself:
 
 ```rust,ignore
 /// A formatter for pretty-printing Facet types
