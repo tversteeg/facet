@@ -365,7 +365,9 @@ pub struct FieldBuilder {
 #[non_exhaustive]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum FieldAttribute {
+    /// Marks field as containing sensitive information
     Sensitive,
+    /// Custom field attribute containing arbitrary text
     Arbitrary(&'static str),
 }
 

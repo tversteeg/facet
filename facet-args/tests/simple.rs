@@ -29,7 +29,6 @@ fn test_arg_parse() {
         concurrency: usize,
     }
 
-    let args: Args =
-        facet_args::from_slice(&["--path", "example.rs", "--verbose", "--concurrency", "14"]);
+    let args: Args = facet_args::from_slice(&["--verbose", "--concurrency", "14", "example.rs"]);
     eprintln!("args: {}", args.pretty());
 }
