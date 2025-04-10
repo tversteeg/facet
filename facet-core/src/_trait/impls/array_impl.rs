@@ -5,7 +5,6 @@ unsafe impl<T> Facet for [T; 1]
 where
     T: Facet,
 {
-    const ARCHETYPE: Self = [T::ARCHETYPE; 1];
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .layout(Layout::new::<[T; 1]>())
