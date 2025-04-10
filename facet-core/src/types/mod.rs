@@ -5,8 +5,6 @@
 use core::alloc::Layout;
 use core::fmt;
 
-use typeid::ConstTypeId;
-
 mod list;
 pub use list::*;
 
@@ -769,46 +767,62 @@ impl Default for EnumRepr {
     }
 }
 
+/// Represents the unique identifier for a scalar type based on its fully qualified name.
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub struct ScalarId(u64);
+
+impl ScalarId {
+    const fn from_fully_qualified_type_name(name: &'static str) -> Self {
+        // Create a simple hash from the type name to serve as ID
+        let mut hash = 0u64;
+        let bytes = name.as_bytes();
+        let mut i = 0;
+        while i < bytes.len() {
+            hash = hash.wrapping_mul(31).wrapping_add(bytes[i] as u64);
+            i += 1;
+        }
+        Self(hash)
+    }
+}
+
 /// Definition for scalar types
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[non_exhaustive]
 pub struct ScalarDef {
     /// The TypeId of the scalar type
-    pub type_id: ConstTypeId,
+    pub scalar_id: ScalarId,
 }
 
 impl ScalarDef {
-    /// Create a new ScalarDef with the given TypeId
-    pub const fn of<T>() -> Self {
+    /// Returns a builder for ScalarDef
+    pub const fn builder() -> ScalarDefBuilder {
         ScalarDefBuilder::new()
-            .type_id(ConstTypeId::of::<T>())
-            .build()
     }
 }
 
 /// Builder for ScalarDef
 #[derive(Default)]
 pub struct ScalarDefBuilder {
-    type_id: Option<ConstTypeId>,
+    type_name: Option<&'static str>,
 }
 
 impl ScalarDefBuilder {
     /// Creates a new ScalarDefBuilder
     #[allow(clippy::new_without_default)]
     pub const fn new() -> Self {
-        Self { type_id: None }
+        Self { type_name: None }
     }
 
-    /// Sets the type_id for the ScalarDef
-    pub const fn type_id(mut self, type_id: ConstTypeId) -> Self {
-        self.type_id = Some(type_id);
+    /// Sets the type_name for the ScalarDef
+    pub const fn fully_qualified_type_name(mut self, type_name: &'static str) -> Self {
+        self.type_name = Some(type_name);
         self
     }
 
     /// Builds the ScalarDef
     pub const fn build(self) -> ScalarDef {
         ScalarDef {
-            type_id: self.type_id.unwrap(),
+            scalar_id: ScalarId::from_fully_qualified_type_name(self.type_name.unwrap()),
         }
     }
 }
