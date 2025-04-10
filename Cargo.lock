@@ -206,7 +206,7 @@ dependencies = [
 
 [[package]]
 name = "facet"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "facet-derive",
  "facet-spez",
@@ -215,7 +215,7 @@ dependencies = [
 
 [[package]]
 name = "facet-args"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "color-backtrace",
  "ctor",
@@ -237,7 +237,7 @@ dependencies = [
 
 [[package]]
 name = "facet-derive"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "facet-trait",
  "unsynn",
@@ -245,7 +245,7 @@ dependencies = [
 
 [[package]]
 name = "facet-json"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "facet-json-read",
  "facet-json-write",
@@ -253,7 +253,7 @@ dependencies = [
 
 [[package]]
 name = "facet-json-read"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "color-backtrace",
  "ctor",
@@ -266,7 +266,7 @@ dependencies = [
 
 [[package]]
 name = "facet-json-write"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "color-backtrace",
  "ctor",
@@ -280,7 +280,7 @@ dependencies = [
 
 [[package]]
 name = "facet-msgpack"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "color-backtrace",
  "ctor",
@@ -295,18 +295,18 @@ dependencies = [
 
 [[package]]
 name = "facet-opaque"
-version = "0.1.4"
+version = "0.1.5"
 
 [[package]]
 name = "facet-peek"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "facet-trait",
 ]
 
 [[package]]
 name = "facet-poke"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "color-backtrace",
  "ctor",
@@ -320,7 +320,7 @@ dependencies = [
 
 [[package]]
 name = "facet-pretty"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "facet-derive",
  "facet-peek",
@@ -329,7 +329,7 @@ dependencies = [
 
 [[package]]
 name = "facet-samplelibc"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "cc",
  "facet",
@@ -337,7 +337,7 @@ dependencies = [
 
 [[package]]
 name = "facet-spez"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "facet-opaque",
  "facet-types",
@@ -346,7 +346,7 @@ dependencies = [
 
 [[package]]
 name = "facet-trait"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "facet-opaque",
  "facet-spez",
@@ -355,7 +355,7 @@ dependencies = [
 
 [[package]]
 name = "facet-types"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "bitflags",
  "facet-opaque",
@@ -364,7 +364,7 @@ dependencies = [
 
 [[package]]
 name = "facet-urlencoded"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "facet-derive",
  "facet-poke",
@@ -375,7 +375,7 @@ dependencies = [
 
 [[package]]
 name = "facet-yaml"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "facet-derive",
  "facet-poke",

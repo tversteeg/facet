@@ -21,7 +21,7 @@ members = [
 resolver = "3"
 
 [workspace.package]
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Amos Wenger <amos@bearcove.eu>"]
 edition = "2024"
 rust-version = "1.86.0"
@@ -29,13 +29,13 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/facet-rs/facet"
 
 [workspace.dependencies]
-facet = { version = "0.1.7", path = "facet" }
-facet-trait = { version = "0.2.3", path = "facet-trait" }
-facet-derive = { version = "0.1.7", path = "facet-derive" }
-facet-opaque = { version = "0.1.4", path = "facet-opaque" }
-facet-peek = { version = "0.2.4", path = "facet-peek" }
-facet-poke = { version = "0.2.2", path = "facet-poke" }
-facet-spez = { version = "0.1.5", path = "facet-spez" }
-facet-types = { version = "0.2.2", path = "facet-types" }
-facet-samplelibc = { version = "0.1.4", path = "facet-samplelibc" }
+facet = { version = "0.1.8", path = "facet" }
+facet-trait = { version = "0.2.4", path = "facet-trait" }
+facet-derive = { version = "0.1.8", path = "facet-derive" }
+facet-opaque = { version = "0.1.5", path = "facet-opaque" }
+facet-peek = { version = "0.2.5", path = "facet-peek" }
+facet-poke = { version = "0.2.3", path = "facet-poke" }
+facet-spez = { version = "0.1.6", path = "facet-spez" }
+facet-types = { version = "0.2.3", path = "facet-types" }
+facet-samplelibc = { version = "0.1.5", path = "facet-samplelibc" }
 unsynn = "0.0.25"

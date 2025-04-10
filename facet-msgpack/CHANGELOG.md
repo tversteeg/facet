@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4](https://github.com/facet-rs/facet/compare/facet-msgpack-v0.1.3...facet-msgpack-v0.1.4) - 2025-04-10
+
+### Fixed
+
+- fix readmes
+
+### Other
+
+- remove spacing
+- no height
+- Update Readmes with logos.
+
 ## [0.1.3](https://github.com/facet-rs/facet/compare/facet-msgpack-v0.1.2...facet-msgpack-v0.1.3) - 2025-04-09
 
 ### Other

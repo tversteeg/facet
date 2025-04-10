@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7](https://github.com/facet-rs/facet/compare/facet-json-v0.1.6...facet-json-v0.1.7) - 2025-04-10
+
+### Fixed
+
+- fix readmes
+
+### Other
+
+- remove spacing
+- no height
+- Update Readmes with logos.
+
 ## [0.1.6](https://github.com/facet-rs/facet/compare/facet-json-v0.1.5...facet-json-v0.1.6) - 2025-04-10
 
 ### Other
