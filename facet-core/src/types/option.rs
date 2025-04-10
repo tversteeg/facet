@@ -23,8 +23,10 @@ pub type OptionGetValueFn =
 /// The function must properly initialize the memory.
 /// `value` is moved out of (with [`core::ptr::read`]) — it should be deallocated
 /// afterwards but NOT dropped.
-pub type OptionInitSomeFn =
-    for<'option> unsafe fn(option: OpaqueUninit<'option>, value: Opaque<'_>) -> Opaque<'option>;
+pub type OptionInitSomeFn = for<'option> unsafe fn(
+    option: OpaqueUninit<'option>,
+    value: OpaqueConst<'_>,
+) -> Opaque<'option>;
 
 /// Initialize an option with None
 ///
@@ -33,6 +35,17 @@ pub type OptionInitSomeFn =
 /// The `option` parameter must point to uninitialized memory of sufficient size.
 /// The function must properly initialize the memory.
 pub type OptionInitNoneFn = unsafe fn(option: OpaqueUninit) -> Opaque;
+
+/// Replace an existing option with a new value
+///
+/// # Safety
+///
+/// The `option` parameter must point to aligned, initialized memory of the correct type.
+/// The old value will be dropped.
+/// If replacing with Some, `value` is moved out of (with [`core::ptr::read`]) —
+/// it should be deallocated afterwards but NOT dropped.
+pub type OptionReplaceWithFn =
+    for<'option> unsafe fn(option: Opaque<'option>, value: Option<OpaqueConst<'_>>);
 
 /// Virtual table for Option<T>
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
@@ -49,6 +62,9 @@ pub struct OptionVTable {
 
     /// cf. [`OptionInitNoneFn`]
     pub init_none_fn: OptionInitNoneFn,
+
+    /// cf. [`OptionReplaceWithFn`]
+    pub replace_with_fn: OptionReplaceWithFn,
 }
 
 impl OptionVTable {
@@ -64,6 +80,7 @@ pub struct OptionVTableBuilder {
     get_value_fn: Option<OptionGetValueFn>,
     init_some_fn: Option<OptionInitSomeFn>,
     init_none_fn: Option<OptionInitNoneFn>,
+    replace_with_fn: Option<OptionReplaceWithFn>,
 }
 
 impl OptionVTableBuilder {
@@ -75,6 +92,7 @@ impl OptionVTableBuilder {
             get_value_fn: None,
             init_some_fn: None,
             init_none_fn: None,
+            replace_with_fn: None,
         }
     }
 
@@ -102,6 +120,12 @@ impl OptionVTableBuilder {
         self
     }
 
+    /// Sets the replace_with_fn field
+    pub const fn replace_with(mut self, f: OptionReplaceWithFn) -> Self {
+        self.replace_with_fn = Some(f);
+        self
+    }
+
     /// Builds the [`OptionVTable`] from the current state of the builder.
     ///
     /// # Panics
@@ -113,6 +137,7 @@ impl OptionVTableBuilder {
             get_value_fn: self.get_value_fn.unwrap(),
             init_some_fn: self.init_some_fn.unwrap(),
             init_none_fn: self.init_none_fn.unwrap(),
+            replace_with_fn: self.replace_with_fn.unwrap(),
         }
     }
 }

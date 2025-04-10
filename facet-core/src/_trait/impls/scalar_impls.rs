@@ -534,6 +534,13 @@ unsafe impl<T: Facet> Facet for Option<T> {
                                     option.put(Option::Some(value.read::<T>()))
                                 },
                                 init_none_fn: |option| unsafe { option.put(<Option<T>>::None) },
+                                replace_with_fn: |option, value| unsafe {
+                                    let option = option.as_mut::<Option<T>>();
+                                    match value {
+                                        Some(value) => option.replace(value.read::<T>()),
+                                        None => option.take(),
+                                    };
+                                },
                             }
                         },
                     )
