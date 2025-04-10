@@ -129,7 +129,8 @@ macro_rules! impl_facet_for_integer {
                     ))
                     .vtable(value_vtable!($type, |f, _opts| write!(
                         f,
-                        stringify!(core::num::NonZero<$type>)
+                        "core::num::NonZero<{}>",
+                        stringify!($type)
                     )))
                     .build()
             };
