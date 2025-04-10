@@ -198,7 +198,7 @@ This is just a pretty printer, but an imaginative mind could come up with...
 
 ## Use case: (de)serialization
 
-The `facet-peek` and `face-poke` allow reading and writing (constructing,
+The `facet-peek` and `facet-poke` allow reading and writing (constructing,
 initializing) any type that implements `Facet` — this makes it trivial to
 write deserializers, see `facet-json`, `facet-yaml`, `facet-urlencoded`, etc.
 
