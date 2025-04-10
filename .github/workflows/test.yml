@@ -35,7 +35,7 @@ jobs:
           just
 
   miri:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     container:
       image: rustlang/rust:nightly
     steps:
