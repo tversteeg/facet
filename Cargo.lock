@@ -206,7 +206,7 @@ dependencies = [
 
 [[package]]
 name = "facet"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "facet-derive",
  "facet-spez",
@@ -237,7 +237,7 @@ dependencies = [
 
 [[package]]
 name = "facet-derive"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "facet-trait",
  "unsynn",
@@ -295,11 +295,11 @@ dependencies = [
 
 [[package]]
 name = "facet-opaque"
-version = "0.1.5"
+version = "0.1.6"
 
 [[package]]
 name = "facet-peek"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
  "facet-trait",
 ]
@@ -337,7 +337,7 @@ dependencies = [
 
 [[package]]
 name = "facet-spez"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "facet-opaque",
  "facet-types",
@@ -346,7 +346,7 @@ dependencies = [
 
 [[package]]
 name = "facet-trait"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "facet-opaque",
  "facet-spez",
@@ -355,7 +355,7 @@ dependencies = [
 
 [[package]]
 name = "facet-types"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "bitflags",
  "facet-opaque",

@@ -1,6 +1,6 @@
 [package]
 name = "facet-types"
-version = "0.2.3"
+version = "0.2.4"
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -12,7 +12,7 @@ categories = ["development-tools"]
 
 [dependencies]
 bitflags = "2.9.0"
-facet-opaque = { version = "0.1.5", path = "../facet-opaque" }
+facet-opaque = { version = "0.1.6", path = "../facet-opaque" }
 typeid = "1.0.3"
 
 [features]

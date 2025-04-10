@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.9](https://github.com/facet-rs/facet/compare/facet-derive-v0.1.8...facet-derive-v0.1.9) - 2025-04-10
+
+### Other
+
+- middle ground
+- and some spacing
+- ok 30
+- ok no ems
+- image height
+- use logo only for readmes
+- logo v2
+
 ## [0.1.8](https://github.com/facet-rs/facet/compare/facet-derive-v0.1.7...facet-derive-v0.1.8) - 2025-04-10
 
 ### Fixed
