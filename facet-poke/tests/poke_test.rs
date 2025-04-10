@@ -684,6 +684,7 @@ fn test_custom_structs() {
 fn test_tuple_structs() {
     // Tuple struct with no trait implementations
     #[derive(Facet)]
+    #[allow(dead_code)]
     struct TupleNoTraits(i32, String);
     test_peek_pair(
         TupleNoTraits(42, "Hello".to_string()),
@@ -693,6 +694,7 @@ fn test_tuple_structs() {
 
     // Tuple struct with Debug only
     #[derive(Facet, Debug)]
+    #[allow(dead_code)]
     struct TupleDebug(i32, String);
     test_peek_pair(
         TupleDebug(42, "Hello".to_string()),
