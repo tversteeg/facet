@@ -35,9 +35,16 @@ pub(crate) fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
             // Determine field flags
             let mut flags = "facet::FieldFlags::EMPTY";
             for attr in &field.value.attributes {
-                if let AttributeInner::Facet(_) = &attr.body.content {
+                if let AttributeInner::Facet(attr) = &attr.body.content {
+                    match &attr.inner.content {
+                        FacetInner::Sensitive(_ksensitive) => {
+                            flags = "facet::FieldFlags::SENSITIVE"
+                        }
+                        FacetInner::Other(_) => {
+                            // nothing
+                        }
+                    }
                     // Since FacetInner only has Sensitive variant, we can directly set flags
-                    flags = "facet::FieldFlags::SENSITIVE";
                 }
             }
 

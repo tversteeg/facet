@@ -217,6 +217,9 @@ dependencies = [
 name = "facet-args"
 version = "0.1.2"
 dependencies = [
+ "color-backtrace",
+ "ctor",
+ "env_logger",
  "facet",
  "facet-poke",
  "facet-pretty",

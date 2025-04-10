@@ -223,6 +223,11 @@ impl<'mem> PokeStruct<'mem> {
     pub unsafe fn mark_initialized(&mut self, index: usize) {
         self.iset.set(index);
     }
+
+    /// Gets the struct definition
+    pub fn def(&self) -> StructDef {
+        self.def
+    }
 }
 
 impl Drop for PokeStruct<'_> {

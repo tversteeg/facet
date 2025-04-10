@@ -8,7 +8,7 @@ pub fn from_slice<T: Facet>(s: &[&str]) -> T {
     let mut s = s;
     let (poke, guard) = Poke::alloc::<T>();
     log::trace!("Allocated Poke for type T");
-    let ps = poke.into_struct();
+    let mut ps = poke.into_struct();
     log::trace!("Converted Poke into struct");
 
     while let Some(token) = s.first() {
@@ -17,17 +17,19 @@ pub fn from_slice<T: Facet>(s: &[&str]) -> T {
 
         if let Some(key) = token.strip_prefix("--") {
             log::trace!("Found named argument: {}", key);
-            let (_field_index, field) = ps.field_by_name(key).unwrap();
+            let (field_index, field) = ps.field_by_name(key).unwrap();
             let field_shape = field.shape();
             log::trace!("Field shape: {:?}", field_shape);
             if field_shape.is_type::<bool>() {
                 log::trace!("Boolean field detected, setting to true");
                 unsafe { field.into_value().put(OpaqueConst::from_ref(&true)) };
+                unsafe { ps.mark_initialized(field_index) }
             } else if field_shape.is_type::<String>() {
                 log::trace!("String field detected, using the next token as value");
                 let value = s.first().unwrap().to_string();
                 s = &s[1..];
                 unsafe { field.into_value().put(OpaqueConst::from_ref(&value)) };
+                unsafe { ps.mark_initialized(field_index) }
                 std::mem::forget(value);
             } else {
                 let value = s.first().unwrap();
@@ -46,10 +48,15 @@ pub fn from_slice<T: Facet>(s: &[&str]) -> T {
                         key, field_shape, e
                     )
                 });
+                unsafe { ps.mark_initialized(field_index) }
             }
         } else {
             log::trace!("Encountered positional argument: {}", token);
             // Handle positional argument
+
+            for f in ps.def().fields {
+                eprintln!("{}: attrs {:?}", f.name, f.attributes);
+            }
         }
     }
     ps.build(Some(guard))
