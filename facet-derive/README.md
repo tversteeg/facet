@@ -3,8 +3,8 @@
 <h1>
 <picture>
 <source srcset="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.webp">
-<img src="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.png" height="30" alt="Facet logo - a reflection library for Rust">
-</picture> &nbsp;&nbsp; facet-derive
+<img src="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.png" height="35" alt="Facet logo - a reflection library for Rust">
+</picture> &nbsp facet-derive
 </h1>
 
 [![experimental](https://img.shields.io/badge/status-experimental-yellow)](https://github.com/fasterthanlime/facet)
