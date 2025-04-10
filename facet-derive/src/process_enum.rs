@@ -47,7 +47,11 @@ pub(crate) fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
             EnumVariantLike::Unit(unit) => {
                 let variant_name = unit.name.to_string();
                 variant_expressions.push(format!(
-                    "facet::enum_unit_variant!({enum_name}, {variant_name}, {discriminant_value})"
+                    "facet::Variant::builder()
+                    .name({variant_name:?})
+                    .discriminant(Some({discriminant_value}))
+                    .kind(facet::VariantKind::Unit)
+                    .build()",
                 ));
             }
             EnumVariantLike::Tuple(tuple) => {
@@ -58,7 +62,7 @@ pub(crate) fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
 
                 // Build the list of fields and types for the shadow struct
                 let fields_with_types = tuple
-                    ._paren
+                    .fields
                     .content
                     .0
                     .iter()
@@ -72,31 +76,37 @@ pub(crate) fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
 
                 // Add shadow struct definition
                 shadow_struct_defs.push(format!(
-                    "#[repr(C)]\nstruct {} {{\n    _discriminant: {},\n    {}\n}}",
+                    "#[repr(C)] struct {} {{ _discriminant: {}, {} }}",
                     shadow_struct_name, discriminant_type, fields_with_types
                 ));
 
                 // Build the list of field types with calculated offsets
-                let fields_with_offsets = tuple
-                    ._paren
+                let fields = tuple
+                    .fields
                     .content
                     .0
                     .iter()
                     .enumerate()
                     .map(|(idx, field)| {
-                        let typ = field.value.typ.to_string();
-                        format!(
-                            "({}, core::mem::offset_of!({}, _{}))",
-                            typ, shadow_struct_name, idx
-                        )
+                        let field_name = format!("{idx}");
+                        gen_struct_field(&field_name, &shadow_struct_name, &field.value.attributes)
                     })
                     .collect::<Vec<String>>()
                     .join(", ");
 
                 // Add variant expression - now with discriminant
                 variant_expressions.push(format!(
-                    "facet::enum_tuple_variant!({}, {}, [{}], {})",
-                    enum_name, variant_name, fields_with_offsets, discriminant_value
+                    "{{
+                        static FIELDS: &[facet::Field] = &[
+                            {fields}
+                        ];
+
+                        facet::Variant::builder()
+                            .name({variant_name:?})
+                            .discriminant(Some({discriminant_value}))
+                            .kind(facet::VariantKind::Tuple {{ fields: FIELDS }})
+                            .build()
+                    }}",
                 ));
             }
             EnumVariantLike::Struct(struct_var) => {
@@ -121,31 +131,36 @@ pub(crate) fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
 
                 // Add shadow struct definition
                 shadow_struct_defs.push(format!(
-                    "#[repr(C)]\nstruct {} {{\n    _discriminant: {},\n    {}\n}}",
+                    "#[repr(C)] struct {} {{ _discriminant: {}, {} }}",
                     shadow_struct_name, discriminant_type, fields_with_types
                 ));
 
                 // Build the list of field types with calculated offsets
-                let fields_with_offsets = struct_var
+                let fields = struct_var
                     .fields
                     .content
                     .0
                     .iter()
                     .map(|field| {
-                        let name = field.value.name.to_string();
-                        let typ = field.value.typ.to_string();
-                        format!(
-                            "({}: {}, core::mem::offset_of!({}, {}))",
-                            name, typ, shadow_struct_name, name
-                        )
+                        let field_name = field.value.name.to_string();
+                        gen_struct_field(&field_name, &shadow_struct_name, &field.value.attributes)
                     })
                     .collect::<Vec<String>>()
                     .join(", ");
 
                 // Add variant expression - now with discriminant
                 variant_expressions.push(format!(
-                    "facet::enum_struct_variant!({}, {}, {{{}}}, {})",
-                    enum_name, variant_name, fields_with_offsets, discriminant_value
+                    "{{
+                        static FIELDS: &[facet::Field] = &[
+                            {fields}
+                        ];
+
+                        facet::Variant::builder()
+                            .name({variant_name:?})
+                            .discriminant(Some({discriminant_value}))
+                            .kind(facet::VariantKind::Struct {{ fields: FIELDS }})
+                            .build()
+                    }}",
                 ));
             }
         }

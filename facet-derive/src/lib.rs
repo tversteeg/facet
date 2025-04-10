@@ -158,7 +158,7 @@ unsynn! {
     struct TupleVariant {
         attributes: Vec<Attribute>,
         name: Ident,
-        _paren: ParenthesisGroupContaining<CommaDelimitedVec<TupleField>>,
+        fields: ParenthesisGroupContaining<CommaDelimitedVec<TupleField>>,
     }
 
     struct StructVariant {
