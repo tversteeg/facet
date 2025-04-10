@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1](https://github.com/facet-rs/facet/compare/facet-core-v0.3.0...facet-core-v0.3.1) - 2025-04-10
+
+### Fixed
+
+- fix undefined behavior in `Shape::allocate`
+- fix debug impl, add missing display impl for arrays
+
+### Other
+
+- Generalize `Facet` array impl to arbitrary lengths
+- Add codegen instructions to the template
+
 ## [0.3.0](https://github.com/facet-rs/facet/compare/facet-core-v0.2.5...facet-core-v0.3.0) - 2025-04-10
 
 ### Other
