@@ -141,7 +141,7 @@ fn generate_readme_files(has_diffs: &mut bool, opts: &Options) {
 <h1>
 <picture>
 <source srcset="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.webp">
-<img src="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.png" alt="Facet logo - a reflection library for Rust">
+<img src="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.png" height="1em" alt="Facet logo - a reflection library for Rust">
 </picture> {0}
 </h1>
 
