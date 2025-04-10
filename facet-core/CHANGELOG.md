@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/facet-rs/facet/compare/facet-core-v0.3.3...facet-core-v0.4.0) - 2025-04-10
+
+### Other
+
+- Re-organize poke tests, add alloc lints, thanks @epage for the hint
+- Introduce a PokeValueUninit / PokeValue chasm
+- Option manipulation
+- option vtable
+
 ## [0.3.3](https://github.com/facet-rs/facet/compare/facet-core-v0.3.2...facet-core-v0.3.3) - 2025-04-10
 
 ### Other

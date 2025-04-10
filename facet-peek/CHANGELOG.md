@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.12](https://github.com/facet-rs/facet/compare/facet-peek-v0.2.11...facet-peek-v0.2.12) - 2025-04-10
+
+### Other
+
+- wip pretty printing
+- Add option support to pretty-printer
+- Re-organize poke tests, add alloc lints, thanks @epage for the hint
+- WIP option support
+
 ## [0.2.11](https://github.com/facet-rs/facet/compare/facet-peek-v0.2.10...facet-peek-v0.2.11) - 2025-04-10
 
 ### Other

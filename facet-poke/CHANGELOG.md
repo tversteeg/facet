@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/facet-rs/facet/compare/facet-poke-v0.4.1...facet-poke-v0.5.0) - 2025-04-10
+
+### Other
+
+- Add option support to pretty-printer
+- Full option support
+- Re-organize poke tests, add alloc lints, thanks @epage for the hint
+- PokeUninit / Poke
+- Introduce a PokeValueUninit / PokeValue chasm
+- replace_with for Option
+- Option manipulation
+- WIP option support
+- option vtable
+
 ## [0.4.1](https://github.com/facet-rs/facet/compare/facet-poke-v0.4.0...facet-poke-v0.4.1) - 2025-04-10
 
 ### Other
