@@ -99,7 +99,7 @@ ship:
     #!/usr/bin/env -S /bin/bash -eux
     release-plz update
     git add .
-    git commit
+    git commit -m "⬆️ crate upgrades"
     git push
     just release
 
