@@ -142,7 +142,7 @@ fn generate_readme_files(has_diffs: &mut bool, opts: &Options) {
 <picture>
 <source srcset="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.webp">
 <img src="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.png" height="30" alt="Facet logo - a reflection library for Rust">
-</picture> {0}
+</picture> &nbsp;&nbsp; {0}
 </h1>
 
 [![experimental](https://img.shields.io/badge/status-experimental-yellow)](https://github.com/fasterthanlime/facet)
