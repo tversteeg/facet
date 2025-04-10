@@ -1,6 +1,3 @@
-#![warn(missing_docs)]
-#![doc = include_str!("../README.md")]
-
 //! structs and vtable definitions used by Facet
 
 // TODO: mark `non_exhaustive`, add `const fn` builder patterns
@@ -217,8 +214,8 @@ impl Shape {
     /// Heap-allocate a value of this shape
     #[cfg(feature = "std")]
     #[inline]
-    pub fn allocate(&self) -> facet_opaque::OpaqueUninit<'static> {
-        facet_opaque::OpaqueUninit::new(unsafe { std::alloc::alloc(self.layout) })
+    pub fn allocate(&self) -> crate::opaque::OpaqueUninit<'static> {
+        crate::opaque::OpaqueUninit::new(unsafe { std::alloc::alloc(self.layout) })
     }
 }
 

@@ -1,8 +1,8 @@
+use facet_core::Facet;
 use facet_derive::Facet;
 use facet_json_read::from_str;
-use facet_trait::Facet;
 
-use facet_trait as facet;
+use facet_core as facet;
 
 #[ctor::ctor]
 fn init() {

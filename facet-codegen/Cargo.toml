@@ -12,6 +12,7 @@ keywords = ["code-generation", "templates"]
 categories = ["development-tools"]
 
 [dependencies]
+fs-err = "3.1.0"
 minijinja = { version = "2.9.0", default-features = false, features = [
     "builtins",
 ] }

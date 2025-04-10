@@ -1,5 +1,5 @@
+use facet_core::{Opaque, OpaqueConst, OpaqueUninit, Shape, TryFromError, ValueVTable};
 use facet_peek::Peek;
-use facet_trait::{Opaque, OpaqueConst, OpaqueUninit, Shape, TryFromError, ValueVTable};
 
 /// Lets you write to a value (implements write-only [`ValueVTable`] proxies)
 pub struct PokeValue<'mem> {

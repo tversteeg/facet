@@ -1,8 +1,8 @@
 use crate::constants::*;
 use crate::errors::Error as DecodeError;
+use facet_core::ShapeExt as _;
+use facet_core::{Facet, Opaque, OpaqueConst};
 use facet_poke::Poke;
-use facet_trait::ShapeExt as _;
-use facet_trait::{Facet, Opaque, OpaqueConst};
 use log::trace;
 
 /// Deserializes MessagePack-encoded data into a type that implements `Facet`.

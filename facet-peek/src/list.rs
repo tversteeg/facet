@@ -1,7 +1,7 @@
 use crate::Peek;
 
 use super::PeekValue;
-use facet_trait::ListDef;
+use facet_core::ListDef;
 
 /// Iterator over a `PeekList`
 pub struct PeekListIter<'mem> {

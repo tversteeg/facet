@@ -1,4 +1,4 @@
-use facet_trait::{MapDef, Opaque, OpaqueConst};
+use facet_core::{MapDef, Opaque, OpaqueConst};
 
 use crate::Peek;
 
@@ -68,7 +68,7 @@ impl<'mem> PeekMap<'mem> {
     }
 
     /// Check if the map contains a key
-    pub fn contains_key(&self, key: &impl facet_trait::Facet) -> bool {
+    pub fn contains_key(&self, key: &impl facet_core::Facet) -> bool {
         unsafe {
             let key_ptr = OpaqueConst::from_ref(key);
             (self.def.vtable.contains_key_fn)(self.value.data(), key_ptr)
@@ -76,7 +76,7 @@ impl<'mem> PeekMap<'mem> {
     }
 
     /// Get a value from the map for the given key
-    pub fn get<'k>(&self, key: &'k impl facet_trait::Facet) -> Option<Peek<'mem>> {
+    pub fn get<'k>(&self, key: &'k impl facet_core::Facet) -> Option<Peek<'mem>> {
         unsafe {
             let key_ptr = OpaqueConst::from_ref(key);
             let value_ptr = (self.def.vtable.get_value_ptr_fn)(self.value.data(), key_ptr)?;

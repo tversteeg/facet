@@ -12,7 +12,7 @@ categories = ["development-tools", "rust-patterns", "memory-management"]
 
 [dependencies]
 facet-peek.workspace = true
-facet-trait.workspace = true
+facet-core.workspace = true
 
 [dev-dependencies]
 color-backtrace = { version = "0.7.0", default-features = false, features = [

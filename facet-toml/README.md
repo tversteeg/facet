@@ -4,14 +4,14 @@
 <picture>
 <source srcset="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.webp">
 <img src="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.png" height="35" alt="Facet logo - a reflection library for Rust">
-</picture> &nbsp facet-opaque
+</picture> &nbsp; facet-toml
 </h1>
 
 [![experimental](https://img.shields.io/badge/status-experimental-yellow)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/facet-opaque.svg)](https://crates.io/crates/facet-opaque)
-[![documentation](https://docs.rs/facet-opaque/badge.svg)](https://docs.rs/facet-opaque)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-opaque.svg)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/facet-toml.svg)](https://crates.io/crates/facet-toml)
+[![documentation](https://docs.rs/facet-toml/badge.svg)](https://docs.rs/facet-toml)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-toml.svg)](./LICENSE)
 
 Thanks to all individual and corporate sponsors, without whom this work could not exist:
 
@@ -38,7 +38,7 @@ Thanks to all individual and corporate sponsors, without whom this work could no
 </a> </p>
              
 
-Provides helpers around type-erased pointers like `OpaqueUninit`, `OpaqueConst`, `Opaque` for Facet types.
+Provides TOML serialization and deserialization for Facet types.
 
 
 ## License

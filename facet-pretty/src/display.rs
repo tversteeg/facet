@@ -3,7 +3,7 @@
 use core::fmt::{self, Display, Formatter};
 
 use crate::printer::PrettyPrinter;
-use facet_trait::Facet;
+use facet_core::Facet;
 
 /// Display wrapper for any type that implements Facet
 pub struct PrettyDisplay<'a, T: Facet> {
@@ -46,8 +46,8 @@ impl<T: Facet> FacetPretty for T {
 mod tests {
     use super::*;
 
+    use facet_core as facet;
     use facet_derive::Facet;
-    use facet_trait as facet;
 
     use core::fmt::Write;
 

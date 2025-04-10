@@ -7,8 +7,8 @@ use std::{
     str,
 };
 
+use facet_core::{Facet, ShapeExt};
 use facet_peek::Peek;
-use facet_trait::{Facet, ShapeExt};
 
 use crate::{ansi, color::ColorGenerator};
 
@@ -282,7 +282,7 @@ impl PrettyPrinter {
                         self.write_punctuation(f, ": ")?;
 
                         // Check if field is sensitive
-                        if flags.contains(facet_trait::FieldFlags::SENSITIVE) {
+                        if flags.contains(facet_core::FieldFlags::SENSITIVE) {
                             // Field value is sensitive, use write_redacted
                             self.write_redacted(f, "[REDACTED]")?;
                             self.write_punctuation(f, ",")?;
@@ -489,7 +489,7 @@ impl PrettyPrinter {
                     // If the value doesn't implement Display, use Debug
                     if self.0.debug(f).is_none() {
                         // If the value doesn't implement Debug either, just show the type name
-                        self.0.type_name(f, facet_trait::TypeNameOpts::infinite())?;
+                        self.0.type_name(f, facet_core::TypeNameOpts::infinite())?;
                         write!(f, "(⋯)")?;
                     }
                 }
@@ -517,7 +517,7 @@ impl PrettyPrinter {
 
         impl core::fmt::Display for TypeNameWriter<'_, '_> {
             fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-                self.0.type_name(f, facet_trait::TypeNameOpts::infinite())
+                self.0.type_name(f, facet_core::TypeNameOpts::infinite())
             }
         }
         let type_name = TypeNameWriter(peek);

@@ -1,8 +1,8 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
+use facet_core::{Facet, Opaque, OpaqueConst, ShapeExt};
 use facet_poke::Poke;
-use facet_trait::{Facet, Opaque, OpaqueConst, ShapeExt};
 use log::*;
 
 #[cfg(test)]
@@ -24,7 +24,7 @@ mod tests;
 ///
 /// ```
 /// use facet_derive::Facet;
-/// use facet_trait::{self as facet, Facet};
+/// use facet_core::{self as facet, Facet};
 /// use facet_urlencoded::from_str;
 ///
 /// #[derive(Debug, Facet, PartialEq)]
@@ -43,7 +43,7 @@ mod tests;
 ///
 /// ```
 /// use facet_derive::Facet;
-/// use facet_trait::{self as facet, Facet};
+/// use facet_core::{self as facet, Facet};
 /// use facet_urlencoded::from_str;
 ///
 /// #[derive(Debug, Facet, PartialEq)]

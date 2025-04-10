@@ -1,5 +1,5 @@
 use core::ptr::NonNull;
-use facet_trait::{
+use facet_core::{
     EnumDef, EnumRepr, Facet, FieldError, Opaque, OpaqueUninit, Shape, ShapeExt as _, VariantKind,
 };
 

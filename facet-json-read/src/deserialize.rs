@@ -1,7 +1,7 @@
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
 
+use facet_core::{Facet, Opaque, OpaqueConst, OpaqueUninit, ShapeExt as _};
 use facet_poke::Poke;
-use facet_trait::{Facet, Opaque, OpaqueConst, OpaqueUninit, ShapeExt as _};
 use log::trace;
 
 /// Deserializes a JSON string into a value of type `T` that implements `Facet`.
@@ -19,9 +19,9 @@ use log::trace;
 ///
 /// # Example
 /// ```
-/// # use facet_trait::Facet;
+/// # use facet_core::Facet;
 /// # use facet_derive::Facet;
-/// # use facet_trait as facet;
+/// # use facet_core as facet;
 /// # #[derive(Facet)]
 /// # struct Person { name: String, age: u64 }
 /// let json = r#"{"name":"Alice","age":30}"#;

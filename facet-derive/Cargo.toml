@@ -24,4 +24,4 @@ unsynn.workspace = true
 
 # cf. https://hachyderm.io/@epage/114141126315983016
 [target.'cfg(any())'.dependencies]
-facet-trait.workspace = true
+facet-core.workspace = true

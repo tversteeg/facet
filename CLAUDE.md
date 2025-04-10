@@ -24,7 +24,7 @@ depend on `facet` directly. For tests to pass, we have to do:
 
 ```rust
 use facet_derive::Facet;
-use facet_trait as facet;
+use facet_core as facet;
 ```
 
 On top. This makes the derive macro work. This is only for tests.

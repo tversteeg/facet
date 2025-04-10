@@ -4,14 +4,14 @@
 <picture>
 <source srcset="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.webp">
 <img src="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.png" height="35" alt="Facet logo - a reflection library for Rust">
-</picture> &nbsp facet-types
+</picture> &nbsp; facet-core
 </h1>
 
 [![experimental](https://img.shields.io/badge/status-experimental-yellow)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/facet-types.svg)](https://crates.io/crates/facet-types)
-[![documentation](https://docs.rs/facet-types/badge.svg)](https://docs.rs/facet-types)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-types.svg)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/facet-core.svg)](https://crates.io/crates/facet-core)
+[![documentation](https://docs.rs/facet-core/badge.svg)](https://docs.rs/facet-core)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-core.svg)](./LICENSE)
 
 Thanks to all individual and corporate sponsors, without whom this work could not exist:
 
@@ -38,20 +38,14 @@ Thanks to all individual and corporate sponsors, without whom this work could no
 </a> </p>
              
 
-Defines the core types used throughout the facet ecosystem for runtime reflection:
+Defines the core types adn traits used throughout the facet ecosystem for runtime reflection:
 
+* `Facet`: exposes a `SHAPE` associated const
 * `Shape`: The central type that describes the memory layout and capabilities of a type
 * Various vtables that define how to manipulate types at runtime
 * The `Def` tree, which describes type definitions (structs, enums, etc.)
 
-This crate is foundational to facet's reflection capabilities, providing the type system that enables safe runtime type manipulation.
-
-### Key Components
-
-* Memory layout information (size, alignment, etc.)
-* Type definition hierarchies
-* Runtime type manipulation vtables
-* Safe type erasure primitives
+This crate is foundational to facet's reflection capabilities, providing the type system that enables runtime type manipulation.
 
 
 ## License

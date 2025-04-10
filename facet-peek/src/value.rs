@@ -1,5 +1,5 @@
 use core::cmp::Ordering;
-use facet_trait::{Opaque, OpaqueConst, Shape, TypeNameOpts, ValueVTable};
+use facet_core::{Opaque, OpaqueConst, Shape, TypeNameOpts, ValueVTable};
 
 use crate::Peek;
 

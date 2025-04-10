@@ -1,5 +1,5 @@
+use facet_core::{Facet, ShapeExt as _};
 use facet_peek::Peek;
-use facet_trait::{Facet, ShapeExt as _};
 use log::trace;
 use std::io::{self, Write};
 

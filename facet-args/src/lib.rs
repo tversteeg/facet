@@ -1,8 +1,8 @@
+use facet_core::Facet;
+use facet_core::FieldAttribute;
+use facet_core::OpaqueConst;
+use facet_core::ShapeExt;
 use facet_poke::{Poke, PokeStruct};
-use facet_trait::Facet;
-use facet_trait::FieldAttribute;
-use facet_trait::OpaqueConst;
-use facet_trait::ShapeExt;
 
 fn parse_field(field: Poke, value: &str, field_index: usize, ps: &mut PokeStruct<'_>) {
     let field_shape = field.shape();

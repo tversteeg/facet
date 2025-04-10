@@ -5,11 +5,11 @@ fn init_backtrace() {
     color_backtrace::install();
 }
 
+use facet_core::Facet;
 use facet_derive::Facet;
 use facet_msgpack::to_vec;
-use facet_trait::Facet;
 
-use facet_trait as facet;
+use facet_core as facet;
 
 #[test]
 fn test_integers() {

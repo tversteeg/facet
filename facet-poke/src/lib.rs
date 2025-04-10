@@ -7,7 +7,7 @@ use core::alloc::Layout;
 
 pub use facet_peek::*;
 
-use facet_trait::{Def, Facet, OpaqueUninit, Shape};
+use facet_core::{Def, Facet, OpaqueUninit, Shape};
 
 mod value;
 pub use value::*;

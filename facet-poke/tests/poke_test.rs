@@ -1,11 +1,12 @@
 use ctor::ctor;
+use facet_core::{Facet, OpaqueConst, OpaqueUninit};
 use facet_derive::Facet;
 use facet_poke::{Peek, Poke};
-use facet_trait::{Facet, OpaqueConst, OpaqueUninit};
+
 use owo_colors::{OwoColorize, Style};
 use std::{cmp::Ordering, collections::HashSet, fmt::Debug};
 
-use facet_trait as facet;
+use facet_core as facet;
 
 // Allow dead code in test modules since we're not constructing all enum variants
 #[derive(Debug, PartialEq, Eq, Facet)]
