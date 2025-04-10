@@ -19,3 +19,6 @@ facet-derive.workspace = true
 testfeat = []
 std = ["facet-core/std"]
 default = ["std"]
+
+[dev-dependencies]
+facet-poke.workspace = true

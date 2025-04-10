@@ -158,6 +158,8 @@ This is just a pretty printer, but an imaginative mind could come up with...
   * A fully inspectable program state, through a browser interface?
   * A modern debugger, exposing all the standard traits and then some instead of a bag of pointers?
 
+
+
 ## Use case: (de)serialization
 
 The `facet-peek` and `facet-poke` allow reading and writing (constructing,
@@ -178,34 +180,47 @@ struct FooBar {
 
 We can build it fully through reflection:
 
-```rust,ignore
-// outer code: we know the type of `FooBar` — we pass `poke`
-let (poke, guard) = Poke::alloc::<FooBar>();
+```rust
+# use facet::Facet;
+# #[derive(Debug, PartialEq, Eq, Facet)]
+# struct FooBar {
+#     foo: u64,
+#     bar: String,
+# }
 
-{
-    // inner code: all we have is a `poke` — our function is not generic,
-    // `Poke` is not generic.
-    let mut poke = poke.into_struct();
-    poke.set_by_name("foo", OpaqueConst::new(&42u64))
-        .unwrap();
+use facet_poke::Poke;
 
+fn main() {
+    // outer code: we know the type of `FooBar` — we pass `poke`
+    let (poke, guard) = Poke::alloc::<FooBar>();
+
+    let foo_bar;
     {
-        let bar = String::from("Hello, World!");
-        poke.set_by_name("bar", OpaqueConst::new(&bar))
-            .unwrap();
-        // bar has been moved out of
-        core::mem::forget(bar);
-    }
-}
+        // inner code: all we have is a `poke` — our function is not generic,
+        // `Poke` is not generic.
+        let mut poke = poke.into_struct();
+        poke.set_by_name("foo", 42u64).unwrap();
 
-// outer code: we know the type of `FooBar` again, we can
-// move out of the `Poke`
-let foo_bar = poke.build::<FooBar>(Some(guard));
+        {
+            let bar = String::from("Hello, World!");
+            poke.set_by_name("bar", bar).unwrap();
+        }
+        foo_bar = poke.build::<FooBar>(Some(guard));
+    }
+
+    // outer code: we know the type of `FooBar` again, we can
+    // move out of the `Poke`
+
+    println!("{}", foo_bar.bar);
+}
 ```
 
 The `inner code` here is the kind of code you would write in a deserializer, for example.
 
-## Use cases: parsing CLI arguments
+Here, we cheated because we (the human) knew the structure of Poke, but in a deserializer,
+you would match against the `Poke` variant, you would inspect a `StructDef` and its `Field`s, etc.
+
+## Use case: parsing CLI arguments
 
 Facet allows arbitrary attributes (WIP) so you can use it for specifying whether a CLI
 argument should be positional or named, for example:
