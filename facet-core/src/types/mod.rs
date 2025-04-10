@@ -37,6 +37,9 @@ pub struct Shape {
 
     /// Details/contents of the value
     pub def: Def,
+
+    /// Doc comments — if there's multiple lines, they're all concatenated
+    pub doc: &'static [&'static str],
 }
 
 impl Shape {
@@ -148,6 +151,7 @@ pub struct ShapeBuilder {
     layout: Option<Layout>,
     vtable: Option<&'static ValueVTable>,
     def: Option<Def>,
+    doc: &'static [&'static str],
 }
 
 impl ShapeBuilder {
@@ -159,6 +163,7 @@ impl ShapeBuilder {
             layout: None,
             vtable: None,
             def: None,
+            doc: &[],
         }
     }
 
@@ -190,6 +195,13 @@ impl ShapeBuilder {
         self
     }
 
+    /// Sets the `doc` field of the `ShapeBuilder`.
+    #[inline]
+    pub const fn doc(mut self, doc: &'static [&'static str]) -> Self {
+        self.doc = doc;
+        self
+    }
+
     /// Builds a `Shape` from the `ShapeBuilder`.
     ///
     /// # Panics
@@ -202,6 +214,7 @@ impl ShapeBuilder {
             layout: self.layout.unwrap(),
             vtable: self.vtable.unwrap(),
             def: self.def.unwrap(),
+            doc: self.doc,
         }
     }
 }
@@ -358,6 +371,9 @@ pub enum StructKind {
     /// struct TupleStruct(T0, T1);
     TupleStruct,
 
+    /// struct UnitStruct;
+    Unit,
+
     /// (T0, T1)
     Tuple,
 }
@@ -381,6 +397,9 @@ pub struct Field {
 
     /// arbitrary attributes set via the derive macro
     pub attributes: &'static [FieldAttribute],
+
+    /// doc comments
+    pub doc: &'static [&'static str],
 }
 
 impl Field {
@@ -397,6 +416,7 @@ pub struct FieldBuilder {
     offset: Option<usize>,
     flags: Option<FieldFlags>,
     attributes: &'static [FieldAttribute],
+    doc: &'static [&'static str],
 }
 
 /// An attribute that can be set on a field
@@ -420,6 +440,7 @@ impl FieldBuilder {
             offset: None,
             flags: None,
             attributes: &[],
+            doc: &[],
         }
     }
 
@@ -453,6 +474,12 @@ impl FieldBuilder {
         self
     }
 
+    /// Sets the doc comments for the Field
+    pub const fn doc(mut self, doc: &'static [&'static str]) -> Self {
+        self.doc = doc;
+        self
+    }
+
     /// Builds the Field
     pub const fn build(self) -> Field {
         Field {
@@ -464,6 +491,7 @@ impl FieldBuilder {
                 None => FieldFlags::EMPTY,
             },
             attributes: self.attributes,
+            doc: self.doc,
         }
     }
 }
@@ -706,6 +734,9 @@ pub struct Variant {
 
     /// Kind of variant (unit, tuple, or struct)
     pub kind: VariantKind,
+
+    /// Doc comment for the variant
+    pub doc: &'static [&'static str],
 }
 
 impl Variant {
@@ -720,6 +751,7 @@ pub struct VariantBuilder {
     name: Option<&'static str>,
     discriminant: Option<Option<i64>>,
     kind: Option<VariantKind>,
+    doc: &'static [&'static str],
 }
 
 impl VariantBuilder {
@@ -730,6 +762,7 @@ impl VariantBuilder {
             name: None,
             discriminant: None,
             kind: None,
+            doc: &[],
         }
     }
 
@@ -751,12 +784,19 @@ impl VariantBuilder {
         self
     }
 
+    /// Sets the doc comment for the Variant
+    pub const fn doc(mut self, doc: &'static [&'static str]) -> Self {
+        self.doc = doc;
+        self
+    }
+
     /// Builds the Variant
     pub const fn build(self) -> Variant {
         Variant {
             name: self.name.unwrap(),
             discriminant: self.discriminant.unwrap(),
             kind: self.kind.unwrap(),
+            doc: self.doc,
         }
     }
 }

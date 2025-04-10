@@ -1,26 +1,24 @@
 use core::{fmt::Debug, mem::offset_of};
-use facet::{Def, Facet, FieldFlags, StructDef, StructKind};
+use facet::{Def, Facet, FieldFlags, StructDef, StructKind, VariantKind};
 
 #[test]
 fn unit_struct() {
     #[derive(Debug, Facet)]
     struct UnitStruct;
 
-    if !cfg!(miri) {
-        let shape = UnitStruct::SHAPE;
+    let shape = UnitStruct::SHAPE;
 
-        // Check the name using Display
-        assert_eq!(format!("{}", shape), "UnitStruct");
+    // Check the name using Display
+    assert_eq!(format!("{}", shape), "UnitStruct");
 
-        assert_eq!(shape.layout.size(), 0);
-        assert_eq!(shape.layout.align(), 1);
+    assert_eq!(shape.layout.size(), 0);
+    assert_eq!(shape.layout.align(), 1);
 
-        if let Def::Struct(StructDef { kind, fields, .. }) = shape.def {
-            assert_eq!(kind, StructKind::Struct);
-            assert_eq!(fields.len(), 0);
-        } else {
-            panic!("Expected Struct innards");
-        }
+    if let Def::Struct(StructDef { kind, fields, .. }) = shape.def {
+        assert_eq!(kind, StructKind::Unit);
+        assert_eq!(fields.len(), 0);
+    } else {
+        panic!("Expected Struct innards");
     }
 }
 
@@ -105,6 +103,52 @@ fn struct_doc_comment() {
     #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
     /// yes
     struct Foo {}
+
+    assert_eq!(Foo::SHAPE.doc, &[" yes"]);
+}
+
+#[test]
+fn struct_doc_comment2() {
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
+    /// yes
+    /// no
+    struct Foo {}
+
+    assert_eq!(Foo::SHAPE.doc, &[" yes", " no"]);
+}
+
+#[test]
+fn struct_doc_comment3() {
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
+    /// yes 😄
+    /// no
+    struct Foo {}
+
+    assert_eq!(Foo::SHAPE.doc, &[" yes 😄", " no"]);
+}
+
+#[test]
+fn struct_doc_comment4() {
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
+    /// what about "quotes"
+    struct Foo {}
+
+    assert_eq!(Foo::SHAPE.doc, &[r#" what about "quotes""#]);
+}
+
+#[test]
+fn enum_doc_comment() {
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
+    #[repr(u8)]
+    /// This is an enum
+    enum MyEnum {
+        #[allow(dead_code)]
+        A,
+        #[allow(dead_code)]
+        B,
+    }
+
+    assert_eq!(MyEnum::SHAPE.doc, &[" This is an enum"]);
 }
 
 #[test]
@@ -113,6 +157,97 @@ fn struct_field_doc_comment() {
     struct Foo {
         /// This field has a doc comment
         bar: u32,
+    }
+
+    if let Def::Struct(StructDef { fields, .. }) = Foo::SHAPE.def {
+        assert_eq!(fields[0].doc, &[" This field has a doc comment"]);
+    } else {
+        panic!("Expected Struct innards");
+    }
+}
+
+#[test]
+fn tuple_struct_field_doc_comment_test() {
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
+    struct MyTupleStruct(
+        /// This is a documented field
+        u32,
+        /// This is another documented field
+        String,
+    );
+
+    let shape = MyTupleStruct::SHAPE;
+
+    if let Def::Struct(StructDef { kind, fields, .. }) = shape.def {
+        assert_eq!(kind, StructKind::TupleStruct);
+        assert_eq!(fields[0].doc, &[" This is a documented field"]);
+        assert_eq!(fields[1].doc, &[" This is another documented field"]);
+    } else {
+        panic!("Expected Struct innards");
+    }
+}
+
+#[test]
+fn enum_variants_with_comments() {
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
+    #[repr(u8)]
+    enum CommentedEnum {
+        /// This is variant A
+        #[allow(dead_code)]
+        A,
+        /// This is variant B
+        /// with multiple lines
+        #[allow(dead_code)]
+        B(u32),
+        /// This is variant C
+        /// which has named fields
+        #[allow(dead_code)]
+        C {
+            /// This is field x
+            x: u32,
+            /// This is field y
+            y: String,
+        },
+    }
+
+    let shape = CommentedEnum::SHAPE;
+
+    if let Def::Enum(enum_def) = shape.def {
+        assert_eq!(enum_def.variants.len(), 3);
+
+        // Check variant A
+        let variant_a = &enum_def.variants[0];
+        assert_eq!(variant_a.name, "A");
+        assert_eq!(variant_a.doc, &[" This is variant A"]);
+
+        // Check variant B
+        let variant_b = &enum_def.variants[1];
+        assert_eq!(variant_b.name, "B");
+        assert_eq!(
+            variant_b.doc,
+            &[" This is variant B", " with multiple lines"]
+        );
+
+        // Check variant C
+        let variant_c = &enum_def.variants[2];
+        assert_eq!(variant_c.name, "C");
+        assert_eq!(
+            variant_c.doc,
+            &[" This is variant C", " which has named fields"]
+        );
+
+        // Check fields of variant C
+        if let VariantKind::Struct { fields } = &variant_c.kind {
+            assert_eq!(fields.len(), 2);
+            assert_eq!(fields[0].name, "x");
+            assert_eq!(fields[0].doc, &[" This is field x"]);
+            assert_eq!(fields[1].name, "y");
+            assert_eq!(fields[1].doc, &[" This is field y"]);
+        } else {
+            panic!("Expected Struct variant");
+        }
+    } else {
+        panic!("Expected Enum definition");
     }
 }
 
@@ -138,6 +273,8 @@ fn tuple_struct_doc_comment() {
     #[repr(transparent)]
     /// This is a struct for sure
     struct Blah(u32);
+
+    assert_eq!(Blah::SHAPE.doc, &[" This is a struct for sure"]);
 }
 
 #[test]
@@ -283,33 +420,6 @@ fn derive_real_life_cub_config() {
 
 // //     let shape = WithLifetime::shape();
 // //     assert_eq!(format!("{}", shape), "WithLifetime");
-// // }
-
-// #[test]
-// fn tuple_struct() {
-//     #[derive(Debug, ::facet::Facet)]
-//     struct Point(f32, f32);
-
-//     let shape = Point::SHAPE;
-//     assert_eq!(format!("{}", shape), "Point");
-//     if let Def::Struct(StructDef { fields }) = shape.def {
-//         assert_eq!(fields.len(), 2);
-//         assert_eq!(fields[0].name, "0");
-//         assert_eq!(fields[1].name, "1");
-//     } else {
-//         panic!("Expected TupleStruct innards");
-//     }
-// }
-
-// // #[test]
-// // fn unit_struct() {
-// //     /// A unit struct with documentation
-// //     #[derive(Debug, ::facet::Facet)]
-// //     struct Unit;
-
-// //     let shape = Unit::shape();
-// //     assert_eq!(format!("{}", shape), "Unit");
-// //     assert!(matches!(shape.innards, facet::Innards::Struct { fields } if fields.is_empty()));
 // // }
 
 // // // #[test]

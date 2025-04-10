@@ -69,9 +69,10 @@ pub fn from_slice<T: Facet>(s: &[&str]) -> T {
         } else {
             log::trace!("Encountered positional argument: {}", token);
             for f in ps.def().fields {
-                if f.attributes.iter().any(
-                    |a| matches!(a, FieldAttribute::Arbitrary(a) if a.contains("sym: positional")),
-                ) {
+                if f.attributes
+                    .iter()
+                    .any(|a| matches!(a, FieldAttribute::Arbitrary(a) if a.contains("positional")))
+                {
                     let (field_index, field) = ps.field_by_name(f.name).unwrap();
                     parse_field(field, token, field_index, &mut ps);
                     break;

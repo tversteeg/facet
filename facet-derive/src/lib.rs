@@ -3,7 +3,6 @@
 
 mod process_enum;
 mod process_struct;
-mod process_tuple_struct;
 
 use unsynn::*;
 
@@ -31,7 +30,6 @@ unsynn! {
     enum TypeDecl {
         Struct(Struct),
         Enum(Enum),
-        TupleStruct(TupleStruct)
     }
 
     enum Vis {
@@ -73,12 +71,17 @@ unsynn! {
     }
 
     struct Struct {
-        // Skip any doc attributes by consuming them
         attributes: Vec<Attribute>,
         _vis: Option<Vis>,
         _kw_struct: KStruct,
         name: Ident,
-        body: Option<BraceGroupContaining<CommaDelimitedVec<StructField>>>,
+        // if None, Unit struct
+        body: Option<StructBody>,
+    }
+
+    enum StructBody {
+        Struct(BraceGroupContaining<CommaDelimitedVec<StructField>>),
+        TupleStruct(ParenthesisGroupContaining<CommaDelimitedVec<TupleField>>),
     }
 
     struct Lifetime {
@@ -127,15 +130,6 @@ unsynn! {
         typ: Type,
     }
 
-    struct TupleStruct {
-        // Skip any doc attributes by consuming them
-        attributes: Vec<Attribute>,
-        _vis: Option<Vis>,
-        _kw_struct: KStruct,
-        name: Ident,
-        body: ParenthesisGroupContaining<CommaDelimitedVec<TupleField>>,
-    }
-
     struct TupleField {
         attributes: Vec<Attribute>,
         vis: Option<Vis>,
@@ -143,7 +137,6 @@ unsynn! {
     }
 
     struct Enum {
-        // Skip any doc attributes by consuming them
         attributes: Vec<Attribute>,
         _pub: Option<KPub>,
         _kw_enum: KEnum,
@@ -163,14 +156,12 @@ unsynn! {
     }
 
     struct TupleVariant {
-        // Skip any doc comments on variants
         attributes: Vec<Attribute>,
         name: Ident,
-        _paren: ParenthesisGroupContaining<CommaDelimitedVec<TupleField>>,
+        fields: ParenthesisGroupContaining<CommaDelimitedVec<TupleField>>,
     }
 
     struct StructVariant {
-        // Skip any doc comments on variants
         attributes: Vec<Attribute>,
         name: Ident,
         fields: BraceGroupContaining<CommaDelimitedVec<StructField>>,
@@ -189,11 +180,10 @@ pub fn facet_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     // Parse as TypeDecl
     match i.parse::<TypeDecl>() {
         Ok(TypeDecl::Struct(parsed)) => process_struct::process_struct(parsed),
-        Ok(TypeDecl::TupleStruct(parsed)) => process_tuple_struct::process_tuple_struct(parsed),
         Ok(TypeDecl::Enum(parsed)) => process_enum::process_enum(parsed),
         Err(err) => {
             panic!(
-                "Could not parse input as struct, tuple struct, or enum: {}\nError: {:?}",
+                "Could not parse type declaration: {}\nError: {:?}",
                 input, err
             );
         }
@@ -284,5 +274,70 @@ pub(crate) fn generate_static_decl(type_name: &str) -> String {
         "#[used]\nstatic {}_SHAPE: &'static facet::Shape = <{} as facet::Facet>::SHAPE;",
         to_upper_snake_case(type_name),
         type_name
+    )
+}
+
+pub(crate) fn build_maybe_doc(attrs: &[Attribute]) -> String {
+    let doc_lines: Vec<_> = attrs
+        .iter()
+        .filter_map(|attr| match &attr.body.content {
+            AttributeInner::Doc(doc_inner) => Some(doc_inner.value.value()),
+            _ => None,
+        })
+        .collect();
+
+    if doc_lines.is_empty() {
+        String::new()
+    } else {
+        format!(r#".doc(&[{}])"#, doc_lines.join(","))
+    }
+}
+
+pub(crate) fn gen_struct_field(field_name: &str, struct_name: &str, attrs: &[Attribute]) -> String {
+    // Determine field flags
+    let mut flags = "facet::FieldFlags::EMPTY";
+    let mut attribute_list: Vec<String> = vec![];
+    let mut doc_lines: Vec<&str> = vec![];
+    for attr in attrs {
+        match &attr.body.content {
+            AttributeInner::Facet(facet_attr) => match &facet_attr.inner.content {
+                FacetInner::Sensitive(_ksensitive) => {
+                    flags = "facet::FieldFlags::SENSITIVE";
+                    attribute_list.push("facet::FieldAttribute::Sensitive".to_string());
+                }
+                FacetInner::Other(tt) => {
+                    attribute_list.push(format!(
+                        r#"facet::FieldAttribute::Arbitrary({:?})"#,
+                        tt.tokens_to_string()
+                    ));
+                }
+            },
+            AttributeInner::Doc(doc_inner) => doc_lines.push(doc_inner.value.value()),
+            AttributeInner::Repr(_) => {
+                // muffin
+            }
+            AttributeInner::Any(_) => {
+                // muffin two
+            }
+        }
+    }
+    let attributes = attribute_list.join(",");
+
+    let maybe_field_doc = if doc_lines.is_empty() {
+        String::new()
+    } else {
+        format!(r#".doc(&[{}])"#, doc_lines.join(","))
+    };
+
+    // Generate each field definition
+    format!(
+        "facet::Field::builder()
+    .name(\"{field_name}\")
+    .shape(facet::shape_of(&|s: {struct_name}| s.{field_name}))
+    .offset(::core::mem::offset_of!({struct_name}, {field_name}))
+    .flags({flags})
+    .attributes(&[{attributes}])
+    {maybe_field_doc}
+    .build()"
     )
 }

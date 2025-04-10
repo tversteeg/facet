@@ -15,7 +15,6 @@ fn init_logger() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 }
 
-// Allow dead code in test modules since we're not constructing all enum variants
 #[derive(Debug, PartialEq, Eq, Facet)]
 struct FooBar {
     foo: u64,
