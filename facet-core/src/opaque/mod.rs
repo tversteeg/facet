@@ -95,6 +95,16 @@ impl<'mem> OpaqueConst<'mem> {
     ///
     /// # Safety
     ///
+    /// The pointer must be non-null, valid, aligned, and point to initialized memory
+    /// of the correct type, and be valid for lifetime `'mem`.
+    pub unsafe fn from_ptr<T>(ptr: *const T) -> Self {
+        unsafe { Self(NonNull::new_unchecked(ptr as *mut u8), PhantomData) }
+    }
+
+    /// Create a new opaque const pointer from a raw pointer
+    ///
+    /// # Safety
+    ///
     /// The pointer must be valid, aligned, and point to initialized memory
     /// of the correct type, and be valid for lifetime `'mem`.
     pub unsafe fn new_unchecked<T>(ptr: *const T) -> Self {
