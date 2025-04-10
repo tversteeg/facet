@@ -231,13 +231,13 @@ fn deserialize_scalar_field<'mem>(
             if ps_scalar.shape().is_type::<String>() {
                 let s = value.to_string();
                 let opaque = OpaqueConst::new(&s);
-                unsafe { ps_scalar.put(opaque) };
+                unsafe { ps_scalar.write(opaque) };
                 core::mem::forget(s);
             } else if ps_scalar.shape().is_type::<u64>() {
                 match value.parse::<u64>() {
                     Ok(num) => {
                         let opaque = OpaqueConst::new(&num);
-                        unsafe { ps_scalar.put(opaque) };
+                        unsafe { ps_scalar.write(opaque) };
                     }
                     Err(_) => {
                         return Err(UrlEncodedError::InvalidNumber(

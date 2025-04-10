@@ -96,6 +96,8 @@ impl<'mem> OpaqueConst<'mem> {
     ///
     /// The pointer must be non-null, valid, aligned, and point to initialized memory
     /// of the correct type, and be valid for lifetime `'mem`.
+    ///
+    /// It's encouraged to take the address of something with `&raw const x`, rather than `&x`
     pub fn new<T>(ptr: *const T) -> Self {
         unsafe { Self(NonNull::new_unchecked(ptr as *mut u8), PhantomData) }
     }
@@ -158,6 +160,8 @@ impl<'mem> Opaque<'mem> {
     ///
     /// The pointer must be valid, aligned, and point to initialized memory
     /// of the correct type, and be valid for lifetime `'mem`.
+    ///
+    /// It's encouraged to take the address of something with `&raw mut x`, rather than `&x`
     pub fn new<T>(ptr: *mut T) -> Self {
         Self(
             unsafe { NonNull::new_unchecked(ptr as *mut u8) },

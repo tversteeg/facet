@@ -13,7 +13,7 @@ fn parse_field(field: Poke, value: &str, field_index: usize, ps: &mut PokeStruct
         unsafe {
             field
                 .into_value()
-                .put(OpaqueConst::new(&true as *const bool))
+                .write(OpaqueConst::new(&true as *const bool))
         };
         unsafe { ps.mark_initialized(field_index) }
     } else if field_shape.is_type::<String>() {
@@ -22,7 +22,7 @@ fn parse_field(field: Poke, value: &str, field_index: usize, ps: &mut PokeStruct
         unsafe {
             field
                 .into_value()
-                .put(OpaqueConst::new(&value as *const String))
+                .write(OpaqueConst::new(&value as *const String))
         };
         unsafe { ps.mark_initialized(field_index) };
         std::mem::forget(value);

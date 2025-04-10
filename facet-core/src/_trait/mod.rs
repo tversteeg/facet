@@ -26,28 +26,3 @@ pub unsafe trait Facet: Sized {
         Self::SHAPE == Other::SHAPE
     }
 }
-
-/// Extension trait to provide `is_type` and `assert_type`
-pub trait ShapeExt {
-    /// Check if this shape is of the given type
-    fn is_type<Other: Facet>(&'static self) -> bool;
-
-    /// Assert that this shape is of the given type, panicking if it's not
-    fn assert_type<Other: Facet>(&'static self);
-}
-
-impl ShapeExt for Shape {
-    /// Check if this shape is of the given type
-    fn is_type<Other: Facet>(&'static self) -> bool {
-        self == Other::SHAPE
-    }
-
-    /// Assert that this shape is of the given type, panicking if it's not
-    fn assert_type<Other: Facet>(&'static self) {
-        assert!(
-            self.is_type::<Other>(),
-            "Type mismatch: expected {}, found {self}",
-            Other::SHAPE,
-        );
-    }
-}
