@@ -237,13 +237,60 @@ let foo_bar = poke.build::<FooBar>(Some(guard));
 
 The `inner code` here is the kind of code you would write in a deserializer, for example.
 
+## Use cases: parsing CLI arguments
+
+Facet allows arbitrary attributes (WIP) so you can use it for specifying whether a CLI
+argument should be positional or named, for example:
+
+```rust,ignore
+use facet::Facet;
+
+#[derive(Facet)]
+struct Args {
+    #[facet(positional)]
+    path: String,
+
+    #[facet(named, short = 'v')]
+    verbose: bool,
+
+    #[facet(named, short = 'j')]
+    concurrency: usize,
+}
+
+let args: Args = facet_args::from_slice(&["--verbose", "--concurrency", "14", "example.rs"]);
+eprintln!("args: {}", args.pretty());
+```
+
+```bash
+facet on  args [!] via 🦀 v1.86.0
+❯ RUST_LOG=info nt run --no-capture test_arg_parse
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+────────────
+ Nextest run ID a8ab7183-8333-465f-a94f-6036576f19c2 with nextest profile: default
+    Starting 1 test across 30 binaries (66 tests skipped)
+       START             facet-args::simple test_arg_parse
+[INFO  simple] Logging and color backtrace initialized
+
+running 1 test
+args: Args {
+  path: example.rs,
+  verbose: true,
+  concurrency: 14,
+}
+test test_arg_parse ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+        PASS [   0.005s] facet-args::simple test_arg_parse
+────────────
+     Summary [   0.005s] 1 test run: 1 passed, 66 skipped
+```
+
 ## Use cases: beyond
 
 This could be extended to allow RPC, there could be an analoguous derive for traits,
 it could export statics so that binaries may be inspected — shapes would then be available
 instead of / in conjunction with debug info.
-
-Parsing CLI arguments is a form of deserialization.
 
 HTTP routing is a form of deserialization.
 

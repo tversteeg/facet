@@ -6,7 +6,7 @@ use facet_trait::ShapeExt;
 
 fn parse_field(field: Poke, value: &str, field_index: usize, ps: &mut PokeStruct<'_>) {
     let field_shape = field.shape();
-    log::trace!("Field shape: {:?}", field_shape);
+    log::trace!("Field shape: {}", field_shape);
 
     if field_shape.is_type::<bool>() {
         log::trace!("Boolean field detected, setting to true");
