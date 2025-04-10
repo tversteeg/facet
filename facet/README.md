@@ -145,7 +145,7 @@ Vec<Person> [
 ]
 ```
 
-Because we know the shaep of `T`, we can format different things differently,
+Because we know the shape of `T`, we can format different things differently,
 if we wanted to:
 
 ```rust,ignore
