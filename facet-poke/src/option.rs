@@ -1,4 +1,4 @@
-use facet_core::{Opaque, OpaqueUninit, OptionDef, OptionVTable, Shape};
+use facet_core::{Opaque, OpaqueConst, OpaqueUninit, OptionDef, OptionVTable, Shape};
 
 use crate::Guard;
 
@@ -112,6 +112,23 @@ impl<'mem> PokeOption<'mem> {
     /// Returns the option definition
     pub fn def(&self) -> OptionDef {
         self.def
+    }
+
+    /// Returns the option vtable
+    pub fn vtable(&self) -> &'static OptionVTable {
+        self.def.vtable
+    }
+
+    /// Replace the current value with None
+    pub fn replace_with_none(self) -> Self {
+        unsafe { (self.vtable().replace_with_fn)(self.data, None) };
+        self
+    }
+
+    /// Replace the current value with Some
+    pub fn replace_with_some(self, value: OpaqueConst<'_>) -> Self {
+        unsafe { (self.vtable().replace_with_fn)(self.data, Some(value)) };
+        self
     }
 
     /// Get a reference to the underlying value
