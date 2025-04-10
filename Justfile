@@ -93,3 +93,11 @@ absolve:
     cargo tree -i syn -e features
     exit 1
     fi
+
+ship:
+    #!/usr/bin/env -S /bin/bash -eux
+    release-plz update
+    git add .
+    git commit
+    git push
+    release-plz release --backend github --git-token $(gh auth token)
