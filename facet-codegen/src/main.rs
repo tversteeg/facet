@@ -137,6 +137,11 @@ fn generate_readme_files(has_diffs: &mut bool, opts: &Options) {
     // Add template functions
     env.add_function("header", |crate_name: String| {
         format!(r#"
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/logo/facet-dark.webp, https://github.com/facet-rs/facet/raw/main/static/logo/facet-dark.png">
+<img src="https://github.com/facet-rs/facet/raw/main/static/logo/facet-light.webp, https://github.com/facet-rs/facet/raw/main/static/logo/facet-light.png" height="40" alt="Facet logo - a reflection library for Rust">
+</picture>
+
 # {0}
 
 [![experimental](https://img.shields.io/badge/status-experimental-yellow)](https://github.com/fasterthanlime/facet)

@@ -1,4 +1,9 @@
 
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/logo/facet-dark.webp, https://github.com/facet-rs/facet/raw/main/static/logo/facet-dark.png">
+<img src="https://github.com/facet-rs/facet/raw/main/static/logo/facet-light.webp, https://github.com/facet-rs/facet/raw/main/static/logo/facet-light.png" height="40" alt="Facet logo - a reflection library for Rust">
+</picture>
+
 # facet-poke
 
 [![experimental](https://img.shields.io/badge/status-experimental-yellow)](https://github.com/fasterthanlime/facet)
