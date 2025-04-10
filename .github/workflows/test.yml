@@ -1,53 +1,55 @@
 name: Tests
 
 on:
-    push:
-        branches: [main]
-    pull_request:
-        branches: [main]
-    merge_group:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  merge_group:
 
 jobs:
-    test:
-        strategy:
-            matrix:
-                os: [ubuntu-latest, macos-latest]
-        runs-on: ${{ matrix.os }}
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
 
-        steps:
-            - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Setup cargo cache
-              uses: Swatinem/rust-cache@v2
+      - name: Setup cargo cache
+        uses: Swatinem/rust-cache@v2
 
-            - name: Install Rust specified toolchain
-              run: |
-                  rustc --version
+      - name: Install Rust specified toolchain
+        run: |
+          rustc --version
 
-            - name: Install just and cargo-nextest
-              uses: taiki-e/install-action@v2
-              with:
-                  tool: just,cargo-nextest
+      - name: Install just and cargo-nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: just,cargo-nextest
 
-            - name: Run tests
-              shell: bash
-              run: |
-                  just
+      - name: Run tests
+        shell: bash
+        run: |
+          just
 
-    miri:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
+  miri:
+    runs-on: ubuntu-latest
+    container:
+      image: rustlang/rust:nightly
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Setup cargo cache
-              uses: Swatinem/rust-cache@v2
-              with:
-                  cache-directories: /home/runner/.rustup
+      - name: Setup cargo cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-directories: /home/runner/.cargo
 
-            - name: Install just and cargo-nextest
-              uses: taiki-e/install-action@v2
-              with:
-                  tool: just,cargo-nextest
+      - name: Install just and cargo-nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: just,cargo-nextest
 
-            - name: Run miri
-              run: just miri
+      - name: Run miri
+        run: just miri
