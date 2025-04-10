@@ -326,6 +326,9 @@ The main `facet` crate re-exports symbols from:
   - Type-erased pointer helpers like `OpaqueUninit`, `OpaqueConst`, and `Opaque`
   - Autoderef specialization trick needed for `facet-derive`
 - [facet-derive](https://github.com/facet-rs/facet/tree/main/facet-derive), which implements the `Facet` derive attribute as a fast/light proc macro powered by [unsynn](https://docs.rs/unsynn)
+
+For struct manipulation, the following are available:
+
 - [facet-peek](https://github.com/facet-rs/facet/tree/main/facet-peek), which allows reading arbitrary `Facet` types
 - [facet-poke](https://github.com/facet-rs/facet/tree/main/facet-poke), which allows building/altering arbitrary `Facet` types
 
