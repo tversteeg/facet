@@ -104,7 +104,4 @@ ship:
     just release
 
 release:
-    # This works around a bug in release-plz: it does not publish dev dependencies in the right order.
-    release-plz release --backend github --git-token $(gh auth token) || true
-    cargo publish -p facet-samplelibc || true
-    release-plz release --backend github --git-token $(gh auth token)
+    cargo ws publish --publish-as-is
