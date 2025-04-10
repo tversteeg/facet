@@ -1,7 +1,9 @@
+use std::num::NonZero;
+
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
 
 use facet_core::{Facet, Opaque, OpaqueUninit};
-use facet_poke::Poke;
+use facet_poke::{Poke, PokeValue};
 use log::trace;
 
 /// Deserializes a JSON string into a value of type `T` that implements `Facet`.
@@ -41,6 +43,40 @@ pub fn from_str_opaque<'input, 'mem>(
     trace!("Starting JSON deserialization");
     let mut parser = JsonParser::new(json);
     deserialize_value(&mut parser, poke)
+}
+
+macro_rules! int {
+    ($parsed:expr, $pv:expr, $type:ty) => {
+        if $pv.shape().is_type::<$type>() {
+            let n = $parsed? as $type;
+            return Ok($pv.put(n));
+        }
+
+        if $pv.shape().is_type::<NonZero<$type>>() {
+            let n = $parsed? as $type;
+            return Ok($pv.put(NonZero::new(n).expect("zero value")));
+        }
+    };
+}
+
+macro_rules! unsigneds {
+    ($parser:expr, $pv:expr, $type:ty, $($types:ty),*) => {
+        int!($parser.parse_u64(), $pv, $type);
+        unsigneds!($parser, $pv, $($types),*);
+    };
+    ($parser:expr, $pv:expr, $type:ty) => {
+        int!($parser.parse_u64(), $pv, $type);
+    };
+}
+
+macro_rules! signeds {
+    ($parser:expr, $pv:expr, $type:ty, $($types:ty),*) => {
+        int!($parser.parse_i64(), $pv, $type);
+        unsigneds!($parser, $pv, $($types),*);
+    };
+    ($parser:expr, $pv:expr, $type:ty) => {
+        int!($parser.parse_i64(), $pv, $type);
+    };
 }
 
 /// Deserializes a value from JSON using an iterative approach.
@@ -95,56 +131,36 @@ fn deserialize_value<'input, 'mem>(
                 match poke {
                     Poke::Scalar(pv) => {
                         trace!("Deserializing \x1b[1;36mscalar\x1b[0m");
-                        let opaque = if pv.shape().is_type::<String>() {
-                            let s = parser.parse_string()?;
-                            let data = pv.put(s);
-                            data
-                        } else if pv.shape().is_type::<bool>() {
-                            let b = parser.parse_bool()?;
-                            pv.put(b)
-                        // Unsigned integers
-                        } else if pv.shape().is_type::<u8>() {
-                            let n = parser.parse_u64()? as u8;
-                            pv.put(n)
-                        } else if pv.shape().is_type::<u16>() {
-                            let n = parser.parse_u64()? as u16;
-                            pv.put(n)
-                        } else if pv.shape().is_type::<u32>() {
-                            let n = parser.parse_u64()? as u32;
-                            pv.put(n)
-                        } else if pv.shape().is_type::<u64>() {
-                            let n = parser.parse_u64()?;
-                            pv.put(n)
-                        } else if pv.shape().is_type::<u128>() {
-                            let n = parser.parse_u64()? as u128;
-                            pv.put(n)
-                        // Signed integers
-                        } else if pv.shape().is_type::<i8>() {
-                            let n = parser.parse_i64()? as i8;
-                            pv.put(n)
-                        } else if pv.shape().is_type::<i16>() {
-                            let n = parser.parse_i64()? as i16;
-                            pv.put(n)
-                        } else if pv.shape().is_type::<i32>() {
-                            let n = parser.parse_i64()? as i32;
-                            pv.put(n)
-                        } else if pv.shape().is_type::<i64>() {
-                            let n = parser.parse_i64()?;
-                            pv.put(n)
-                        } else if pv.shape().is_type::<i128>() {
-                            let n = parser.parse_i64()? as i128;
-                            pv.put(n)
-                        // Floating point
-                        } else if pv.shape().is_type::<f32>() {
-                            let n = parser.parse_f64()? as f32;
-                            pv.put(n)
-                        } else if pv.shape().is_type::<f64>() {
-                            let n = parser.parse_f64()?;
-                            pv.put(n)
-                        } else {
+                        fn aux<'input, 'mem>(
+                            parser: &mut JsonParser<'input>,
+                            pv: PokeValue<'mem>,
+                        ) -> Result<Opaque<'mem>, JsonParseErrorWithContext<'input>>
+                        {
+                            if pv.shape().is_type::<String>() {
+                                let s = parser.parse_string()?;
+                                let data = pv.put(s);
+                                return Ok(data);
+                            }
+                            if pv.shape().is_type::<bool>() {
+                                let b = parser.parse_bool()?;
+                                return Ok(pv.put(b));
+                            }
+                            if pv.shape().is_type::<f32>() {
+                                let n = parser.parse_f64()? as f32;
+                                return Ok(pv.put(n));
+                            }
+                            if pv.shape().is_type::<f64>() {
+                                let n = parser.parse_f64()?;
+                                return Ok(pv.put(n));
+                            }
+
+                            unsigneds!(parser, pv, u8, u16, u32, u64, u128, usize);
+                            signeds!(parser, pv, i8, i16, i32, i64, i128, isize);
+
                             panic!("Unknown scalar shape: {}", pv.shape());
-                        };
-                        result = Some(opaque);
+                        }
+
+                        result = Some(aux(parser, pv)?);
                     }
                     Poke::Struct(ps) => {
                         trace!("Deserializing \x1b[1;36mstruct\x1b[0m");

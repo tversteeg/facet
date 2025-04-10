@@ -1,3 +1,5 @@
+use std::num::NonZero;
+
 use facet_derive::Facet;
 use facet_json_read::from_str;
 
@@ -43,6 +45,20 @@ fn json_read_empty_struct() {
         Ok(s) => s,
         Err(e) => panic!("Error deserializing JSON: {}", e),
     };
+}
+
+#[test]
+fn json_read_nonzero() {
+    #[derive(Facet)]
+    struct Foo {
+        foo: NonZero<u8>,
+    }
+    let json = r#"{"foo": 1}"#;
+    let s: Foo = match from_str(json) {
+        Ok(s) => s,
+        Err(e) => panic!("Error deserializing JSON: {}", e),
+    };
+    assert_eq!(s.foo, { const { NonZero::new(1).unwrap() } });
 }
 
 #[test]
