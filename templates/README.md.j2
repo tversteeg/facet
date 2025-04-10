@@ -1,29 +1,190 @@
 {{ header("facet") }}
 
-facet provides type reflection for Rust, in const contexts.
+facet provides "const fn" reflection for Rust.
 
-Any type that implements `Facet` trait returns a `Shape`, which describes:
+The `Facet` trait is meant to be derived for _every single type in the Rust
+ecosystem_, and can be used to replace many other derive macros.
 
-  * The memory layout of the type
-  * Its definition: struct fields, underlying type for newtypes, etc.
-  * How to drop it in place
+```rust,ignore
+pub unsafe trait Facet: Sized {
+    const SHAPE: &'static Shape;
+    // (other fields ignored)
+}
+```
 
-The `Poke` type is able to allocate (or work from a `&mut MaybeUninit<T>`)
-any Facet type, and gradually initialize its fields — until the fully-built
-value is moved out of the partial.
+Whereas crates like `serde` derive _code_ using the heavy `syn`, `facet` derives
+data with the light and fast `unsynn`.
 
-The `Peek` type helps perform read operations on any Facet type.
+That data does not make compile times balloon due to heavy monomorphization. It
+can be used to reason about types at runtime — which even allows doing
+specialization.
 
-It comes with a derive macro that uses [unsynn](https://crates.io/crates/unsynn)
-for speed of compilation.
+The `SHAPE` associated constant fully describes a type:
+
+  * Whether it's a struct, an enum, or a scalar
+  * All fields, variants, offsets, discriminants, memory layouts
+  * VTable for various standard traits:
+    * Display, Debug, Clone, Default, Drop etc.
+
+## Use case: (de)serialization
+
+The `facet-peek` and `face-poke` allow reading and writing (constructing,
+initializing) any type that implements `Facet` — this makes it trivial to
+write deserializers, see `facet-json`, `facet-yaml`, `facet-urlencoded`, etc.
+
+Say we have this struct:
+
+```rust,ignore
+use facet::Facet;
+
+#[derive(Debug, PartialEq, Eq, Facet)]
+struct FooBar {
+    foo: u64,
+    bar: String,
+}
+```
+
+We can build it fully through reflection:
+
+```rust
+// outer code: we know the type of `FooBar` — we pass `poke`
+let (poke, guard) = Poke::alloc::<FooBar>();
+
+{
+    // inner code: all we have is a `poke` — our function is not generic,
+    // `Poke` is not generic.
+    let mut poke = poke.into_struct();
+    poke.set_by_name("foo", OpaqueConst::from_ref(&42u64))
+        .unwrap();
+
+    {
+        let bar = String::from("Hello, World!");
+        poke.set_by_name("bar", OpaqueConst::from_ref(&bar))
+            .unwrap();
+        // bar has been moved out of
+        core::mem::forget(bar);
+    }
+}
+
+// outer code: we know the type of `FooBar` again, we can
+// move out of the `Poke`
+let foo_bar = poke.build::<FooBar>(Some(guard));
+```
+
+The `inner code` here is the kind of code you would write in a deserializer, for example.
+
+## Use case: inspection, pretty printing, debugging, specialization
+
+The `Debug` trait is severely limited because it cannot be specialized.
+
+`facet-pretty` provides pretty printing of any type that implements `Facet`:
+
+```rust,ignore
+    let address = Address {
+        street: "123 Main St".to_string(),
+        city: "Wonderland".to_string(),
+        country: "Imagination".to_string(),
+    };
+
+    let person = Person {
+        name: "Alice".to_string(),
+        age: 30,
+        address,
+    };
+
+    println!("Default pretty-printing:");
+    println!("{}", person.pretty());
+```
+
+```bash
+facet on  main [!] via 🦀 v1.86.0
+❯ cargo run --example basic_usage
+   Compiling facet-pretty v0.1.2 (/Users/amos/bearcove/facet/facet-pretty)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.15s
+     Running `target/debug/examples/basic_usage`
+Default pretty-printing:
+Person {
+  name: Alice,
+  age: 30,
+  address: Address {
+    street: 123 Main St,
+    city: Wonderland,
+    country: Imagination,
+  },
+}
+```
+
+(Note: the default pretty-printing shows ANSI colors).
+
+Facet knows the type inside the `T`, so it's able to format it:
+
+```rust,ignore
+use facet_pretty::FacetPretty;
+
+#[derive(Debug, Facet)]
+struct Person {
+    name: String,
+}
+
+fn main() {
+    let alice = Person {
+        name: "Alice".to_string(),
+    };
+    let bob = Person {
+        name: "Bob".to_string(),
+    };
+    let carol = Person {
+        name: "Carol".to_string(),
+    };
+
+    println!("{}", vec![alice, bob, carol].pretty());
+}
+```
+
+```bash
+facet on  main [!?] via 🦀 v1.86.0
+❯ cargo run --example various_vecs
+   Compiling facet-pretty v0.1.2 (/Users/amos/bearcove/facet/facet-pretty)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.15s
+     Running `target/debug/examples/various_vecs`
+Vec<Person> [
+  Person {
+    name: Alice,
+  },
+  Person {
+    name: Bob,
+  },
+  Person {
+    name: Carol,
+  },
+]
+```
 
 ## Ecosystem
 
-There are separate crates for the trait, the core types, the derive macro, peek, poke,
-and various serializers, deserializers, and pretty printers etc.
+The core crates, `facet-trait`, `facet-types` etc. are nostd-friendly.
 
-The hub for everything is the [facet](https://crates.io/crates/facet) crate.
+The main `facet` crate re-exports symbols from:
 
-You can start with its [README](https://github.com/facet-rs/facet/blob/main/facet/README.md).
+- [facet-trait](https://github.com/facet-rs/facet/tree/main/facet-trait), which defines the main `Facet` trait and implements it for foreign types (mostly `libstd`)
+- [facet-types](https://github.com/facet-rs/facet/tree/main/facet-types), which defines the `Shape` struct, along with various vtables and the whole `Def` tree
+- [facet-opaque](https://github.com/facet-rs/facet/tree/main/facet-opaque), which provides helpers around type-erased pointers like
+  `OpaqueUninit`, `OpaqueConst`, `Opaque`
+- [facet-derive](https://github.com/facet-rs/facet/tree/main/facet-derive), which implements the `Facet` derive attribute as a fast/light proc macro powered by [unsynn](https://docs.rs/unsynn)
+- [facet-spez](https://github.com/facet-rs/facet/tree/main/facet-spez), which implements an autoderef specialization trick needed for `facet-derive`
+- [facet-peek](https://github.com/facet-rs/facet/tree/main/facet-peek), which allows reading arbitrary `Facet` types
+- [facet-poke](https://github.com/facet-rs/facet/tree/main/facet-poke), which allows building/altering arbitrary `Facet` types
+
+facet supports deserialization from multiple data formats through dedicated crates:
+
+- [facet-json](https://github.com/facet-rs/facet/tree/main/facet-json): JSON deserialization
+- [facet-yaml](https://github.com/facet-rs/facet/tree/main/facet-yaml): YAML deserialization
+- [facet-msgpack](https://github.com/facet-rs/facet/tree/main/facet-msgpack): MessagePack deserialization
+- [facet-urlencoded](https://github.com/facet-rs/facet/tree/main/facet-urlencoded): URL-encoded form data deserialization
+
+Additionally:
+
+- [facet-pretty](https://github.com/facet-rs/facet/tree/main/facet-pretty) is able to pretty-print Facet types.
+- [facet-codegen](https://github.com/facet-rs/facet/tree/main/facet-codegen) is internal and generates some of the code of `facet-core`
 
 {{ footer() }}
