@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-use facet_core::{Facet, Opaque, OpaqueConst, ShapeExt};
+use facet_core::{Facet, Opaque, OpaqueConst};
 use facet_poke::Poke;
 use yaml_rust2::{Yaml, YamlLoader};
 

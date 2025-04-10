@@ -1,4 +1,3 @@
-use facet_core::ShapeExt as _;
 use facet_poke::{Peek, PeekValue};
 use std::collections::VecDeque;
 use std::io::{self, Write};

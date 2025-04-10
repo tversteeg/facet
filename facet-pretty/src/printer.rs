@@ -7,7 +7,7 @@ use std::{
     str,
 };
 
-use facet_core::{Facet, ShapeExt};
+use facet_core::Facet;
 use facet_peek::Peek;
 
 use crate::{ansi, color::ColorGenerator};

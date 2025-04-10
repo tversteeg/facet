@@ -1,7 +1,5 @@
 use core::ptr::NonNull;
-use facet_core::{
-    EnumDef, EnumRepr, Facet, FieldError, Opaque, OpaqueUninit, Shape, ShapeExt as _, VariantKind,
-};
+use facet_core::{EnumDef, EnumRepr, Facet, FieldError, Opaque, OpaqueUninit, Shape, VariantKind};
 
 use super::{ISet, Poke, PokeValue};
 

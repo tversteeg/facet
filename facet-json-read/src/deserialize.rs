@@ -1,6 +1,6 @@
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
 
-use facet_core::{Facet, Opaque, OpaqueConst, OpaqueUninit, ShapeExt as _};
+use facet_core::{Facet, Opaque, OpaqueConst, OpaqueUninit};
 use facet_poke::Poke;
 use log::trace;
 

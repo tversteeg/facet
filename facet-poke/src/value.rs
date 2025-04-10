@@ -83,7 +83,7 @@ impl<'mem> PokeValue<'mem> {
         }
     }
 
-    /// Reads data from an opaque const pointer into this value
+    /// Performs a bitwise copy from a given const pointer into this value.
     ///
     /// # Safety
     ///
@@ -91,7 +91,8 @@ impl<'mem> PokeValue<'mem> {
     /// as described by this `PokeValue`'s shape.
     ///
     /// Also, `source` is moved out of after this function is called, so it cannot be used
-    /// anymore — it should be deallocated, but it should not be "dropped" anymore.
+    /// anymore — it should be deallocated, but it should not be "dropped" anymore: you
+    /// can use `core::mem::forget` for this.
     pub unsafe fn write<'src>(self, source: OpaqueConst<'src>) -> Opaque<'mem> {
         unsafe {
             core::ptr::copy_nonoverlapping(

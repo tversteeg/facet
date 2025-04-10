@@ -1,7 +1,7 @@
 use facet_core::Facet;
 use facet_core::FieldAttribute;
 use facet_core::OpaqueConst;
-use facet_core::ShapeExt;
+
 use facet_poke::{Poke, PokeStruct};
 
 fn parse_field(field: Poke, value: &str, field_index: usize, ps: &mut PokeStruct<'_>) {

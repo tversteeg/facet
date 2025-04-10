@@ -1,6 +1,6 @@
 use crate::constants::*;
 use crate::errors::Error as DecodeError;
-use facet_core::ShapeExt as _;
+
 use facet_core::{Facet, Opaque, OpaqueConst};
 use facet_poke::Poke;
 use log::trace;
