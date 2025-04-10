@@ -1,5 +1,7 @@
+use std::num::NonZero;
+
 use facet_derive::Facet;
-use facet_json_write::to_json;
+use facet_json_write::{to_json, to_json_string};
 use facet_poke::Peek;
 
 use facet_core as facet;
@@ -44,4 +46,21 @@ fn test_to_json() {
     to_json(peek, &mut buffer, true).unwrap();
     let json = String::from_utf8(buffer).unwrap();
     assert_eq!(json, expected_json_indented);
+}
+
+#[test]
+fn test_nonzero() {
+    #[derive(Debug, PartialEq, Clone, Facet)]
+    struct Foo {
+        foo: NonZero<u8>,
+    }
+
+    let test_struct = Foo {
+        foo: const { NonZero::new(1).unwrap() },
+    };
+
+    let peek = Peek::new(&test_struct);
+    let json = to_json_string(peek, false);
+
+    assert_eq!(json, r#"{"foo":1}"#);
 }
