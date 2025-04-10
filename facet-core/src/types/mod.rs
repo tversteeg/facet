@@ -5,6 +5,8 @@
 use core::alloc::Layout;
 use core::fmt;
 
+use typeid::ConstTypeId;
+
 mod list;
 pub use list::*;
 
@@ -14,7 +16,7 @@ pub use map::*;
 mod value;
 pub use value::*;
 
-use crate::Facet;
+use crate::{Facet, shape_of, value_vtable};
 
 /// Schema for reflection of a type
 #[derive(Clone, Copy, Debug)]
@@ -783,55 +785,20 @@ impl Default for EnumRepr {
     }
 }
 
-/// Represents the unique identifier for a scalar type based on its fully qualified name.
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
-pub struct ScalarId(u64);
-
-unsafe impl Facet for ScalarId {
-    const SHAPE: &'static Shape = &Shape::builder()
-        .layout(Layout::new::<Self>())
-        .vtable(crate::value_vtable!(String, |f, _opts| write!(
-            f,
-            "ScalarId"
-        )))
-        .def(Def::Scalar(
-            ScalarDef::builder()
-                .fully_qualified_type_name("facet_core::ScalarId")
-                .build(),
-        ))
-        .build();
-}
-
-impl ScalarId {
-    const fn from_fully_qualified_type_name(name: &'static str) -> Self {
-        // Create a simple hash from the type name to serve as ID
-        let mut hash = 0u64;
-        let bytes = name.as_bytes();
-        let mut i = 0;
-        while i < bytes.len() {
-            hash = hash.wrapping_mul(31).wrapping_add(bytes[i] as u64);
-            i += 1;
-        }
-        Self(hash)
-    }
-}
-
-use crate::{shape_of, value_vtable};
-
 /// Definition for scalar types
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[non_exhaustive]
 pub struct ScalarDef {
     /// The TypeId of the scalar type
-    pub scalar_id: ScalarId,
+    pub type_id: ConstTypeId,
 }
 
 unsafe impl Facet for ScalarDef {
     const SHAPE: &'static Shape = &const {
         static FIELDS: &[Field] = &[Field::builder()
-            .name("scalar_id")
-            .shape(shape_of(&|s: ScalarDef| s.scalar_id))
-            .offset(core::mem::offset_of!(ScalarDef, scalar_id))
+            .name("type_id")
+            .shape(shape_of(&|s: ScalarDef| s.type_id))
+            .offset(core::mem::offset_of!(ScalarDef, type_id))
             .flags(FieldFlags::EMPTY)
             .attributes(&[])
             .build()];
@@ -850,35 +817,37 @@ unsafe impl Facet for ScalarDef {
 }
 
 impl ScalarDef {
-    /// Returns a builder for ScalarDef
-    pub const fn builder() -> ScalarDefBuilder {
+    /// Create a new ScalarDef with the given TypeId
+    pub const fn of<T>() -> Self {
         ScalarDefBuilder::new()
+            .type_id(ConstTypeId::of::<T>())
+            .build()
     }
 }
 
 /// Builder for ScalarDef
 #[derive(Default)]
 pub struct ScalarDefBuilder {
-    type_name: Option<&'static str>,
+    type_id: Option<ConstTypeId>,
 }
 
 impl ScalarDefBuilder {
     /// Creates a new ScalarDefBuilder
     #[allow(clippy::new_without_default)]
     pub const fn new() -> Self {
-        Self { type_name: None }
+        Self { type_id: None }
     }
 
-    /// Sets the type_name for the ScalarDef
-    pub const fn fully_qualified_type_name(mut self, type_name: &'static str) -> Self {
-        self.type_name = Some(type_name);
+    /// Sets the type_id for the ScalarDef
+    pub const fn type_id(mut self, type_id: ConstTypeId) -> Self {
+        self.type_id = Some(type_id);
         self
     }
 
     /// Builds the ScalarDef
     pub const fn build(self) -> ScalarDef {
         ScalarDef {
-            scalar_id: ScalarId::from_fully_qualified_type_name(self.type_name.unwrap()),
+            type_id: self.type_id.unwrap(),
         }
     }
 }
