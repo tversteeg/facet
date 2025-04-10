@@ -1,13 +1,11 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-//! Allows poking (writing to) shapes
-
 use core::alloc::Layout;
 
 pub use facet_peek::*;
 
-use facet_core::{Def, Facet, OpaqueUninit, Shape};
+use facet_core::{Def, Facet, Opaque, OpaqueUninit, Shape};
 
 mod value;
 pub use value::*;
@@ -24,11 +22,14 @@ pub use struct_::*;
 mod enum_;
 pub use enum_::*;
 
-/// Allows writing values of different kinds.
+mod option;
+pub use option::*;
+
+/// Allows initializing values of different kinds.
 #[non_exhaustive]
-pub enum Poke<'mem> {
+pub enum PokeUninit<'mem> {
     /// A scalar value. See [`PokeValue`].
-    Scalar(PokeValue<'mem>),
+    Scalar(PokeValueUninit<'mem>),
     /// A list (array/vec/etc). See [`PokeList`].
     List(PokeListUninit<'mem>),
     /// A map (HashMap/BTreeMap/etc). See [`PokeMap`].
@@ -37,6 +38,8 @@ pub enum Poke<'mem> {
     Struct(PokeStruct<'mem>),
     /// An enum variant. See [`PokeEnum`].
     Enum(PokeEnumNoVariant<'mem>),
+    /// An option value. See [`PokeOption`].
+    Option(PokeOptionUninit<'mem>),
 }
 
 /// Ensures a value is dropped when the guard is dropped.
@@ -56,7 +59,7 @@ impl Drop for Guard {
     }
 }
 
-impl<'mem> Poke<'mem> {
+impl<'mem> PokeUninit<'mem> {
     /// Allocates a new poke of a type that implements facet
     pub fn alloc<S: Facet>() -> (Self, Guard) {
         let data = S::SHAPE.allocate();
@@ -92,19 +95,23 @@ impl<'mem> Poke<'mem> {
     pub unsafe fn unchecked_new(data: OpaqueUninit<'mem>, shape: &'static Shape) -> Self {
         match shape.def {
             Def::Struct(struct_def) => {
-                Poke::Struct(unsafe { PokeStruct::new(data, shape, struct_def) })
+                PokeUninit::Struct(unsafe { PokeStruct::new(data, shape, struct_def) })
             }
             Def::Map(map_def) => {
                 let pmu = unsafe { PokeMapUninit::new(data, shape, map_def) };
-                Poke::Map(pmu)
+                PokeUninit::Map(pmu)
             }
             Def::List(list_def) => {
                 let plu = unsafe { PokeListUninit::new(data, shape, list_def) };
-                Poke::List(plu)
+                PokeUninit::List(plu)
             }
-            Def::Scalar { .. } => Poke::Scalar(unsafe { PokeValue::new(data, shape) }),
+            Def::Scalar { .. } => PokeUninit::Scalar(unsafe { PokeValueUninit::new(data, shape) }),
             Def::Enum(enum_def) => {
-                Poke::Enum(unsafe { PokeEnumNoVariant::new(data, shape, enum_def) })
+                PokeUninit::Enum(unsafe { PokeEnumNoVariant::new(data, shape, enum_def) })
+            }
+            Def::Option(option_def) => {
+                let pou = unsafe { PokeOptionUninit::new(data, shape, option_def) };
+                PokeUninit::Option(pou)
             }
             _ => todo!("unsupported def: {:?}", shape.def),
         }
@@ -113,7 +120,7 @@ impl<'mem> Poke<'mem> {
     /// Converts this Poke into a PokeStruct, panicking if it's not a Struct variant
     pub fn into_struct(self) -> PokeStruct<'mem> {
         match self {
-            Poke::Struct(s) => s,
+            PokeUninit::Struct(s) => s,
             _ => panic!("expected Struct variant"),
         }
     }
@@ -121,7 +128,7 @@ impl<'mem> Poke<'mem> {
     /// Converts this Poke into a PokeList, panicking if it's not a List variant
     pub fn into_list(self) -> PokeListUninit<'mem> {
         match self {
-            Poke::List(l) => l,
+            PokeUninit::List(l) => l,
             _ => panic!("expected List variant"),
         }
     }
@@ -129,15 +136,15 @@ impl<'mem> Poke<'mem> {
     /// Converts this Poke into a PokeMap, panicking if it's not a Map variant
     pub fn into_map(self) -> PokeMapUninit<'mem> {
         match self {
-            Poke::Map(m) => m,
+            PokeUninit::Map(m) => m,
             _ => panic!("expected Map variant"),
         }
     }
 
     /// Converts this Poke into a PokeValue, panicking if it's not a Scalar variant
-    pub fn into_scalar(self) -> PokeValue<'mem> {
+    pub fn into_scalar(self) -> PokeValueUninit<'mem> {
         match self {
-            Poke::Scalar(s) => s,
+            PokeUninit::Scalar(s) => s,
             _ => panic!("expected Scalar variant"),
         }
     }
@@ -145,20 +152,29 @@ impl<'mem> Poke<'mem> {
     /// Converts this Poke into a PokeEnum, panicking if it's not an Enum variant
     pub fn into_enum(self) -> PokeEnumNoVariant<'mem> {
         match self {
-            Poke::Enum(e) => e,
+            PokeUninit::Enum(e) => e,
             _ => panic!("expected Enum variant"),
+        }
+    }
+
+    /// Converts this Poke into a PokeOption, panicking if it's not an Option variant
+    pub fn into_option(self) -> PokeOptionUninit<'mem> {
+        match self {
+            PokeUninit::Option(o) => o,
+            _ => panic!("expected Option variant"),
         }
     }
 
     /// Converts into a value, so we can manipulate it
     #[inline(always)]
-    pub fn into_value(self) -> PokeValue<'mem> {
+    pub fn into_value(self) -> PokeValueUninit<'mem> {
         match self {
-            Poke::Scalar(s) => s.into_value(),
-            Poke::List(l) => l.into_value(),
-            Poke::Map(m) => m.into_value(),
-            Poke::Struct(s) => s.into_value(),
-            Poke::Enum(e) => e.into_value(),
+            PokeUninit::Scalar(s) => s.into_value(),
+            PokeUninit::List(l) => l.into_value(),
+            PokeUninit::Map(m) => m.into_value(),
+            PokeUninit::Struct(s) => s.into_value(),
+            PokeUninit::Enum(e) => e.into_value(),
+            PokeUninit::Option(o) => o.into_value(),
         }
     }
 
@@ -166,11 +182,12 @@ impl<'mem> Poke<'mem> {
     #[inline(always)]
     pub fn shape(&self) -> &'static Shape {
         match self {
-            Poke::Scalar(poke_value) => poke_value.shape(),
-            Poke::List(poke_list_uninit) => poke_list_uninit.shape(),
-            Poke::Map(poke_map_uninit) => poke_map_uninit.shape(),
-            Poke::Struct(poke_struct) => poke_struct.shape(),
-            Poke::Enum(poke_enum_no_variant) => poke_enum_no_variant.shape(),
+            PokeUninit::Scalar(poke_value) => poke_value.shape(),
+            PokeUninit::List(poke_list_uninit) => poke_list_uninit.shape(),
+            PokeUninit::Map(poke_map_uninit) => poke_map_uninit.shape(),
+            PokeUninit::Struct(poke_struct) => poke_struct.shape(),
+            PokeUninit::Enum(poke_enum_no_variant) => poke_enum_no_variant.shape(),
+            PokeUninit::Option(poke_option_uninit) => poke_option_uninit.shape(),
         }
     }
 }
@@ -211,5 +228,129 @@ impl ISet {
         }
         let mask = (1 << count) - 1;
         self.0 & mask == mask
+    }
+}
+
+/// Allows manipulating already-initialized values of different kinds.
+#[non_exhaustive]
+pub enum Poke<'mem> {
+    /// A scalar value. See [`PokeValue`].
+    Scalar(PokeValue<'mem>),
+    /// A list (array/vec/etc). See [`PokeList`].
+    List(PokeList<'mem>),
+    /// A map (HashMap/BTreeMap/etc). See [`PokeMap`].
+    Map(PokeMap<'mem>),
+    /// A struct, tuple struct, or tuple. See [`PokeStruct`].
+    Struct(PokeStruct<'mem>),
+    /// An enum variant. See [`PokeEnum`].
+    Enum(PokeEnum<'mem>),
+    /// An option value. See [`PokeOption`].
+    Option(PokeOption<'mem>),
+}
+
+impl<'mem> Poke<'mem> {
+    /// Creates a new peek, for easy manipulation of some opaque data.
+    ///
+    /// # Safety
+    ///
+    /// `data` must be initialized and well-aligned, and point to a value
+    /// of the type described by `shape`.
+    pub unsafe fn unchecked_new(data: Opaque<'mem>, shape: &'static Shape) -> Self {
+        match shape.def {
+            Def::Struct(struct_def) => Poke::Struct(unsafe {
+                let mut ps =
+                    PokeStruct::new(OpaqueUninit::new(data.as_mut_byte_ptr()), shape, struct_def);
+                for (i, _f) in ps.def().fields.iter().enumerate() {
+                    ps.mark_initialized(i);
+                }
+                ps
+            }),
+            Def::Map(map_def) => {
+                let pm = unsafe { PokeMap::new(data, shape, map_def) };
+                Poke::Map(pm)
+            }
+            Def::List(list_def) => {
+                let pl = unsafe { PokeList::new(data, shape, list_def) };
+                Poke::List(pl)
+            }
+            Def::Scalar { .. } => Poke::Scalar(unsafe { PokeValue::new(data, shape) }),
+            Def::Enum(_enum_def) => {
+                todo!("we need to get the active variant somehow")
+            }
+            Def::Option(option_def) => {
+                let po = unsafe { PokeOption::new(data, shape, option_def) };
+                Poke::Option(po)
+            }
+            _ => todo!("unsupported def: {:?}", shape.def),
+        }
+    }
+
+    /// Borrows the value for a different kind of inspection.
+    #[inline(always)]
+    pub fn borrow<T: Facet>(data: &'mem mut T) -> Poke<'mem> {
+        let shape = T::SHAPE;
+        let data = Opaque::new(data);
+        unsafe { Poke::unchecked_new(data, shape) }
+    }
+
+    /// Converts this Poke into a PokeValue, panicking if it's not a Scalar variant
+    pub fn into_scalar(self) -> PokeValue<'mem> {
+        match self {
+            Poke::Scalar(s) => s,
+            _ => panic!("expected Scalar variant"),
+        }
+    }
+
+    /// Converts this Poke into a PokeList, panicking if it's not a List variant
+    pub fn into_list(self) -> PokeList<'mem> {
+        match self {
+            Poke::List(l) => l,
+            _ => panic!("expected List variant"),
+        }
+    }
+
+    /// Converts this Poke into a PokeMap, panicking if it's not a Map variant
+    pub fn into_map(self) -> PokeMap<'mem> {
+        match self {
+            Poke::Map(m) => m,
+            _ => panic!("expected Map variant"),
+        }
+    }
+
+    /// Converts this Poke into a PokeStruct, panicking if it's not a Struct variant
+    pub fn into_struct(self) -> PokeStruct<'mem> {
+        match self {
+            Poke::Struct(s) => s,
+            _ => panic!("expected Struct variant"),
+        }
+    }
+
+    /// Converts this Poke into a PokeEnum, panicking if it's not an Enum variant
+    pub fn into_enum(self) -> PokeEnum<'mem> {
+        match self {
+            Poke::Enum(e) => e,
+            _ => panic!("expected Enum variant"),
+        }
+    }
+
+    /// Converts this Poke into a PokeOption, panicking if it's not an Option variant
+    pub fn into_option(self) -> PokeOption<'mem> {
+        match self {
+            Poke::Option(o) => o,
+            _ => panic!("expected Option variant"),
+        }
+    }
+
+    /// Get the shape of this Poke.
+    #[inline(always)]
+    pub fn shape(&self) -> &'static Shape {
+        match self {
+            Poke::Scalar(poke_value) => poke_value.shape(),
+            Poke::List(poke_list) => poke_list.shape(),
+            Poke::Map(poke_map) => poke_map.shape(),
+            Poke::Struct(poke_struct) => poke_struct.shape(),
+            Poke::Enum(poke_enum) => poke_enum.shape(),
+            Poke::Option(poke_option) => poke_option.shape(),
+        }
     }
 }

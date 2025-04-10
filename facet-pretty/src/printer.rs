@@ -41,6 +41,7 @@ enum StackState {
     ProcessBytesItem { item_index: usize },
     ProcessMapEntry,
     Finish,
+    OptionFinish,
 }
 
 /// Stack item for iterative traversal
@@ -169,6 +170,41 @@ impl PrettyPrinter {
                         Peek::Value(value) => {
                             self.format_value(value, f)?;
                         }
+                        Peek::Option(option) => {
+                            // Print the Option name
+                            self.write_type_name(f, &option)?;
+
+                            if option.is_some() {
+                                self.write_punctuation(f, "::Some(")?;
+
+                                if let Some(inner_value) = option.value() {
+                                    // Create a custom stack item for Option::Some value
+                                    let start_item = StackItem {
+                                        peek: inner_value,
+                                        format_depth: item.format_depth,
+                                        type_depth: item.type_depth + 1,
+                                        state: StackState::Start,
+                                    };
+
+                                    // Add a special close parenthesis item
+                                    let close_paren_item = StackItem {
+                                        peek: Peek::Option(option),
+                                        format_depth: item.format_depth,
+                                        type_depth: item.type_depth,
+                                        state: StackState::OptionFinish,
+                                    };
+
+                                    // Process the value first, then handle closing
+                                    stack.push_back(close_paren_item);
+                                    stack.push_back(start_item);
+                                }
+
+                                // Skip to next item
+                                continue;
+                            } else {
+                                self.write_punctuation(f, "::None")?;
+                            }
+                        }
                         Peek::Struct(struct_) => {
                             // When recursing into a struct, always increment format_depth
                             // Only increment type_depth if we're moving to a different address
@@ -179,12 +215,21 @@ impl PrettyPrinter {
                                     item.type_depth + 1 // Different pointer, increment type_depth
                                 };
 
+                            // Get struct doc comments from the shape
+                            let doc_comments = struct_.shape().doc;
+                            if !doc_comments.is_empty() {
+                                for line in doc_comments {
+                                    self.write_comment(f, &format!("///{}", line))?;
+                                    writeln!(f)?;
+                                }
+                            }
+
                             // Print the struct name
                             self.write_type_name(f, &struct_)?;
                             self.write_punctuation(f, " {")?;
 
                             if struct_.field_count() == 0 {
-                                self.write_punctuation(f, " }")?;
+                                self.write_punctuation(f, "}")?;
                                 continue;
                             }
 
@@ -256,9 +301,29 @@ impl PrettyPrinter {
                                     item.type_depth + 1 // Different pointer, increment type_depth
                                 };
 
-                            // Print the enum name
+                            // Get the active variant
+                            let variant = enum_.active_variant();
+
+                            // Get enum and variant doc comments
+                            let doc_comments = enum_.shape().doc;
+
+                            // Display doc comments before the type name
+                            for line in doc_comments {
+                                self.write_comment(f, &format!("///{}", line))?;
+                                writeln!(f)?;
+                            }
+
+                            // Show variant docs
+                            for line in variant.doc {
+                                self.write_comment(f, &format!("///{}", line))?;
+                                writeln!(f)?;
+                            }
+
+                            // Print the enum name and separator
                             self.write_type_name(f, &enum_)?;
                             self.write_punctuation(f, "::")?;
+
+                            // Variant docs are already handled above
 
                             // Get the active variant name
                             let variant_name = enum_.variant_name_active();
@@ -343,22 +408,34 @@ impl PrettyPrinter {
                             continue;
                         }
 
-                        let (_, field_name, field_value, flags) = &fields[field_index];
+                        let (_, field_name, field_value, field) = &fields[field_index];
 
-                        // Indent
-                        write!(
-                            f,
-                            "{:width$}",
-                            "",
-                            width = item.format_depth * self.indent_size
-                        )?;
+                        // Define consistent indentation
+                        let field_indent = "  "; // Use 2 spaces for all fields
+
+                        // Field doc comment
+                        if !field.doc.is_empty() {
+                            // Only add new line if not the first field
+                            if field_index > 0 {
+                                writeln!(f)?;
+                            }
+                            // Hard-code consistent indentation for doc comments
+                            for line in field.doc {
+                                // Use exactly the same indentation as fields (2 spaces)
+                                write!(f, "{}", field_indent)?;
+                                self.write_comment(f, &format!("///{}", line))?;
+                                writeln!(f)?;
+                            }
+                            // Rewrite indentation after doc comments with consistent spacing
+                            write!(f, "{}", field_indent)?;
+                        }
 
                         // Field name
                         self.write_field_name(f, field_name)?;
                         self.write_punctuation(f, ": ")?;
 
                         // Check if field is sensitive
-                        if flags.contains(facet_core::FieldFlags::SENSITIVE) {
+                        if field.flags.contains(facet_core::FieldFlags::SENSITIVE) {
                             // Field value is sensitive, use write_redacted
                             self.write_redacted(f, "[REDACTED]")?;
                             self.write_punctuation(f, ",")?;
@@ -395,8 +472,8 @@ impl PrettyPrinter {
                     } else if let Peek::Enum(enum_val) = item.peek {
                         // Since PeekEnum implements Copy, we can use it directly
 
-                        // Get all fields directly
-                        let fields: Vec<_> = enum_val.fields().collect();
+                        // Get all fields with their metadata
+                        let fields: Vec<_> = enum_val.fields_with_metadata().collect();
 
                         // Check if we're done processing fields
                         if field_index >= fields.len() {
@@ -427,16 +504,27 @@ impl PrettyPrinter {
                             continue;
                         }
 
-                        // Get the current field
-                        let (field_name, field_peek) = fields[field_index];
+                        // Get the current field with metadata
+                        let (_, field_name, field_peek, field) = fields[field_index];
 
-                        // Add indentation
-                        write!(
-                            f,
-                            "{:width$}",
-                            "",
-                            width = item.format_depth * self.indent_size
-                        )?;
+                        // Define consistent indentation
+                        let field_indent = "  "; // Use 2 spaces for all fields
+
+                        // Add field doc comments if available
+                        if !field.doc.is_empty() {
+                            // Only add new line if not the first field
+                            if field_index > 0 {
+                                writeln!(f)?;
+                            }
+                            for line in field.doc {
+                                // Hard-code consistent indentation (2 spaces)
+                                write!(f, "  ")?;
+                                self.write_comment(f, &format!("///{}", line))?;
+                                writeln!(f)?;
+                            }
+                            // Rewrite indentation after doc comments
+                            write!(f, "{}", field_indent)?;
+                        }
 
                         // For struct variants, print field name
                         if let facet_core::VariantKind::Struct { .. } =
@@ -608,10 +696,13 @@ impl PrettyPrinter {
                     }
                 }
                 StackState::Finish => {
-                    // This state is reached after processing a field or list item
                     // Add comma and newline for struct fields and list items
                     self.write_punctuation(f, ",")?;
                     writeln!(f)?;
+                }
+                StackState::OptionFinish => {
+                    // Just close the Option::Some parenthesis, with no comma
+                    self.write_punctuation(f, ")")?;
                 }
             }
         }

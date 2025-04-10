@@ -1,10 +1,11 @@
-use typeid::ConstTypeId;
+extern crate alloc;
 
 use crate::value_vtable;
 use crate::*;
 use core::alloc::Layout;
 use core::num::NonZero;
 use core::option::Option;
+use typeid::ConstTypeId;
 
 unsafe impl Facet for ConstTypeId {
     const SHAPE: &'static Shape = &const {
@@ -37,7 +38,7 @@ unsafe impl Facet for () {
 }
 
 #[cfg(feature = "std")]
-unsafe impl Facet for std::string::String {
+unsafe impl Facet for alloc::string::String {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .id(ConstTypeId::of::<String>())
@@ -69,20 +70,20 @@ unsafe impl Facet for &str {
 }
 
 #[cfg(feature = "std")]
-unsafe impl Facet for std::borrow::Cow<'_, str> {
+unsafe impl Facet for alloc::borrow::Cow<'_, str> {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
-            .id(ConstTypeId::of::<std::borrow::Cow<'_, str>>())
+            .id(ConstTypeId::of::<alloc::borrow::Cow<'_, str>>())
             .layout(Layout::new::<Self>())
             .def(Def::Scalar(
                 ScalarDef::builder()
                     .affinity(ScalarAffinity::string().build())
                     .build(),
             ))
-            .vtable(value_vtable!(std::borrow::Cow<'_, str>, |f, _opts| write!(
-                f,
-                "Cow<'_, str>"
-            )))
+            .vtable(value_vtable!(
+                alloc::borrow::Cow<'_, str>,
+                |f, _opts| write!(f, "Cow<'_, str>")
+            ))
             .build()
     };
 }
@@ -438,7 +439,7 @@ unsafe impl Facet for f64 {
 }
 
 #[cfg(feature = "std")]
-unsafe impl Facet for std::net::SocketAddr {
+unsafe impl Facet for core::net::SocketAddr {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .id(ConstTypeId::of::<Self>())
@@ -448,7 +449,7 @@ unsafe impl Facet for std::net::SocketAddr {
                     .affinity(ScalarAffinity::socket_addr().build())
                     .build(),
             ))
-            .vtable(value_vtable!(std::net::SocketAddr, |f, _opts| write!(
+            .vtable(value_vtable!(core::net::SocketAddr, |f, _opts| write!(
                 f,
                 "SocketAddr"
             )))
@@ -534,6 +535,13 @@ unsafe impl<T: Facet> Facet for Option<T> {
                                     option.put(Option::Some(value.read::<T>()))
                                 },
                                 init_none_fn: |option| unsafe { option.put(<Option<T>>::None) },
+                                replace_with_fn: |option, value| unsafe {
+                                    let option = option.as_mut::<Option<T>>();
+                                    match value {
+                                        Some(value) => option.replace(value.read::<T>()),
+                                        None => option.take(),
+                                    };
+                                },
                             }
                         },
                     )

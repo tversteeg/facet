@@ -23,9 +23,7 @@ where
                                 write!(f, "[⋯; {L}]")
                             }
                         })
-                        .drop_in_place(|value| unsafe {
-                            core::ptr::drop_in_place(value.as_mut::<[T; L]>());
-                        });
+                        .drop_in_place(|value| unsafe { value.drop_in_place::<[T; L]>() });
                     if T::SHAPE.vtable.display.is_some() {
                         builder = builder.display(|value, f| {
                             let value = unsafe { value.as_ref::<[T; L]>() };

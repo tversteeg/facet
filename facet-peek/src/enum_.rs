@@ -185,6 +185,41 @@ impl<'mem> PeekEnum<'mem> {
         }
     }
 
+    /// Returns an iterator over fields of a struct or tuple variant with metadata
+    pub fn fields_with_metadata(
+        self,
+    ) -> Box<
+        dyn Iterator<
+                Item = (
+                    usize,
+                    &'static str,
+                    crate::Peek<'mem>,
+                    &'static facet_core::Field,
+                ),
+            > + 'mem,
+    > {
+        let variant = self.active_variant();
+        let data = self.value.data();
+
+        match &variant.kind {
+            VariantKind::Struct { fields } => {
+                Box::new(fields.iter().enumerate().map(move |(i, field)| {
+                    let field_data = unsafe { data.field(field.offset) };
+                    let field_peek = unsafe { crate::Peek::unchecked_new(field_data, field.shape) };
+                    (i, field.name, field_peek, field)
+                }))
+            }
+            VariantKind::Tuple { fields } => {
+                Box::new(fields.iter().enumerate().map(move |(i, field)| {
+                    let field_data = unsafe { data.field(field.offset) };
+                    let field_peek = unsafe { crate::Peek::unchecked_new(field_data, field.shape) };
+                    (i, field.name, field_peek, field)
+                }))
+            }
+            _ => Box::new(core::iter::empty()),
+        }
+    }
+
     /// Returns an iterator over fields of a struct or tuple variant
     pub fn fields(self) -> Box<dyn Iterator<Item = (&'static str, crate::Peek<'mem>)> + 'mem> {
         let variant = self.active_variant();
@@ -201,7 +236,7 @@ impl<'mem> PeekEnum<'mem> {
                 let peek = unsafe { crate::Peek::unchecked_new(field_data, field.shape) };
                 (field.name, peek)
             })),
-            _ => Box::new(std::iter::empty()),
+            _ => Box::new(core::iter::empty()),
         }
     }
 }

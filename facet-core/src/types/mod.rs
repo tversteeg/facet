@@ -1,6 +1,6 @@
 //! structs and vtable definitions used by Facet
 
-// TODO: mark `non_exhaustive`, add `const fn` builder patterns
+extern crate alloc;
 
 use core::alloc::Layout;
 use core::fmt;
@@ -268,7 +268,7 @@ impl Shape {
             core::ptr::without_provenance_mut(self.layout.align())
         } else {
             // SAFETY: We have checked that layout's size is non-zero
-            unsafe { std::alloc::alloc(self.layout) }
+            unsafe { alloc::alloc::alloc(self.layout) }
         })
     }
 }

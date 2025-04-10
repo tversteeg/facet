@@ -1,4 +1,4 @@
-use crate::PokeValue;
+use crate::PokeValueUninit;
 use facet_core::{ListDef, ListVTable, Opaque, OpaqueConst, OpaqueUninit, Shape};
 
 /// Allows initializing an uninitialized list
@@ -11,8 +11,8 @@ pub struct PokeListUninit<'mem> {
 impl<'mem> PokeListUninit<'mem> {
     #[inline(always)]
     /// Coerce back into a `PokeValue`
-    pub fn into_value(self) -> PokeValue<'mem> {
-        unsafe { PokeValue::new(self.data, self.shape) }
+    pub fn into_value(self) -> PokeValueUninit<'mem> {
+        unsafe { PokeValueUninit::new(self.data, self.shape) }
     }
 
     #[inline(always)]
@@ -39,7 +39,7 @@ impl<'mem> PokeListUninit<'mem> {
             let init_in_place_with_capacity = self.def.vtable.init_in_place_with_capacity;
             unsafe { init_in_place_with_capacity(self.data, capacity) }
         } else {
-            let pv = unsafe { PokeValue::new(self.data, self.shape) };
+            let pv = unsafe { PokeValueUninit::new(self.data, self.shape) };
             pv.default_in_place().map_err(|_| ())
         };
         let data = res.map_err(|_| self.data)?;
@@ -63,6 +63,12 @@ impl<'mem> PokeList<'mem> {
     /// The data buffer must match the size and alignment of the shape.
     pub(crate) unsafe fn new(data: Opaque<'mem>, shape: &'static Shape, def: ListDef) -> Self {
         Self { data, shape, def }
+    }
+
+    #[inline(always)]
+    /// Shape getter
+    pub fn shape(&self) -> &'static Shape {
+        self.shape
     }
 
     /// Gets the vtable for the list

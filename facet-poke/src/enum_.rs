@@ -3,7 +3,7 @@ use facet_core::{EnumDef, EnumRepr, Facet, FieldError, Opaque, OpaqueUninit, Sha
 
 use crate::Guard;
 
-use super::{ISet, PokeValue};
+use super::{ISet, PokeValueUninit};
 
 /// Represents an enum before a variant has been selected
 pub struct PokeEnumNoVariant<'mem> {
@@ -15,8 +15,8 @@ pub struct PokeEnumNoVariant<'mem> {
 impl<'mem> PokeEnumNoVariant<'mem> {
     /// Coerce back into a `PokeValue`
     #[inline(always)]
-    pub fn into_value(self) -> PokeValue<'mem> {
-        unsafe { PokeValue::new(self.data, self.shape) }
+    pub fn into_value(self) -> PokeValueUninit<'mem> {
+        unsafe { PokeValueUninit::new(self.data, self.shape) }
     }
 
     /// Shape getter
@@ -169,6 +169,39 @@ pub struct PokeEnum<'mem> {
 }
 
 impl<'mem> PokeEnum<'mem> {
+    /// Coerce back into a `PokeValue`
+    #[inline(always)]
+    pub fn into_value(self) -> PokeValueUninit<'mem> {
+        unsafe { PokeValueUninit::new(self.data, self.shape) }
+    }
+
+    /// Creates a new PokeEnum from raw data
+    ///
+    /// # Safety
+    ///
+    /// The data buffer must match the size and alignment of the enum shape described by shape
+    #[allow(dead_code)]
+    pub(crate) unsafe fn new(
+        data: OpaqueUninit<'mem>,
+        shape: &'static Shape,
+        def: EnumDef,
+        selected_variant: usize,
+    ) -> Self {
+        Self {
+            data,
+            iset: Default::default(),
+            shape,
+            def,
+            selected_variant,
+        }
+    }
+
+    #[inline(always)]
+    /// Shape getter
+    pub fn shape(&self) -> &'static Shape {
+        self.shape
+    }
+
     /// Returns the currently selected variant index
     pub fn selected_variant_index(&self) -> usize {
         self.selected_variant
@@ -181,7 +214,10 @@ impl<'mem> PokeEnum<'mem> {
     /// Returns an error if:
     /// - The field name doesn't exist in the selected variant.
     /// - The selected variant is a unit variant (which has no fields).
-    pub fn field_by_name(&self, name: &str) -> Result<(usize, crate::Poke<'mem>), FieldError> {
+    pub fn field_by_name(
+        &self,
+        name: &str,
+    ) -> Result<(usize, crate::PokeUninit<'mem>), FieldError> {
         let variant = &self.def.variants[self.selected_variant];
 
         // Find the field in the variant
@@ -200,7 +236,7 @@ impl<'mem> PokeEnum<'mem> {
 
                 // Get the field's address
                 let field_data = unsafe { self.data.field_uninit(field.offset) };
-                let poke = unsafe { crate::Poke::unchecked_new(field_data, field.shape) };
+                let poke = unsafe { crate::PokeUninit::unchecked_new(field_data, field.shape) };
                 Ok((index, poke))
             }
             VariantKind::Struct { fields } => {
@@ -213,7 +249,7 @@ impl<'mem> PokeEnum<'mem> {
 
                 // Get the field's address
                 let field_data = unsafe { self.data.field_uninit(field.offset) };
-                let poke = unsafe { crate::Poke::unchecked_new(field_data, field.shape) };
+                let poke = unsafe { crate::PokeUninit::unchecked_new(field_data, field.shape) };
                 Ok((index, poke))
             }
             _ => {
@@ -229,7 +265,7 @@ impl<'mem> PokeEnum<'mem> {
     /// Returns an error if:
     /// - The index is out of bounds.
     /// - The selected variant is not a tuple variant.
-    pub fn tuple_field(&self, index: usize) -> Result<crate::Poke<'mem>, FieldError> {
+    pub fn tuple_field(&self, index: usize) -> Result<crate::PokeUninit<'mem>, FieldError> {
         let variant = &self.def.variants[self.selected_variant];
 
         // Make sure we're working with a tuple variant
@@ -245,7 +281,7 @@ impl<'mem> PokeEnum<'mem> {
 
                 // Get the field's address
                 let field_data = unsafe { self.data.field_uninit(field.offset) };
-                let poke = unsafe { crate::Poke::unchecked_new(field_data, field.shape) };
+                let poke = unsafe { crate::PokeUninit::unchecked_new(field_data, field.shape) };
                 Ok(poke)
             }
             _ => {

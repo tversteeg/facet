@@ -255,7 +255,36 @@ impl<'mem> Opaque<'mem> {
     /// The memory must be properly initialized and aligned for type `T`.
     /// After calling this function, the memory should not be accessed again
     /// until it is properly reinitialized.
-    pub unsafe fn drop_in_place<T>(self) {
+    pub unsafe fn drop_in_place<T>(self) -> OpaqueUninit<'mem> {
         unsafe { core::ptr::drop_in_place(self.as_mut::<T>()) }
+        OpaqueUninit(self.0.as_ptr(), PhantomData)
+    }
+
+    /// Write a value to this location after dropping the existing value
+    ///
+    /// # Safety
+    ///
+    /// - The pointer must be properly aligned for T and point to allocated memory
+    ///   that can be safely written to.
+    /// - T must be the actual type of the object being pointed to
+    /// - The memory must already be initialized to a valid T value
+    pub unsafe fn replace<T>(self, value: T) -> Self {
+        unsafe { self.drop_in_place::<T>().put(value) }
+    }
+
+    /// Copies data from the source pointer to this location
+    ///
+    /// # Safety
+    ///
+    /// - The destination pointer must be properly aligned and point to allocated memory
+    ///   that can be safely written to.
+    /// - The source pointer must point to properly initialized data.
+    /// - Both pointers must refer to objects of the same type and size.
+    pub unsafe fn write(self, source: OpaqueConst<'_>) -> Self {
+        unsafe {
+            let size = core::mem::size_of_val(&*source.as_byte_ptr());
+            core::ptr::copy_nonoverlapping(source.as_byte_ptr(), self.0.as_ptr(), size);
+            self
+        }
     }
 }

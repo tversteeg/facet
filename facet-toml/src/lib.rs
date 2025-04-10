@@ -2,7 +2,7 @@
 #![doc = include_str!("../README.md")]
 
 use facet_core::{Facet, Opaque};
-use facet_poke::Poke;
+use facet_poke::PokeUninit;
 use toml_edit::{DocumentMut, Item, TomlError, Value};
 
 #[cfg(test)]
@@ -10,7 +10,7 @@ mod tests;
 
 /// Deserializes a TOML string into a value of type `T` that implements `Facet`.
 pub fn from_str<T: Facet>(toml: &str) -> Result<T, AnyErr> {
-    let (poke, _guard) = Poke::alloc::<T>();
+    let (poke, _guard) = PokeUninit::alloc::<T>();
     let opaque = from_str_opaque(poke, toml)?;
     Ok(unsafe { opaque.read::<T>() })
 }
@@ -52,14 +52,14 @@ fn toml_to_u64(ty: &Value) -> Result<u64, AnyErr> {
     }
 }
 
-fn from_str_opaque<'mem>(poke: Poke<'mem>, toml: &str) -> Result<Opaque<'mem>, AnyErr> {
+fn from_str_opaque<'mem>(poke: PokeUninit<'mem>, toml: &str) -> Result<Opaque<'mem>, AnyErr> {
     let docs: DocumentMut = toml.parse().map_err(|e| TomlError::to_string(&e))?;
     deserialize_item(poke, docs.as_item())
 }
 
-fn deserialize_item<'mem>(poke: Poke<'mem>, value: &Item) -> Result<Opaque<'mem>, AnyErr> {
+fn deserialize_item<'mem>(poke: PokeUninit<'mem>, value: &Item) -> Result<Opaque<'mem>, AnyErr> {
     let opaque = match poke {
-        Poke::Scalar(ps) => {
+        PokeUninit::Scalar(ps) => {
             if ps.shape().is_type::<u64>() {
                 let v = value
                     .as_value()
@@ -76,9 +76,9 @@ fn deserialize_item<'mem>(poke: Poke<'mem>, value: &Item) -> Result<Opaque<'mem>
                 return Err(format!("Unsupported scalar type: {}", ps.shape()).into());
             }
         }
-        Poke::List(_) => todo!(),
-        Poke::Map(_) => todo!(),
-        Poke::Struct(mut ps) => {
+        PokeUninit::List(_) => todo!(),
+        PokeUninit::Map(_) => todo!(),
+        PokeUninit::Struct(mut ps) => {
             let table = value.as_table_like().ok_or_else(|| {
                 format!("Expected table like structure, got {}", value.type_name())
             })?;
@@ -95,7 +95,7 @@ fn deserialize_item<'mem>(poke: Poke<'mem>, value: &Item) -> Result<Opaque<'mem>
             }
             ps.build_in_place()
         }
-        Poke::Enum(_) => todo!(),
+        PokeUninit::Enum(_) => todo!(),
         _ => todo!("unsupported poke type"),
     };
     Ok(opaque)

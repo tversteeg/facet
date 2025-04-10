@@ -1,14 +1,14 @@
 use facet_core::Facet;
 use facet_core::FieldAttribute;
 
-use facet_poke::{Poke, PokeStruct};
+use facet_poke::{PokeStruct, PokeUninit};
 
-fn parse_field(field: Poke, value: &str, field_index: usize, ps: &mut PokeStruct<'_>) {
+fn parse_field(field: PokeUninit, value: &str, field_index: usize, ps: &mut PokeStruct<'_>) {
     let field_shape = field.shape();
     log::trace!("Field shape: {}", field_shape);
 
     let field = match field {
-        Poke::Scalar(pv) => {
+        PokeUninit::Scalar(pv) => {
             let pv = match pv.typed::<String>() {
                 Ok(pv) => {
                     pv.put(value.to_string());
@@ -26,7 +26,7 @@ fn parse_field(field: Poke, value: &str, field_index: usize, ps: &mut PokeStruct
                 }
                 Err(pv) => pv,
             };
-            Poke::Scalar(pv)
+            PokeUninit::Scalar(pv)
         }
         field => field,
     };
@@ -46,7 +46,7 @@ fn parse_field(field: Poke, value: &str, field_index: usize, ps: &mut PokeStruct
 pub fn from_slice<T: Facet>(s: &[&str]) -> T {
     log::trace!("Entering from_slice function");
     let mut s = s;
-    let (poke, guard) = Poke::alloc::<T>();
+    let (poke, guard) = PokeUninit::alloc::<T>();
     log::trace!("Allocated Poke for type T");
     let mut ps = poke.into_struct();
     log::trace!("Converted Poke into struct");

@@ -1,8 +1,10 @@
+extern crate alloc;
+
 use crate::*;
 use core::{alloc::Layout, hash::Hash as _};
 
 #[cfg(feature = "std")]
-use std::vec::Vec;
+use alloc::vec::Vec;
 
 unsafe impl<T> Facet for Vec<T>
 where
@@ -24,9 +26,7 @@ where
                                 write!(f, "Vec<⋯>")
                             }
                         })
-                        .drop_in_place(|value| unsafe {
-                            core::ptr::drop_in_place(value.as_mut::<Vec<T>>());
-                        })
+                        .drop_in_place(|value| unsafe { value.drop_in_place::<Vec<T>>() })
                         .default_in_place(|target| unsafe { target.put(Self::default()) })
                         .clone_into(|src, dst| unsafe { dst.put(src.as_ref::<Vec<T>>()) });
 

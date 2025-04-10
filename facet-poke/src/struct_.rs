@@ -1,7 +1,7 @@
 use core::ptr::NonNull;
 use facet_core::{FieldError, Opaque, OpaqueConst, OpaqueUninit, Shape, StructDef};
 
-use super::{Guard, ISet, PokeValue};
+use super::{Guard, ISet, PokeValueUninit};
 
 /// Allows poking a struct (setting fields, etc.)
 pub struct PokeStruct<'mem> {
@@ -14,8 +14,8 @@ pub struct PokeStruct<'mem> {
 impl<'mem> PokeStruct<'mem> {
     #[inline(always)]
     /// Coerce back into a `PokeValue`
-    pub fn into_value(self) -> PokeValue<'mem> {
-        unsafe { PokeValue::new(self.data, self.shape) }
+    pub fn into_value(self) -> PokeValueUninit<'mem> {
+        unsafe { PokeValueUninit::new(self.data, self.shape) }
     }
 
     /// Shape getter
@@ -139,7 +139,10 @@ impl<'mem> PokeStruct<'mem> {
     }
 
     /// Gets a field, by name
-    pub fn field_by_name(&self, name: &str) -> Result<(usize, crate::Poke<'mem>), FieldError> {
+    pub fn field_by_name(
+        &self,
+        name: &str,
+    ) -> Result<(usize, crate::PokeUninit<'mem>), FieldError> {
         let index = self
             .def
             .fields
@@ -156,7 +159,7 @@ impl<'mem> PokeStruct<'mem> {
     /// Returns an error if:
     /// - The shape doesn't represent a struct.
     /// - The index is out of bounds.
-    pub fn field(&self, index: usize) -> Result<crate::Poke<'mem>, FieldError> {
+    pub fn field(&self, index: usize) -> Result<crate::PokeUninit<'mem>, FieldError> {
         if index >= self.def.fields.len() {
             return Err(FieldError::IndexOutOfBounds);
         }
@@ -167,7 +170,7 @@ impl<'mem> PokeStruct<'mem> {
         let field_addr = unsafe { self.data.field_uninit(field.offset) };
         let field_shape = field.shape;
 
-        let poke = unsafe { crate::Poke::unchecked_new(field_addr, field_shape) };
+        let poke = unsafe { crate::PokeUninit::unchecked_new(field_addr, field_shape) };
         Ok(poke)
     }
 
