@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/facet-rs/facet/compare/facet-poke-v0.2.3...facet-poke-v0.3.0) - 2025-04-10
+
+### Other
+
+- Move facet-args to typed()
+- Introduced TypedPokeValue
+- Use put rather than write for all users of PokeValue
+- rename pokevalue:: put into pokevalue:: write and provide a safe alternative
+- introduces put in poke value which is safe
+
 ## [0.2.3](https://github.com/facet-rs/facet/compare/facet-poke-v0.2.2...facet-poke-v0.2.3) - 2025-04-10
 
 ### Fixed

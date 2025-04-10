@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7](https://github.com/facet-rs/facet/compare/facet-json-read-v0.1.6...facet-json-read-v0.1.7) - 2025-04-10
+
+### Other
+
+- Use put rather than write for all users of PokeValue
+- rename pokevalue:: put into pokevalue:: write and provide a safe alternative
+- introduces put in poke value which is safe
+
 ## [0.1.6](https://github.com/facet-rs/facet/compare/facet-json-read-v0.1.5...facet-json-read-v0.1.6) - 2025-04-10
 
 ### Fixed

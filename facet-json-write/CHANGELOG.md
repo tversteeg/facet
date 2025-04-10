@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7](https://github.com/facet-rs/facet/compare/facet-json-write-v0.1.6...facet-json-write-v0.1.7) - 2025-04-10
+
+### Added
+
+- serialize floats
+- serialize integers
+
+### Fixed
+
+- actually call to_json_string in example
+
+### Other
+
+- add example for json serialization
+- rename pokevalue:: put into pokevalue:: write and provide a safe alternative
+
 ## [0.1.6](https://github.com/facet-rs/facet/compare/facet-json-write-v0.1.5...facet-json-write-v0.1.6) - 2025-04-10
 
 ### Fixed

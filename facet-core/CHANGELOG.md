@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/facet-rs/facet/compare/facet-core-v0.2.5...facet-core-v0.3.0) - 2025-04-10
+
+### Other
+
+- Add no_std support
+- Add ScalarAffinity type and update implementations
+- Use TypeId for every types, not just scalar. Closes #97
+- Revert 9b8904f
+- Use put rather than write for all users of PokeValue
+- introduces put in poke value which is safe
+
 ## [0.2.5](https://github.com/facet-rs/facet/releases/tag/facet-core-v0.2.5) - 2025-04-10
 
 ### Other
