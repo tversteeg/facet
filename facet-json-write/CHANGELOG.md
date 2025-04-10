@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.9](https://github.com/facet-rs/facet/compare/facet-json-write-v0.1.8...facet-json-write-v0.1.9) - 2025-04-10
+
+### Other
+
+- updated the following local packages: facet-core, facet-derive, facet-poke
+
 ## [0.1.8](https://github.com/facet-rs/facet/compare/facet-json-write-v0.1.7...facet-json-write-v0.1.8) - 2025-04-10
 
 ### Other

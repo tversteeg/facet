@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2](https://github.com/facet-rs/facet/compare/facet-core-v0.3.1...facet-core-v0.3.2) - 2025-04-10
+
+### Other
+
+- Make shape & friends repr(C)
+- enums are peekable 😎
+- Peek for unit structs
+- holy ship it works
+- Start peeking/poking enums
+
 ## [0.3.1](https://github.com/facet-rs/facet/compare/facet-core-v0.3.0...facet-core-v0.3.1) - 2025-04-10
 
 ### Fixed

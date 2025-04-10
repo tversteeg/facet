@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/facet-rs/facet/compare/facet-poke-v0.3.1...facet-poke-v0.4.0) - 2025-04-10
+
+### Other
+
+- Test enums
+- Building enums works!
+- enums are peekable 😎
+- Peek for unit structs
+- holy ship it works
+- Fix type depth
+- Start peeking/poking enums
+
 ## [0.3.1](https://github.com/facet-rs/facet/compare/facet-poke-v0.3.0...facet-poke-v0.3.1) - 2025-04-10
 
 ### Fixed
