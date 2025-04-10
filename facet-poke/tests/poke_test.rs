@@ -120,7 +120,7 @@ fn build_foobar_after_default() {
 
 #[test]
 fn build_enum() {
-    #[derive(Facet)]
+    #[derive(Facet, PartialEq, Debug)]
     #[repr(u8)]
     #[allow(dead_code)]
     enum FooBar {
@@ -144,6 +144,67 @@ fn build_enum() {
         b: "Hello".into(),
     };
     eprintln!("{}", v.pretty());
+
+    {
+        // now let's try to build an enum variant with a poke
+        let (poke, guard) = Poke::alloc::<FooBar>();
+        let pe = poke.into_enum();
+        let pe = pe.set_variant_by_name("Unit").unwrap();
+        let v = pe.build::<FooBar>(Some(guard));
+        assert_eq!(v, FooBar::Unit);
+    }
+
+    {
+        // Build the Foo variant with a u32 value
+        let (poke, guard) = Poke::alloc::<FooBar>();
+        let pe = poke.into_enum();
+        let mut pe = pe.set_variant_by_name("Foo").unwrap();
+        unsafe {
+            let poke_field = pe.tuple_field(0).unwrap();
+            poke_field.into_value().put(43_u32);
+            pe.mark_initialized(0);
+        }
+        let v = pe.build::<FooBar>(Some(guard));
+        assert_eq!(v, FooBar::Foo(43));
+    }
+
+    {
+        // Build the Bar variant with a String value
+        let (poke, guard) = Poke::alloc::<FooBar>();
+        let pe = poke.into_enum();
+        let mut pe = pe.set_variant_by_name("Bar").unwrap();
+        unsafe {
+            let poke_field = pe.tuple_field(0).unwrap();
+            poke_field.into_value().put(String::from("junjito"));
+            pe.mark_initialized(0);
+        }
+        let v = pe.build::<FooBar>(Some(guard));
+        assert_eq!(v, FooBar::Bar("junjito".into()));
+    }
+
+    {
+        // Build the StructLike variant with fields
+        let (poke, guard) = Poke::alloc::<FooBar>();
+        let pe = poke.into_enum();
+        let mut pe = pe.set_variant_by_name("StructLike").unwrap();
+        unsafe {
+            let (index_a, poke_a) = pe.field_by_name("a").unwrap();
+            poke_a.into_value().put(1_u32);
+            pe.mark_initialized(index_a);
+
+            let (index_b, poke_b) = pe.field_by_name("b").unwrap();
+            poke_b.into_value().put(String::from("Hello"));
+            pe.mark_initialized(index_b);
+        }
+        let v = pe.build::<FooBar>(Some(guard));
+        assert_eq!(
+            v,
+            FooBar::StructLike {
+                a: 1,
+                b: "Hello".into()
+            }
+        );
+    }
 }
 
 fn test_peek_pair<T>(val1: T, val2: T, expected_facts: HashSet<Fact>)
