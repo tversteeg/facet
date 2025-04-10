@@ -14,6 +14,8 @@ pub use map::*;
 mod value;
 pub use value::*;
 
+use crate::Facet;
+
 /// Schema for reflection of a type
 #[derive(Clone, Copy, Debug)]
 #[non_exhaustive]
@@ -771,6 +773,21 @@ impl Default for EnumRepr {
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct ScalarId(u64);
 
+unsafe impl Facet for ScalarId {
+    const SHAPE: &'static Shape = &Shape::builder()
+        .layout(Layout::new::<Self>())
+        .vtable(crate::value_vtable!(String, |f, _opts| write!(
+            f,
+            "ScalarId"
+        )))
+        .def(Def::Scalar(
+            ScalarDef::builder()
+                .fully_qualified_type_name("facet_core::ScalarId")
+                .build(),
+        ))
+        .build();
+}
+
 impl ScalarId {
     const fn from_fully_qualified_type_name(name: &'static str) -> Self {
         // Create a simple hash from the type name to serve as ID
@@ -785,12 +802,37 @@ impl ScalarId {
     }
 }
 
+use crate::{shape_of, value_vtable};
+
 /// Definition for scalar types
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[non_exhaustive]
 pub struct ScalarDef {
     /// The TypeId of the scalar type
     pub scalar_id: ScalarId,
+}
+
+unsafe impl Facet for ScalarDef {
+    const SHAPE: &'static Shape = &const {
+        static FIELDS: &[Field] = &[Field::builder()
+            .name("scalar_id")
+            .shape(shape_of(&|s: ScalarDef| s.scalar_id))
+            .offset(core::mem::offset_of!(ScalarDef, scalar_id))
+            .flags(FieldFlags::EMPTY)
+            .attributes(&[])
+            .build()];
+
+        Shape::builder()
+            .layout(core::alloc::Layout::new::<Self>())
+            .vtable(value_vtable!(ScalarDef, |f, _opts| f.write_str("ScalarDef")))
+            .def(Def::Struct(
+                StructDef::builder()
+                    .kind(StructKind::Struct)
+                    .fields(FIELDS)
+                    .build(),
+            ))
+            .build()
+    };
 }
 
 impl ScalarDef {
