@@ -89,6 +89,8 @@ impl_facet_for_integer!(u64);
 impl_facet_for_integer!(i64);
 impl_facet_for_integer!(u128);
 impl_facet_for_integer!(i128);
+impl_facet_for_integer!(usize);
+impl_facet_for_integer!(isize);
 
 macro_rules! impl_facet_for_float {
     ($type:ty) => {

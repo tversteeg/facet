@@ -214,6 +214,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "facet-args"
+version = "0.1.2"
+dependencies = [
+ "facet",
+ "facet-poke",
+ "facet-trait",
+]
+
+[[package]]
 name = "facet-codegen"
 version = "0.1.1"
 dependencies = [

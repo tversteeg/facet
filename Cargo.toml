@@ -16,7 +16,7 @@ members = [
     "facet-trait",
     "facet-types",
     "facet-yaml",
-    "facet-urlencoded",
+    "facet-urlencoded", "facet-args",
 ]
 resolver = "3"
 

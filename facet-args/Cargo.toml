@@ -1,0 +1,15 @@
+[package]
+name = "facet-args"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+facet-poke.workspace = true
+facet-trait.workspace = true
+
+[dev-dependencies]
+facet.workspace = true

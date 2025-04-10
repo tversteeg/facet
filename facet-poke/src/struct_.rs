@@ -139,7 +139,7 @@ impl<'mem> PokeStruct<'mem> {
     }
 
     /// Gets a field, by name
-    pub fn field_by_name(&mut self, name: &str) -> Result<(usize, crate::Poke<'mem>), FieldError> {
+    pub fn field_by_name(&self, name: &str) -> Result<(usize, crate::Poke<'mem>), FieldError> {
         let index = self
             .def
             .fields
@@ -156,7 +156,7 @@ impl<'mem> PokeStruct<'mem> {
     /// Returns an error if:
     /// - The shape doesn't represent a struct.
     /// - The index is out of bounds.
-    pub fn field(&mut self, index: usize) -> Result<crate::Poke<'mem>, FieldError> {
+    pub fn field(&self, index: usize) -> Result<crate::Poke<'mem>, FieldError> {
         if index >= self.def.fields.len() {
             return Err(FieldError::IndexOutOfBounds);
         }

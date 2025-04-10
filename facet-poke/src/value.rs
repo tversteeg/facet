@@ -42,6 +42,15 @@ impl<'mem> PokeValue<'mem> {
         self.shape.vtable
     }
 
+    /// Exposes the internal data buffer as a mutable reference
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that they don't violate any invariants of the underlying type.
+    pub unsafe fn data(&mut self) -> OpaqueUninit<'mem> {
+        self.data
+    }
+
     /// Attempts to convert a value from another type into this one
     ///
     /// Returns `Ok(Opaque)` if the conversion was successful, `Err((Self, TryFromError))` otherwise.

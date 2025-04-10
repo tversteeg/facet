@@ -68,6 +68,19 @@ impl<'mem> Poke<'mem> {
         (poke, guard)
     }
 
+    /// Allocates a new poke from a given shape
+    pub fn alloc_shape(shape: &'static Shape) -> (Self, Guard) {
+        let data = shape.allocate();
+        let layout = shape.layout;
+        let guard = Guard {
+            ptr: data.as_mut_ptr(),
+            layout,
+            shape,
+        };
+        let poke = unsafe { Self::unchecked_new(data, shape) };
+        (poke, guard)
+    }
+
     /// Creates a new peek, for easy manipulation of some opaque data.
     ///
     /// # Safety
