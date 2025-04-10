@@ -169,6 +169,12 @@ fn struct_field_doc_comment() {
         /// This field has a doc comment
         bar: u32,
     }
+
+    if let Def::Struct(StructDef { fields, .. }) = Foo::SHAPE.def {
+        assert_eq!(fields[0].doc, &[" This field has a doc comment"]);
+    } else {
+        panic!("Expected Struct innards");
+    }
 }
 
 #[test]

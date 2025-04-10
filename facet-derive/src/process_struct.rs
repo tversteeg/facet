@@ -54,6 +54,7 @@ pub(crate) fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
                     }
                 }
                 let attributes = attributes.join(",");
+                let maybe_field_doc = build_maybe_doc(&field.value.attributes);
 
                 // Generate each field definition
                 format!(
@@ -63,6 +64,7 @@ pub(crate) fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
                 .offset(::core::mem::offset_of!({struct_name}, {field_name}))
                 .flags({flags})
                 .attributes(&[{attributes}])
+                {maybe_field_doc}
                 .build()"
                 )
             })

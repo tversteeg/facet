@@ -394,6 +394,9 @@ pub struct Field {
 
     /// arbitrary attributes set via the derive macro
     pub attributes: &'static [FieldAttribute],
+
+    /// doc comments
+    pub doc: &'static [&'static str],
 }
 
 impl Field {
@@ -410,6 +413,7 @@ pub struct FieldBuilder {
     offset: Option<usize>,
     flags: Option<FieldFlags>,
     attributes: &'static [FieldAttribute],
+    doc: &'static [&'static str],
 }
 
 /// An attribute that can be set on a field
@@ -433,6 +437,7 @@ impl FieldBuilder {
             offset: None,
             flags: None,
             attributes: &[],
+            doc: &[],
         }
     }
 
@@ -466,6 +471,12 @@ impl FieldBuilder {
         self
     }
 
+    /// Sets the doc comments for the Field
+    pub const fn doc(mut self, doc: &'static [&'static str]) -> Self {
+        self.doc = doc;
+        self
+    }
+
     /// Builds the Field
     pub const fn build(self) -> Field {
         Field {
@@ -477,6 +488,7 @@ impl FieldBuilder {
                 None => FieldFlags::EMPTY,
             },
             attributes: self.attributes,
+            doc: self.doc,
         }
     }
 }
