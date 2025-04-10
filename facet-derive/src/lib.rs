@@ -152,8 +152,8 @@ unsynn! {
     }
 
     enum EnumVariantLike {
-        Unit(UnitVariant),
         Tuple(TupleVariant),
+        Unit(UnitVariant),
         Struct(StructVariant),
     }
 

@@ -11,6 +11,9 @@ pub use value::*;
 mod struct_;
 pub use struct_::*;
 
+mod enum_;
+pub use enum_::*;
+
 mod list;
 pub use list::*;
 
@@ -37,6 +40,9 @@ pub enum Peek<'mem> {
 
     /// cf. [`PeekStruct`]
     Struct(PeekStruct<'mem>),
+
+    /// cf. [`PeekEnum`]
+    Enum(PeekEnum<'mem>),
 }
 
 impl<'mem> core::ops::Deref for Peek<'mem> {
@@ -48,6 +54,7 @@ impl<'mem> core::ops::Deref for Peek<'mem> {
             Peek::List(list) => list,
             Peek::Map(map) => map,
             Peek::Struct(struct_) => struct_,
+            Peek::Enum(enum_) => enum_,
         }
     }
 }
@@ -74,7 +81,7 @@ impl<'mem> Peek<'mem> {
             Def::Map(def) => Peek::Map(PeekMap::new(value, def)),
             Def::List(def) => Peek::List(PeekList::new(value, def)),
             Def::Scalar { .. } => Peek::Value(value),
-            Def::Enum { .. } => todo!(),
+            Def::Enum(def) => Peek::Enum(PeekEnum::new(value, def)),
             _ => todo!("unsupported def: {:?}", shape.def),
         }
     }
@@ -86,6 +93,7 @@ impl<'mem> Peek<'mem> {
             Self::List(l) => *l,
             Self::Map(m) => *m,
             Self::Struct(s) => *s,
+            Self::Enum(e) => *e,
         }
     }
 }

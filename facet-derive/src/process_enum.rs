@@ -100,19 +100,18 @@ pub(crate) fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
 #[automatically_derived]
 unsafe impl facet::Facet for {enum_name} {{
     const SHAPE: &'static facet::Shape = &const {{
-        facet::Shape.builder()
+        facet::Shape::builder()
             .id(facet::ConstTypeId::of::<{enum_name}>())
             .layout(core::alloc::Layout::new::<Self>())
             .vtable(facet::value_vtable!(
                 {enum_name},
                 |f, _opts| core::fmt::Write::write_str(f, "{enum_name}")
             ))
-            .def(facet::Def::Enum(facet::EnumDef {{
-                variants: facet::enum_variants!({enum_name}, [{variants}]),
-                repr: facet::EnumRepr::{repr_type},
-            }}))
+            .def(facet::Def::Enum(facet::EnumDef::builder()
+                .variants(facet::enum_variants!({enum_name}, [{variants}]))
+                .repr(facet::EnumRepr::{repr_type})
+                .build()))
             .build()
-        }}
     }};
 }}
         "#

@@ -3,10 +3,16 @@ use facet_core::{Facet, OpaqueConst, OpaqueUninit};
 use facet_derive::Facet;
 use facet_poke::{Peek, Poke};
 
+use facet_pretty::FacetPretty as _;
 use owo_colors::{OwoColorize, Style};
 use std::{cmp::Ordering, collections::HashSet, fmt::Debug};
 
 use facet_core as facet;
+
+#[ctor]
+fn init_backtrace() {
+    color_backtrace::install();
+}
 
 // Allow dead code in test modules since we're not constructing all enum variants
 #[derive(Debug, PartialEq, Eq, Facet)]
@@ -111,9 +117,21 @@ fn build_foobar_after_default() {
     assert_eq!(foo_bar.bar, "Hello, World!");
 }
 
-#[ctor]
-fn init_backtrace() {
-    color_backtrace::install();
+#[test]
+fn build_enum() {
+    #[derive(Facet)]
+    #[repr(u8)]
+    #[allow(dead_code)]
+    enum FooBar {
+        Foo(u32),
+        Bar(String),
+    }
+
+    let v = FooBar::Foo(42);
+    eprintln!("{}", v.pretty());
+
+    let v = FooBar::Bar("junjito".into());
+    eprintln!("{}", v.pretty());
 }
 
 fn test_peek_pair<T>(val1: T, val2: T, expected_facts: HashSet<Fact>)

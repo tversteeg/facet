@@ -52,20 +52,20 @@ macro_rules! enum_tuple_variant {
     ($enum:ty, $variant:ident, [$($field_type:ty),*]) => {{
         static FIELDS: &[$crate::Field] = &[
             $(
-                $crate::Field {
-                    name: concat!("_", stringify!($field_type)),
-                    shape_fn: <$field_type>::shape,
-                    offset: 0, // Will be calculated at runtime
-                    flags: $crate::FieldFlags::EMPTY,
-                }
+                $crate::Field::builder()
+                    .name(concat!("_", stringify!($field_type)))
+                    .shape(<$field_type>::SHAPE)
+                    .offset(0) // Will be calculated at runtime
+                    .flags($crate::FieldFlags::EMPTY)
+                    .build()
             ),*
         ];
 
-        $crate::Variant {
-            name: stringify!($variant),
-            discriminant: None,
-            kind: $crate::VariantKind::Tuple { fields: FIELDS },
-        }
+        $crate::Variant::builder()
+            .name(stringify!($variant))
+            .discriminant(None)
+            .kind($crate::VariantKind::Tuple { fields: FIELDS })
+            .build()
     }};
     ($enum:ty, $variant:ident, [$($field_type:ty),*], $discriminant:expr) => {{
         static FIELDS: &[$crate::Field] = &[
