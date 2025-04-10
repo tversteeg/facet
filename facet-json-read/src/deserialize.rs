@@ -202,7 +202,8 @@ fn deserialize_value<'input, 'mem>(
                             let item_shape = pl.def().t;
                             let item_data =
                                 OpaqueUninit::new(unsafe { std::alloc::alloc(item_shape.layout) });
-                            let item_poke = unsafe { PokeUninit::unchecked_new(item_data, item_shape) };
+                            let item_poke =
+                                unsafe { PokeUninit::unchecked_new(item_data, item_shape) };
 
                             stack.push_front(StackItem::FinishList { pl });
                             stack.push_front(StackItem::AfterListItem { item: item_data });

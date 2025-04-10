@@ -1,8 +1,6 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-//! Allows poking (writing to) shapes
-
 use core::alloc::Layout;
 
 pub use facet_peek::*;

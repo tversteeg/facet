@@ -139,7 +139,10 @@ impl<'mem> PokeStruct<'mem> {
     }
 
     /// Gets a field, by name
-    pub fn field_by_name(&self, name: &str) -> Result<(usize, crate::PokeUninit<'mem>), FieldError> {
+    pub fn field_by_name(
+        &self,
+        name: &str,
+    ) -> Result<(usize, crate::PokeUninit<'mem>), FieldError> {
         let index = self
             .def
             .fields

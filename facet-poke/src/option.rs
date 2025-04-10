@@ -82,7 +82,7 @@ impl<'mem> PokeOptionUninit<'mem> {
     pub unsafe fn put<T>(self, value: T) -> PokeOption<'mem> {
         let value_opaque = facet_core::OpaqueConst::new(&raw const value);
         let result = unsafe { self.write(value_opaque) };
-        std::mem::forget(value);
+        core::mem::forget(value);
         result
     }
 }

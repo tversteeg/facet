@@ -1,5 +1,8 @@
+extern crate alloc;
+
+use alloc::collections::VecDeque;
 use core::{alloc::Layout, hash::Hash};
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 use std::hash::RandomState;
 
 use crate::opaque::{Opaque, OpaqueConst};

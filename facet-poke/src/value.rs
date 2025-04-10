@@ -17,9 +17,10 @@ impl<'mem, T: Facet> TypedPokeValueUninit<'mem, T> {
     }
 
     /// Place a value of type T in the space provided
-    pub fn put(self, value: T) -> Opaque<'mem> {
+    pub fn put(self, value: T) -> PokeValue<'mem> {
         // We already verified the shape matches T when we created this TypedPokeValue
-        unsafe { self.poke_value.data.put(value) }
+        let data = unsafe { self.poke_value.data.put(value) };
+        unsafe { PokeValue::new(data, self.poke_value.shape) }
     }
 }
 

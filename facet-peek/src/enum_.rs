@@ -201,7 +201,7 @@ impl<'mem> PeekEnum<'mem> {
                 let peek = unsafe { crate::Peek::unchecked_new(field_data, field.shape) };
                 (field.name, peek)
             })),
-            _ => Box::new(std::iter::empty()),
+            _ => Box::new(core::iter::empty()),
         }
     }
 }

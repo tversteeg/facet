@@ -1,212 +1,19 @@
-use ctor::ctor;
-use facet_core::{Facet, OpaqueConst, OpaqueUninit};
-use facet_derive::Facet;
-use facet_poke::{Peek, PokeUninit};
-
-use facet_pretty::FacetPretty as _;
-use owo_colors::{OwoColorize, Style};
-use std::{cmp::Ordering, collections::HashSet, fmt::Debug};
+use std::{cmp::Ordering, collections::HashSet};
 
 use facet_core as facet;
+use facet_core::Facet;
+use facet_derive::Facet;
+use facet_peek::Peek;
+use facet_poke::PokeUninit;
+use owo_colors::{OwoColorize, Style};
 
-#[ctor]
+#[ctor::ctor]
 fn init_logger() {
     color_backtrace::install();
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 }
 
-#[derive(Debug, PartialEq, Eq, Facet)]
-struct FooBar {
-    foo: u64,
-    bar: String,
-}
-
-impl Default for FooBar {
-    fn default() -> Self {
-        FooBar {
-            foo: 69,
-            bar: String::new(),
-        }
-    }
-}
-
-#[test]
-fn build_foobar_through_reflection() {
-    let (poke, guard) = PokeUninit::alloc::<FooBar>();
-    let mut poke = poke.into_struct();
-    unsafe {
-        poke.unchecked_set_by_name("foo", OpaqueConst::new(&42u64))
-            .unwrap();
-    }
-
-    {
-        let bar = String::from("Hello, World!");
-        unsafe {
-            poke.unchecked_set_by_name("bar", OpaqueConst::new(&bar))
-                .unwrap();
-        }
-        // bar has been moved out of
-        core::mem::forget(bar);
-    }
-
-    let foo_bar = poke.build::<FooBar>(Some(guard));
-
-    // Verify the fields were set correctly
-    assert_eq!(foo_bar.foo, 42);
-    assert_eq!(foo_bar.bar, "Hello, World!");
-
-    assert_eq!(
-        FooBar {
-            foo: 42,
-            bar: "Hello, World!".to_string()
-        },
-        foo_bar
-    )
-}
-
-#[test]
-#[should_panic(expected = "Field 'bar' was not initialized")]
-fn build_foobar_incomplete() {
-    let (poke, guard) = PokeUninit::alloc::<FooBar>();
-    let mut poke = poke.into_struct();
-    unsafe {
-        poke.unchecked_set_by_name("foo", OpaqueConst::new(&42u64))
-            .unwrap();
-    }
-
-    let foo_bar = poke.build::<FooBar>(Some(guard));
-
-    // Verify the fields were set correctly
-    assert_eq!(foo_bar.foo, 42);
-    assert_eq!(foo_bar.bar, "Hello, World!");
-
-    assert_eq!(
-        FooBar {
-            foo: 42,
-            bar: "Hello, World!".to_string()
-        },
-        foo_bar
-    )
-}
-
-#[test]
-fn build_foobar_after_default() {
-    let mut foo_bar: FooBar = Default::default();
-
-    let mut poke =
-        unsafe { PokeUninit::unchecked_new(OpaqueUninit::new(&mut foo_bar as *mut _), FooBar::SHAPE) }
-            .into_struct();
-    unsafe {
-        poke.mark_initialized(0);
-        poke.mark_initialized(1);
-    }
-
-    {
-        let bar = String::from("Hello, World!");
-        unsafe {
-            poke.unchecked_set_by_name("bar", OpaqueConst::new(&bar))
-                .unwrap();
-        }
-        // bar has been moved out of
-        core::mem::forget(bar);
-    }
-    poke.build_in_place();
-
-    // Verify the fields were set correctly
-    assert_eq!(foo_bar.foo, 69);
-    assert_eq!(foo_bar.bar, "Hello, World!");
-}
-
-#[test]
-fn build_enum() {
-    #[derive(Facet, PartialEq, Debug)]
-    #[repr(u8)]
-    #[allow(dead_code)]
-    enum FooBar {
-        Unit,
-        Foo(u32),
-        Bar(String),
-        StructLike { a: u32, b: String },
-    }
-
-    let v = FooBar::Unit;
-    eprintln!("{}", v.pretty());
-
-    let v = FooBar::Foo(42);
-    eprintln!("{}", v.pretty());
-
-    let v = FooBar::Bar("junjito".into());
-    eprintln!("{}", v.pretty());
-
-    let v = FooBar::StructLike {
-        a: 1,
-        b: "Hello".into(),
-    };
-    eprintln!("{}", v.pretty());
-
-    {
-        // now let's try to build an enum variant with a poke
-        let (poke, guard) = PokeUninit::alloc::<FooBar>();
-        let pe = poke.into_enum();
-        let pe = pe.set_variant_by_name("Unit").unwrap();
-        let v = pe.build::<FooBar>(Some(guard));
-        assert_eq!(v, FooBar::Unit);
-    }
-
-    {
-        // Build the Foo variant with a u32 value
-        let (poke, guard) = PokeUninit::alloc::<FooBar>();
-        let pe = poke.into_enum();
-        let mut pe = pe.set_variant_by_name("Foo").unwrap();
-        unsafe {
-            let poke_field = pe.tuple_field(0).unwrap();
-            poke_field.into_value().put(43_u32);
-            pe.mark_initialized(0);
-        }
-        let v = pe.build::<FooBar>(Some(guard));
-        assert_eq!(v, FooBar::Foo(43));
-    }
-
-    {
-        // Build the Bar variant with a String value
-        let (poke, guard) = PokeUninit::alloc::<FooBar>();
-        let pe = poke.into_enum();
-        let mut pe = pe.set_variant_by_name("Bar").unwrap();
-        unsafe {
-            let poke_field = pe.tuple_field(0).unwrap();
-            poke_field.into_value().put(String::from("junjito"));
-            pe.mark_initialized(0);
-        }
-        let v = pe.build::<FooBar>(Some(guard));
-        assert_eq!(v, FooBar::Bar("junjito".into()));
-    }
-
-    {
-        // Build the StructLike variant with fields
-        let (poke, guard) = PokeUninit::alloc::<FooBar>();
-        let pe = poke.into_enum();
-        let mut pe = pe.set_variant_by_name("StructLike").unwrap();
-        unsafe {
-            let (index_a, poke_a) = pe.field_by_name("a").unwrap();
-            poke_a.into_value().put(1_u32);
-            pe.mark_initialized(index_a);
-
-            let (index_b, poke_b) = pe.field_by_name("b").unwrap();
-            poke_b.into_value().put(String::from("Hello"));
-            pe.mark_initialized(index_b);
-        }
-        let v = pe.build::<FooBar>(Some(guard));
-        assert_eq!(
-            v,
-            FooBar::StructLike {
-                a: 1,
-                b: "Hello".into()
-            }
-        );
-    }
-}
-
-fn test_peek_pair<T>(val1: T, val2: T, expected_facts: HashSet<Fact>)
+fn check_facts<T>(val1: T, val2: T, expected_facts: HashSet<Fact>)
 where
     T: Facet + 'static,
 {
@@ -326,623 +133,6 @@ where
     );
 }
 
-#[test]
-fn test_integer_traits() {
-    // i32 implements Debug, PartialEq, and Ord
-    test_peek_pair(
-        42,
-        24,
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .ord_and(Ordering::Greater)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    // Test equal i32 values
-    test_peek_pair(
-        42,
-        42,
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(true)
-            .ord_and(Ordering::Equal)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    // Test i32::MIN and i32::MAX
-    test_peek_pair(
-        i32::MIN,
-        i32::MAX,
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .ord_and(Ordering::Less)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    // Test i32 with 0
-    test_peek_pair(
-        0,
-        42,
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .ord_and(Ordering::Less)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    // Test negative i32 values
-    test_peek_pair(
-        -10,
-        10,
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .ord_and(Ordering::Less)
-            .default()
-            .clone()
-            .build(),
-    );
-}
-
-#[test]
-fn test_boolean_traits() {
-    // bool implements Debug, PartialEq, Ord, and Display
-    test_peek_pair(
-        true,
-        false,
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .ord_and(Ordering::Greater)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    test_peek_pair(
-        true,
-        true,
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(true)
-            .ord_and(Ordering::Equal)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    test_peek_pair(
-        false,
-        true,
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .ord_and(Ordering::Less)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    test_peek_pair(
-        false,
-        false,
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(true)
-            .ord_and(Ordering::Equal)
-            .default()
-            .clone()
-            .build(),
-    );
-}
-
-#[test]
-fn test_floating_traits() {
-    // f64 implements Debug, PartialEq
-    test_peek_pair(
-        3.18,
-        2.71,
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .default()
-            .clone()
-            .build(),
-    );
-}
-
-#[test]
-fn test_string_traits() {
-    // String implements Debug, PartialEq, and Ord
-    test_peek_pair(
-        String::from("hello"),
-        String::from("world"),
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .ord_and(Ordering::Less)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    // &str implements Debug, PartialEq, and Ord
-    test_peek_pair(
-        "hello",
-        "world",
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .ord_and(Ordering::Less)
-            .clone()
-            .default()
-            .build(),
-    );
-
-    // Cow<'a, str> implements Debug, PartialEq, and Ord
-    use std::borrow::Cow;
-    test_peek_pair(
-        Cow::Borrowed("hello"),
-        Cow::Borrowed("world"),
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .ord_and(Ordering::Less)
-            .clone()
-            .default()
-            .build(),
-    );
-    test_peek_pair(
-        Cow::Owned("hello".to_string()),
-        Cow::Owned("world".to_string()),
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .ord_and(Ordering::Less)
-            .clone()
-            .default()
-            .build(),
-    );
-    test_peek_pair(
-        Cow::Borrowed("same"),
-        Cow::Owned("same".to_string()),
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(true)
-            .ord_and(Ordering::Equal)
-            .clone()
-            .default()
-            .build(),
-    );
-}
-
-#[test]
-fn test_slice_traits() {
-    // &[i32] implements Debug, PartialEq, and Ord
-    test_peek_pair(
-        &[1, 2, 3][..],
-        &[4, 5, 6][..],
-        FactBuilder::new()
-            .debug()
-            .equal_and(false)
-            .ord_and(Ordering::Less)
-            .clone()
-            .default()
-            .build(),
-    );
-
-    // &[&str] implements Debug, PartialEq, and Ord
-    test_peek_pair(
-        &["hello", "world"][..],
-        &["foo", "bar"][..],
-        FactBuilder::new()
-            .debug()
-            .equal_and(false)
-            .ord_and(Ordering::Greater)
-            .clone()
-            .default()
-            .build(),
-    );
-}
-
-#[test]
-fn test_array_traits() {
-    // [i32; 0] implements Debug, PartialEq, Ord, Default, and Clone
-    test_peek_pair::<[i32; 0]>(
-        [],
-        [],
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(true)
-            .ord_and(Ordering::Equal)
-            .default()
-            .clone()
-            .build(),
-    );
-    // [i32; 1] implements Debug, PartialEq, Ord, Default, and Clone
-    test_peek_pair(
-        [42],
-        [24],
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .ord_and(Ordering::Greater)
-            .default()
-            .clone()
-            .build(),
-    );
-    // [i32; 2] implements Debug, PartialEq, Ord, Default, and Clone
-    test_peek_pair(
-        [1, 2],
-        [1, 3],
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(false)
-            .ord_and(Ordering::Less)
-            .default()
-            .clone()
-            .build(),
-    );
-    // [i32; 33] implements Debug, PartialEq, Ord and Clone but not yet `Default`
-    test_peek_pair(
-        [0; 33],
-        [0; 33],
-        FactBuilder::new()
-            .debug()
-            .display()
-            .equal_and(true)
-            .ord_and(Ordering::Equal)
-            .clone()
-            .build(),
-    );
-
-    // [&str; 1] implements Debug, PartialEq, Ord, Default, and Clone
-    test_peek_pair(
-        ["hello"],
-        ["world"],
-        FactBuilder::new()
-            .display()
-            .debug()
-            .equal_and(false)
-            .ord_and(Ordering::Less)
-            .default()
-            .clone()
-            .build(),
-    );
-}
-
-#[test]
-fn test_vecs() {
-    // Vec<i32> implements Debug, PartialEq, but not Ord
-    test_peek_pair(
-        vec![1, 2, 3],
-        vec![4, 5, 6],
-        FactBuilder::new()
-            .debug()
-            .equal_and(false)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    // Vec<String> implements Debug, PartialEq, but not Ord
-    test_peek_pair(
-        vec!["hello".to_string(), "world".to_string()],
-        vec!["foo".to_string(), "bar".to_string()],
-        FactBuilder::new()
-            .debug()
-            .equal_and(false)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    // Two pairs of equal Vecs
-    let vec1 = vec![1, 2, 3];
-    let vec2 = vec![1, 2, 3];
-    test_peek_pair(
-        vec1.clone(),
-        vec2.clone(),
-        FactBuilder::new()
-            .debug()
-            .equal_and(true)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    let vec3 = vec!["hello".to_string(), "world".to_string()];
-    let vec4 = vec!["hello".to_string(), "world".to_string()];
-    test_peek_pair(
-        vec3.clone(),
-        vec4.clone(),
-        FactBuilder::new()
-            .debug()
-            .equal_and(true)
-            .default()
-            .clone()
-            .build(),
-    );
-}
-
-#[test]
-fn test_hashmaps() {
-    use std::collections::HashMap;
-
-    // HashMap<String, i32> implements Debug, PartialEq, but not Ord
-    let mut map1 = HashMap::new();
-    map1.insert("key1".to_string(), 42);
-    map1.insert("key2".to_string(), 24);
-
-    let mut map2 = HashMap::new();
-    map2.insert("key3".to_string(), 100);
-    map2.insert("key4".to_string(), 200);
-
-    test_peek_pair(
-        map1.clone(),
-        map2.clone(),
-        FactBuilder::new()
-            .debug()
-            .equal_and(false)
-            .default()
-            .clone()
-            .build(),
-    );
-
-    // Two pairs of equal HashMaps
-    let mut map3 = HashMap::new();
-    map3.insert("key1".to_string(), 10);
-    map3.insert("key2".to_string(), 20);
-
-    let mut map4 = HashMap::new();
-    map4.insert("key1".to_string(), 10);
-    map4.insert("key2".to_string(), 20);
-
-    test_peek_pair(
-        map3.clone(),
-        map4.clone(),
-        FactBuilder::new()
-            .debug()
-            .equal_and(true)
-            .default()
-            .clone()
-            .build(),
-    );
-}
-
-#[test]
-fn test_custom_structs() {
-    // Struct with no trait implementations
-    #[derive(Facet)]
-    struct StructNoTraits {
-        value: i32,
-    }
-    test_peek_pair(
-        StructNoTraits { value: 42 },
-        StructNoTraits { value: 24 },
-        FactBuilder::new().build(),
-    );
-
-    // Struct with Debug only
-    #[derive(Facet, Debug)]
-    struct StructDebug {
-        value: i32,
-    }
-    test_peek_pair(
-        StructDebug { value: 42 },
-        StructDebug { value: 24 },
-        FactBuilder::new().debug().build(),
-    );
-
-    // Struct with Debug and PartialEq
-    #[derive(Facet, Debug, PartialEq)]
-    struct StructDebugEq {
-        value: i32,
-    }
-    test_peek_pair(
-        StructDebugEq { value: 42 },
-        StructDebugEq { value: 24 },
-        FactBuilder::new().debug().equal_and(false).build(),
-    );
-
-    // Struct with all traits
-    #[derive(Facet, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
-    struct StructAll {
-        value: i32,
-    }
-    test_peek_pair(
-        StructAll { value: 42 },
-        StructAll { value: 24 },
-        FactBuilder::new()
-            .debug()
-            .equal_and(false)
-            .ord_and(Ordering::Greater)
-            .clone()
-            .build(),
-    );
-    test_peek_pair(
-        StructAll { value: 10 },
-        StructAll { value: 90 },
-        FactBuilder::new()
-            .debug()
-            .equal_and(false)
-            .ord_and(Ordering::Less)
-            .clone()
-            .build(),
-    );
-    test_peek_pair(
-        StructAll { value: 69 },
-        StructAll { value: 69 },
-        FactBuilder::new()
-            .debug()
-            .equal_and(true)
-            .ord_and(Ordering::Equal)
-            .clone()
-            .build(),
-    );
-}
-
-#[test]
-fn test_tuple_structs() {
-    // Tuple struct with no trait implementations
-    #[derive(Facet)]
-    #[allow(dead_code)]
-    struct TupleNoTraits(i32, String);
-    test_peek_pair(
-        TupleNoTraits(42, "Hello".to_string()),
-        TupleNoTraits(24, "World".to_string()),
-        FactBuilder::new().build(),
-    );
-
-    // Tuple struct with Debug only
-    #[derive(Facet, Debug)]
-    #[allow(dead_code)]
-    struct TupleDebug(i32, String);
-    test_peek_pair(
-        TupleDebug(42, "Hello".to_string()),
-        TupleDebug(24, "World".to_string()),
-        FactBuilder::new().debug().build(),
-    );
-
-    // Tuple struct with EQ only
-    #[derive(Facet, PartialEq)]
-    struct TupleEq(i32, String);
-    test_peek_pair(
-        TupleEq(42, "Hello".to_string()),
-        TupleEq(24, "World".to_string()),
-        FactBuilder::new().equal_and(false).build(),
-    );
-
-    // Tuple struct with all traits
-    #[derive(Facet, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
-    struct TupleAll(i32, String);
-    test_peek_pair(
-        TupleAll(42, "Hello".to_string()),
-        TupleAll(24, "World".to_string()),
-        FactBuilder::new()
-            .debug()
-            .equal_and(false)
-            .ord_and(Ordering::Greater)
-            .clone()
-            .build(),
-    );
-}
-
-#[test]
-fn test_enums() {
-    #[derive(Facet, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
-    #[repr(u8)]
-    enum TestEnum {
-        Variant1,
-        Variant2(i32),
-        Variant3 { field: String },
-    }
-
-    // Unit variant with equal values
-    test_peek_pair(
-        TestEnum::Variant1,
-        TestEnum::Variant1,
-        FactBuilder::new()
-            .debug()
-            .equal_and(true)
-            .ord_and(Ordering::Equal)
-            .clone()
-            .build(),
-    );
-
-    // Tuple variant with different values
-    test_peek_pair(
-        TestEnum::Variant2(42),
-        TestEnum::Variant2(24),
-        FactBuilder::new()
-            .debug()
-            .equal_and(false)
-            .ord_and(Ordering::Greater)
-            .clone()
-            .build(),
-    );
-
-    // Struct variant with different values
-    test_peek_pair(
-        TestEnum::Variant3 {
-            field: "Hello".to_string(),
-        },
-        TestEnum::Variant3 {
-            field: "World".to_string(),
-        },
-        FactBuilder::new()
-            .debug()
-            .equal_and(false)
-            .ord_and(Ordering::Less)
-            .clone()
-            .build(),
-    );
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum Fact {
-    Debug,
-    Display,
-    EqualAnd { l_eq_r: bool },
-    OrdAnd { l_ord_r: Ordering },
-    Default,
-    Clone,
-}
-
-use core::fmt::{Display, Formatter, Result};
-
-impl Display for Fact {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        match self {
-            Fact::Debug => write!(f, "impl Debug"),
-            Fact::Display => write!(f, "impl Display"),
-            Fact::EqualAnd { l_eq_r } => write!(
-                f,
-                "impl Equal and l {} r",
-                if *l_eq_r { "==" } else { "!=" }
-            ),
-            Fact::OrdAnd { l_ord_r } => {
-                let ord_str = match l_ord_r {
-                    Ordering::Less => "<",
-                    Ordering::Equal => "==",
-                    Ordering::Greater => ">",
-                };
-                write!(f, "impl Ord and l {} r", ord_str)
-            }
-            Fact::Default => write!(f, "impl Default"),
-            Fact::Clone => write!(f, "impl Clone"),
-        }
-    }
-}
-
 #[derive(Default)]
 pub struct FactBuilder {
     has_debug: bool,
@@ -1012,19 +202,619 @@ impl FactBuilder {
     }
 }
 
-#[test]
-fn build_u64_properly() {
-    let shape = u64::SHAPE;
-    eprintln!("{:#?}", shape);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum Fact {
+    Debug,
+    Display,
+    EqualAnd { l_eq_r: bool },
+    OrdAnd { l_ord_r: Ordering },
+    Default,
+    Clone,
+}
 
-    let (poke, _guard) = PokeUninit::alloc::<u64>();
-    let poke = poke.into_scalar();
-    let data = poke.put(42u64);
-    let value = unsafe { data.read::<u64>() };
+use core::fmt::{Display, Formatter, Result};
 
-    // Verify the value was set correctly
-    assert_eq!(value, 42);
+impl Display for Fact {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        match self {
+            Fact::Debug => write!(f, "impl Debug"),
+            Fact::Display => write!(f, "impl Display"),
+            Fact::EqualAnd { l_eq_r } => write!(
+                f,
+                "impl Equal and l {} r",
+                if *l_eq_r { "==" } else { "!=" }
+            ),
+            Fact::OrdAnd { l_ord_r } => {
+                let ord_str = match l_ord_r {
+                    Ordering::Less => "<",
+                    Ordering::Equal => "==",
+                    Ordering::Greater => ">",
+                };
+                write!(f, "impl Ord and l {} r", ord_str)
+            }
+            Fact::Default => write!(f, "impl Default"),
+            Fact::Clone => write!(f, "impl Clone"),
+        }
+    }
 }
 
 #[test]
-fn build_option() {}
+fn test_integer_traits() {
+    // i32 implements Debug, PartialEq, and Ord
+    check_facts(
+        42,
+        24,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Greater)
+            .default()
+            .clone()
+            .build(),
+    );
+
+    // Test equal i32 values
+    check_facts(
+        42,
+        42,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(true)
+            .ord_and(Ordering::Equal)
+            .default()
+            .clone()
+            .build(),
+    );
+
+    // Test i32::MIN and i32::MAX
+    check_facts(
+        i32::MIN,
+        i32::MAX,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .default()
+            .clone()
+            .build(),
+    );
+
+    // Test i32 with 0
+    check_facts(
+        0,
+        42,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .default()
+            .clone()
+            .build(),
+    );
+
+    // Test negative i32 values
+    check_facts(
+        -10,
+        10,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .default()
+            .clone()
+            .build(),
+    );
+}
+
+#[test]
+fn test_boolean_traits() {
+    // bool implements Debug, PartialEq, Ord, and Display
+    check_facts(
+        true,
+        false,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Greater)
+            .default()
+            .clone()
+            .build(),
+    );
+
+    check_facts(
+        true,
+        true,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(true)
+            .ord_and(Ordering::Equal)
+            .default()
+            .clone()
+            .build(),
+    );
+
+    check_facts(
+        false,
+        true,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .default()
+            .clone()
+            .build(),
+    );
+
+    check_facts(
+        false,
+        false,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(true)
+            .ord_and(Ordering::Equal)
+            .default()
+            .clone()
+            .build(),
+    );
+}
+
+#[test]
+fn test_floating_traits() {
+    // f64 implements Debug, PartialEq
+    check_facts(
+        3.18,
+        2.71,
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .default()
+            .clone()
+            .build(),
+    );
+}
+
+#[test]
+fn test_string_traits() {
+    // String implements Debug, PartialEq, and Ord
+    check_facts(
+        String::from("hello"),
+        String::from("world"),
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .default()
+            .clone()
+            .build(),
+    );
+
+    // &str implements Debug, PartialEq, and Ord
+    check_facts(
+        "hello",
+        "world",
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .clone()
+            .default()
+            .build(),
+    );
+
+    // Cow<'a, str> implements Debug, PartialEq, and Ord
+    use std::borrow::Cow;
+    check_facts(
+        Cow::Borrowed("hello"),
+        Cow::Borrowed("world"),
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .clone()
+            .default()
+            .build(),
+    );
+    check_facts(
+        Cow::Owned("hello".to_string()),
+        Cow::Owned("world".to_string()),
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .clone()
+            .default()
+            .build(),
+    );
+    check_facts(
+        Cow::Borrowed("same"),
+        Cow::Owned("same".to_string()),
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(true)
+            .ord_and(Ordering::Equal)
+            .clone()
+            .default()
+            .build(),
+    );
+}
+
+#[test]
+fn test_slice_traits() {
+    // &[i32] implements Debug, PartialEq, and Ord
+    check_facts(
+        &[1, 2, 3][..],
+        &[4, 5, 6][..],
+        FactBuilder::new()
+            .debug()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .clone()
+            .default()
+            .build(),
+    );
+
+    // &[&str] implements Debug, PartialEq, and Ord
+    check_facts(
+        &["hello", "world"][..],
+        &["foo", "bar"][..],
+        FactBuilder::new()
+            .debug()
+            .equal_and(false)
+            .ord_and(Ordering::Greater)
+            .clone()
+            .default()
+            .build(),
+    );
+}
+
+#[test]
+fn test_array_traits() {
+    // [i32; 0] implements Debug, PartialEq, Ord, Default, and Clone
+    check_facts::<[i32; 0]>(
+        [],
+        [],
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(true)
+            .ord_and(Ordering::Equal)
+            .default()
+            .clone()
+            .build(),
+    );
+    // [i32; 1] implements Debug, PartialEq, Ord, Default, and Clone
+    check_facts(
+        [42],
+        [24],
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Greater)
+            .default()
+            .clone()
+            .build(),
+    );
+    // [i32; 2] implements Debug, PartialEq, Ord, Default, and Clone
+    check_facts(
+        [1, 2],
+        [1, 3],
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .default()
+            .clone()
+            .build(),
+    );
+    // [i32; 33] implements Debug, PartialEq, Ord and Clone but not yet `Default`
+    check_facts(
+        [0; 33],
+        [0; 33],
+        FactBuilder::new()
+            .debug()
+            .display()
+            .equal_and(true)
+            .ord_and(Ordering::Equal)
+            .clone()
+            .build(),
+    );
+
+    // [&str; 1] implements Debug, PartialEq, Ord, Default, and Clone
+    check_facts(
+        ["hello"],
+        ["world"],
+        FactBuilder::new()
+            .display()
+            .debug()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .default()
+            .clone()
+            .build(),
+    );
+}
+
+#[test]
+fn test_vecs() {
+    // Vec<i32> implements Debug, PartialEq, but not Ord
+    check_facts(
+        vec![1, 2, 3],
+        vec![4, 5, 6],
+        FactBuilder::new()
+            .debug()
+            .equal_and(false)
+            .default()
+            .clone()
+            .build(),
+    );
+
+    // Vec<String> implements Debug, PartialEq, but not Ord
+    check_facts(
+        vec!["hello".to_string(), "world".to_string()],
+        vec!["foo".to_string(), "bar".to_string()],
+        FactBuilder::new()
+            .debug()
+            .equal_and(false)
+            .default()
+            .clone()
+            .build(),
+    );
+
+    // Two pairs of equal Vecs
+    let vec1 = vec![1, 2, 3];
+    let vec2 = vec![1, 2, 3];
+    check_facts(
+        vec1.clone(),
+        vec2.clone(),
+        FactBuilder::new()
+            .debug()
+            .equal_and(true)
+            .default()
+            .clone()
+            .build(),
+    );
+
+    let vec3 = vec!["hello".to_string(), "world".to_string()];
+    let vec4 = vec!["hello".to_string(), "world".to_string()];
+    check_facts(
+        vec3.clone(),
+        vec4.clone(),
+        FactBuilder::new()
+            .debug()
+            .equal_and(true)
+            .default()
+            .clone()
+            .build(),
+    );
+}
+
+#[test]
+fn test_hashmaps() {
+    use std::collections::HashMap;
+
+    // HashMap<String, i32> implements Debug, PartialEq, but not Ord
+    let mut map1 = HashMap::new();
+    map1.insert("key1".to_string(), 42);
+    map1.insert("key2".to_string(), 24);
+
+    let mut map2 = HashMap::new();
+    map2.insert("key3".to_string(), 100);
+    map2.insert("key4".to_string(), 200);
+
+    check_facts(
+        map1.clone(),
+        map2.clone(),
+        FactBuilder::new()
+            .debug()
+            .equal_and(false)
+            .default()
+            .clone()
+            .build(),
+    );
+
+    // Two pairs of equal HashMaps
+    let mut map3 = HashMap::new();
+    map3.insert("key1".to_string(), 10);
+    map3.insert("key2".to_string(), 20);
+
+    let mut map4 = HashMap::new();
+    map4.insert("key1".to_string(), 10);
+    map4.insert("key2".to_string(), 20);
+
+    check_facts(
+        map3.clone(),
+        map4.clone(),
+        FactBuilder::new()
+            .debug()
+            .equal_and(true)
+            .default()
+            .clone()
+            .build(),
+    );
+}
+
+#[test]
+fn test_custom_structs() {
+    // Struct with no trait implementations
+    #[derive(Facet)]
+    struct StructNoTraits {
+        value: i32,
+    }
+    check_facts(
+        StructNoTraits { value: 42 },
+        StructNoTraits { value: 24 },
+        FactBuilder::new().build(),
+    );
+
+    // Struct with Debug only
+    #[derive(Facet, Debug)]
+    struct StructDebug {
+        value: i32,
+    }
+    check_facts(
+        StructDebug { value: 42 },
+        StructDebug { value: 24 },
+        FactBuilder::new().debug().build(),
+    );
+
+    // Struct with Debug and PartialEq
+    #[derive(Facet, Debug, PartialEq)]
+    struct StructDebugEq {
+        value: i32,
+    }
+    check_facts(
+        StructDebugEq { value: 42 },
+        StructDebugEq { value: 24 },
+        FactBuilder::new().debug().equal_and(false).build(),
+    );
+
+    // Struct with all traits
+    #[derive(Facet, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+    struct StructAll {
+        value: i32,
+    }
+    check_facts(
+        StructAll { value: 42 },
+        StructAll { value: 24 },
+        FactBuilder::new()
+            .debug()
+            .equal_and(false)
+            .ord_and(Ordering::Greater)
+            .clone()
+            .build(),
+    );
+    check_facts(
+        StructAll { value: 10 },
+        StructAll { value: 90 },
+        FactBuilder::new()
+            .debug()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .clone()
+            .build(),
+    );
+    check_facts(
+        StructAll { value: 69 },
+        StructAll { value: 69 },
+        FactBuilder::new()
+            .debug()
+            .equal_and(true)
+            .ord_and(Ordering::Equal)
+            .clone()
+            .build(),
+    );
+}
+
+#[test]
+fn test_tuple_structs() {
+    // Tuple struct with no trait implementations
+    #[derive(Facet)]
+    #[allow(dead_code)]
+    struct TupleNoTraits(i32, String);
+    check_facts(
+        TupleNoTraits(42, "Hello".to_string()),
+        TupleNoTraits(24, "World".to_string()),
+        FactBuilder::new().build(),
+    );
+
+    // Tuple struct with Debug only
+    #[derive(Facet, Debug)]
+    #[allow(dead_code)]
+    struct TupleDebug(i32, String);
+    check_facts(
+        TupleDebug(42, "Hello".to_string()),
+        TupleDebug(24, "World".to_string()),
+        FactBuilder::new().debug().build(),
+    );
+
+    // Tuple struct with EQ only
+    #[derive(Facet, PartialEq)]
+    struct TupleEq(i32, String);
+    check_facts(
+        TupleEq(42, "Hello".to_string()),
+        TupleEq(24, "World".to_string()),
+        FactBuilder::new().equal_and(false).build(),
+    );
+
+    // Tuple struct with all traits
+    #[derive(Facet, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+    struct TupleAll(i32, String);
+    check_facts(
+        TupleAll(42, "Hello".to_string()),
+        TupleAll(24, "World".to_string()),
+        FactBuilder::new()
+            .debug()
+            .equal_and(false)
+            .ord_and(Ordering::Greater)
+            .clone()
+            .build(),
+    );
+}
+
+#[test]
+fn test_enums() {
+    #[derive(Facet, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+    #[repr(u8)]
+    enum TestEnum {
+        Variant1,
+        Variant2(i32),
+        Variant3 { field: String },
+    }
+
+    // Unit variant with equal values
+    check_facts(
+        TestEnum::Variant1,
+        TestEnum::Variant1,
+        FactBuilder::new()
+            .debug()
+            .equal_and(true)
+            .ord_and(Ordering::Equal)
+            .clone()
+            .build(),
+    );
+
+    // Tuple variant with different values
+    check_facts(
+        TestEnum::Variant2(42),
+        TestEnum::Variant2(24),
+        FactBuilder::new()
+            .debug()
+            .equal_and(false)
+            .ord_and(Ordering::Greater)
+            .clone()
+            .build(),
+    );
+
+    // Struct variant with different values
+    check_facts(
+        TestEnum::Variant3 {
+            field: "Hello".to_string(),
+        },
+        TestEnum::Variant3 {
+            field: "World".to_string(),
+        },
+        FactBuilder::new()
+            .debug()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .clone()
+            .build(),
+    );
+}
