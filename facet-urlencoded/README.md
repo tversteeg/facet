@@ -3,7 +3,7 @@
 <h1>
 <picture>
 <source srcset="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.webp">
-<img src="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.png" height="40" alt="Facet logo - a reflection library for Rust">
+<img src="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.png" height="30" alt="Facet logo - a reflection library for Rust">
 </picture> facet-urlencoded
 </h1>
 
