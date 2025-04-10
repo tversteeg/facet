@@ -41,6 +41,8 @@ jobs:
 
       - name: Setup cargo cache
         uses: Swatinem/rust-cache@v2
+        with:
+          cache-bin: false
 
       - name: Run miri
         run: just miri
