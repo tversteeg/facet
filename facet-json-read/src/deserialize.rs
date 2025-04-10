@@ -46,36 +46,53 @@ pub fn from_str_opaque<'input, 'mem>(
 }
 
 macro_rules! int {
-    ($parsed:expr, $pv:expr, $type:ty) => {
+    ($parser:expr, $parsed:expr, $pv:expr, $type:ty) => {
         if $pv.shape().is_type::<$type>() {
-            let n = $parsed? as $type;
+            let n = <$type>::try_from($parsed?).map_err(|e| {
+                $parser.make_error(JsonParseErrorKind::Custom(format!(
+                    "Invalid value for {}: {e}",
+                    stringify!($type)
+                )))
+            })?;
             return Ok($pv.put(n));
         }
 
         if $pv.shape().is_type::<NonZero<$type>>() {
-            let n = $parsed? as $type;
-            return Ok($pv.put(NonZero::new(n).expect("zero value")));
+            let n = <$type>::try_from($parsed?).map_err(|e| {
+                $parser.make_error(JsonParseErrorKind::Custom(format!(
+                    "Invalid value for core::num::NonZero<{}>: {e}",
+                    stringify!($type)
+                )))
+            })?;
+            let n = NonZero::new(n).ok_or_else(|| {
+                $parser.make_error(JsonParseErrorKind::Custom(format!(
+                    "Can't deserialize zero to core::num::NonZero<{}>",
+                    stringify!($type)
+                )))
+            })?;
+
+            return Ok($pv.put(n));
         }
     };
 }
 
 macro_rules! unsigneds {
     ($parser:expr, $pv:expr, $type:ty, $($types:ty),*) => {
-        int!($parser.parse_u64(), $pv, $type);
+        int!($parser, $parser.parse_u64(), $pv, $type);
         unsigneds!($parser, $pv, $($types),*);
     };
     ($parser:expr, $pv:expr, $type:ty) => {
-        int!($parser.parse_u64(), $pv, $type);
+        int!($parser, $parser.parse_u64(), $pv, $type);
     };
 }
 
 macro_rules! signeds {
     ($parser:expr, $pv:expr, $type:ty, $($types:ty),*) => {
-        int!($parser.parse_i64(), $pv, $type);
+        int!($parser, $parser.parse_i64(), $pv, $type);
         unsigneds!($parser, $pv, $($types),*);
     };
     ($parser:expr, $pv:expr, $type:ty) => {
-        int!($parser.parse_i64(), $pv, $type);
+        int!($parser, $parser.parse_i64(), $pv, $type);
     };
 }
 
