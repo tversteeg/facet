@@ -41,6 +41,11 @@ pub(crate) fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
                 }
             }
 
+            let mut attributes = vec![];
+            for attr in &field.value.attributes {
+                if let AttributeInner::Facet(inner) = &attr.body.content {}
+            }
+
             // Generate each field definition
             format!(
                 "facet::Field::builder()
@@ -48,6 +53,7 @@ pub(crate) fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
                 .shape(facet::shape_of(&|s: {struct_name}| s.{field_name}))
                 .offset(::core::mem::offset_of!({struct_name}, {field_name}))
                 .flags({flags})
+                .attributes({attributes})
                 .build()"
             )
         })

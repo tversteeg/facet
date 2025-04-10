@@ -342,7 +342,7 @@ pub struct Field {
     pub flags: FieldFlags,
 
     /// arbitrary attributes set via the derive macro
-    pub attributes: &'static [&'static str],
+    pub attributes: &'static [FieldAttribute],
 }
 
 impl Field {
@@ -358,7 +358,15 @@ pub struct FieldBuilder {
     shape: Option<&'static Shape>,
     offset: Option<usize>,
     flags: Option<FieldFlags>,
-    attributes: Option<&'static [&'static str]>,
+    attributes: &'static [FieldAttribute],
+}
+
+/// An attribute that can be set on a field
+#[non_exhaustive]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum FieldAttribute {
+    Sensitive,
+    Arbitrary(&'static str),
 }
 
 impl FieldBuilder {
@@ -370,7 +378,7 @@ impl FieldBuilder {
             shape: None,
             offset: None,
             flags: None,
-            attributes: None,
+            attributes: &[],
         }
     }
 
@@ -399,8 +407,8 @@ impl FieldBuilder {
     }
 
     /// Sets the attributes for the Field
-    pub const fn attributes(mut self, attributes: &'static [&'static str]) -> Self {
-        self.attributes = Some(attributes);
+    pub const fn attributes(mut self, attributes: &'static [FieldAttribute]) -> Self {
+        self.attributes = attributes;
         self
     }
 
@@ -414,10 +422,7 @@ impl FieldBuilder {
                 Some(flags) => flags,
                 None => FieldFlags::EMPTY,
             },
-            attributes: match self.attributes {
-                Some(attrs) => attrs,
-                None => &[],
-            },
+            attributes: self.attributes,
         }
     }
 }

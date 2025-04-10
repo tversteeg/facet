@@ -47,7 +47,7 @@ unsynn! {
 
     struct FacetAttr {
         _facet: KFacet,
-        _sensitive: ParenthesisGroupContaining<FacetInner>,
+        inner: ParenthesisGroupContaining<FacetInner>,
     }
 
     enum FacetInner {
