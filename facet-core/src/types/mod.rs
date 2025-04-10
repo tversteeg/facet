@@ -22,6 +22,9 @@ use crate::{Facet, shape_of, value_vtable};
 #[derive(Clone, Copy, Debug)]
 #[non_exhaustive]
 pub struct Shape {
+    /// Type ID
+    pub id: ConstTypeId,
+
     /// Size, alignment
     pub layout: Layout,
 
@@ -137,6 +140,7 @@ impl Shape {
 
 /// Builder for [`Shape`]
 pub struct ShapeBuilder {
+    id: Option<ConstTypeId>,
     layout: Option<Layout>,
     vtable: Option<&'static ValueVTable>,
     def: Option<Def>,
@@ -147,10 +151,18 @@ impl ShapeBuilder {
     #[allow(clippy::new_without_default)]
     pub const fn new() -> Self {
         Self {
+            id: None,
             layout: None,
             vtable: None,
             def: None,
         }
+    }
+
+    /// Sets the id field of the `ShapeBuilder`.
+    #[inline]
+    pub const fn id(mut self, id: ConstTypeId) -> Self {
+        self.id = Some(id);
+        self
     }
 
     /// Sets the `layout` field of the `ShapeBuilder`.
@@ -182,6 +194,7 @@ impl ShapeBuilder {
     #[inline]
     pub const fn build(self) -> Shape {
         Shape {
+            id: self.id.unwrap(),
             layout: self.layout.unwrap(),
             vtable: self.vtable.unwrap(),
             def: self.def.unwrap(),
@@ -804,6 +817,7 @@ unsafe impl Facet for ScalarDef {
             .build()];
 
         Shape::builder()
+            .id(ConstTypeId::of::<ScalarDef>())
             .layout(core::alloc::Layout::new::<Self>())
             .vtable(value_vtable!(ScalarDef, |f, _opts| f.write_str("ScalarDef")))
             .def(Def::Struct(

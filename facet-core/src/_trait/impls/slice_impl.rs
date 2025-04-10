@@ -7,6 +7,7 @@ where
 {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
+            .id(ConstTypeId::of::<&[T]>())
             .layout(Layout::new::<&[T]>())
             .def(Def::List(
                 ListDef::builder()

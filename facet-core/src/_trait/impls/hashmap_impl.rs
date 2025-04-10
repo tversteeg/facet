@@ -2,6 +2,8 @@ use core::{alloc::Layout, hash::Hash};
 use std::collections::{HashMap, VecDeque};
 use std::hash::RandomState;
 
+use typeid::ConstTypeId;
+
 use crate::opaque::{Opaque, OpaqueConst};
 
 use crate::{
@@ -22,6 +24,7 @@ where
 {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
+            .id(ConstTypeId::of::<HashMap<K, V, S>>())
             .layout(Layout::new::<HashMap<K, V>>())
             .vtable(
                 &const {
@@ -211,6 +214,7 @@ struct RandomStateInnards {
 unsafe impl Facet for RandomState {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
+            .id(ConstTypeId::of::<RandomState>())
             .layout(Layout::new::<Self>())
             .def(Def::Scalar(ScalarDef::of::<Self>()))
             .vtable(value_vtable!((), |f, _opts| write!(f, "RandomState")))

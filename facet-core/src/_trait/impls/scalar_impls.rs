@@ -7,6 +7,7 @@ use core::alloc::Layout;
 unsafe impl Facet for ConstTypeId {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
+            .id(ConstTypeId::of::<ConstTypeId>())
             .layout(Layout::new::<Self>())
             .def(Def::Scalar(ScalarDef::of::<Self>()))
             .vtable(value_vtable!((), |f, _opts| write!(f, "ConstTypeId")))
@@ -17,6 +18,7 @@ unsafe impl Facet for ConstTypeId {
 unsafe impl Facet for () {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
+            .id(ConstTypeId::of::<()>())
             .layout(Layout::new::<Self>())
             .def(Def::Scalar(ScalarDef::of::<Self>()))
             .vtable(value_vtable!((), |f, _opts| write!(f, "()")))
@@ -27,6 +29,7 @@ unsafe impl Facet for () {
 unsafe impl Facet for String {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
+            .id(ConstTypeId::of::<String>())
             .layout(Layout::new::<Self>())
             .def(Def::Scalar(ScalarDef::of::<Self>()))
             .vtable(value_vtable!(String, |f, _opts| write!(f, "String")))
@@ -37,6 +40,7 @@ unsafe impl Facet for String {
 unsafe impl Facet for &str {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
+            .id(ConstTypeId::of::<&str>())
             .layout(Layout::new::<Self>())
             .def(Def::Scalar(ScalarDef::of::<Self>()))
             .vtable(value_vtable!(&str, |f, _opts| write!(f, "&str")))
@@ -48,6 +52,7 @@ unsafe impl Facet for &str {
 unsafe impl Facet for std::borrow::Cow<'_, str> {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
+            .id(ConstTypeId::of::<std::borrow::Cow<'_, str>>())
             .layout(Layout::new::<Self>())
             .def(Def::Scalar(ScalarDef::of::<Self>()))
             .vtable(value_vtable!(std::borrow::Cow<'_, str>, |f, _opts| write!(
@@ -61,6 +66,7 @@ unsafe impl Facet for std::borrow::Cow<'_, str> {
 unsafe impl Facet for bool {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
+            .id(ConstTypeId::of::<bool>())
             .layout(Layout::new::<Self>())
             .def(Def::Scalar(ScalarDef::of::<Self>()))
             .vtable(value_vtable!(bool, |f, _opts| write!(f, "bool")))
@@ -73,6 +79,7 @@ macro_rules! impl_facet_for_integer {
         unsafe impl Facet for $type {
             const SHAPE: &'static Shape = &const {
                 Shape::builder()
+                    .id(ConstTypeId::of::<$type>())
                     .layout(Layout::new::<Self>())
                     .def(Def::Scalar(ScalarDef::of::<Self>()))
                     .vtable(value_vtable!($type, |f, _opts| write!(
@@ -103,6 +110,7 @@ macro_rules! impl_facet_for_float {
         unsafe impl Facet for $type {
             const SHAPE: &'static Shape = &const {
                 Shape::builder()
+                    .id(ConstTypeId::of::<$type>())
                     .layout(Layout::new::<Self>())
                     .def(Def::Scalar(ScalarDef::of::<Self>()))
                     .vtable(value_vtable!($type, |f, _opts| write!(
@@ -122,6 +130,7 @@ impl_facet_for_float!(f64);
 unsafe impl Facet for std::net::SocketAddr {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
+            .id(ConstTypeId::of::<Self>())
             .layout(Layout::new::<Self>())
             .def(Def::Scalar(ScalarDef::of::<Self>()))
             .vtable(value_vtable!(std::net::SocketAddr, |f, _opts| write!(

@@ -101,6 +101,7 @@ pub(crate) fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
 unsafe impl facet::Facet for {enum_name} {{
     const SHAPE: &'static facet::Shape = &const {{
         facet::Shape.builder()
+            .id(facet::ConstTypeId::of::<{enum_name}>())
             .layout(core::alloc::Layout::new::<Self>())
             .vtable(facet::value_vtable!(
                 {enum_name},

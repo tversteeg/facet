@@ -1,6 +1,8 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
+pub use typeid::ConstTypeId;
+
 // Opaque pointer utilities
 mod opaque;
 pub use opaque::*;

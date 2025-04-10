@@ -7,6 +7,7 @@ where
 {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
+            .id(ConstTypeId::of::<Vec<T>>())
             .layout(Layout::new::<Vec<T>>())
             .vtable(
                 &const {

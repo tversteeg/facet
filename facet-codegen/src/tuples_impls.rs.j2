@@ -6,7 +6,11 @@
 
 use std::{alloc::Layout, fmt};
 
-use crate::{Field, FieldFlags, Def, StructDef, StructKind, Shape, Facet, TypeNameOpts, ValueVTable, Characteristic, OpaqueConst, MarkerTraits};
+use crate::{
+    ConstTypeId, Field, FieldFlags, Def, StructDef,
+    StructKind, Shape, Facet, TypeNameOpts, ValueVTable,
+    Characteristic, OpaqueConst, MarkerTraits
+};
 
 #[inline(always)]
 pub fn write_type_name_list(
@@ -75,6 +79,7 @@ where
         }
 
         Shape::builder()
+            .id(ConstTypeId::of::<{{ type_name }}>())
             .layout(Layout::new::<{{ type_name }}>())
             .vtable(&const {
                 let mut builder = ValueVTable::builder()

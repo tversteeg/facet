@@ -30,6 +30,7 @@ pub(crate) fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStre
 unsafe impl facet::Facet for {struct_name} {{
     const SHAPE: &'static facet::Shape = &const {{
         facet::Shape::builder()
+            .id(facet::ConstTypeId::of::<{struct_name}>())
             .layout(core::alloc::Layout::new::<Self>())
             .vtable(facet::value_vtable!(
                 {struct_name},

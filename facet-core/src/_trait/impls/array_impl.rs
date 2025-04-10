@@ -1,3 +1,5 @@
+use typeid::ConstTypeId;
+
 use crate::*;
 use core::alloc::Layout;
 
@@ -7,6 +9,7 @@ where
 {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
+            .id(ConstTypeId::of::<[T; 1]>())
             .layout(Layout::new::<[T; 1]>())
             .vtable(
                 &const {

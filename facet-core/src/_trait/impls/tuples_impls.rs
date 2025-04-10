@@ -4,8 +4,8 @@
 use std::{alloc::Layout, fmt};
 
 use crate::{
-    Characteristic, Def, Facet, Field, FieldFlags, MarkerTraits, OpaqueConst, Shape, StructDef,
-    StructKind, TypeNameOpts, ValueVTable,
+    Characteristic, ConstTypeId, Def, Facet, Field, FieldFlags, MarkerTraits, OpaqueConst, Shape,
+    StructDef, StructKind, TypeNameOpts, ValueVTable,
 };
 
 #[inline(always)]
@@ -56,6 +56,7 @@ where
         }
 
         Shape::builder()
+            .id(ConstTypeId::of::<(T0,)>())
             .layout(Layout::new::<(T0,)>())
             .vtable(
                 &const {
@@ -118,6 +119,7 @@ where
         }
 
         Shape::builder()
+            .id(ConstTypeId::of::<(T0, T1)>())
             .layout(Layout::new::<(T0, T1)>())
             .vtable(
                 &const {
@@ -202,6 +204,7 @@ where
         }
 
         Shape::builder()
+            .id(ConstTypeId::of::<(T0, T1, T2)>())
             .layout(Layout::new::<(T0, T1, T2)>())
             .vtable(
                 &const {
@@ -323,6 +326,7 @@ where
         }
 
         Shape::builder()
+            .id(ConstTypeId::of::<(T0, T1, T2, T3)>())
             .layout(Layout::new::<(T0, T1, T2, T3)>())
             .vtable(
                 &const {
@@ -467,6 +471,7 @@ where
         }
 
         Shape::builder()
+            .id(ConstTypeId::of::<(T0, T1, T2, T3, T4)>())
             .layout(Layout::new::<(T0, T1, T2, T3, T4)>())
             .vtable(
                 &const {
@@ -650,6 +655,7 @@ where
         }
 
         Shape::builder()
+            .id(ConstTypeId::of::<(T0, T1, T2, T3, T4, T5)>())
             .layout(Layout::new::<(T0, T1, T2, T3, T4, T5)>())
             .vtable(
                 &const {
@@ -858,6 +864,7 @@ where
         }
 
         Shape::builder()
+            .id(ConstTypeId::of::<(T0, T1, T2, T3, T4, T5, T6)>())
             .layout(Layout::new::<(T0, T1, T2, T3, T4, T5, T6)>())
             .vtable(
                 &const {
@@ -1091,6 +1098,7 @@ where
         }
 
         Shape::builder()
+            .id(ConstTypeId::of::<(T0, T1, T2, T3, T4, T5, T6, T7)>())
             .layout(Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7)>())
             .vtable(
                 &const {
@@ -1350,6 +1358,7 @@ where
         }
 
         Shape::builder()
+            .id(ConstTypeId::of::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>())
             .layout(Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>())
             .vtable(
                 &const {
@@ -1635,6 +1644,7 @@ where
         }
 
         Shape::builder()
+            .id(ConstTypeId::of::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>())
             .layout(Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>())
             .vtable(
                 &const {
@@ -1948,6 +1958,19 @@ where
         }
 
         Shape::builder()
+            .id(ConstTypeId::of::<(
+                T0,
+                T1,
+                T2,
+                T3,
+                T4,
+                T5,
+                T6,
+                T7,
+                T8,
+                T9,
+                T10,
+            )>())
             .layout(Layout::new::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>())
             .vtable(
                 &const {
@@ -2288,6 +2311,20 @@ where
         }
 
         Shape::builder()
+            .id(ConstTypeId::of::<(
+                T0,
+                T1,
+                T2,
+                T3,
+                T4,
+                T5,
+                T6,
+                T7,
+                T8,
+                T9,
+                T10,
+                T11,
+            )>())
             .layout(Layout::new::<(
                 T0,
                 T1,
