@@ -28,13 +28,17 @@ impl Default for FooBar {
 fn build_foobar_through_reflection() {
     let (poke, guard) = Poke::alloc::<FooBar>();
     let mut poke = poke.into_struct();
-    poke.set_by_name("foo", OpaqueConst::from_ref(&42u64))
-        .unwrap();
+    unsafe {
+        poke.unchecked_set_by_name("foo", OpaqueConst::from_ref(&42u64))
+            .unwrap();
+    }
 
     {
         let bar = String::from("Hello, World!");
-        poke.set_by_name("bar", OpaqueConst::from_ref(&bar))
-            .unwrap();
+        unsafe {
+            poke.unchecked_set_by_name("bar", OpaqueConst::from_ref(&bar))
+                .unwrap();
+        }
         // bar has been moved out of
         core::mem::forget(bar);
     }
@@ -59,8 +63,10 @@ fn build_foobar_through_reflection() {
 fn build_foobar_incomplete() {
     let (poke, guard) = Poke::alloc::<FooBar>();
     let mut poke = poke.into_struct();
-    poke.set_by_name("foo", OpaqueConst::from_ref(&42u64))
-        .unwrap();
+    unsafe {
+        poke.unchecked_set_by_name("foo", OpaqueConst::from_ref(&42u64))
+            .unwrap();
+    }
 
     let foo_bar = poke.build::<FooBar>(Some(guard));
 
@@ -91,8 +97,10 @@ fn build_foobar_after_default() {
 
     {
         let bar = String::from("Hello, World!");
-        poke.set_by_name("bar", OpaqueConst::from_ref(&bar))
-            .unwrap();
+        unsafe {
+            poke.unchecked_set_by_name("bar", OpaqueConst::from_ref(&bar))
+                .unwrap();
+        }
         // bar has been moved out of
         core::mem::forget(bar);
     }

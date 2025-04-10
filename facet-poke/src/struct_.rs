@@ -171,14 +171,23 @@ impl<'mem> PokeStruct<'mem> {
         Ok(poke)
     }
 
-    /// Sets a field's value by its index.
+    /// Sets a field's value by its index, directly copying raw memory.
+    ///
+    /// # Safety
+    ///
+    /// This is unsafe because it directly copies memory without checking types.
+    /// The caller must ensure that `value` is of the correct type for the field.
     ///
     /// # Errors
     ///
     /// Returns an error if:
     /// - The index is out of bounds
     /// - The field shapes don't match
-    pub fn set(&mut self, index: usize, value: OpaqueConst) -> Result<(), FieldError> {
+    pub unsafe fn unchecked_set(
+        &mut self,
+        index: usize,
+        value: OpaqueConst,
+    ) -> Result<(), FieldError> {
         if index >= self.def.fields.len() {
             return Err(FieldError::IndexOutOfBounds);
         }
@@ -197,20 +206,77 @@ impl<'mem> PokeStruct<'mem> {
         Ok(())
     }
 
-    /// Sets a field's value by its name.
+    /// Sets a field's value by its name, directly copying raw memory.
+    ///
+    /// # Safety
+    ///
+    /// This is unsafe because it directly copies memory without checking types.
+    /// The caller must ensure that `value` is of the correct type for the field.
     ///
     /// # Errors
     ///
     /// Returns an error if:
     /// - The field name doesn't exist
     /// - The field shapes don't match
-    pub fn set_by_name(&mut self, name: &str, value: OpaqueConst) -> Result<(), FieldError> {
+    pub unsafe fn unchecked_set_by_name(
+        &mut self,
+        name: &str,
+        value: OpaqueConst,
+    ) -> Result<(), FieldError> {
         let index = self
             .def
             .fields
             .iter()
             .position(|f| f.name == name)
             .ok_or(FieldError::NoSuchStaticField)?;
+        unsafe { self.unchecked_set(index, value) }
+    }
+
+    /// Sets a field's value by its index in a type-safe manner.
+    ///
+    /// This method takes ownership of the value and ensures proper memory management.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The index is out of bounds
+    /// - The field shapes don't match
+    pub fn set<T: crate::Facet>(&mut self, index: usize, value: T) -> Result<(), FieldError> {
+        let field_shape = self
+            .def
+            .fields
+            .get(index)
+            .ok_or(FieldError::IndexOutOfBounds)?
+            .shape;
+        field_shape.assert_type::<T>();
+
+        unsafe {
+            let opaque = OpaqueConst::from_ref(&value);
+            let result = self.unchecked_set(index, opaque);
+            if result.is_ok() {
+                core::mem::forget(value);
+            }
+            result
+        }
+    }
+
+    /// Sets a field's value by its name in a type-safe manner.
+    ///
+    /// This method takes ownership of the value and ensures proper memory management.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The field name doesn't exist
+    /// - The field shapes don't match
+    pub fn set_by_name<T: crate::Facet>(&mut self, name: &str, value: T) -> Result<(), FieldError> {
+        let index = self
+            .def
+            .fields
+            .iter()
+            .position(|f| f.name == name)
+            .ok_or(FieldError::NoSuchStaticField)?;
+
         self.set(index, value)
     }
 
