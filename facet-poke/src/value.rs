@@ -96,7 +96,7 @@ impl<'mem> PokeValue<'mem> {
         unsafe {
             core::ptr::copy_nonoverlapping(
                 source.as_ptr(),
-                self.data.as_mut_ptr(),
+                self.data.as_mut_bytes(),
                 self.shape.layout.size(),
             );
             self.data.assume_init()
