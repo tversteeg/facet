@@ -42,37 +42,37 @@ impl<'mem> PeekEnum<'mem> {
 
     /// Returns the enum definition
     #[inline(always)]
-    pub fn def(&self) -> &EnumDef {
-        &self.def
+    pub fn def(self) -> EnumDef {
+        self.def
     }
 
     /// Returns the enum representation
     #[inline(always)]
-    pub fn repr(&self) -> EnumRepr {
+    pub fn repr(self) -> EnumRepr {
         self.def.repr
     }
 
     /// Returns the enum variants
     #[inline(always)]
-    pub fn variants(&self) -> &'static [Variant] {
+    pub fn variants(self) -> &'static [Variant] {
         self.def.variants
     }
 
     /// Returns the number of variants in this enum
     #[inline(always)]
-    pub fn variant_count(&self) -> usize {
+    pub fn variant_count(self) -> usize {
         self.def.variants.len()
     }
 
     /// Returns the variant name at the given index
     #[inline(always)]
-    pub fn variant_name(&self, index: usize) -> Option<&'static str> {
+    pub fn variant_name(self, index: usize) -> Option<&'static str> {
         self.def.variants.get(index).map(|variant| variant.name)
     }
 
     /// Returns the discriminant value for the current enum value
     #[inline]
-    pub fn discriminant(&self) -> i64 {
+    pub fn discriminant(self) -> i64 {
         // Read the discriminant based on the enum representation
         unsafe {
             let data = self.value.data();
@@ -107,7 +107,7 @@ impl<'mem> PeekEnum<'mem> {
 
     /// Returns the variant index for this enum value
     #[inline]
-    pub fn variant_index(&self) -> usize {
+    pub fn variant_index(self) -> usize {
         let discriminant = self.discriminant();
 
         // Find the variant with matching discriminant
@@ -128,25 +128,25 @@ impl<'mem> PeekEnum<'mem> {
 
     /// Returns the active variant
     #[inline]
-    pub fn active_variant(&self) -> &'static Variant {
+    pub fn active_variant(self) -> &'static Variant {
         let index = self.variant_index();
         &self.def.variants[index]
     }
 
     /// Returns the name of the active variant for this enum value
     #[inline]
-    pub fn variant_name_active(&self) -> &'static str {
+    pub fn variant_name_active(self) -> &'static str {
         self.active_variant().name
     }
 
     /// Returns the kind of the active variant (Unit, Tuple, Struct)
     #[inline]
-    pub fn variant_kind_active(&self) -> &'static VariantKind {
+    pub fn variant_kind_active(self) -> &'static VariantKind {
         &self.active_variant().kind
     }
 
     /// Returns a Peek handle to a field of a tuple or struct variant
-    pub fn field(&self, field_name: &str) -> Option<crate::Peek<'_>> {
+    pub fn field(self, field_name: &str) -> Option<crate::Peek<'mem>> {
         let variant = self.active_variant();
 
         match &variant.kind {
@@ -168,7 +168,7 @@ impl<'mem> PeekEnum<'mem> {
     }
 
     /// Returns a Peek handle to a field of a tuple variant by index
-    pub fn tuple_field(&self, index: usize) -> Option<crate::Peek<'_>> {
+    pub fn tuple_field(self, index: usize) -> Option<crate::Peek<'mem>> {
         let variant = self.active_variant();
 
         match &variant.kind {
@@ -186,7 +186,7 @@ impl<'mem> PeekEnum<'mem> {
     }
 
     /// Returns an iterator over fields of a struct or tuple variant
-    pub fn fields(&self) -> Box<dyn Iterator<Item = (&'static str, crate::Peek<'_>)> + '_> {
+    pub fn fields(self) -> Box<dyn Iterator<Item = (&'static str, crate::Peek<'mem>)> + 'mem> {
         let variant = self.active_variant();
         let data = self.value.data();
 

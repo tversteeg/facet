@@ -271,6 +271,57 @@ impl PrettyPrinter {
                             } else {
                                 write!(f, "{}", variant_name)?;
                             }
+
+                            // Process the variant fields based on the variant kind
+                            match enum_.variant_kind_active() {
+                                facet_core::VariantKind::Unit => {
+                                    // Unit variant has no fields, nothing more to print
+                                }
+                                facet_core::VariantKind::Tuple { .. } => {
+                                    // Tuple variant, print the fields like a tuple
+                                    self.write_punctuation(f, "(")?;
+
+                                    // Check if there are any fields to print
+                                    let has_fields = enum_.fields().count() > 0;
+
+                                    if !has_fields {
+                                        self.write_punctuation(f, ")")?;
+                                        continue;
+                                    }
+
+                                    writeln!(f)?;
+
+                                    // Push back item to process fields
+                                    item.state = StackState::ProcessStructField { field_index: 0 };
+                                    item.format_depth += 1;
+                                    item.type_depth = item.type_depth + 1;
+                                    stack.push_back(item);
+                                }
+                                facet_core::VariantKind::Struct { .. } => {
+                                    // Struct variant, print the fields like a struct
+                                    self.write_punctuation(f, " {")?;
+
+                                    // Check if there are any fields to print
+                                    let has_fields = enum_.fields().count() > 0;
+
+                                    if !has_fields {
+                                        self.write_punctuation(f, " }")?;
+                                        continue;
+                                    }
+
+                                    writeln!(f)?;
+
+                                    // Push back item to process fields
+                                    item.state = StackState::ProcessStructField { field_index: 0 };
+                                    item.format_depth += 1;
+                                    item.type_depth = item.type_depth + 1;
+                                    stack.push_back(item);
+                                }
+                                _ => {
+                                    // Other variant kinds that might be added in the future
+                                    write!(f, " /* unsupported variant kind */")?;
+                                }
+                            }
                         }
                         _ => {
                             write!(f, "unsupported peek variant: {:?}", item.peek)?;
@@ -278,6 +329,7 @@ impl PrettyPrinter {
                     }
                 }
                 StackState::ProcessStructField { field_index } => {
+                    // Handle both struct and enum fields
                     if let Peek::Struct(struct_) = item.peek {
                         let fields: Vec<_> = struct_.fields_with_metadata().collect();
 
@@ -343,6 +395,86 @@ impl PrettyPrinter {
                             stack.push_back(finish_item);
                             stack.push_back(start_item);
                         }
+                    } else if let Peek::Enum(enum_copy) = item.peek {
+                        // Handle enum fields
+                        // Make a clone of enum_copy to work with
+                        let enum_peek = enum_copy;
+
+                        // Determine if this is a tuple or struct variant
+                        let variant_kind = enum_peek.variant_kind_active();
+                        let is_tuple =
+                            matches!(variant_kind, facet_core::VariantKind::Tuple { .. });
+                        let is_struct =
+                            matches!(variant_kind, facet_core::VariantKind::Struct { .. });
+
+                        // Get all enum fields as a vector to avoid borrow issues
+                        let fields: Vec<(&str, Peek)> = enum_peek.fields().collect();
+
+                        // Check if we've processed all fields
+                        if field_index >= fields.len() {
+                            if is_tuple {
+                                // Close the tuple variant
+                                write!(
+                                    f,
+                                    "{:width$}{}",
+                                    "",
+                                    self.style_punctuation(")"),
+                                    width = (item.format_depth - 1) * self.indent_size
+                                )?;
+                            } else if is_struct {
+                                // Close the struct variant
+                                write!(
+                                    f,
+                                    "{:width$}{}",
+                                    "",
+                                    self.style_punctuation("}"),
+                                    width = (item.format_depth - 1) * self.indent_size
+                                )?;
+                            }
+                            continue;
+                        }
+
+                        // We know we have a field at this index
+                        let (field_name, field_peek) = &fields[field_index];
+
+                        // Indent
+                        write!(
+                            f,
+                            "{:width$}",
+                            "",
+                            width = item.format_depth * self.indent_size
+                        )?;
+
+                        // For struct variants, print the field name
+                        if is_struct {
+                            self.write_field_name(f, field_name)?;
+                            self.write_punctuation(f, ": ")?;
+                        }
+                        // For tuple variants, we just format the field value directly
+
+                        // Push current item back to continue processing remaining fields
+                        item.state = StackState::ProcessStructField {
+                            field_index: field_index + 1,
+                        };
+
+                        // Set up start and finish items for the field value
+                        let finish_item = StackItem {
+                            peek: *field_peek,
+                            format_depth: item.format_depth,
+                            type_depth: item.type_depth + 1,
+                            state: StackState::Finish,
+                        };
+                        let start_item = StackItem {
+                            peek: *field_peek,
+                            format_depth: item.format_depth,
+                            type_depth: item.type_depth + 1,
+                            state: StackState::Start,
+                        };
+
+                        // Push everything back onto the stack in the correct order
+                        stack.push_back(item);
+                        stack.push_back(finish_item);
+                        stack.push_back(start_item);
                     }
                 }
                 StackState::ProcessListItem { item_index } => {
