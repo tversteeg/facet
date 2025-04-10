@@ -21,11 +21,6 @@ pub unsafe trait Facet: Sized {
     /// The shape of this type
     const SHAPE: &'static Shape;
 
-    /// An instance of this type — which doesn't have to be valid, but it has to
-    /// "not be UB". We never actually read from it, or even actually use it for
-    /// dynamic dispatch, we only use it for inference tricks.
-    const ARCHETYPE: Self;
-
     /// Returns true if the type of `self` is equal to the type of `other`
     fn type_eq<Other: Facet>() -> bool {
         Self::SHAPE == Other::SHAPE

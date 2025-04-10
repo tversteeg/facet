@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Other
+
+- Removed `Facet::ARCHETYPE`
+
 ## [0.1.9](https://github.com/facet-rs/facet/compare/facet-derive-v0.1.8...facet-derive-v0.1.9) - 2025-04-10
 
 ### Other

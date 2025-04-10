@@ -63,9 +63,6 @@ unsafe impl<{{ type_list }}> Facet for {{ type_name }}
 where
     {{ where_predicates }}
 {
-    const ARCHETYPE: Self = (
-        {% for i in range(n) %}T{{ i }}::ARCHETYPE,{% endfor %}
-    );
     const SHAPE: &'static Shape = &const {
         fn type_name<{{ type_list }}>(
             f: &mut fmt::Formatter,
