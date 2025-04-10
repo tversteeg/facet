@@ -60,8 +60,11 @@ fn test_doc_comments_in_pretty_printing() {
     // Print the formatted struct with character markers for debugging
     let formatted_with_markers = formatted.replace(" ", "·");
     eprintln!("\n===== TestStruct with doc comments =====\n{}", formatted);
-    eprintln!("\n===== With visible spaces =====\n{}", formatted_with_markers);
-    
+    eprintln!(
+        "\n===== With visible spaces =====\n{}",
+        formatted_with_markers
+    );
+
     // Test with colors disabled
     let no_colors = PrettyPrinter::new().with_colors(false).format(&test_struct);
     eprintln!("\n===== Without colors =====\n{}", no_colors);
