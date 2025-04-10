@@ -2,7 +2,7 @@ use core::{alloc::Layout, hash::Hash};
 use std::collections::{HashMap, VecDeque};
 use std::hash::RandomState;
 
-use facet_opaque::{Opaque, OpaqueConst};
+use crate::opaque::{Opaque, OpaqueConst};
 
 use crate::{
     Def, Facet, MapDef, MapIterVTable, MapVTable, MarkerTraits, ScalarDef, Shape, ValueVTable,

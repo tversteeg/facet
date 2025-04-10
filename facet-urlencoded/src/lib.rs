@@ -1,8 +1,8 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
+use facet_core::{Facet, Opaque, OpaqueConst, ShapeExt};
 use facet_poke::Poke;
-use facet_trait::{Facet, Opaque, OpaqueConst, ShapeExt};
 use log::*;
 
 #[cfg(test)]

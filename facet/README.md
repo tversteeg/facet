@@ -4,7 +4,7 @@
 <picture>
 <source srcset="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.webp">
 <img src="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.png" height="35" alt="Facet logo - a reflection library for Rust">
-</picture> &nbsp facet
+</picture> &nbsp; facet
 </h1>
 
 [![experimental](https://img.shields.io/badge/status-experimental-yellow)](https://github.com/fasterthanlime/facet)
@@ -320,12 +320,12 @@ The core crates, `facet-trait`, `facet-types` etc. are nostd-friendly.
 
 The main `facet` crate re-exports symbols from:
 
-- [facet-trait](https://github.com/facet-rs/facet/tree/main/facet-trait), which defines the main `Facet` trait and implements it for foreign types (mostly `libstd`)
-- [facet-types](https://github.com/facet-rs/facet/tree/main/facet-types), which defines the `Shape` struct, along with various vtables and the whole `Def` tree
-- [facet-opaque](https://github.com/facet-rs/facet/tree/main/facet-opaque), which provides helpers around type-erased pointers like
-  `OpaqueUninit`, `OpaqueConst`, `Opaque`
+- [facet-core](https://github.com/facet-rs/facet/tree/main/facet-core), which defines the main components:
+  - The `Facet` trait and implementations for foreign types (mostly `libstd`)
+  - The `Shape` struct along with various vtables and the whole `Def` tree
+  - Type-erased pointer helpers like `OpaqueUninit`, `OpaqueConst`, and `Opaque`
+  - Autoderef specialization trick needed for `facet-derive`
 - [facet-derive](https://github.com/facet-rs/facet/tree/main/facet-derive), which implements the `Facet` derive attribute as a fast/light proc macro powered by [unsynn](https://docs.rs/unsynn)
-- [facet-spez](https://github.com/facet-rs/facet/tree/main/facet-spez), which implements an autoderef specialization trick needed for `facet-derive`
 - [facet-peek](https://github.com/facet-rs/facet/tree/main/facet-peek), which allows reading arbitrary `Facet` types
 - [facet-poke](https://github.com/facet-rs/facet/tree/main/facet-poke), which allows building/altering arbitrary `Facet` types
 

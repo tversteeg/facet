@@ -17,7 +17,7 @@ keywords = [
 categories = ["development-tools", "visualization", "command-line-utilities"]
 
 [dependencies]
-facet-trait.workspace = true
+facet-core.workspace = true
 facet-peek.workspace = true
 
 [dev-dependencies]

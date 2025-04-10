@@ -1,5 +1,5 @@
 use crate::PokeValue;
-use facet_trait::{MapDef, MapVTable, Opaque, OpaqueConst, OpaqueUninit, Shape};
+use facet_core::{MapDef, MapVTable, Opaque, OpaqueConst, OpaqueUninit, Shape};
 
 /// Allows initializing an uninitialized map
 pub struct PokeMapUninit<'mem> {

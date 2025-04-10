@@ -4,14 +4,14 @@
 <picture>
 <source srcset="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.webp">
 <img src="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.png" height="35" alt="Facet logo - a reflection library for Rust">
-</picture> &nbsp facet-opaque
+</picture> &nbsp; facet-core
 </h1>
 
 [![experimental](https://img.shields.io/badge/status-experimental-yellow)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/facet-opaque.svg)](https://crates.io/crates/facet-opaque)
-[![documentation](https://docs.rs/facet-opaque/badge.svg)](https://docs.rs/facet-opaque)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-opaque.svg)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/facet-core.svg)](https://crates.io/crates/facet-core)
+[![documentation](https://docs.rs/facet-core/badge.svg)](https://docs.rs/facet-core)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-core.svg)](./LICENSE)
 
 Thanks to all individual and corporate sponsors, without whom this work could not exist:
 
@@ -38,7 +38,14 @@ Thanks to all individual and corporate sponsors, without whom this work could no
 </a> </p>
              
 
-Provides helpers around type-erased pointers like `OpaqueUninit`, `OpaqueConst`, `Opaque` for Facet types.
+Defines the core types adn traits used throughout the facet ecosystem for runtime reflection:
+
+* `Facet`: exposes a `SHAPE` associated const
+* `Shape`: The central type that describes the memory layout and capabilities of a type
+* Various vtables that define how to manipulate types at runtime
+* The `Def` tree, which describes type definitions (structs, enums, etc.)
+
+This crate is foundational to facet's reflection capabilities, providing the type system that enables runtime type manipulation.
 
 
 ## License

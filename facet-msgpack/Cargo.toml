@@ -18,9 +18,8 @@ categories = ["encoding", "parsing", "data-structures"]
 
 [dependencies]
 log = "0.4.27"
-facet-trait.workspace = true
+facet-core.workspace = true
 facet-poke.workspace = true
-facet-types.workspace = true
 facet-peek.workspace = true
 [dev-dependencies]
 color-backtrace = "0.7.0"

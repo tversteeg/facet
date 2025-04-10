@@ -1,10 +1,7 @@
 #![warn(missing_docs)]
-#![doc = include_str!("../README.md")]
+#![doc = include_str!("../../README.md")]
 
-pub use facet_spez;
-
-pub use facet_opaque::*;
-pub use facet_types::*;
+pub use crate::types::*;
 
 mod impls;
 

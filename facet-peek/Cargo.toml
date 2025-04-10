@@ -11,8 +11,8 @@ keywords = ["reflection", "introspection", "reading", "facet"]
 categories = ["development-tools", "rust-patterns", "parsing"]
 
 [dependencies]
-facet-trait.workspace = true
+facet-core.workspace = true
 
 [features]
-std = ["facet-trait/std"]
+std = ["facet-core/std"]
 default = ["std"]

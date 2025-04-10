@@ -1,4 +1,3 @@
-use std::fs;
 use std::io::Write;
 use std::path::Path;
 use std::process;
@@ -17,7 +16,7 @@ fn check_diff(path: &Path, new_content: &[u8]) -> bool {
         return true;
     }
 
-    let old_content = fs::read(path).unwrap();
+    let old_content = fs_err::read(path).unwrap();
     if old_content != new_content {
         let old_str = String::from_utf8_lossy(&old_content);
         let new_str = String::from_utf8_lossy(new_content);
@@ -41,7 +40,7 @@ fn write_if_different(path: &Path, content: Vec<u8>, check_mode: bool) -> bool {
     if check_mode {
         check_diff(path, &content)
     } else {
-        fs::write(path, content).expect("Failed to write file");
+        fs_err::write(path, content).expect("Failed to write file");
         false
     }
 }
@@ -55,7 +54,7 @@ fn main() {
     // Check if current directory has a Cargo.toml with [workspace]
     let cargo_toml_path = std::env::current_dir().unwrap().join("Cargo.toml");
     let cargo_toml_content =
-        std::fs::read_to_string(cargo_toml_path).expect("Failed to read Cargo.toml");
+        fs_err::read_to_string(cargo_toml_path).expect("Failed to read Cargo.toml");
     if !cargo_toml_content.contains("[workspace]") {
         panic!(
             "Cargo.toml does not contain [workspace] (you must run codegen from the workspace root)"
@@ -81,7 +80,7 @@ fn generate_tuple_impls(has_diffs: &mut bool, opts: &Options) {
     // Load the template from file
     let template_path = "facet-codegen/src/tuples_impls.rs.j2";
     let template_content =
-        std::fs::read_to_string(template_path).expect("Failed to read template file");
+        fs_err::read_to_string(template_path).expect("Failed to read template file");
 
     // Add the template to the environment
     env.add_template("tuples_impls", &template_content)
@@ -122,14 +121,14 @@ fn generate_tuple_impls(has_diffs: &mut bool, opts: &Options) {
         std::process::exit(1);
     }
 
-    let path = Path::new("facet-trait/src/impls/tuples_impls.rs");
+    let path = Path::new("facet-core/src/_trait/impls/tuples_impls.rs");
     *has_diffs |= write_if_different(path, formatted_output.stdout, opts.check);
 }
 
 fn generate_readme_files(has_diffs: &mut bool, opts: &Options) {
     // Get all crate directories in the workspace
     let workspace_dir = std::env::current_dir().unwrap();
-    let entries = fs::read_dir(&workspace_dir).expect("Failed to read workspace directory");
+    let entries = fs_err::read_dir(&workspace_dir).expect("Failed to read workspace directory");
 
     // Create a new MiniJinja environment for README templates
     let mut env = Environment::empty();
@@ -142,7 +141,7 @@ fn generate_readme_files(has_diffs: &mut bool, opts: &Options) {
 <picture>
 <source srcset="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.webp">
 <img src="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.png" height="35" alt="Facet logo - a reflection library for Rust">
-</picture> &nbsp {0}
+</picture> &nbsp; {0}
 </h1>
 
 [![experimental](https://img.shields.io/badge/status-experimental-yellow)](https://github.com/fasterthanlime/facet)
@@ -279,7 +278,7 @@ fn process_readme_template(
         .to_string();
 
     // Read the template
-    let template_content = fs::read_to_string(template_path)
+    let template_content = fs_err::read_to_string(template_path)
         .unwrap_or_else(|_| panic!("Failed to read template file: {:?}", template_path));
 
     // Create a template ID

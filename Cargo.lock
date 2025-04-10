@@ -83,6 +83,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d902e3d592a523def97af8f317b08ce16b7ab854c1985a0c671e6f15cebc236"
 
 [[package]]
+name = "autocfg"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
+
+[[package]]
 name = "backtrace"
 version = "0.3.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -208,9 +214,8 @@ dependencies = [
 name = "facet"
 version = "0.1.9"
 dependencies = [
+ "facet-core",
  "facet-derive",
- "facet-spez",
- "facet-trait",
 ]
 
 [[package]]
@@ -221,9 +226,9 @@ dependencies = [
  "ctor",
  "env_logger",
  "facet",
+ "facet-core",
  "facet-poke",
  "facet-pretty",
- "facet-trait",
  "log",
 ]
 
@@ -231,15 +236,25 @@ dependencies = [
 name = "facet-codegen"
 version = "0.1.1"
 dependencies = [
+ "fs-err",
  "minijinja",
  "similar",
+]
+
+[[package]]
+name = "facet-core"
+version = "0.2.5"
+dependencies = [
+ "bitflags",
+ "impls",
+ "typeid",
 ]
 
 [[package]]
 name = "facet-derive"
 version = "0.1.9"
 dependencies = [
- "facet-trait",
+ "facet-core",
  "unsynn",
 ]
 
@@ -258,9 +273,9 @@ dependencies = [
  "color-backtrace",
  "ctor",
  "env_logger",
+ "facet-core",
  "facet-derive",
  "facet-poke",
- "facet-trait",
  "log",
 ]
 
@@ -271,10 +286,10 @@ dependencies = [
  "color-backtrace",
  "ctor",
  "env_logger",
+ "facet-core",
  "facet-derive",
  "facet-json-read",
  "facet-poke",
- "facet-trait",
  "log",
 ]
 
@@ -285,23 +300,18 @@ dependencies = [
  "color-backtrace",
  "ctor",
  "facet",
+ "facet-core",
  "facet-derive",
  "facet-peek",
  "facet-poke",
- "facet-trait",
- "facet-types",
  "log",
 ]
-
-[[package]]
-name = "facet-opaque"
-version = "0.1.6"
 
 [[package]]
 name = "facet-peek"
 version = "0.2.6"
 dependencies = [
- "facet-trait",
+ "facet-core",
 ]
 
 [[package]]
@@ -310,11 +320,11 @@ version = "0.2.3"
 dependencies = [
  "color-backtrace",
  "ctor",
+ "facet-core",
  "facet-derive",
  "facet-peek",
  "facet-pretty",
  "facet-samplelibc",
- "facet-trait",
  "owo-colors",
 ]
 
@@ -322,9 +332,9 @@ dependencies = [
 name = "facet-pretty"
 version = "0.1.4"
 dependencies = [
+ "facet-core",
  "facet-derive",
  "facet-peek",
- "facet-trait",
 ]
 
 [[package]]
@@ -336,39 +346,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "facet-spez"
-version = "0.1.7"
-dependencies = [
- "facet-opaque",
- "facet-types",
- "impls",
-]
-
-[[package]]
-name = "facet-trait"
-version = "0.2.5"
-dependencies = [
- "facet-opaque",
- "facet-spez",
- "facet-types",
-]
-
-[[package]]
-name = "facet-types"
-version = "0.2.4"
-dependencies = [
- "bitflags",
- "facet-opaque",
- "typeid",
-]
-
-[[package]]
 name = "facet-urlencoded"
 version = "0.1.4"
 dependencies = [
+ "facet-core",
  "facet-derive",
  "facet-poke",
- "facet-trait",
  "form_urlencoded",
  "log",
 ]
@@ -377,9 +360,9 @@ dependencies = [
 name = "facet-yaml"
 version = "0.1.4"
 dependencies = [
+ "facet-core",
  "facet-derive",
  "facet-poke",
- "facet-trait",
  "yaml-rust2",
 ]
 
@@ -396,6 +379,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e13624c2627564efccf4934284bdd98cbaa14e79b0b5a141218e507b3a823456"
 dependencies = [
  "percent-encoding",
+]
+
+[[package]]
+name = "fs-err"
+version = "3.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f89bda4c2a21204059a977ed3bfe746677dfd137b83c339e702b0ac91d482aa"
+dependencies = [
+ "autocfg",
 ]
 
 [[package]]

@@ -12,7 +12,7 @@ categories = ["development-tools", "parsing"]
 
 [dependencies]
 facet-poke.workspace = true
-facet-trait.workspace = true
+facet-core.workspace = true
 log = "0.4.27"
 
 [dev-dependencies]

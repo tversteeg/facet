@@ -7,16 +7,14 @@ members = [
     "facet-json-read",
     "facet-json-write",
     "facet-msgpack",
-    "facet-opaque",
     "facet-peek",
     "facet-poke",
     "facet-pretty",
     "facet-samplelibc",
-    "facet-spez",
-    "facet-trait",
-    "facet-types",
     "facet-yaml",
-    "facet-urlencoded", "facet-args",
+    "facet-urlencoded",
+    "facet-args",
+    "facet-core",
 ]
 resolver = "3"
 
@@ -30,12 +28,9 @@ repository = "https://github.com/facet-rs/facet"
 
 [workspace.dependencies]
 facet = { version = "0.1.9", path = "facet" }
-facet-trait = { version = "0.2.5", path = "facet-trait" }
 facet-derive = { version = "0.1.9", path = "facet-derive" }
-facet-opaque = { version = "0.1.6", path = "facet-opaque" }
 facet-peek = { version = "0.2.6", path = "facet-peek" }
 facet-poke = { version = "0.2.3", path = "facet-poke" }
-facet-spez = { version = "0.1.7", path = "facet-spez" }
-facet-types = { version = "0.2.4", path = "facet-types" }
+facet-core = { version = "0.2.5", path = "facet-core" }
 facet-samplelibc = { version = "0.1.5", path = "facet-samplelibc" }
 unsynn = "0.0.25"

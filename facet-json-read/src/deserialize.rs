@@ -1,7 +1,7 @@
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
 
+use facet_core::{Facet, Opaque, OpaqueConst, OpaqueUninit, ShapeExt as _};
 use facet_poke::Poke;
-use facet_trait::{Facet, Opaque, OpaqueConst, OpaqueUninit, ShapeExt as _};
 use log::trace;
 
 /// Deserializes a JSON string into a value of type `T` that implements `Facet`.

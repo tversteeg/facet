@@ -1,10 +1,14 @@
-#![warn(missing_docs)]
-#![doc = include_str!("../README.md")]
+//! Auto-deref specialization helpers for the Facet reflection system
+//!
+//! This module provides traits and implementations that allow for specialization
+//! based on what traits a type implements, without requiring the unstable
+//! `specialization` feature.
+
+use crate::types::ParseError;
 pub use ::impls::impls;
 use core::fmt::{self, Debug};
-use facet_types::ParseError;
 
-use facet_opaque::{Opaque, OpaqueUninit};
+use crate::opaque::{Opaque, OpaqueUninit};
 
 /// A wrapper type used for auto-deref specialization.
 ///

@@ -1,4 +1,4 @@
-use facet_trait::StructDef;
+use facet_core::StructDef;
 
 use crate::{Peek, PeekValue};
 
@@ -76,7 +76,7 @@ impl<'mem> PeekStruct<'mem> {
     #[inline]
     pub fn fields_with_metadata(
         &self,
-    ) -> impl Iterator<Item = (usize, &'static str, Peek<'mem>, facet_trait::FieldFlags)> + '_ {
+    ) -> impl Iterator<Item = (usize, &'static str, Peek<'mem>, facet_core::FieldFlags)> + '_ {
         (0..self.field_count()).filter_map(|i| {
             let name = self.field_name(i)?;
             let value = self.field_value(i)?;

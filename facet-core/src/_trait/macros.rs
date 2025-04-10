@@ -150,9 +150,9 @@ macro_rules! enum_variants {
 /// # Example
 ///
 /// ```
-/// use facet_trait::value_vtable;
+/// use facet_core::value_vtable;
 /// use core::fmt::{self, Formatter};
-/// use facet_types::TypeNameOpts;
+/// use facet_core::TypeNameOpts;
 ///
 /// let vtable = value_vtable!(String, |f: &mut Formatter<'_>, _opts: TypeNameOpts| write!(f, "String"));
 /// ```
@@ -168,87 +168,87 @@ macro_rules! value_vtable {
                 .type_name($type_name_fn)
                 .drop_in_place(|data| unsafe { data.drop_in_place::<$type_name>() });
 
-            if $crate::facet_spez::impls!($type_name: core::fmt::Display) {
+            if $crate::spez::impls!($type_name: core::fmt::Display) {
                 builder = builder.display(|data, f| {
-                    use $crate::facet_spez::*;
+                    use $crate::spez::*;
                     (&&Spez(unsafe { data.as_ref::<$type_name>() })).spez_display(f)
                 });
             }
 
-            if $crate::facet_spez::impls!($type_name: core::fmt::Debug) {
+            if $crate::spez::impls!($type_name: core::fmt::Debug) {
                 builder = builder.debug(|data, f| {
-                    use $crate::facet_spez::*;
+                    use $crate::spez::*;
                     (&&Spez(unsafe { data.as_ref::<$type_name>() })).spez_debug(f)
                 });
             }
 
-            if $crate::facet_spez::impls!($type_name: core::default::Default) {
+            if $crate::spez::impls!($type_name: core::default::Default) {
                 builder = builder.default_in_place(|target| {
-                    use $crate::facet_spez::*;
+                    use $crate::spez::*;
                     (&&Spez(<$type_name as $crate::Facet>::ARCHETYPE)).spez_default_in_place(target)
                 });
             }
 
-            if $crate::facet_spez::impls!($type_name: core::clone::Clone) {
+            if $crate::spez::impls!($type_name: core::clone::Clone) {
                 builder = builder.clone_into(|src, dst| {
-                    use $crate::facet_spez::*;
+                    use $crate::spez::*;
                     (&&Spez(unsafe { src.as_ref::<$type_name>() })).spez_clone_into(dst)
                 });
             }
 
             {
                 let mut traits = $crate::MarkerTraits::empty();
-                if $crate::facet_spez::impls!($type_name: core::cmp::Eq) {
+                if $crate::spez::impls!($type_name: core::cmp::Eq) {
                     traits = traits.union($crate::MarkerTraits::EQ);
                 }
-                if $crate::facet_spez::impls!($type_name: core::marker::Send) {
+                if $crate::spez::impls!($type_name: core::marker::Send) {
                     traits = traits.union($crate::MarkerTraits::SEND);
                 }
-                if $crate::facet_spez::impls!($type_name: core::marker::Sync) {
+                if $crate::spez::impls!($type_name: core::marker::Sync) {
                     traits = traits.union($crate::MarkerTraits::SYNC);
                 }
-                if $crate::facet_spez::impls!($type_name: core::marker::Copy) {
+                if $crate::spez::impls!($type_name: core::marker::Copy) {
                     traits = traits.union($crate::MarkerTraits::COPY);
                 }
                 builder = builder.marker_traits(traits);
             }
 
-            if $crate::facet_spez::impls!($type_name: core::cmp::PartialEq) {
+            if $crate::spez::impls!($type_name: core::cmp::PartialEq) {
                 builder = builder.eq(|left, right| {
-                    use $crate::facet_spez::*;
+                    use $crate::spez::*;
                     (&&Spez(unsafe { left.as_ref::<$type_name>() }))
                         .spez_eq(&&Spez(unsafe { right.as_ref::<$type_name>() }))
                 });
             }
 
-            if $crate::facet_spez::impls!($type_name: core::cmp::PartialOrd) {
+            if $crate::spez::impls!($type_name: core::cmp::PartialOrd) {
                 builder = builder.partial_ord(|left, right| {
-                    use $crate::facet_spez::*;
+                    use $crate::spez::*;
                     (&&Spez(unsafe { left.as_ref::<$type_name>() }))
                         .spez_partial_cmp(&&Spez(unsafe { right.as_ref::<$type_name>() }))
                 });
             }
 
-            if $crate::facet_spez::impls!($type_name: core::cmp::Ord) {
+            if $crate::spez::impls!($type_name: core::cmp::Ord) {
                 builder = builder.ord(|left, right| {
-                    use $crate::facet_spez::*;
+                    use $crate::spez::*;
                     (&&Spez(unsafe { left.as_ref::<$type_name>() }))
                         .spez_cmp(&&Spez(unsafe { right.as_ref::<$type_name>() }))
                 });
             }
 
-            if $crate::facet_spez::impls!($type_name: core::hash::Hash) {
+            if $crate::spez::impls!($type_name: core::hash::Hash) {
                 builder = builder.hash(|value, hasher_this, hasher_write_fn| {
-                    use $crate::facet_spez::*;
+                    use $crate::spez::*;
                     use $crate::HasherProxy;
                     (&&Spez(unsafe { value.as_ref::<$type_name>() }))
                         .spez_hash(&mut unsafe { HasherProxy::new(hasher_this, hasher_write_fn) })
                 });
             }
 
-            if $crate::facet_spez::impls!($type_name: core::str::FromStr) {
+            if $crate::spez::impls!($type_name: core::str::FromStr) {
                 builder = builder.parse(|s, target| {
-                    use $crate::facet_spez::*;
+                    use $crate::spez::*;
                     let res = (&&Spez(<$type_name as $crate::Facet>::ARCHETYPE)).spez_parse(s, target);
                     res.map(|_| unsafe { target.assume_init() })
                 });

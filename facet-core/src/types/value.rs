@@ -1,6 +1,6 @@
+use crate::opaque::{Opaque, OpaqueConst, OpaqueUninit};
 use bitflags::bitflags;
 use core::cmp::Ordering;
-use facet_opaque::{Opaque, OpaqueConst, OpaqueUninit};
 
 use crate::Shape;
 

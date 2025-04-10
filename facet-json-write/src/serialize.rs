@@ -1,5 +1,5 @@
+use facet_core::ShapeExt as _;
 use facet_poke::{Peek, PeekValue};
-use facet_trait::ShapeExt as _;
 use std::collections::VecDeque;
 use std::io::{self, Write};
 

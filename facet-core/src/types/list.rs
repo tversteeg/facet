@@ -1,4 +1,4 @@
-use facet_opaque::{Opaque, OpaqueConst, OpaqueUninit};
+use crate::opaque::{Opaque, OpaqueConst, OpaqueUninit};
 
 /// Initialize a list in place with a given capacity
 ///

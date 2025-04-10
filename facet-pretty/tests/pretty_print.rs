@@ -1,9 +1,9 @@
+use facet_core::Facet;
 use facet_derive::Facet;
-use facet_trait::Facet;
 
 use core::fmt::Write;
+use facet_core as facet;
 use facet_pretty::{FacetPretty, PrettyPrinter};
-use facet_trait as facet;
 
 #[derive(Debug, Facet)]
 struct Person {

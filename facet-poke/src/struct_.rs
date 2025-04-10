@@ -1,5 +1,5 @@
 use core::ptr::NonNull;
-use facet_trait::{FieldError, Opaque, OpaqueConst, OpaqueUninit, Shape, ShapeExt as _, StructDef};
+use facet_core::{FieldError, Opaque, OpaqueConst, OpaqueUninit, Shape, ShapeExt as _, StructDef};
 
 use super::{Guard, ISet, PokeValue};
 

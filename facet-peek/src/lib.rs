@@ -3,7 +3,7 @@
 
 //! Allows peeking (reading from) shapes
 
-use facet_trait::{Facet, TypeNameOpts};
+use facet_core::{Facet, TypeNameOpts};
 
 mod value;
 pub use value::*;
@@ -17,7 +17,7 @@ pub use list::*;
 mod map;
 pub use map::*;
 
-use facet_trait::{Def, OpaqueConst, Shape};
+use facet_core::{Def, OpaqueConst, Shape};
 
 /// Lets you peek at the innards of a value
 ///

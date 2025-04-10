@@ -11,14 +11,11 @@ keywords = ["facet", "introspection", "reflection"]
 categories = ["development-tools"]
 
 [dependencies]
-facet-trait.workspace = true
+facet-core.workspace = true
 facet-derive.workspace = true
 
 [features]
 # Does nothing, only used for tests
 testfeat = []
-std = ["facet-trait/std"]
+std = ["facet-core/std"]
 default = ["std"]
-
-[dev-dependencies]
-facet-spez = { path = "../facet-spez" }
