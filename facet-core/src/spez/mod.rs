@@ -94,10 +94,15 @@ pub trait SpezDefaultInPlaceYes {
     ///
     /// This method is called when the wrapped type implements `Default`.
     /// It writes the default value into the provided uninitialized memory.
-    fn spez_default_in_place<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem>;
+    ///
+    /// # Safety
+    ///
+    /// This function operates on uninitialized memory and requires that `target`
+    /// has sufficient space allocated for type `T`.
+    unsafe fn spez_default_in_place<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem>;
 }
 impl<T: Default> SpezDefaultInPlaceYes for &Spez<T> {
-    fn spez_default_in_place<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem> {
+    unsafe fn spez_default_in_place<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem> {
         unsafe { target.write(<T as Default>::default()) }
     }
 }
@@ -108,10 +113,15 @@ pub trait SpezDefaultInPlaceNo {
     ///
     /// This method is used as a fallback and is designed to be unreachable in practice.
     /// It's only selected when the wrapped type doesn't implement `Default`.
-    fn spez_default_in_place<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem>;
+    ///
+    /// # Safety
+    ///
+    /// This function is marked unsafe as it deals with uninitialized memory,
+    /// but it should never be reachable in practice.
+    unsafe fn spez_default_in_place<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem>;
 }
 impl<T> SpezDefaultInPlaceNo for Spez<T> {
-    fn spez_default_in_place<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem> {
+    unsafe fn spez_default_in_place<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem> {
         unreachable!()
     }
 }
@@ -126,10 +136,15 @@ pub trait SpezCloneIntoYes {
     ///
     /// This method is called when the wrapped type implements `Clone`.
     /// It creates a clone of the inner value and writes it into the target memory.
-    fn spez_clone_into<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem>;
+    ///
+    /// # Safety
+    ///
+    /// This function operates on uninitialized memory and requires that `target`
+    /// has sufficient space allocated for type `T`.
+    unsafe fn spez_clone_into<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem>;
 }
 impl<T: Clone> SpezCloneIntoYes for &Spez<T> {
-    fn spez_clone_into<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem> {
+    unsafe fn spez_clone_into<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem> {
         unsafe { target.write(self.0.clone()) }
     }
 }
@@ -140,10 +155,15 @@ pub trait SpezCloneIntoNo {
     ///
     /// This method is used as a fallback and is designed to be unreachable in practice.
     /// It's only selected when the wrapped type doesn't implement `Clone`.
-    fn spez_clone_into<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem>;
+    ///
+    /// # Safety
+    ///
+    /// This function is marked unsafe as it deals with uninitialized memory,
+    /// but it should never be reachable in practice.
+    unsafe fn spez_clone_into<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem>;
 }
 impl<T> SpezCloneIntoNo for Spez<T> {
-    fn spez_clone_into<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem> {
+    unsafe fn spez_clone_into<'mem>(&self, _target: OpaqueUninit<'mem>) -> Opaque<'mem> {
         unreachable!()
     }
 }
@@ -158,10 +178,15 @@ pub trait SpezParseYes {
     ///
     /// This method is called when the wrapped type implements `FromStr`.
     /// It attempts to parse the provided string and write the result into the target memory.
-    fn spez_parse(&self, s: &str, target: OpaqueUninit) -> Result<(), ParseError>;
+    ///
+    /// # Safety
+    ///
+    /// This function operates on uninitialized memory and requires that `target`
+    /// has sufficient space allocated for type `T`.
+    unsafe fn spez_parse(&self, s: &str, target: OpaqueUninit) -> Result<(), ParseError>;
 }
 impl<T: core::str::FromStr> SpezParseYes for &Spez<T> {
-    fn spez_parse(&self, s: &str, target: OpaqueUninit) -> Result<(), ParseError> {
+    unsafe fn spez_parse(&self, s: &str, target: OpaqueUninit) -> Result<(), ParseError> {
         match <T as core::str::FromStr>::from_str(s) {
             Ok(value) => {
                 unsafe { target.write(value) };
@@ -180,10 +205,15 @@ pub trait SpezParseNo {
     ///
     /// This method is used as a fallback and is designed to be unreachable in practice.
     /// It's only selected when the wrapped type doesn't implement `FromStr`.
-    fn spez_parse(&self, _s: &str, _target: OpaqueUninit) -> Result<(), ParseError>;
+    ///
+    /// # Safety
+    ///
+    /// This function is marked unsafe as it deals with uninitialized memory,
+    /// but it should never be reachable in practice.
+    unsafe fn spez_parse(&self, _s: &str, _target: OpaqueUninit) -> Result<(), ParseError>;
 }
 impl<T> SpezParseNo for Spez<T> {
-    fn spez_parse(&self, _s: &str, _target: OpaqueUninit) -> Result<(), ParseError> {
+    unsafe fn spez_parse(&self, _s: &str, _target: OpaqueUninit) -> Result<(), ParseError> {
         unreachable!()
     }
 }
