@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2](https://github.com/facet-rs/facet/compare/facet-trait-v0.2.1...facet-trait-v0.2.2) - 2025-04-10
+
+### Other
+
+- updated the following local packages: facet-opaque, facet-types, facet-spez
+
 ## [0.2.1](https://github.com/facet-rs/facet/compare/facet-trait-v0.2.0...facet-trait-v0.2.1) - 2025-04-09
 
 ### Other
