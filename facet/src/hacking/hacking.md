@@ -106,8 +106,8 @@ fn create_array_shape<T: Facet>() {
                 let b = unsafe { b.as_ref::<[T; 1]>() };
                 unsafe {
                     (T::SHAPE.vtable.partial_ord.unwrap_unchecked())(
-                        OpaqueConst::from_ref(&a[0]),
-                        OpaqueConst::from_ref(&b[0]),
+                        OpaqueConst::new(&a[0]),
+                        OpaqueConst::new(&b[0]),
                     )
                 }
             })
