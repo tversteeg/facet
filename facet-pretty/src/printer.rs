@@ -215,24 +215,21 @@ impl PrettyPrinter {
                                     item.type_depth + 1 // Different pointer, increment type_depth
                                 };
 
-                            // Print the struct name
-                            self.write_type_name(f, &struct_)?;
-
                             // Get struct doc comments from the shape
                             let doc_comments = struct_.shape().doc;
                             if !doc_comments.is_empty() {
-                                writeln!(f)?;
                                 for line in doc_comments {
-                                    write!(f, "  ")?;
-                                    self.write_comment(f, &format!("/// {}", line))?;
+                                    self.write_comment(f, &format!("///{}", line))?;
                                     writeln!(f)?;
                                 }
                             }
 
-                            self.write_punctuation(f, "{")?;
+                            // Print the struct name
+                            self.write_type_name(f, &struct_)?;
+                            self.write_punctuation(f, " {")?;
 
                             if struct_.field_count() == 0 {
-                                self.write_punctuation(f, " }")?;
+                                self.write_punctuation(f, "}")?;
                                 continue;
                             }
 
@@ -304,34 +301,29 @@ impl PrettyPrinter {
                                     item.type_depth + 1 // Different pointer, increment type_depth
                                 };
 
-                            // Print the enum name
-                            self.write_type_name(f, &enum_)?;
-
-                            // Get enum doc comments from the shape
-                            let doc_comments = enum_.shape().doc;
-                            if !doc_comments.is_empty() {
-                                writeln!(f)?;
-                                for line in doc_comments {
-                                    write!(f, "  ")?;
-                                    self.write_comment(f, &format!("/// {}", line))?;
-                                    writeln!(f)?;
-                                }
-                                // No need to re-print the enum name
-                            }
-
-                            self.write_punctuation(f, "::")?;
-
-                            // Get the active variant to access its doc comments
+                            // Get the active variant
                             let variant = enum_.active_variant();
 
-                            // Output variant doc comments before the variant name
-                            if !variant.doc.is_empty() {
+                            // Get enum and variant doc comments
+                            let doc_comments = enum_.shape().doc;
+
+                            // Display doc comments before the type name
+                            for line in doc_comments {
+                                self.write_comment(f, &format!("///{}", line))?;
                                 writeln!(f)?;
-                                for line in variant.doc {
-                                    self.write_comment(f, &format!("/// {}", line))?;
-                                    writeln!(f)?;
-                                }
                             }
+
+                            // Show variant docs
+                            for line in variant.doc {
+                                self.write_comment(f, &format!("///{}", line))?;
+                                writeln!(f)?;
+                            }
+
+                            // Print the enum name and separator
+                            self.write_type_name(f, &enum_)?;
+                            self.write_punctuation(f, "::")?;
+
+                            // Variant docs are already handled above
 
                             // Get the active variant name
                             let variant_name = enum_.variant_name_active();
@@ -418,24 +410,24 @@ impl PrettyPrinter {
 
                         let (_, field_name, field_value, field) = &fields[field_index];
 
-                        // Indent
-                        write!(
-                            f,
-                            "{:width$}",
-                            "",
-                            width = item.format_depth * self.indent_size
-                        )?;
+                        // Define consistent indentation
+                        let field_indent = "  "; // Use 2 spaces for all fields
 
                         // Field doc comment
                         if !field.doc.is_empty() {
-                            writeln!(f)?;
-                            for line in field.doc {
-                                write!(f, "{:width$}", "", width = item.format_depth * self.indent_size)?;
-                                self.write_comment(f, &format!("/// {}", line))?;
+                            // Only add new line if not the first field
+                            if field_index > 0 {
                                 writeln!(f)?;
                             }
-                            // Rewrite indentation after doc comments
-                            write!(f, "{:width$}", "", width = item.format_depth * self.indent_size)?;
+                            // Hard-code consistent indentation for doc comments
+                            for line in field.doc {
+                                // Use exactly the same indentation as fields (2 spaces)
+                                write!(f, "{}", field_indent)?;
+                                self.write_comment(f, &format!("///{}", line))?;
+                                writeln!(f)?;
+                            }
+                            // Rewrite indentation after doc comments with consistent spacing
+                            write!(f, "{}", field_indent)?;
                         }
 
                         // Field name
@@ -515,24 +507,23 @@ impl PrettyPrinter {
                         // Get the current field with metadata
                         let (_, field_name, field_peek, field) = fields[field_index];
 
-                        // Add indentation
-                        write!(
-                            f,
-                            "{:width$}",
-                            "",
-                            width = item.format_depth * self.indent_size
-                        )?;
+                        // Define consistent indentation
+                        let field_indent = "  "; // Use 2 spaces for all fields
 
                         // Add field doc comments if available
                         if !field.doc.is_empty() {
-                            writeln!(f)?;
+                            // Only add new line if not the first field
+                            if field_index > 0 {
+                                writeln!(f)?;
+                            }
                             for line in field.doc {
-                                write!(f, "{:width$}", "", width = item.format_depth * self.indent_size)?;
-                                self.write_comment(f, &format!("/// {}", line))?;
+                                // Hard-code consistent indentation (2 spaces)
+                                write!(f, "  ")?;
+                                self.write_comment(f, &format!("///{}", line))?;
                                 writeln!(f)?;
                             }
                             // Rewrite indentation after doc comments
-                            write!(f, "{:width$}", "", width = item.format_depth * self.indent_size)?;
+                            write!(f, "{}", field_indent)?;
                         }
 
                         // For struct variants, print field name
