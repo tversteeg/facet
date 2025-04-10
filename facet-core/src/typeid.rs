@@ -13,6 +13,7 @@ use core::mem;
 
 /// TypeId equivalent usable in const contexts.
 #[derive(Copy, Clone)]
+#[repr(C)]
 pub struct ConstTypeId {
     type_id_fn: fn() -> TypeId,
 }
