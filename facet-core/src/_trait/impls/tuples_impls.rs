@@ -47,7 +47,6 @@ unsafe impl<T0> Facet for (T0,)
 where
     T0: Facet,
 {
-    const ARCHETYPE: Self = (T0::ARCHETYPE,);
     const SHAPE: &'static Shape = &const {
         fn type_name<T0>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result
         where
@@ -108,7 +107,6 @@ where
     T0: Facet,
     T1: Facet,
 {
-    const ARCHETYPE: Self = (T0::ARCHETYPE, T1::ARCHETYPE);
     const SHAPE: &'static Shape = &const {
         fn type_name<T0, T1>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result
         where
@@ -188,7 +186,6 @@ where
     T1: Facet,
     T2: Facet,
 {
-    const ARCHETYPE: Self = (T0::ARCHETYPE, T1::ARCHETYPE, T2::ARCHETYPE);
     const SHAPE: &'static Shape = &const {
         fn type_name<T0, T1, T2>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result
         where
@@ -295,7 +292,6 @@ where
     T2: Facet,
     T3: Facet,
 {
-    const ARCHETYPE: Self = (T0::ARCHETYPE, T1::ARCHETYPE, T2::ARCHETYPE, T3::ARCHETYPE);
     const SHAPE: &'static Shape = &const {
         fn type_name<T0, T1, T2, T3>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result
         where
@@ -429,13 +425,6 @@ where
     T3: Facet,
     T4: Facet,
 {
-    const ARCHETYPE: Self = (
-        T0::ARCHETYPE,
-        T1::ARCHETYPE,
-        T2::ARCHETYPE,
-        T3::ARCHETYPE,
-        T4::ARCHETYPE,
-    );
     const SHAPE: &'static Shape = &const {
         fn type_name<T0, T1, T2, T3, T4>(f: &mut fmt::Formatter, opts: TypeNameOpts) -> fmt::Result
         where
@@ -595,14 +584,6 @@ where
     T4: Facet,
     T5: Facet,
 {
-    const ARCHETYPE: Self = (
-        T0::ARCHETYPE,
-        T1::ARCHETYPE,
-        T2::ARCHETYPE,
-        T3::ARCHETYPE,
-        T4::ARCHETYPE,
-        T5::ARCHETYPE,
-    );
     const SHAPE: &'static Shape = &const {
         fn type_name<T0, T1, T2, T3, T4, T5>(
             f: &mut fmt::Formatter,
@@ -793,15 +774,6 @@ where
     T5: Facet,
     T6: Facet,
 {
-    const ARCHETYPE: Self = (
-        T0::ARCHETYPE,
-        T1::ARCHETYPE,
-        T2::ARCHETYPE,
-        T3::ARCHETYPE,
-        T4::ARCHETYPE,
-        T5::ARCHETYPE,
-        T6::ARCHETYPE,
-    );
     const SHAPE: &'static Shape = &const {
         fn type_name<T0, T1, T2, T3, T4, T5, T6>(
             f: &mut fmt::Formatter,
@@ -1014,16 +986,6 @@ where
     T6: Facet,
     T7: Facet,
 {
-    const ARCHETYPE: Self = (
-        T0::ARCHETYPE,
-        T1::ARCHETYPE,
-        T2::ARCHETYPE,
-        T3::ARCHETYPE,
-        T4::ARCHETYPE,
-        T5::ARCHETYPE,
-        T6::ARCHETYPE,
-        T7::ARCHETYPE,
-    );
     const SHAPE: &'static Shape = &const {
         fn type_name<T0, T1, T2, T3, T4, T5, T6, T7>(
             f: &mut fmt::Formatter,
@@ -1259,17 +1221,6 @@ where
     T7: Facet,
     T8: Facet,
 {
-    const ARCHETYPE: Self = (
-        T0::ARCHETYPE,
-        T1::ARCHETYPE,
-        T2::ARCHETYPE,
-        T3::ARCHETYPE,
-        T4::ARCHETYPE,
-        T5::ARCHETYPE,
-        T6::ARCHETYPE,
-        T7::ARCHETYPE,
-        T8::ARCHETYPE,
-    );
     const SHAPE: &'static Shape = &const {
         fn type_name<T0, T1, T2, T3, T4, T5, T6, T7, T8>(
             f: &mut fmt::Formatter,
@@ -1528,18 +1479,6 @@ where
     T8: Facet,
     T9: Facet,
 {
-    const ARCHETYPE: Self = (
-        T0::ARCHETYPE,
-        T1::ARCHETYPE,
-        T2::ARCHETYPE,
-        T3::ARCHETYPE,
-        T4::ARCHETYPE,
-        T5::ARCHETYPE,
-        T6::ARCHETYPE,
-        T7::ARCHETYPE,
-        T8::ARCHETYPE,
-        T9::ARCHETYPE,
-    );
     const SHAPE: &'static Shape = &const {
         fn type_name<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>(
             f: &mut fmt::Formatter,
@@ -1823,19 +1762,6 @@ where
     T9: Facet,
     T10: Facet,
 {
-    const ARCHETYPE: Self = (
-        T0::ARCHETYPE,
-        T1::ARCHETYPE,
-        T2::ARCHETYPE,
-        T3::ARCHETYPE,
-        T4::ARCHETYPE,
-        T5::ARCHETYPE,
-        T6::ARCHETYPE,
-        T7::ARCHETYPE,
-        T8::ARCHETYPE,
-        T9::ARCHETYPE,
-        T10::ARCHETYPE,
-    );
     const SHAPE: &'static Shape = &const {
         fn type_name<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
             f: &mut fmt::Formatter,
@@ -2143,20 +2069,6 @@ where
     T10: Facet,
     T11: Facet,
 {
-    const ARCHETYPE: Self = (
-        T0::ARCHETYPE,
-        T1::ARCHETYPE,
-        T2::ARCHETYPE,
-        T3::ARCHETYPE,
-        T4::ARCHETYPE,
-        T5::ARCHETYPE,
-        T6::ARCHETYPE,
-        T7::ARCHETYPE,
-        T8::ARCHETYPE,
-        T9::ARCHETYPE,
-        T10::ARCHETYPE,
-        T11::ARCHETYPE,
-    );
     const SHAPE: &'static Shape = &const {
         fn type_name<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(
             f: &mut fmt::Formatter,
