@@ -24,7 +24,7 @@ pub(crate) fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStre
     let fields_str = fields.join(", ");
 
     let static_decl = generate_static_decl(&struct_name);
-    let maybe_container_doc = build_maybe_doc_string(&parsed.attributes);
+    let maybe_container_doc = build_maybe_doc(&parsed.attributes);
 
     // Generate the impl
     let output = format!(

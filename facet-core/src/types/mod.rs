@@ -39,7 +39,7 @@ pub struct Shape {
     pub def: Def,
 
     /// Doc comments — if there's multiple lines, they're all concatenated
-    pub doc: Option<&'static str>,
+    pub doc: &'static [&'static str],
 }
 
 impl Shape {
@@ -151,7 +151,7 @@ pub struct ShapeBuilder {
     layout: Option<Layout>,
     vtable: Option<&'static ValueVTable>,
     def: Option<Def>,
-    doc: Option<&'static str>,
+    doc: &'static [&'static str],
 }
 
 impl ShapeBuilder {
@@ -163,7 +163,7 @@ impl ShapeBuilder {
             layout: None,
             vtable: None,
             def: None,
-            doc: None,
+            doc: &[],
         }
     }
 
@@ -197,8 +197,8 @@ impl ShapeBuilder {
 
     /// Sets the `doc` field of the `ShapeBuilder`.
     #[inline]
-    pub const fn doc(mut self, doc: &'static str) -> Self {
-        self.doc = Some(doc);
+    pub const fn doc(mut self, doc: &'static [&'static str]) -> Self {
+        self.doc = doc;
         self
     }
 

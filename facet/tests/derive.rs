@@ -106,7 +106,7 @@ fn struct_doc_comment() {
     /// yes
     struct Foo {}
 
-    assert_eq!(Foo::SHAPE.doc, Some(" yes"));
+    assert_eq!(Foo::SHAPE.doc, &[" yes"]);
 }
 
 #[test]
@@ -116,7 +116,7 @@ fn struct_doc_comment2() {
     /// no
     struct Foo {}
 
-    assert_eq!(Foo::SHAPE.doc, Some(" yes\n no"));
+    assert_eq!(Foo::SHAPE.doc, &[" yes", " no"]);
 }
 
 #[test]
@@ -126,7 +126,7 @@ fn struct_doc_comment3() {
     /// no
     struct Foo {}
 
-    assert_eq!(Foo::SHAPE.doc, Some(" yes 😄\n no"));
+    assert_eq!(Foo::SHAPE.doc, &[" yes 😄", " no"]);
 }
 
 #[test]
@@ -135,7 +135,7 @@ fn struct_doc_comment4() {
     /// what about "quotes"
     struct Foo {}
 
-    assert_eq!(Foo::SHAPE.doc, Some(r#" what about "quotes""#));
+    assert_eq!(Foo::SHAPE.doc, &[r#" what about "quotes""#]);
 }
 
 #[test]
@@ -150,7 +150,7 @@ fn enum_doc_comment() {
         B,
     }
 
-    assert_eq!(MyEnum::SHAPE.doc, Some(" This is an enum"));
+    assert_eq!(MyEnum::SHAPE.doc, &[" This is an enum"]);
 }
 
 #[test]
@@ -159,7 +159,7 @@ fn tuple_struct_doc_comment_test() {
     /// This is a tuple struct
     struct MyTuple(u32, String);
 
-    assert_eq!(MyTuple::SHAPE.doc, Some(" This is a tuple struct"));
+    assert_eq!(MyTuple::SHAPE.doc, &[" This is a tuple struct"]);
 }
 
 #[test]

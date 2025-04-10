@@ -282,24 +282,11 @@ pub(crate) fn generate_static_decl(type_name: &str) -> String {
     )
 }
 
-pub(crate) fn build_maybe_doc_string(attrs: &[Attribute]) -> String {
+pub(crate) fn build_maybe_doc(attrs: &[Attribute]) -> String {
     let doc_lines: Vec<_> = attrs
         .iter()
         .filter_map(|attr| match &attr.body.content {
-            AttributeInner::Doc(doc_inner) => {
-                // Remove quotes from the string value
-                let unquoted_val = {
-                    let value = doc_inner.value.value();
-                    if value.starts_with('"') && value.ends_with('"') {
-                        &value[1..value.len() - 1]
-                    } else {
-                        panic!(
-                            "Expected string value surrounded by exactly one quote on each side"
-                        );
-                    }
-                };
-                Some(unquoted_val)
-            }
+            AttributeInner::Doc(doc_inner) => Some(doc_inner.value.value()),
             _ => None,
         })
         .collect();
@@ -307,6 +294,6 @@ pub(crate) fn build_maybe_doc_string(attrs: &[Attribute]) -> String {
     if doc_lines.is_empty() {
         String::new()
     } else {
-        format!(r#".doc("{}")"#, doc_lines.join("\n"))
+        format!(r#".doc(&[{}])"#, doc_lines.join(","))
     }
 }
