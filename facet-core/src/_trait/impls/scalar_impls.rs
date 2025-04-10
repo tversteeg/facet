@@ -4,6 +4,7 @@ use crate::value_vtable;
 use crate::*;
 use core::alloc::Layout;
 use core::num::NonZero;
+use core::option::Option;
 
 unsafe impl Facet for ConstTypeId {
     const SHAPE: &'static Shape = &const {
@@ -504,6 +505,43 @@ unsafe impl Facet for core::net::Ipv6Addr {
             .vtable(value_vtable!(core::net::Ipv6Addr, |f, _opts| write!(
                 f,
                 "Ipv6Addr"
+            )))
+            .build()
+    };
+}
+
+unsafe impl<T: Facet> Facet for Option<T> {
+    const SHAPE: &'static Shape = &const {
+        Shape::builder()
+            .id(ConstTypeId::of::<Self>())
+            .layout(Layout::new::<Self>())
+            .def(Def::Option(
+                OptionDef::builder()
+                    .t(T::SHAPE)
+                    .vtable(
+                        const {
+                            &OptionVTable {
+                                is_some_fn: |option| unsafe {
+                                    option.as_ref::<Option<T>>().is_some()
+                                },
+                                get_value_fn: |option| unsafe {
+                                    option
+                                        .as_ref::<Option<T>>()
+                                        .as_ref()
+                                        .map(|t| OpaqueConst::new(t as *const T))
+                                },
+                                init_some_fn: |option, value| unsafe {
+                                    option.put(Option::Some(value.read::<T>()))
+                                },
+                                init_none_fn: |option| unsafe { option.put(<Option<T>>::None) },
+                            }
+                        },
+                    )
+                    .build(),
+            ))
+            .vtable(value_vtable!(core::option::Option<T>, |f, _opts| write!(
+                f,
+                "Option"
             )))
             .build()
     };

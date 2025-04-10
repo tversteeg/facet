@@ -1025,3 +1025,6 @@ fn build_u64_properly() {
     // Verify the value was set correctly
     assert_eq!(value, 42);
 }
+
+#[test]
+fn build_option() {}
