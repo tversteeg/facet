@@ -31,11 +31,11 @@ macro_rules! struct_fields {
 #[macro_export]
 macro_rules! enum_unit_variant {
     ($enum:ty, $variant:ident, $discriminant:expr) => {
-        $crate::Variant {
-            name: stringify!($variant),
-            discriminant: Some($discriminant),
-            kind: $crate::VariantKind::Unit,
-        }
+        $crate::Variant::builder()
+            .name(stringify!($variant))
+            .discriminant(Some($discriminant))
+            .kind($crate::VariantKind::Unit)
+            .build()
     };
 }
 

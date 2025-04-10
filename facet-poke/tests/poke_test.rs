@@ -124,18 +124,19 @@ fn build_enum() {
     #[repr(u8)]
     #[allow(dead_code)]
     enum FooBar {
+        Unit,
         Foo(u32),
         Bar(String),
-        Baz(i64),
+        // StructLike { a: u32, b: String },
     }
+
+    let v = FooBar::Unit;
+    eprintln!("{}", v.pretty());
 
     let v = FooBar::Foo(42);
     eprintln!("{}", v.pretty());
 
     let v = FooBar::Bar("junjito".into());
-    eprintln!("{}", v.pretty());
-
-    let v = FooBar::Baz(67);
     eprintln!("{}", v.pretty());
 }
 
