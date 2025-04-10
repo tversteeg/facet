@@ -185,7 +185,7 @@ impl PrettyPrinter {
                                         type_depth: item.type_depth + 1,
                                         state: StackState::Start,
                                     };
-                                    
+
                                     // Add a special close parenthesis item
                                     let close_paren_item = StackItem {
                                         peek: Peek::Option(option),
@@ -193,7 +193,7 @@ impl PrettyPrinter {
                                         type_depth: item.type_depth,
                                         state: StackState::OptionFinish,
                                     };
-                                    
+
                                     // Process the value first, then handle closing
                                     stack.push_back(close_paren_item);
                                     stack.push_back(start_item);
@@ -218,9 +218,18 @@ impl PrettyPrinter {
                             // Print the struct name
                             self.write_type_name(f, &struct_)?;
 
-                            // Struct doc comments aren't directly accessible
+                            // Get struct doc comments from the shape
+                            let doc_comments = struct_.shape().doc;
+                            if !doc_comments.is_empty() {
+                                writeln!(f)?;
+                                for line in doc_comments {
+                                    write!(f, "  ")?;
+                                    self.write_comment(f, &format!("/// {}", line))?;
+                                    writeln!(f)?;
+                                }
+                            }
 
-                            self.write_punctuation(f, " {")?;
+                            self.write_punctuation(f, "{")?;
 
                             if struct_.field_count() == 0 {
                                 self.write_punctuation(f, " }")?;
@@ -297,19 +306,35 @@ impl PrettyPrinter {
 
                             // Print the enum name
                             self.write_type_name(f, &enum_)?;
-                            self.write_punctuation(f, "::")?;
 
-                            // Get the active variant name
-                            let variant_name = enum_.variant_name_active();
+                            // Get enum doc comments from the shape
+                            let doc_comments = enum_.shape().doc;
+                            if !doc_comments.is_empty() {
+                                writeln!(f)?;
+                                for line in doc_comments {
+                                    write!(f, "  ")?;
+                                    self.write_comment(f, &format!("/// {}", line))?;
+                                    writeln!(f)?;
+                                }
+                                // No need to re-print the enum name
+                            }
+
+                            self.write_punctuation(f, "::")?;
 
                             // Get the active variant to access its doc comments
                             let variant = enum_.active_variant();
 
-                            // Display doc comments for the variant if they exist
+                            // Output variant doc comments before the variant name
                             if !variant.doc.is_empty() {
-                                let doc = variant.doc.join("\n");
-                                self.write_comment(f, &format!(" /* {} */ ", doc))?;
+                                writeln!(f)?;
+                                for line in variant.doc {
+                                    self.write_comment(f, &format!("/// {}", line))?;
+                                    writeln!(f)?;
+                                }
                             }
+
+                            // Get the active variant name
+                            let variant_name = enum_.variant_name_active();
 
                             // Apply color for variant name
                             if self.use_colors {
@@ -403,8 +428,14 @@ impl PrettyPrinter {
 
                         // Field doc comment
                         if !field.doc.is_empty() {
-                            let doc = field.doc.join("\n");
-                            self.write_comment(f, &format!("/* {} */ ", doc))?;
+                            writeln!(f)?;
+                            for line in field.doc {
+                                write!(f, "{:width$}", "", width = item.format_depth * self.indent_size)?;
+                                self.write_comment(f, &format!("/// {}", line))?;
+                                writeln!(f)?;
+                            }
+                            // Rewrite indentation after doc comments
+                            write!(f, "{:width$}", "", width = item.format_depth * self.indent_size)?;
                         }
 
                         // Field name
@@ -449,8 +480,8 @@ impl PrettyPrinter {
                     } else if let Peek::Enum(enum_val) = item.peek {
                         // Since PeekEnum implements Copy, we can use it directly
 
-                        // Get all fields directly
-                        let fields: Vec<_> = enum_val.fields().collect();
+                        // Get all fields with their metadata
+                        let fields: Vec<_> = enum_val.fields_with_metadata().collect();
 
                         // Check if we're done processing fields
                         if field_index >= fields.len() {
@@ -481,8 +512,8 @@ impl PrettyPrinter {
                             continue;
                         }
 
-                        // Get the current field
-                        let (field_name, field_peek) = fields[field_index];
+                        // Get the current field with metadata
+                        let (_, field_name, field_peek, field) = fields[field_index];
 
                         // Add indentation
                         write!(
@@ -491,6 +522,18 @@ impl PrettyPrinter {
                             "",
                             width = item.format_depth * self.indent_size
                         )?;
+
+                        // Add field doc comments if available
+                        if !field.doc.is_empty() {
+                            writeln!(f)?;
+                            for line in field.doc {
+                                write!(f, "{:width$}", "", width = item.format_depth * self.indent_size)?;
+                                self.write_comment(f, &format!("/// {}", line))?;
+                                writeln!(f)?;
+                            }
+                            // Rewrite indentation after doc comments
+                            write!(f, "{:width$}", "", width = item.format_depth * self.indent_size)?;
+                        }
 
                         // For struct variants, print field name
                         if let facet_core::VariantKind::Struct { .. } =
@@ -665,7 +708,7 @@ impl PrettyPrinter {
                     // Add comma and newline for struct fields and list items
                     self.write_punctuation(f, ",")?;
                     writeln!(f)?;
-                },
+                }
                 StackState::OptionFinish => {
                     // Just close the Option::Some parenthesis, with no comma
                     self.write_punctuation(f, ")")?;

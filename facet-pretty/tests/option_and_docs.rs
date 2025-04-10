@@ -57,9 +57,17 @@ fn test_doc_comments_in_pretty_printing() {
 
     let formatted = PrettyPrinter::new().format(&test_struct);
 
+    // Print the formatted struct
+    eprintln!("\n===== TestStruct with doc comments =====\n{}", formatted);
+
     // Check that field names are present
     assert!(formatted.contains("field1"));
     assert!(formatted.contains("opt_field"));
+
+    // Check that doc comments are present
+    assert!(formatted.contains("A test struct with doc comments"));
+    assert!(formatted.contains("Field with a doc comment"));
+    assert!(formatted.contains("Optional field with a doc comment"));
 
     // Create test enum instances
     let unit = TestEnum::Unit;
@@ -68,17 +76,36 @@ fn test_doc_comments_in_pretty_printing() {
 
     // Check unit variant formatting
     let formatted = PrettyPrinter::new().format(&unit);
+    eprintln!(
+        "\n===== TestEnum::Unit with doc comments =====\n{}",
+        formatted
+    );
     assert!(formatted.contains("TestEnum"));
     assert!(formatted.contains("Unit"));
+    assert!(formatted.contains("A test enum with doc comments"));
+    assert!(formatted.contains("Unit variant with a doc comment"));
 
     // Check tuple variant formatting
     let formatted = PrettyPrinter::new().format(&tuple);
+    eprintln!(
+        "\n===== TestEnum::Tuple with doc comments =====\n{}",
+        formatted
+    );
     assert!(formatted.contains("TestEnum"));
     assert!(formatted.contains("Tuple"));
+    assert!(formatted.contains("A test enum with doc comments"));
+    assert!(formatted.contains("Tuple variant with a doc comment"));
 
     // Check struct variant formatting
     let formatted = PrettyPrinter::new().format(&struct_variant);
+    eprintln!(
+        "\n===== TestEnum::Struct with doc comments =====\n{}",
+        formatted
+    );
     assert!(formatted.contains("TestEnum"));
     assert!(formatted.contains("Struct"));
     assert!(formatted.contains("field"));
+    assert!(formatted.contains("A test enum with doc comments"));
+    assert!(formatted.contains("Struct variant with a doc comment"));
+    assert!(formatted.contains("Field in struct variant with a doc comment"));
 }
