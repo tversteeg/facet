@@ -1,6 +1,6 @@
 [package]
 name = "facet-json"
-version = "0.1.5"
+version = "0.1.6"
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -15,5 +15,6 @@ facet-json-read = { version = "0.1.5", path = "../facet-json-read", optional = t
 facet-json-write = { version = "0.1.5", path = "../facet-json-write", optional = true }
 
 [features]
+default = ["read", "write"]
 read = ["dep:facet-json-read"]
 write = ["dep:facet-json-write"]

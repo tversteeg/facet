@@ -245,7 +245,7 @@ dependencies = [
 
 [[package]]
 name = "facet-json"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "facet-json-read",
  "facet-json-write",
