@@ -246,8 +246,34 @@ impl PrettyPrinter {
                             };
                             stack.push_back(item);
                         }
+                        Peek::Enum(enum_) => {
+                            // When recursing into an enum, increment format_depth
+                            // Only increment type_depth if we're moving to a different address
+                            let _new_type_depth =
+                                if core::ptr::eq(unsafe { enum_.data().as_ptr() }, ptr) {
+                                    item.type_depth // Same pointer, don't increment type_depth
+                                } else {
+                                    item.type_depth + 1 // Different pointer, increment type_depth
+                                };
+
+                            // Print the enum name
+                            self.write_type_name(f, &enum_)?;
+                            self.write_punctuation(f, "::")?;
+
+                            // Get the active variant name
+                            let variant_name = enum_.variant_name_active();
+
+                            // Apply color for variant name
+                            if self.use_colors {
+                                ansi::write_bold(f)?;
+                                write!(f, "{}", variant_name)?;
+                                ansi::write_reset(f)?;
+                            } else {
+                                write!(f, "{}", variant_name)?;
+                            }
+                        }
                         _ => {
-                            writeln!(f, "unsupported peek variant: {:?}", item.peek)?;
+                            write!(f, "unsupported peek variant: {:?}", item.peek)?;
                         }
                     }
                 }
