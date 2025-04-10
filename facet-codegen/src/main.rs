@@ -141,7 +141,7 @@ fn generate_readme_files(has_diffs: &mut bool, opts: &Options) {
 <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/logo/facet-dark.webp">
 <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/logo/facet-dark.png">
 <source media="(prefers-color-scheme: light)" srcset="https://github.com/facet-rs/facet/raw/main/static/logo/facet-light.webp">
-<img src="https://github.com/facet-rs/facet/raw/main/static/logo/facet-light.png" height="40" alt="Facet logo - a reflection library for Rust">
+<img src="https://github.com/facet-rs/facet/raw/main/static/logo/facet-light.png" alt="Facet logo - a reflection library for Rust">
 </picture>
 
 # {0}
