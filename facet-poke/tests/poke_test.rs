@@ -8,7 +8,6 @@ use std::{cmp::Ordering, collections::HashSet, fmt::Debug};
 use facet_trait as facet;
 
 // Allow dead code in test modules since we're not constructing all enum variants
-#[allow(dead_code)]
 #[derive(Debug, PartialEq, Eq, Facet)]
 struct FooBar {
     foo: u64,

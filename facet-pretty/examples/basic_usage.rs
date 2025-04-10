@@ -2,7 +2,7 @@ use facet_derive::Facet;
 use facet_trait as facet;
 use facet_trait::Facet;
 
-use facet_pretty::{FacetPretty, PrettyPrinter};
+use facet_pretty::FacetPretty;
 
 #[derive(Debug, Facet)]
 struct Person {
@@ -33,17 +33,4 @@ fn main() {
 
     println!("Default pretty-printing:");
     println!("{}", person.pretty());
-
-    println!("\nCustomized pretty-printing:");
-    let custom_printer = PrettyPrinter::new()
-        .with_indent_size(4)
-        .with_max_depth(3)
-        .with_colors(true);
-
-    println!("{}", person.pretty_with(custom_printer));
-
-    println!("\nWithout colors:");
-    let no_colors_printer = PrettyPrinter::new().with_colors(false);
-
-    println!("{}", person.pretty_with(no_colors_printer));
 }

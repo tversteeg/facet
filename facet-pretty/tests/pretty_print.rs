@@ -67,8 +67,6 @@ fn test_pretty_print() {
     let mut buffer = String::new();
     write!(buffer, "{}", person.pretty()).unwrap();
 
-    eprintln!("{}", buffer);
-
     // Ensure the output contains the field names
     assert!(buffer.contains("name"));
     assert!(buffer.contains("age"));
