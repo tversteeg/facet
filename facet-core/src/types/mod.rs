@@ -802,12 +802,37 @@ impl ScalarId {
     }
 }
 
+use crate::{shape_of, value_vtable};
+
 /// Definition for scalar types
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[non_exhaustive]
 pub struct ScalarDef {
     /// The TypeId of the scalar type
     pub scalar_id: ScalarId,
+}
+
+unsafe impl Facet for ScalarDef {
+    const SHAPE: &'static Shape = &const {
+        static FIELDS: &[Field] = &[Field::builder()
+            .name("scalar_id")
+            .shape(shape_of(&|s: ScalarDef| s.scalar_id))
+            .offset(core::mem::offset_of!(ScalarDef, scalar_id))
+            .flags(FieldFlags::EMPTY)
+            .attributes(&[])
+            .build()];
+
+        Shape::builder()
+            .layout(core::alloc::Layout::new::<Self>())
+            .vtable(value_vtable!(ScalarDef, |f, _opts| f.write_str("ScalarDef")))
+            .def(Def::Struct(
+                StructDef::builder()
+                    .kind(StructKind::Struct)
+                    .fields(FIELDS)
+                    .build(),
+            ))
+            .build()
+    };
 }
 
 impl ScalarDef {
