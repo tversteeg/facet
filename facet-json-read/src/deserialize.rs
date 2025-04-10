@@ -89,7 +89,7 @@ macro_rules! unsigneds {
 macro_rules! signeds {
     ($parser:expr, $pv:expr, $type:ty, $($types:ty),*) => {
         int!($parser, $parser.parse_i64(), $pv, $type);
-        unsigneds!($parser, $pv, $($types),*);
+        signeds!($parser, $pv, $($types),*);
     };
     ($parser:expr, $pv:expr, $type:ty) => {
         int!($parser, $parser.parse_i64(), $pv, $type);
