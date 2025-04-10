@@ -169,6 +169,12 @@ pub struct PokeEnum<'mem> {
 }
 
 impl<'mem> PokeEnum<'mem> {
+    #[inline(always)]
+    /// Shape getter
+    pub fn shape(&self) -> &'static Shape {
+        self.shape
+    }
+
     /// Returns the currently selected variant index
     pub fn selected_variant_index(&self) -> usize {
         self.selected_variant
@@ -181,7 +187,10 @@ impl<'mem> PokeEnum<'mem> {
     /// Returns an error if:
     /// - The field name doesn't exist in the selected variant.
     /// - The selected variant is a unit variant (which has no fields).
-    pub fn field_by_name(&self, name: &str) -> Result<(usize, crate::Poke<'mem>), FieldError> {
+    pub fn field_by_name(
+        &self,
+        name: &str,
+    ) -> Result<(usize, crate::PokeUninit<'mem>), FieldError> {
         let variant = &self.def.variants[self.selected_variant];
 
         // Find the field in the variant
@@ -200,7 +209,7 @@ impl<'mem> PokeEnum<'mem> {
 
                 // Get the field's address
                 let field_data = unsafe { self.data.field_uninit(field.offset) };
-                let poke = unsafe { crate::Poke::unchecked_new(field_data, field.shape) };
+                let poke = unsafe { crate::PokeUninit::unchecked_new(field_data, field.shape) };
                 Ok((index, poke))
             }
             VariantKind::Struct { fields } => {
@@ -213,7 +222,7 @@ impl<'mem> PokeEnum<'mem> {
 
                 // Get the field's address
                 let field_data = unsafe { self.data.field_uninit(field.offset) };
-                let poke = unsafe { crate::Poke::unchecked_new(field_data, field.shape) };
+                let poke = unsafe { crate::PokeUninit::unchecked_new(field_data, field.shape) };
                 Ok((index, poke))
             }
             _ => {
@@ -229,7 +238,7 @@ impl<'mem> PokeEnum<'mem> {
     /// Returns an error if:
     /// - The index is out of bounds.
     /// - The selected variant is not a tuple variant.
-    pub fn tuple_field(&self, index: usize) -> Result<crate::Poke<'mem>, FieldError> {
+    pub fn tuple_field(&self, index: usize) -> Result<crate::PokeUninit<'mem>, FieldError> {
         let variant = &self.def.variants[self.selected_variant];
 
         // Make sure we're working with a tuple variant
@@ -245,7 +254,7 @@ impl<'mem> PokeEnum<'mem> {
 
                 // Get the field's address
                 let field_data = unsafe { self.data.field_uninit(field.offset) };
-                let poke = unsafe { crate::Poke::unchecked_new(field_data, field.shape) };
+                let poke = unsafe { crate::PokeUninit::unchecked_new(field_data, field.shape) };
                 Ok(poke)
             }
             _ => {

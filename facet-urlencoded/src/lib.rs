@@ -2,7 +2,7 @@
 #![doc = include_str!("../README.md")]
 
 use facet_core::{Facet, Opaque};
-use facet_poke::Poke;
+use facet_poke::PokeUninit;
 use log::*;
 
 #[cfg(test)]
@@ -70,7 +70,7 @@ mod tests;
 /// });
 /// ```
 pub fn from_str<T: Facet>(urlencoded: &str) -> Result<T, UrlEncodedError> {
-    let (poke, _guard) = Poke::alloc::<T>();
+    let (poke, _guard) = PokeUninit::alloc::<T>();
     let opaque = from_str_opaque(poke, urlencoded)?;
     Ok(unsafe { opaque.read::<T>() })
 }
@@ -79,7 +79,7 @@ pub fn from_str<T: Facet>(urlencoded: &str) -> Result<T, UrlEncodedError> {
 ///
 /// This is the lower-level function that works with `Poke` directly.
 fn from_str_opaque<'mem>(
-    poke: Poke<'mem>,
+    poke: PokeUninit<'mem>,
     urlencoded: &str,
 ) -> Result<Opaque<'mem>, UrlEncodedError> {
     trace!("Starting URL encoded form data deserialization");
@@ -163,11 +163,11 @@ impl NestedValues {
 
 /// Deserialize a value recursively using the nested values
 fn deserialize_value<'mem>(
-    poke: Poke<'mem>,
+    poke: PokeUninit<'mem>,
     values: &NestedValues,
 ) -> Result<Opaque<'mem>, UrlEncodedError> {
     match poke {
-        Poke::Struct(mut ps) => {
+        PokeUninit::Struct(mut ps) => {
             trace!("Deserializing struct");
 
             // Process flat fields
@@ -186,7 +186,7 @@ fn deserialize_value<'mem>(
                 if let Ok((index, field_poke)) = ps.field_by_name(key) {
                     if let Some(nested_values) = values.get_nested(key) {
                         match field_poke {
-                            Poke::Struct(_) => {
+                            PokeUninit::Struct(_) => {
                                 let _nested_opaque = deserialize_value(field_poke, nested_values)?;
                                 unsafe {
                                     ps.mark_initialized(index);
@@ -222,12 +222,12 @@ fn deserialize_value<'mem>(
 fn deserialize_scalar_field<'mem>(
     key: &str,
     value: &str,
-    field_poke: Poke<'mem>,
+    field_poke: PokeUninit<'mem>,
     index: usize,
     ps: &mut facet_poke::PokeStruct<'mem>,
 ) -> Result<(), UrlEncodedError> {
     match field_poke {
-        Poke::Scalar(ps_scalar) => {
+        PokeUninit::Scalar(ps_scalar) => {
             if ps_scalar.shape().is_type::<String>() {
                 let s = value.to_string();
                 ps_scalar.put(s);

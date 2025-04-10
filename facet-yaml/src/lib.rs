@@ -2,7 +2,7 @@
 #![doc = include_str!("../README.md")]
 
 use facet_core::{Facet, Opaque};
-use facet_poke::Poke;
+use facet_poke::PokeUninit;
 use yaml_rust2::{Yaml, YamlLoader};
 
 #[cfg(test)]
@@ -10,7 +10,7 @@ mod tests;
 
 /// Deserializes a YAML string into a value of type `T` that implements `Facet`.
 pub fn from_str<T: Facet>(yaml: &str) -> Result<T, AnyErr> {
-    let (poke, _guard) = Poke::alloc::<T>();
+    let (poke, _guard) = PokeUninit::alloc::<T>();
     let opaque = from_str_opaque(poke, yaml)?;
     Ok(unsafe { opaque.read::<T>() })
 }
@@ -67,7 +67,7 @@ fn yaml_to_u64(ty: &Yaml) -> Result<u64, AnyErr> {
     }
 }
 
-fn from_str_opaque<'mem>(poke: Poke<'mem>, yaml: &str) -> Result<Opaque<'mem>, AnyErr> {
+fn from_str_opaque<'mem>(poke: PokeUninit<'mem>, yaml: &str) -> Result<Opaque<'mem>, AnyErr> {
     let docs = YamlLoader::load_from_str(yaml).map_err(|e| e.to_string())?;
     if docs.len() != 1 {
         return Err("Expected exactly one YAML document".into());
@@ -75,9 +75,9 @@ fn from_str_opaque<'mem>(poke: Poke<'mem>, yaml: &str) -> Result<Opaque<'mem>, A
     deserialize_value(poke, &docs[0])
 }
 
-fn deserialize_value<'mem>(poke: Poke<'mem>, value: &Yaml) -> Result<Opaque<'mem>, AnyErr> {
+fn deserialize_value<'mem>(poke: PokeUninit<'mem>, value: &Yaml) -> Result<Opaque<'mem>, AnyErr> {
     let opaque = match poke {
-        Poke::Scalar(ps) => {
+        PokeUninit::Scalar(ps) => {
             if ps.shape().is_type::<u64>() {
                 let u = yaml_to_u64(value)?;
                 ps.put(u)
@@ -91,9 +91,9 @@ fn deserialize_value<'mem>(poke: Poke<'mem>, value: &Yaml) -> Result<Opaque<'mem
                 return Err(format!("Unsupported scalar type: {}", ps.shape()).into());
             }
         }
-        Poke::List(_) => todo!(),
-        Poke::Map(_) => todo!(),
-        Poke::Struct(mut ps) => match value {
+        PokeUninit::List(_) => todo!(),
+        PokeUninit::Map(_) => todo!(),
+        PokeUninit::Struct(mut ps) => match value {
             Yaml::Hash(hash) => {
                 for (k, v) in hash {
                     let k = k
@@ -114,7 +114,7 @@ fn deserialize_value<'mem>(poke: Poke<'mem>, value: &Yaml) -> Result<Opaque<'mem
                 return Err(format!("Expected a YAML hash, got: {:?}", value).into());
             }
         },
-        Poke::Enum(_) => todo!(),
+        PokeUninit::Enum(_) => todo!(),
         _ => todo!("unsupported poke type"),
     };
     Ok(opaque)

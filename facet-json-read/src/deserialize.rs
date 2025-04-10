@@ -3,7 +3,7 @@ use std::num::NonZero;
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
 
 use facet_core::{Facet, Opaque, OpaqueUninit};
-use facet_poke::{Poke, PokeValueUninit};
+use facet_poke::{PokeUninit, PokeValueUninit};
 use log::trace;
 
 /// Deserializes a JSON string into a value of type `T` that implements `Facet`.
@@ -30,14 +30,14 @@ use log::trace;
 /// let person: Person = facet_json_read::from_str(json).unwrap();
 /// ```
 pub fn from_str<T: Facet>(json: &str) -> Result<T, JsonParseErrorWithContext<'_>> {
-    let (poke, _guard) = Poke::alloc::<T>();
+    let (poke, _guard) = PokeUninit::alloc::<T>();
     let opaque = from_str_opaque(poke, json)?;
     Ok(unsafe { opaque.read::<T>() })
 }
 
 /// Deserialize a `Poke` object from a JSON string.
 pub fn from_str_opaque<'input, 'mem>(
-    poke: Poke<'mem>,
+    poke: PokeUninit<'mem>,
     json: &'input str,
 ) -> Result<Opaque<'mem>, JsonParseErrorWithContext<'input>> {
     trace!("Starting JSON deserialization");
@@ -103,13 +103,13 @@ macro_rules! signeds {
 /// recursion.
 fn deserialize_value<'input, 'mem>(
     parser: &mut JsonParser<'input>,
-    root_poke: Poke<'mem>,
+    root_poke: PokeUninit<'mem>,
 ) -> Result<Opaque<'mem>, JsonParseErrorWithContext<'input>> {
     use std::collections::VecDeque;
 
     enum StackItem<'mem> {
         Value {
-            poke: Poke<'mem>,
+            poke: PokeUninit<'mem>,
         },
         FinishStruct {
             ps: facet_poke::PokeStruct<'mem>,
@@ -146,7 +146,7 @@ fn deserialize_value<'input, 'mem>(
                 trace!("Deserializing {shape}");
 
                 match poke {
-                    Poke::Scalar(pv) => {
+                    PokeUninit::Scalar(pv) => {
                         trace!("Deserializing \x1b[1;36mscalar\x1b[0m");
                         fn aux<'input, 'mem>(
                             parser: &mut JsonParser<'input>,
@@ -179,7 +179,7 @@ fn deserialize_value<'input, 'mem>(
 
                         result = Some(aux(parser, pv)?);
                     }
-                    Poke::Struct(ps) => {
+                    PokeUninit::Struct(ps) => {
                         trace!("Deserializing \x1b[1;36mstruct\x1b[0m");
                         stack.push_front(StackItem::FinishStruct { ps });
 
@@ -188,7 +188,7 @@ fn deserialize_value<'input, 'mem>(
                             stack.push_front(StackItem::StructField { key });
                         }
                     }
-                    Poke::List(list_uninit) => {
+                    PokeUninit::List(list_uninit) => {
                         trace!("Deserializing \x1b[1;36marray\x1b[0m");
                         parser.expect_array_start()?;
 
@@ -202,7 +202,7 @@ fn deserialize_value<'input, 'mem>(
                             let item_shape = pl.def().t;
                             let item_data =
                                 OpaqueUninit::new(unsafe { std::alloc::alloc(item_shape.layout) });
-                            let item_poke = unsafe { Poke::unchecked_new(item_data, item_shape) };
+                            let item_poke = unsafe { PokeUninit::unchecked_new(item_data, item_shape) };
 
                             stack.push_front(StackItem::FinishList { pl });
                             stack.push_front(StackItem::AfterListItem { item: item_data });
@@ -211,7 +211,7 @@ fn deserialize_value<'input, 'mem>(
                             stack.push_front(StackItem::FinishList { pl });
                         }
                     }
-                    Poke::Map(map_uninit) => {
+                    PokeUninit::Map(map_uninit) => {
                         trace!("Deserializing \x1b[1;36mhashmap\x1b[0m");
                         let first_key = parser.expect_object_start()?;
 
@@ -224,7 +224,7 @@ fn deserialize_value<'input, 'mem>(
                             let value_data =
                                 OpaqueUninit::new(unsafe { std::alloc::alloc(value_shape.layout) });
                             let value_poke =
-                                unsafe { Poke::unchecked_new(value_data, value_shape) };
+                                unsafe { PokeUninit::unchecked_new(value_data, value_shape) };
 
                             stack.push_front(StackItem::FinishMap { pm });
                             stack.push_front(StackItem::AfterMapValue {
@@ -236,7 +236,7 @@ fn deserialize_value<'input, 'mem>(
                             stack.push_front(StackItem::FinishMap { pm });
                         }
                     }
-                    Poke::Enum(pe) => {
+                    PokeUninit::Enum(pe) => {
                         trace!("Deserializing \x1b[1;36menum\x1b[0m");
                         let variant_str = parser.parse_string()?;
 
@@ -317,7 +317,7 @@ fn deserialize_value<'input, 'mem>(
                     let item_shape = pl.def().t;
                     let item_data =
                         OpaqueUninit::new(unsafe { std::alloc::alloc(item_shape.layout) });
-                    let item_poke = unsafe { Poke::unchecked_new(item_data, item_shape) };
+                    let item_poke = unsafe { PokeUninit::unchecked_new(item_data, item_shape) };
 
                     stack.push_front(StackItem::AfterListItem { item: item_data });
                     stack.push_front(StackItem::Value { poke: item_poke });
@@ -348,7 +348,7 @@ fn deserialize_value<'input, 'mem>(
                     let value_shape = pm.def().v;
                     let value_data =
                         OpaqueUninit::new(unsafe { std::alloc::alloc(value_shape.layout) });
-                    let value_poke = unsafe { Poke::unchecked_new(value_data, value_shape) };
+                    let value_poke = unsafe { PokeUninit::unchecked_new(value_data, value_shape) };
 
                     stack.push_front(StackItem::AfterMapValue {
                         key: next_key,

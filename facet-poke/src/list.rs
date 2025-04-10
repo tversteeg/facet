@@ -65,6 +65,12 @@ impl<'mem> PokeList<'mem> {
         Self { data, shape, def }
     }
 
+    #[inline(always)]
+    /// Shape getter
+    pub fn shape(&self) -> &'static Shape {
+        self.shape
+    }
+
     /// Gets the vtable for the list
     #[inline(always)]
     fn list_vtable(&self) -> &'static ListVTable {

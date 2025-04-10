@@ -1,7 +1,7 @@
 use ctor::ctor;
 use facet_core::{Facet, OpaqueConst, OpaqueUninit};
 use facet_derive::Facet;
-use facet_poke::{Peek, Poke};
+use facet_poke::{Peek, PokeUninit};
 
 use facet_pretty::FacetPretty as _;
 use owo_colors::{OwoColorize, Style};
@@ -32,7 +32,7 @@ impl Default for FooBar {
 
 #[test]
 fn build_foobar_through_reflection() {
-    let (poke, guard) = Poke::alloc::<FooBar>();
+    let (poke, guard) = PokeUninit::alloc::<FooBar>();
     let mut poke = poke.into_struct();
     unsafe {
         poke.unchecked_set_by_name("foo", OpaqueConst::new(&42u64))
@@ -67,7 +67,7 @@ fn build_foobar_through_reflection() {
 #[test]
 #[should_panic(expected = "Field 'bar' was not initialized")]
 fn build_foobar_incomplete() {
-    let (poke, guard) = Poke::alloc::<FooBar>();
+    let (poke, guard) = PokeUninit::alloc::<FooBar>();
     let mut poke = poke.into_struct();
     unsafe {
         poke.unchecked_set_by_name("foo", OpaqueConst::new(&42u64))
@@ -94,7 +94,7 @@ fn build_foobar_after_default() {
     let mut foo_bar: FooBar = Default::default();
 
     let mut poke =
-        unsafe { Poke::unchecked_new(OpaqueUninit::new(&mut foo_bar as *mut _), FooBar::SHAPE) }
+        unsafe { PokeUninit::unchecked_new(OpaqueUninit::new(&mut foo_bar as *mut _), FooBar::SHAPE) }
             .into_struct();
     unsafe {
         poke.mark_initialized(0);
@@ -146,7 +146,7 @@ fn build_enum() {
 
     {
         // now let's try to build an enum variant with a poke
-        let (poke, guard) = Poke::alloc::<FooBar>();
+        let (poke, guard) = PokeUninit::alloc::<FooBar>();
         let pe = poke.into_enum();
         let pe = pe.set_variant_by_name("Unit").unwrap();
         let v = pe.build::<FooBar>(Some(guard));
@@ -155,7 +155,7 @@ fn build_enum() {
 
     {
         // Build the Foo variant with a u32 value
-        let (poke, guard) = Poke::alloc::<FooBar>();
+        let (poke, guard) = PokeUninit::alloc::<FooBar>();
         let pe = poke.into_enum();
         let mut pe = pe.set_variant_by_name("Foo").unwrap();
         unsafe {
@@ -169,7 +169,7 @@ fn build_enum() {
 
     {
         // Build the Bar variant with a String value
-        let (poke, guard) = Poke::alloc::<FooBar>();
+        let (poke, guard) = PokeUninit::alloc::<FooBar>();
         let pe = poke.into_enum();
         let mut pe = pe.set_variant_by_name("Bar").unwrap();
         unsafe {
@@ -183,7 +183,7 @@ fn build_enum() {
 
     {
         // Build the StructLike variant with fields
-        let (poke, guard) = Poke::alloc::<FooBar>();
+        let (poke, guard) = PokeUninit::alloc::<FooBar>();
         let pe = poke.into_enum();
         let mut pe = pe.set_variant_by_name("StructLike").unwrap();
         unsafe {
@@ -287,7 +287,7 @@ where
     }
 
     // Test default_in_place
-    let (poke, _guard) = Poke::alloc::<T>();
+    let (poke, _guard) = PokeUninit::alloc::<T>();
     let poke_value = poke.into_value();
     if let Ok(value) = poke_value.default_in_place() {
         facts.insert(Fact::Default);
@@ -1017,7 +1017,7 @@ fn build_u64_properly() {
     let shape = u64::SHAPE;
     eprintln!("{:#?}", shape);
 
-    let (poke, _guard) = Poke::alloc::<u64>();
+    let (poke, _guard) = PokeUninit::alloc::<u64>();
     let poke = poke.into_scalar();
     let data = poke.put(42u64);
     let value = unsafe { data.read::<u64>() };

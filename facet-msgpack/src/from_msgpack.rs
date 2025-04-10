@@ -2,7 +2,7 @@ use crate::constants::*;
 use crate::errors::Error as DecodeError;
 
 use facet_core::{Facet, Opaque};
-use facet_poke::Poke;
+use facet_poke::PokeUninit;
 use log::trace;
 
 /// Deserializes MessagePack-encoded data into a type that implements `Facet`.
@@ -30,7 +30,7 @@ use log::trace;
 /// ```
 pub fn from_str<T: Facet>(msgpack: &[u8]) -> Result<T, DecodeError> {
     // Allocate a Poke for type T
-    let (poke, _guard) = Poke::alloc::<T>();
+    let (poke, _guard) = PokeUninit::alloc::<T>();
 
     // Deserialize the MessagePack into the Poke
     let opaque = from_slice_opaque(poke, msgpack)?;
@@ -82,20 +82,20 @@ pub fn from_str<T: Facet>(msgpack: &[u8]) -> Result<T, DecodeError> {
 /// <https://github.com/msgpack/msgpack/blob/master/spec.md>
 #[allow(clippy::needless_lifetimes)]
 pub fn from_slice_opaque<'mem>(
-    poke: Poke<'mem>,
+    poke: PokeUninit<'mem>,
     msgpack: &[u8],
 ) -> Result<Opaque<'mem>, DecodeError> {
     let mut decoder = Decoder::new(msgpack);
 
     fn deserialize_value<'mem>(
         decoder: &mut Decoder,
-        poke: Poke<'mem>,
+        poke: PokeUninit<'mem>,
     ) -> Result<Opaque<'mem>, DecodeError> {
         let shape = poke.shape();
         trace!("Deserializing {:?}", shape);
 
         let opaque = match poke {
-            Poke::Scalar(pv) => {
+            PokeUninit::Scalar(pv) => {
                 trace!("Deserializing scalar");
                 if pv.shape().is_type::<String>() {
                     let s = decoder.decode_string()?;
@@ -108,7 +108,7 @@ pub fn from_slice_opaque<'mem>(
                     todo!("Unsupported scalar type: {}", pv.shape())
                 }
             }
-            Poke::Struct(mut ps) => {
+            PokeUninit::Struct(mut ps) => {
                 trace!("Deserializing struct");
                 let map_len = decoder.decode_map_len()?;
 
