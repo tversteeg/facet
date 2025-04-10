@@ -203,12 +203,6 @@ where
     };
 }
 
-#[allow(dead_code)]
-struct RandomStateInnards {
-    k0: u64,
-    k1: u64,
-}
-
 unsafe impl Facet for RandomState {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
