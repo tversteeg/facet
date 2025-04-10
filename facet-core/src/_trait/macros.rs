@@ -185,14 +185,14 @@ macro_rules! value_vtable {
             if $crate::spez::impls!($type_name: core::default::Default) {
                 builder = builder.default_in_place(|target| {
                     use $crate::spez::*;
-                    (&&Spez(<$type_name as $crate::Facet>::ARCHETYPE)).spez_default_in_place(target)
+                    unsafe { (&&Spez(<$type_name as $crate::Facet>::ARCHETYPE)).spez_default_in_place(target) }
                 });
             }
 
             if $crate::spez::impls!($type_name: core::clone::Clone) {
                 builder = builder.clone_into(|src, dst| {
                     use $crate::spez::*;
-                    (&&Spez(unsafe { src.as_ref::<$type_name>() })).spez_clone_into(dst)
+                    unsafe { (&&Spez(src.as_ref::<$type_name>())).spez_clone_into(dst) }
                 });
             }
 
@@ -249,7 +249,7 @@ macro_rules! value_vtable {
             if $crate::spez::impls!($type_name: core::str::FromStr) {
                 builder = builder.parse(|s, target| {
                     use $crate::spez::*;
-                    let res = (&&Spez(<$type_name as $crate::Facet>::ARCHETYPE)).spez_parse(s, target);
+                    let res = unsafe { (&&Spez(<$type_name as $crate::Facet>::ARCHETYPE)).spez_parse(s, target) };
                     res.map(|_| unsafe { target.assume_init() })
                 });
             }
