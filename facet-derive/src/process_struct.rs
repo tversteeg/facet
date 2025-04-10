@@ -74,9 +74,13 @@ pub(crate) fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
         None => String::new(),
     };
 
+    let static_decl = generate_static_decl(&struct_name);
+
     // Generate the impl
     let output = format!(
         r#"
+{static_decl}
+
 #[automatically_derived]
 unsafe impl facet::Facet for {struct_name} {{
     const SHAPE: &'static facet::Shape = &const {{

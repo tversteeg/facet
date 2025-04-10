@@ -23,9 +23,13 @@ pub(crate) fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStre
     // Create the fields string for struct_fields! macro
     let fields_str = fields.join(", ");
 
+    let static_decl = generate_static_decl(&struct_name);
+
     // Generate the impl
     let output = format!(
         r#"
+{static_decl}
+
 #[automatically_derived]
 unsafe impl facet::Facet for {struct_name} {{
     const SHAPE: &'static facet::Shape = &const {{

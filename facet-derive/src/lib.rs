@@ -259,3 +259,30 @@ impl core::fmt::Display for Expr {
         }
     }
 }
+
+/// Converts PascalCase to UPPER_SNAKE_CASE
+pub(crate) fn to_upper_snake_case(input: &str) -> String {
+    input
+        .chars()
+        .enumerate()
+        .fold(String::new(), |mut acc, (i, c)| {
+            if c.is_uppercase() {
+                if i > 0 {
+                    acc.push('_');
+                }
+                acc.push(c.to_ascii_uppercase());
+            } else {
+                acc.push(c.to_ascii_uppercase());
+            }
+            acc
+        })
+}
+
+/// Generate a static declaration that exports the crate
+pub(crate) fn generate_static_decl(type_name: &str) -> String {
+    format!(
+        "#[used]\nstatic {}_SHAPE: &'static facet::Shape = <{} as facet::Facet>::SHAPE;",
+        to_upper_snake_case(type_name),
+        type_name
+    )
+}

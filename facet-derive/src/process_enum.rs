@@ -176,9 +176,13 @@ pub(crate) fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
         }
     }
 
+    let static_decl = generate_static_decl(&enum_name);
+
     // Generate the impl
     let output = format!(
         r#"
+{static_decl}
+
 #[automatically_derived]
 unsafe impl facet::Facet for {enum_name} {{
     const SHAPE: &'static facet::Shape = &const {{
