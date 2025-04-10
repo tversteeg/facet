@@ -7,27 +7,40 @@ fn parse_field(field: Poke, value: &str, field_index: usize, ps: &mut PokeStruct
     let field_shape = field.shape();
     log::trace!("Field shape: {}", field_shape);
 
-    if field_shape.is_type::<bool>() {
-        log::trace!("Boolean field detected, setting to true");
-        field.into_value().put(true);
-        unsafe { ps.mark_initialized(field_index) }
-    } else if field_shape.is_type::<String>() {
-        log::trace!("String field detected");
-        let value = value.to_string();
-        field.into_value().put(value);
-        unsafe { ps.mark_initialized(field_index) };
-    } else {
-        let parse = field_shape.vtable.parse.unwrap_or_else(|| {
-            log::trace!("No parse function found for shape {}", field.shape());
-            panic!("shape {} does not support parse", field.shape())
-        });
-        log::trace!("Parsing field value");
-        unsafe { (parse)(value, field.into_value().data()) }.unwrap_or_else(|e| {
-            log::trace!("Failed to parse field: {}", e);
-            panic!("Failed to parse field of shape {}: {}", field_shape, e)
-        });
-        unsafe { ps.mark_initialized(field_index) }
-    }
+    let field = match field {
+        Poke::Scalar(pv) => {
+            let pv = match pv.typed::<String>() {
+                Ok(pv) => {
+                    pv.put(value.to_string());
+                    unsafe { ps.mark_initialized(field_index) }
+                    return;
+                }
+                Err(pv) => pv,
+            };
+            let pv = match pv.typed::<bool>() {
+                Ok(pv) => {
+                    log::trace!("Boolean field detected, setting to true");
+                    pv.put(value.to_lowercase() == "true");
+                    unsafe { ps.mark_initialized(field_index) }
+                    return;
+                }
+                Err(pv) => pv,
+            };
+            Poke::Scalar(pv)
+        }
+        field => field,
+    };
+
+    let parse = field_shape.vtable.parse.unwrap_or_else(|| {
+        log::trace!("No parse function found for shape {}", field.shape());
+        panic!("shape {} does not support parse", field.shape())
+    });
+    log::trace!("Parsing field value");
+    unsafe { (parse)(value, field.into_value().data()) }.unwrap_or_else(|e| {
+        log::trace!("Failed to parse field: {}", e);
+        panic!("Failed to parse field of shape {}: {}", field_shape, e)
+    });
+    unsafe { ps.mark_initialized(field_index) }
 }
 
 pub fn from_slice<T: Facet>(s: &[&str]) -> T {

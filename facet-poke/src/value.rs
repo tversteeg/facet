@@ -47,11 +47,11 @@ impl<'mem> PokeValue<'mem> {
     /// Converts to a type-checked [`TypedPokeValue<T>`] if the shape matches type `T`
     ///
     /// Returns `None` if the shape doesn't match the type `T`.
-    pub fn typed<T: Facet>(self) -> Option<TypedPokeValue<'mem, T>> {
+    pub fn typed<T: Facet>(self) -> Result<TypedPokeValue<'mem, T>, Self> {
         if self.shape.is_type::<T>() {
-            Some(TypedPokeValue::new(self))
+            Ok(TypedPokeValue::new(self))
         } else {
-            None
+            Err(self)
         }
     }
 
@@ -116,7 +116,8 @@ impl<'mem> PokeValue<'mem> {
         }
     }
 
-    /// Place a value in the space provided
+    /// Place a value in the space provided. See also [`Self::typed`], which
+    /// is panic-free.
     ///
     /// This function places a value of type T into the destination space,
     /// checking that T exactly matches the expected shape.
