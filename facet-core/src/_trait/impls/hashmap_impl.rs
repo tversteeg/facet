@@ -208,7 +208,11 @@ unsafe impl Facet for RandomState {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .layout(Layout::new::<Self>())
-            .def(Def::Scalar(ScalarDef::of::<Self>()))
+            .def(Def::Scalar(
+                ScalarDef::builder()
+                    .fully_qualified_type_name("std::collections::hash_map::RandomState")
+                    .build(),
+            ))
             .vtable(value_vtable!((), |f, _opts| write!(f, "RandomState")))
             .build()
     };
