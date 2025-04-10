@@ -105,8 +105,11 @@ impl<'mem> OpaqueUninit<'mem> {
 /// A type-erased read-only pointer to an initialized value.
 ///
 /// Cannot be null. May be dangling (for ZSTs)
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct OpaqueConst<'mem>(NonNull<u8>, PhantomData<&'mem ()>);
+
+unsafe impl Send for OpaqueConst<'_> {}
+unsafe impl Sync for OpaqueConst<'_> {}
 
 impl<'mem> OpaqueConst<'mem> {
     /// Create a new opaque const pointer from a raw pointer
@@ -117,12 +120,12 @@ impl<'mem> OpaqueConst<'mem> {
     /// of the correct type, and be valid for lifetime `'mem`.
     ///
     /// It's encouraged to take the address of something with `&raw const x`, rather than `&x`
-    pub fn new<T>(ptr: *const T) -> Self {
+    pub const fn new<T>(ptr: *const T) -> Self {
         unsafe { Self(NonNull::new_unchecked(ptr as *mut u8), PhantomData) }
     }
 
     /// Gets the underlying raw pointer as a byte pointer
-    pub fn as_byte_ptr(self) -> *const u8 {
+    pub const fn as_byte_ptr(self) -> *const u8 {
         self.0.as_ptr()
     }
 
@@ -131,7 +134,7 @@ impl<'mem> OpaqueConst<'mem> {
     /// # Safety
     ///
     /// Must be called with the original type T that was used to create this pointer
-    pub unsafe fn as_ptr<T>(self) -> *const T {
+    pub const unsafe fn as_ptr<T>(self) -> *const T {
         self.0.as_ptr() as *const T
     }
 
@@ -140,7 +143,7 @@ impl<'mem> OpaqueConst<'mem> {
     /// # Safety
     ///
     /// `T` must be the _actual_ underlying type. You're downcasting with no guardrails.
-    pub unsafe fn as_ref<'borrow: 'mem, T>(self) -> &'borrow T {
+    pub const unsafe fn as_ref<'borrow: 'mem, T>(self) -> &'borrow T {
         unsafe { &*(self.0.as_ptr() as *const T) }
     }
 
@@ -150,7 +153,7 @@ impl<'mem> OpaqueConst<'mem> {
     ///
     /// Offset must be within the bounds of the allocated memory,
     /// and the resulting pointer must be properly aligned.
-    pub unsafe fn field(self, offset: usize) -> OpaqueConst<'mem> {
+    pub const unsafe fn field(self, offset: usize) -> OpaqueConst<'mem> {
         OpaqueConst(
             unsafe { NonNull::new_unchecked(self.0.as_ptr().byte_add(offset)) },
             PhantomData,
@@ -163,7 +166,7 @@ impl<'mem> OpaqueConst<'mem> {
     ///
     /// `T` must be the actual underlying type of the pointed-to memory.
     /// The memory must be properly initialized and aligned for type `T`.
-    pub unsafe fn read<T>(self) -> T {
+    pub const unsafe fn read<T>(self) -> T {
         unsafe { core::ptr::read(self.as_ptr()) }
     }
 }
@@ -181,7 +184,7 @@ impl<'mem> Opaque<'mem> {
     /// of the correct type, and be valid for lifetime `'mem`.
     ///
     /// It's encouraged to take the address of something with `&raw mut x`, rather than `&x`
-    pub fn new<T>(ptr: *mut T) -> Self {
+    pub const fn new<T>(ptr: *mut T) -> Self {
         Self(
             unsafe { NonNull::new_unchecked(ptr as *mut u8) },
             PhantomData,
@@ -189,12 +192,12 @@ impl<'mem> Opaque<'mem> {
     }
 
     /// Gets the underlying raw pointer
-    pub fn as_byte_ptr(self) -> *const u8 {
+    pub const fn as_byte_ptr(self) -> *const u8 {
         self.0.as_ptr()
     }
 
     /// Gets the underlying raw pointer as mutable
-    pub fn as_mut_byte_ptr(self) -> *mut u8 {
+    pub const fn as_mut_byte_ptr(self) -> *mut u8 {
         self.0.as_ptr()
     }
 
@@ -203,7 +206,7 @@ impl<'mem> Opaque<'mem> {
     /// # Safety
     ///
     /// Must be called with the original type T that was used to create this pointer
-    pub unsafe fn as_ptr<T>(self) -> *const T {
+    pub const unsafe fn as_ptr<T>(self) -> *const T {
         self.0.as_ptr() as *const T
     }
 
@@ -212,7 +215,7 @@ impl<'mem> Opaque<'mem> {
     /// # Safety
     ///
     /// `T` must be the _actual_ underlying type. You're downcasting with no guardrails.
-    pub unsafe fn as_mut<'borrow: 'mem, T>(self) -> &'borrow mut T {
+    pub const unsafe fn as_mut<'borrow: 'mem, T>(self) -> &'borrow mut T {
         unsafe { &mut *(self.0.as_ptr() as *mut T) }
     }
 
@@ -225,12 +228,12 @@ impl<'mem> Opaque<'mem> {
     /// calling as_mut is UB.
     ///
     /// Basically this is UB land. Careful.
-    pub unsafe fn as_ref<'borrow: 'mem, T>(self) -> &'borrow T {
+    pub const unsafe fn as_ref<'borrow: 'mem, T>(self) -> &'borrow T {
         unsafe { &*(self.0.as_ptr() as *const T) }
     }
 
     /// Make a const ptr out of this mut ptr
-    pub fn as_const<'borrow: 'mem>(self) -> OpaqueConst<'borrow> {
+    pub const fn as_const<'borrow: 'mem>(self) -> OpaqueConst<'borrow> {
         OpaqueConst(self.0, PhantomData)
     }
 
@@ -240,7 +243,7 @@ impl<'mem> Opaque<'mem> {
     ///
     /// `T` must be the actual underlying type of the pointed-to memory.
     /// The memory must be properly initialized and aligned for type `T`.
-    pub unsafe fn read<T>(self) -> T {
+    pub const unsafe fn read<T>(self) -> T {
         unsafe { core::ptr::read(self.as_mut()) }
     }
 

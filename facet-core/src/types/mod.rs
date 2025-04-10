@@ -16,7 +16,10 @@ pub use map::*;
 mod value;
 pub use value::*;
 
-use crate::{Facet, shape_of, value_vtable};
+mod scalar_affinities;
+pub use scalar_affinities::*;
+
+use crate::Facet;
 
 /// Schema for reflection of a type
 #[derive(Clone, Copy, Debug)]
@@ -802,66 +805,41 @@ impl Default for EnumRepr {
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[non_exhaustive]
 pub struct ScalarDef {
-    /// The TypeId of the scalar type
-    pub type_id: ConstTypeId,
-}
-
-unsafe impl Facet for ScalarDef {
-    const SHAPE: &'static Shape = &const {
-        static FIELDS: &[Field] = &[Field::builder()
-            .name("type_id")
-            .shape(shape_of(&|s: ScalarDef| s.type_id))
-            .offset(core::mem::offset_of!(ScalarDef, type_id))
-            .flags(FieldFlags::EMPTY)
-            .attributes(&[])
-            .build()];
-
-        Shape::builder()
-            .id(ConstTypeId::of::<ScalarDef>())
-            .layout(core::alloc::Layout::new::<Self>())
-            .vtable(value_vtable!(ScalarDef, |f, _opts| f.write_str("ScalarDef")))
-            .def(Def::Struct(
-                StructDef::builder()
-                    .kind(StructKind::Struct)
-                    .fields(FIELDS)
-                    .build(),
-            ))
-            .build()
-    };
+    /// Affinity of the scalar — is spiritually more like a number, more like a string, something else?
+    /// example: an IPv4 address is both. good luck.
+    pub affinity: ScalarAffinity,
 }
 
 impl ScalarDef {
-    /// Create a new ScalarDef with the given TypeId
-    pub const fn of<T>() -> Self {
+    /// Returns a builder for ScalarDef
+    pub const fn builder() -> ScalarDefBuilder {
         ScalarDefBuilder::new()
-            .type_id(ConstTypeId::of::<T>())
-            .build()
     }
 }
 
 /// Builder for ScalarDef
 #[derive(Default)]
 pub struct ScalarDefBuilder {
-    type_id: Option<ConstTypeId>,
+    affinity: Option<ScalarAffinity>,
 }
 
 impl ScalarDefBuilder {
     /// Creates a new ScalarDefBuilder
     #[allow(clippy::new_without_default)]
     pub const fn new() -> Self {
-        Self { type_id: None }
+        Self { affinity: None }
     }
 
-    /// Sets the type_id for the ScalarDef
-    pub const fn type_id(mut self, type_id: ConstTypeId) -> Self {
-        self.type_id = Some(type_id);
+    /// Sets the affinity for the ScalarDef
+    pub const fn affinity(mut self, affinity: ScalarAffinity) -> Self {
+        self.affinity = Some(affinity);
         self
     }
 
     /// Builds the ScalarDef
     pub const fn build(self) -> ScalarDef {
         ScalarDef {
-            type_id: self.type_id.unwrap(),
+            affinity: self.affinity.unwrap(),
         }
     }
 }
