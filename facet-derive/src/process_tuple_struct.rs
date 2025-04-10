@@ -24,6 +24,7 @@ pub(crate) fn process_tuple_struct(parsed: TupleStruct) -> proc_macro::TokenStre
     let fields_str = fields.join(", ");
 
     let static_decl = generate_static_decl(&struct_name);
+    let maybe_container_doc = build_maybe_doc_string(&parsed.attributes);
 
     // Generate the impl
     let output = format!(
@@ -45,6 +46,7 @@ unsafe impl facet::Facet for {struct_name} {{
                 .fields(facet::struct_fields!({struct_name}, ({fields_str})))
                 .build()
             ))
+            {maybe_container_doc}
             .build()
     }};
 }}

@@ -139,6 +139,30 @@ fn struct_doc_comment4() {
 }
 
 #[test]
+fn enum_doc_comment() {
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
+    #[repr(u8)]
+    /// This is an enum
+    enum MyEnum {
+        #[allow(dead_code)]
+        A,
+        #[allow(dead_code)]
+        B,
+    }
+
+    assert_eq!(MyEnum::SHAPE.doc, Some(" This is an enum"));
+}
+
+#[test]
+fn tuple_struct_doc_comment_test() {
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
+    /// This is a tuple struct
+    struct MyTuple(u32, String);
+
+    assert_eq!(MyTuple::SHAPE.doc, Some(" This is a tuple struct"));
+}
+
+#[test]
 fn struct_field_doc_comment() {
     #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
     struct Foo {

@@ -177,6 +177,7 @@ pub(crate) fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
     }
 
     let static_decl = generate_static_decl(&enum_name);
+    let maybe_container_doc = build_maybe_doc_string(&parsed.attributes);
 
     // Generate the impl
     let output = format!(
@@ -203,6 +204,7 @@ unsafe impl facet::Facet for {enum_name} {{
                 .variants(facet::enum_variants!({enum_name}, [{variants}]))
                 .repr(facet::EnumRepr::{repr_type})
                 .build()))
+            {maybe_container_doc}
             .build()
     }};
 }}
