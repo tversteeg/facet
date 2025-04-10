@@ -23,6 +23,12 @@ pub fn from_slice<T: Facet>(s: &[&str]) -> T {
             if field_shape.is_type::<bool>() {
                 log::trace!("Boolean field detected, setting to true");
                 unsafe { field.into_value().put(OpaqueConst::from_ref(&true)) };
+            } else if field_shape.is_type::<String>() {
+                log::trace!("String field detected, using the next token as value");
+                let value = s.first().unwrap().to_string();
+                s = &s[1..];
+                unsafe { field.into_value().put(OpaqueConst::from_ref(&value)) };
+                std::mem::forget(value);
             } else {
                 let value = s.first().unwrap();
                 log::trace!("Field value: {}", value);

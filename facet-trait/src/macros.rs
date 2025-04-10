@@ -246,6 +246,14 @@ macro_rules! value_vtable {
                 });
             }
 
+            if $crate::facet_spez::impls!($type_name: core::str::FromStr) {
+                builder = builder.parse(|s, target| {
+                    use $crate::facet_spez::*;
+                    let res = (&&Spez(<$type_name as $crate::Facet>::ARCHETYPE)).spez_parse(s, target);
+                    res.map(|_| unsafe { target.assume_init() })
+                });
+            }
+
             builder.build()
         }
     };
