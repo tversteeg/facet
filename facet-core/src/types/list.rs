@@ -36,6 +36,7 @@ pub type ListGetItemPtrFn = unsafe fn(list: OpaqueConst, index: usize) -> Opaque
 /// Virtual table for a list-like type (like `Vec<T>`,
 /// but also `HashSet<T>`, etc.)
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct ListVTable {
     /// cf. [`ListInitInPlaceWithCapacityFn`]

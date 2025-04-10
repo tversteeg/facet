@@ -68,6 +68,7 @@ pub type MapIterDeallocFn = for<'iter> unsafe fn(iter: Opaque<'iter>);
 
 /// VTable for an iterator over a map
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct MapIterVTable {
     /// cf. [`MapIterNextFn`]
@@ -127,6 +128,7 @@ impl MapIterVTableBuilder {
 
 /// Virtual table for a Map<K, V>
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+#[repr(C)]
 pub struct MapVTable {
     /// cf. [`MapInitInPlaceWithCapacityFn`]
     pub init_in_place_with_capacity_fn: MapInitInPlaceWithCapacityFn,

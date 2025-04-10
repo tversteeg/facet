@@ -21,6 +21,7 @@ use crate::{ConstTypeId, Facet};
 
 /// Schema for reflection of a type
 #[derive(Clone, Copy, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct Shape {
     /// Type ID
@@ -292,6 +293,7 @@ impl core::fmt::Display for FieldError {
 
 /// Common fields for struct-like types
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct StructDef {
     /// the kind of struct (e.g. struct, tuple struct, tuple)
@@ -347,6 +349,7 @@ impl StructDefBuilder {
 
 /// Describes the kind of struct (useful for deserializing)
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub enum StructKind {
     /// struct S { t0: T0, t1: T1 }
@@ -361,6 +364,7 @@ pub enum StructKind {
 
 /// Describes a field in a struct or tuple
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct Field {
     /// key for the struct field (for tuples and tuple-structs, this is the 0-based index)
@@ -398,6 +402,7 @@ pub struct FieldBuilder {
 /// An attribute that can be set on a field
 #[non_exhaustive]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 pub enum FieldAttribute {
     /// Marks field as containing sensitive information
     Sensitive,
@@ -514,6 +519,7 @@ impl core::fmt::Display for FieldFlags {
 
 /// Fields for map types
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct MapDef {
     /// vtable for interacting with the map
@@ -579,6 +585,7 @@ impl MapDefBuilder {
 
 /// Fields for list types
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct ListDef {
     /// vtable for interacting with the list
@@ -633,6 +640,7 @@ impl ListDefBuilder {
 
 /// Fields for enum types
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct EnumDef {
     /// representation of the enum (u8, u16, etc.)
@@ -687,6 +695,7 @@ impl EnumDefBuilder {
 
 /// Describes a variant of an enum
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct Variant {
     /// Name of the variant
@@ -754,6 +763,7 @@ impl VariantBuilder {
 
 /// Represents the different kinds of variants that can exist in a Rust enum
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub enum VariantKind {
     /// Unit variant (e.g., `None` in Option)
@@ -774,6 +784,7 @@ pub enum VariantKind {
 
 /// All possible representations for Rust enums
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub enum EnumRepr {
     /// Default representation (compiler-dependent)
@@ -808,6 +819,7 @@ impl Default for EnumRepr {
 
 /// Definition for scalar types
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct ScalarDef {
     /// Affinity of the scalar — is spiritually more like a number, more like a string, something else?
@@ -851,6 +863,7 @@ impl ScalarDefBuilder {
 
 /// The definition of a shape: is it more like a struct, a map, a list?
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub enum Def {
     /// Scalar — those don't have a def, they're not composed of other things.
@@ -882,6 +895,7 @@ pub enum Def {
 
 /// A characteristic a shape can have
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(C)]
 #[non_exhaustive]
 pub enum Characteristic {
     // Marker traits

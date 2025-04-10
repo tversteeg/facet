@@ -3,6 +3,7 @@ use crate::OpaqueConst;
 /// Scalar affinity: what a scalar spiritually is: a number, a string, a bool, something else
 /// entirely?
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub enum ScalarAffinity {
     /// Number-like scalar affinity
@@ -71,6 +72,7 @@ impl ScalarAffinity {
 
 /// Definition for number-like scalar affinities
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct NumberAffinity {
     /// Bit representation of numbers
@@ -101,6 +103,7 @@ pub struct NumberAffinity {
 
 /// Represents whether a numeric type is signed or unsigned
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub enum Signedness {
     /// Signed numeric type
@@ -111,6 +114,7 @@ pub enum Signedness {
 
 /// Bit representation of numbers
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub enum NumberBits {
     /// Integer number limits with specified number of bits
@@ -148,6 +152,7 @@ impl NumberAffinity {
 }
 
 /// Builder for NumberAffinity
+#[repr(C)]
 pub struct NumberAffinityBuilder {
     limits: Option<NumberBits>,
     min: Option<OpaqueConst<'static>>,
@@ -280,6 +285,7 @@ impl NumberAffinityBuilder {
 
 /// Definition for string-like scalar affinities
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct StringAffinity {
     /// Maximum inline length
@@ -294,6 +300,7 @@ impl StringAffinity {
 }
 
 /// Builder for StringAffinity
+#[repr(C)]
 pub struct StringAffinityBuilder {
     max_inline_length: Option<usize>,
 }
@@ -323,6 +330,7 @@ impl StringAffinityBuilder {
 
 /// Definition for boolean scalar affinities
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct BoolAffinity {}
 
@@ -334,6 +342,7 @@ impl BoolAffinity {
 }
 
 /// Builder for BoolAffinity
+#[repr(C)]
 pub struct BoolAffinityBuilder {}
 
 impl BoolAffinityBuilder {
@@ -351,6 +360,7 @@ impl BoolAffinityBuilder {
 
 /// Definition for empty scalar affinities
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct EmptyAffinity {}
 
@@ -362,6 +372,7 @@ impl EmptyAffinity {
 }
 
 /// Builder for EmptyAffinity
+#[repr(C)]
 pub struct EmptyAffinityBuilder {}
 
 impl EmptyAffinityBuilder {
@@ -379,6 +390,7 @@ impl EmptyAffinityBuilder {
 
 /// Definition for socket address scalar affinities
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct SocketAddrAffinity {}
 
@@ -390,6 +402,7 @@ impl SocketAddrAffinity {
 }
 
 /// Builder for SocketAddrAffinity
+#[repr(C)]
 pub struct SocketAddrAffinityBuilder {}
 
 impl SocketAddrAffinityBuilder {
@@ -407,6 +420,7 @@ impl SocketAddrAffinityBuilder {
 
 /// Definition for IP address scalar affinities
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct IpAddrAffinity {}
 
@@ -418,6 +432,7 @@ impl IpAddrAffinity {
 }
 
 /// Builder for IpAddrAffinity
+#[repr(C)]
 pub struct IpAddrAffinityBuilder {}
 
 impl IpAddrAffinityBuilder {
@@ -435,6 +450,7 @@ impl IpAddrAffinityBuilder {
 
 /// Definition for opaque scalar affinities
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct OpaqueAffinity {}
 
@@ -446,6 +462,7 @@ impl OpaqueAffinity {
 }
 
 /// Builder for OpaqueAffinity
+#[repr(C)]
 pub struct OpaqueAffinityBuilder {}
 
 impl OpaqueAffinityBuilder {
@@ -463,6 +480,7 @@ impl OpaqueAffinityBuilder {
 
 /// Definition for other scalar affinities
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(C)]
 #[non_exhaustive]
 pub struct OtherAffinity {}
 
@@ -474,6 +492,7 @@ impl OtherAffinity {
 }
 
 /// Builder for OtherAffinity
+#[repr(C)]
 pub struct OtherAffinityBuilder {}
 
 impl OtherAffinityBuilder {
