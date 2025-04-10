@@ -41,6 +41,7 @@ enum StackState {
     ProcessBytesItem { item_index: usize },
     ProcessMapEntry,
     Finish,
+    OptionFinish,
 }
 
 /// Stack item for iterative traversal
@@ -169,6 +170,41 @@ impl PrettyPrinter {
                         Peek::Value(value) => {
                             self.format_value(value, f)?;
                         }
+                        Peek::Option(option) => {
+                            // Print the Option name
+                            self.write_type_name(f, &option)?;
+
+                            if option.is_some() {
+                                self.write_punctuation(f, "::Some(")?;
+
+                                if let Some(inner_value) = option.value() {
+                                    // Create a custom stack item for Option::Some value
+                                    let start_item = StackItem {
+                                        peek: inner_value,
+                                        format_depth: item.format_depth,
+                                        type_depth: item.type_depth + 1,
+                                        state: StackState::Start,
+                                    };
+                                    
+                                    // Add a special close parenthesis item
+                                    let close_paren_item = StackItem {
+                                        peek: Peek::Option(option),
+                                        format_depth: item.format_depth,
+                                        type_depth: item.type_depth,
+                                        state: StackState::OptionFinish,
+                                    };
+                                    
+                                    // Process the value first, then handle closing
+                                    stack.push_back(close_paren_item);
+                                    stack.push_back(start_item);
+                                }
+
+                                // Skip to next item
+                                continue;
+                            } else {
+                                self.write_punctuation(f, "::None")?;
+                            }
+                        }
                         Peek::Struct(struct_) => {
                             // When recursing into a struct, always increment format_depth
                             // Only increment type_depth if we're moving to a different address
@@ -181,6 +217,9 @@ impl PrettyPrinter {
 
                             // Print the struct name
                             self.write_type_name(f, &struct_)?;
+
+                            // Struct doc comments aren't directly accessible
+
                             self.write_punctuation(f, " {")?;
 
                             if struct_.field_count() == 0 {
@@ -263,6 +302,15 @@ impl PrettyPrinter {
                             // Get the active variant name
                             let variant_name = enum_.variant_name_active();
 
+                            // Get the active variant to access its doc comments
+                            let variant = enum_.active_variant();
+
+                            // Display doc comments for the variant if they exist
+                            if !variant.doc.is_empty() {
+                                let doc = variant.doc.join("\n");
+                                self.write_comment(f, &format!(" /* {} */ ", doc))?;
+                            }
+
                             // Apply color for variant name
                             if self.use_colors {
                                 ansi::write_bold(f)?;
@@ -343,7 +391,7 @@ impl PrettyPrinter {
                             continue;
                         }
 
-                        let (_, field_name, field_value, flags) = &fields[field_index];
+                        let (_, field_name, field_value, field) = &fields[field_index];
 
                         // Indent
                         write!(
@@ -353,12 +401,18 @@ impl PrettyPrinter {
                             width = item.format_depth * self.indent_size
                         )?;
 
+                        // Field doc comment
+                        if !field.doc.is_empty() {
+                            let doc = field.doc.join("\n");
+                            self.write_comment(f, &format!("/* {} */ ", doc))?;
+                        }
+
                         // Field name
                         self.write_field_name(f, field_name)?;
                         self.write_punctuation(f, ": ")?;
 
                         // Check if field is sensitive
-                        if flags.contains(facet_core::FieldFlags::SENSITIVE) {
+                        if field.flags.contains(facet_core::FieldFlags::SENSITIVE) {
                             // Field value is sensitive, use write_redacted
                             self.write_redacted(f, "[REDACTED]")?;
                             self.write_punctuation(f, ",")?;
@@ -608,10 +662,13 @@ impl PrettyPrinter {
                     }
                 }
                 StackState::Finish => {
-                    // This state is reached after processing a field or list item
                     // Add comma and newline for struct fields and list items
                     self.write_punctuation(f, ",")?;
                     writeln!(f)?;
+                },
+                StackState::OptionFinish => {
+                    // Just close the Option::Some parenthesis, with no comma
+                    self.write_punctuation(f, ")")?;
                 }
             }
         }

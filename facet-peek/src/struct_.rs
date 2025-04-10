@@ -72,16 +72,17 @@ impl<'mem> PeekStruct<'mem> {
         &self.def
     }
 
-    /// Iterates over all fields in this struct, providing index, name, value, and flags
+    /// Iterates over all fields in this struct, providing index, name, value, and the field definition
     #[inline]
     pub fn fields_with_metadata(
         &self,
-    ) -> impl Iterator<Item = (usize, &'static str, Peek<'mem>, facet_core::FieldFlags)> + '_ {
+    ) -> impl Iterator<Item = (usize, &'static str, Peek<'mem>, &'static facet_core::Field)> + '_
+    {
         (0..self.field_count()).filter_map(|i| {
             let name = self.field_name(i)?;
             let value = self.field_value(i)?;
-            let flags = self.def.fields[i].flags;
-            Some((i, name, value, flags))
+            let field = &self.def.fields[i];
+            Some((i, name, value, field))
         })
     }
 }
