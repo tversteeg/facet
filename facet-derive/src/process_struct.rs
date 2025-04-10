@@ -43,8 +43,21 @@ pub(crate) fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
 
             let mut attributes = vec![];
             for attr in &field.value.attributes {
-                if let AttributeInner::Facet(inner) = &attr.body.content {}
+                if let AttributeInner::Facet(attr) = &attr.body.content {
+                    match &attr.inner.content {
+                        FacetInner::Sensitive(_ksensitive) => {
+                            attributes.push("facet::FieldAttribute::Sensitive".to_string());
+                        }
+                        FacetInner::Other(token_trees) => {
+                            attributes.push(format!(
+                                r#"facet::FieldAttribute::Arbitrary({:?})"#,
+                                format!("{:?}", token_trees)
+                            ));
+                        }
+                    }
+                }
             }
+            let attributes = attributes.join(",");
 
             // Generate each field definition
             format!(
@@ -53,7 +66,7 @@ pub(crate) fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
                 .shape(facet::shape_of(&|s: {struct_name}| s.{field_name}))
                 .offset(::core::mem::offset_of!({struct_name}, {field_name}))
                 .flags({flags})
-                .attributes({attributes})
+                .attributes(&[{attributes}])
                 .build()"
             )
         })
