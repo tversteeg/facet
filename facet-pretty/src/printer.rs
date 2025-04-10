@@ -392,49 +392,45 @@ impl PrettyPrinter {
                             stack.push_back(finish_item);
                             stack.push_back(start_item);
                         }
-                    } else if let Peek::Enum(enum_copy) = item.peek {
-                        // Handle enum fields
-                        // Make a clone of enum_copy to work with
-                        let enum_peek = enum_copy;
+                    } else if let Peek::Enum(enum_val) = item.peek {
+                        // Since PeekEnum implements Copy, we can use it directly
 
-                        // Determine if this is a tuple or struct variant
-                        let variant_kind = enum_peek.variant_kind_active();
-                        let is_tuple =
-                            matches!(variant_kind, facet_core::VariantKind::Tuple { .. });
-                        let is_struct =
-                            matches!(variant_kind, facet_core::VariantKind::Struct { .. });
+                        // Get all fields directly
+                        let fields: Vec<_> = enum_val.fields().collect();
 
-                        // Get all enum fields as a vector to avoid borrow issues
-                        let fields: Vec<(&str, Peek)> = enum_peek.fields().collect();
-
-                        // Check if we've processed all fields
+                        // Check if we're done processing fields
                         if field_index >= fields.len() {
-                            if is_tuple {
-                                // Close the tuple variant
-                                write!(
-                                    f,
-                                    "{:width$}{}",
-                                    "",
-                                    self.style_punctuation(")"),
-                                    width = (item.format_depth - 1) * self.indent_size
-                                )?;
-                            } else if is_struct {
-                                // Close the struct variant
-                                write!(
-                                    f,
-                                    "{:width$}{}",
-                                    "",
-                                    self.style_punctuation("}"),
-                                    width = (item.format_depth - 1) * self.indent_size
-                                )?;
+                            // Determine variant kind to use the right closing delimiter
+                            match enum_val.variant_kind_active() {
+                                facet_core::VariantKind::Tuple { .. } => {
+                                    // Close tuple variant with )
+                                    write!(
+                                        f,
+                                        "{:width$}{}",
+                                        "",
+                                        self.style_punctuation(")"),
+                                        width = (item.format_depth - 1) * self.indent_size
+                                    )?;
+                                }
+                                facet_core::VariantKind::Struct { .. } => {
+                                    // Close struct variant with }
+                                    write!(
+                                        f,
+                                        "{:width$}{}",
+                                        "",
+                                        self.style_punctuation("}"),
+                                        width = (item.format_depth - 1) * self.indent_size
+                                    )?;
+                                }
+                                _ => {}
                             }
                             continue;
                         }
 
-                        // We know we have a field at this index
-                        let (field_name, field_peek) = &fields[field_index];
+                        // Get the current field
+                        let (field_name, field_peek) = fields[field_index];
 
-                        // Indent
+                        // Add indentation
                         write!(
                             f,
                             "{:width$}",
@@ -442,33 +438,34 @@ impl PrettyPrinter {
                             width = item.format_depth * self.indent_size
                         )?;
 
-                        // For struct variants, print the field name
-                        if is_struct {
+                        // For struct variants, print field name
+                        if let facet_core::VariantKind::Struct { .. } =
+                            enum_val.variant_kind_active()
+                        {
                             self.write_field_name(f, field_name)?;
                             self.write_punctuation(f, ": ")?;
                         }
-                        // For tuple variants, we just format the field value directly
 
-                        // Push current item back to continue processing remaining fields
+                        // Set up to process the next field after this one
                         item.state = StackState::ProcessStructField {
                             field_index: field_index + 1,
                         };
 
-                        // Set up start and finish items for the field value
+                        // Create finish and start items for processing the field value
                         let finish_item = StackItem {
-                            peek: *field_peek,
+                            peek: field_peek, // field_peek is already a Peek which is Copy
                             format_depth: item.format_depth,
                             type_depth: item.type_depth + 1,
                             state: StackState::Finish,
                         };
                         let start_item = StackItem {
-                            peek: *field_peek,
+                            peek: field_peek, // field_peek is already a Peek which is Copy
                             format_depth: item.format_depth,
                             type_depth: item.type_depth + 1,
                             state: StackState::Start,
                         };
 
-                        // Push everything back onto the stack in the correct order
+                        // Push items to stack in the right order
                         stack.push_back(item);
                         stack.push_back(finish_item);
                         stack.push_back(start_item);

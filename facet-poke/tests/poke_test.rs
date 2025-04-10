@@ -126,12 +126,16 @@ fn build_enum() {
     enum FooBar {
         Foo(u32),
         Bar(String),
+        Baz(i64),
     }
 
     let v = FooBar::Foo(42);
     eprintln!("{}", v.pretty());
 
     let v = FooBar::Bar("junjito".into());
+    eprintln!("{}", v.pretty());
+
+    let v = FooBar::Baz(67);
     eprintln!("{}", v.pretty());
 }
 
