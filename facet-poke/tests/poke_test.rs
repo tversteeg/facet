@@ -487,8 +487,8 @@ fn test_array_traits() {
         [],
         [],
         FactBuilder::new()
-            .display()
             .debug()
+            .display()
             .equal_and(true)
             .ord_and(Ordering::Equal)
             .default()
@@ -500,8 +500,8 @@ fn test_array_traits() {
         [42],
         [24],
         FactBuilder::new()
-            .display()
             .debug()
+            .display()
             .equal_and(false)
             .ord_and(Ordering::Greater)
             .default()
