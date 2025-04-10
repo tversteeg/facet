@@ -30,7 +30,7 @@ where
                             write!(f, "[")?;
                             unsafe {
                                 (T::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value[0]),
+                                    OpaqueConst::new(&value[0] as *const T),
                                     f,
                                 )?;
                             }
@@ -43,8 +43,8 @@ where
                             let b = unsafe { b.as_ref::<[T; 1]>() };
                             unsafe {
                                 (T::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a[0]),
-                                    OpaqueConst::from_ref(&b[0]),
+                                    OpaqueConst::new(&a[0] as *const T),
+                                    OpaqueConst::new(&b[0] as *const T),
                                 )
                             }
                         });
@@ -59,7 +59,7 @@ where
                         builder = builder.clone_into(|src, dst| unsafe {
                             let t_cip = T::SHAPE.vtable.clone_into.unwrap_unchecked();
                             (t_cip)(
-                                OpaqueConst::from_ref(&src.as_ref::<[T; 1]>()[0]),
+                                OpaqueConst::new(&src.as_ref::<[T; 1]>()[0] as *const T),
                                 dst.field_uninit(0),
                             )
                         });
@@ -70,8 +70,8 @@ where
                             let b = unsafe { b.as_ref::<[T; 1]>() };
                             unsafe {
                                 (T::SHAPE.vtable.partial_ord.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a[0]),
-                                    OpaqueConst::from_ref(&b[0]),
+                                    OpaqueConst::new(&a[0] as *const T),
+                                    OpaqueConst::new(&b[0] as *const T),
                                 )
                             }
                         });
@@ -82,8 +82,8 @@ where
                             let b = unsafe { b.as_ref::<[T; 1]>() };
                             unsafe {
                                 (T::SHAPE.vtable.ord.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a[0]),
-                                    OpaqueConst::from_ref(&b[0]),
+                                    OpaqueConst::new(&a[0] as *const T),
+                                    OpaqueConst::new(&b[0] as *const T),
                                 )
                             }
                         });
@@ -93,7 +93,7 @@ where
                             let value = unsafe { value.as_ref::<[T; 1]>() };
                             unsafe {
                                 (T::SHAPE.vtable.hash.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value[0]),
+                                    OpaqueConst::new(&value[0] as *const T),
                                     state,
                                     hasher,
                                 )
@@ -119,7 +119,7 @@ where
                                     "Index out of bounds: the len is 1 but the index is {index}"
                                 );
                             }
-                            OpaqueConst::new_unchecked(ptr.as_ptr::<[T; 1]>())
+                            OpaqueConst::new(ptr.as_ptr::<[T; 1]>())
                         })
                         .build()
                         },

@@ -29,7 +29,7 @@ where
                                     "Index out of bounds: the len is {len} but the index is {index}"
                                 );
                             }
-                            OpaqueConst::new_unchecked(slice.as_ptr().add(index))
+                            OpaqueConst::new(slice.as_ptr().add(index))
                         })
                         .build()
                         },
@@ -67,7 +67,7 @@ where
                                 }
                                 unsafe {
                                     (T::SHAPE.vtable.debug.unwrap_unchecked())(
-                                        OpaqueConst::from_ref(item),
+                                        OpaqueConst::new(item as *const _),
                                         f,
                                     )?;
                                 }
@@ -86,8 +86,8 @@ where
                             for (x, y) in a.iter().zip(b.iter()) {
                                 if !unsafe {
                                     (T::SHAPE.vtable.eq.unwrap_unchecked())(
-                                        OpaqueConst::from_ref(x),
-                                        OpaqueConst::from_ref(y),
+                                        OpaqueConst::new(x as *const _),
+                                        OpaqueConst::new(y as *const _),
                                     )
                                 } {
                                     return false;
@@ -104,8 +104,8 @@ where
                             for (x, y) in a.iter().zip(b.iter()) {
                                 let ord = unsafe {
                                     (T::SHAPE.vtable.ord.unwrap_unchecked())(
-                                        OpaqueConst::from_ref(x),
-                                        OpaqueConst::from_ref(y),
+                                        OpaqueConst::new(x as *const _),
+                                        OpaqueConst::new(y as *const _),
                                     )
                                 };
                                 if ord != core::cmp::Ordering::Equal {
@@ -123,8 +123,8 @@ where
                             for (x, y) in a.iter().zip(b.iter()) {
                                 let ord = unsafe {
                                     (T::SHAPE.vtable.partial_ord.unwrap_unchecked())(
-                                        OpaqueConst::from_ref(x),
-                                        OpaqueConst::from_ref(y),
+                                        OpaqueConst::new(x as *const _),
+                                        OpaqueConst::new(y as *const _),
                                     )
                                 };
                                 match ord {
@@ -143,7 +143,7 @@ where
                             for item in value.iter() {
                                 unsafe {
                                     (T::SHAPE.vtable.hash.unwrap_unchecked())(
-                                        OpaqueConst::from_ref(item),
+                                        OpaqueConst::new(item as *const _),
                                         state,
                                         hasher,
                                     )

@@ -68,8 +68,9 @@ where
                             let value = unsafe { value.as_ref::<(T0,)>() };
                             write!(f, "(")?;
                             unsafe {
+                                let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -83,8 +84,8 @@ where
                             // Compare last element
                             unsafe {
                                 (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.0),
-                                    OpaqueConst::from_ref(&b.0),
+                                    OpaqueConst::new(&a.0 as *const T0),
+                                    OpaqueConst::new(&b.0 as *const T0),
                                 )
                             }
                         });
@@ -129,15 +130,17 @@ where
                             let value = unsafe { value.as_ref::<(T0, T1)>() };
                             write!(f, "(")?;
                             unsafe {
+                                let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -149,20 +152,22 @@ where
                             let b = unsafe { b.as_ref::<(T0, T1)>() };
 
                             // Compare element 0
-                            if !unsafe {
-                                (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.0),
-                                    OpaqueConst::from_ref(&b.0),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.0 as *const T0;
+                                let b_ptr = &b.0 as *const T0;
+                                if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare last element
                             unsafe {
                                 (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.1),
-                                    OpaqueConst::from_ref(&b.1),
+                                    OpaqueConst::new(&a.1 as *const T1),
+                                    OpaqueConst::new(&b.1 as *const T1),
                                 )
                             }
                         });
@@ -209,22 +214,25 @@ where
                             let value = unsafe { value.as_ref::<(T0, T1, T2)>() };
                             write!(f, "(")?;
                             unsafe {
+                                let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -236,30 +244,34 @@ where
                             let b = unsafe { b.as_ref::<(T0, T1, T2)>() };
 
                             // Compare element 0
-                            if !unsafe {
-                                (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.0),
-                                    OpaqueConst::from_ref(&b.0),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.0 as *const T0;
+                                let b_ptr = &b.0 as *const T0;
+                                if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 1
-                            if !unsafe {
-                                (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.1),
-                                    OpaqueConst::from_ref(&b.1),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.1 as *const T1;
+                                let b_ptr = &b.1 as *const T1;
+                                if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare last element
                             unsafe {
                                 (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.2),
-                                    OpaqueConst::from_ref(&b.2),
+                                    OpaqueConst::new(&a.2 as *const T2),
+                                    OpaqueConst::new(&b.2 as *const T2),
                                 )
                             }
                         });
@@ -323,29 +335,33 @@ where
                             let value = unsafe { value.as_ref::<(T0, T1, T2, T3)>() };
                             write!(f, "(")?;
                             unsafe {
+                                let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -357,40 +373,46 @@ where
                             let b = unsafe { b.as_ref::<(T0, T1, T2, T3)>() };
 
                             // Compare element 0
-                            if !unsafe {
-                                (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.0),
-                                    OpaqueConst::from_ref(&b.0),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.0 as *const T0;
+                                let b_ptr = &b.0 as *const T0;
+                                if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 1
-                            if !unsafe {
-                                (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.1),
-                                    OpaqueConst::from_ref(&b.1),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.1 as *const T1;
+                                let b_ptr = &b.1 as *const T1;
+                                if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 2
-                            if !unsafe {
-                                (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.2),
-                                    OpaqueConst::from_ref(&b.2),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.2 as *const T2;
+                                let b_ptr = &b.2 as *const T2;
+                                if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare last element
                             unsafe {
                                 (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.3),
-                                    OpaqueConst::from_ref(&b.3),
+                                    OpaqueConst::new(&a.3 as *const T3),
+                                    OpaqueConst::new(&b.3 as *const T3),
                                 )
                             }
                         });
@@ -463,36 +485,41 @@ where
                             let value = unsafe { value.as_ref::<(T0, T1, T2, T3, T4)>() };
                             write!(f, "(")?;
                             unsafe {
+                                let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.4 as *const T4;
                                 (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.4),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -504,50 +531,58 @@ where
                             let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4)>() };
 
                             // Compare element 0
-                            if !unsafe {
-                                (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.0),
-                                    OpaqueConst::from_ref(&b.0),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.0 as *const T0;
+                                let b_ptr = &b.0 as *const T0;
+                                if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 1
-                            if !unsafe {
-                                (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.1),
-                                    OpaqueConst::from_ref(&b.1),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.1 as *const T1;
+                                let b_ptr = &b.1 as *const T1;
+                                if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 2
-                            if !unsafe {
-                                (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.2),
-                                    OpaqueConst::from_ref(&b.2),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.2 as *const T2;
+                                let b_ptr = &b.2 as *const T2;
+                                if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 3
-                            if !unsafe {
-                                (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.3),
-                                    OpaqueConst::from_ref(&b.3),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.3 as *const T3;
+                                let b_ptr = &b.3 as *const T3;
+                                if !(T3::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare last element
                             unsafe {
                                 (T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.4),
-                                    OpaqueConst::from_ref(&b.4),
+                                    OpaqueConst::new(&a.4 as *const T4),
+                                    OpaqueConst::new(&b.4 as *const T4),
                                 )
                             }
                         });
@@ -634,43 +669,49 @@ where
                             let value = unsafe { value.as_ref::<(T0, T1, T2, T3, T4, T5)>() };
                             write!(f, "(")?;
                             unsafe {
+                                let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.4 as *const T4;
                                 (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.4),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.5 as *const T5;
                                 (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.5),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -682,60 +723,70 @@ where
                             let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5)>() };
 
                             // Compare element 0
-                            if !unsafe {
-                                (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.0),
-                                    OpaqueConst::from_ref(&b.0),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.0 as *const T0;
+                                let b_ptr = &b.0 as *const T0;
+                                if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 1
-                            if !unsafe {
-                                (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.1),
-                                    OpaqueConst::from_ref(&b.1),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.1 as *const T1;
+                                let b_ptr = &b.1 as *const T1;
+                                if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 2
-                            if !unsafe {
-                                (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.2),
-                                    OpaqueConst::from_ref(&b.2),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.2 as *const T2;
+                                let b_ptr = &b.2 as *const T2;
+                                if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 3
-                            if !unsafe {
-                                (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.3),
-                                    OpaqueConst::from_ref(&b.3),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.3 as *const T3;
+                                let b_ptr = &b.3 as *const T3;
+                                if !(T3::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 4
-                            if !unsafe {
-                                (T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.4),
-                                    OpaqueConst::from_ref(&b.4),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.4 as *const T4;
+                                let b_ptr = &b.4 as *const T4;
+                                if !(T4::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare last element
                             unsafe {
                                 (T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.5),
-                                    OpaqueConst::from_ref(&b.5),
+                                    OpaqueConst::new(&a.5 as *const T5),
+                                    OpaqueConst::new(&b.5 as *const T5),
                                 )
                             }
                         });
@@ -827,50 +878,57 @@ where
                             let value = unsafe { value.as_ref::<(T0, T1, T2, T3, T4, T5, T6)>() };
                             write!(f, "(")?;
                             unsafe {
+                                let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.4 as *const T4;
                                 (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.4),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.5 as *const T5;
                                 (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.5),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.6 as *const T6;
                                 (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.6),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -882,70 +940,82 @@ where
                             let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6)>() };
 
                             // Compare element 0
-                            if !unsafe {
-                                (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.0),
-                                    OpaqueConst::from_ref(&b.0),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.0 as *const T0;
+                                let b_ptr = &b.0 as *const T0;
+                                if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 1
-                            if !unsafe {
-                                (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.1),
-                                    OpaqueConst::from_ref(&b.1),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.1 as *const T1;
+                                let b_ptr = &b.1 as *const T1;
+                                if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 2
-                            if !unsafe {
-                                (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.2),
-                                    OpaqueConst::from_ref(&b.2),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.2 as *const T2;
+                                let b_ptr = &b.2 as *const T2;
+                                if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 3
-                            if !unsafe {
-                                (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.3),
-                                    OpaqueConst::from_ref(&b.3),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.3 as *const T3;
+                                let b_ptr = &b.3 as *const T3;
+                                if !(T3::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 4
-                            if !unsafe {
-                                (T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.4),
-                                    OpaqueConst::from_ref(&b.4),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.4 as *const T4;
+                                let b_ptr = &b.4 as *const T4;
+                                if !(T4::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 5
-                            if !unsafe {
-                                (T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.5),
-                                    OpaqueConst::from_ref(&b.5),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.5 as *const T5;
+                                let b_ptr = &b.5 as *const T5;
+                                if !(T5::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare last element
                             unsafe {
                                 (T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.6),
-                                    OpaqueConst::from_ref(&b.6),
+                                    OpaqueConst::new(&a.6 as *const T6),
+                                    OpaqueConst::new(&b.6 as *const T6),
                                 )
                             }
                         });
@@ -1043,57 +1113,65 @@ where
                                 unsafe { value.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7)>() };
                             write!(f, "(")?;
                             unsafe {
+                                let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.4 as *const T4;
                                 (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.4),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.5 as *const T5;
                                 (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.5),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.6 as *const T6;
                                 (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.6),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.7 as *const T7;
                                 (T7::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.7),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1105,80 +1183,94 @@ where
                             let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7)>() };
 
                             // Compare element 0
-                            if !unsafe {
-                                (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.0),
-                                    OpaqueConst::from_ref(&b.0),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.0 as *const T0;
+                                let b_ptr = &b.0 as *const T0;
+                                if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 1
-                            if !unsafe {
-                                (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.1),
-                                    OpaqueConst::from_ref(&b.1),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.1 as *const T1;
+                                let b_ptr = &b.1 as *const T1;
+                                if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 2
-                            if !unsafe {
-                                (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.2),
-                                    OpaqueConst::from_ref(&b.2),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.2 as *const T2;
+                                let b_ptr = &b.2 as *const T2;
+                                if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 3
-                            if !unsafe {
-                                (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.3),
-                                    OpaqueConst::from_ref(&b.3),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.3 as *const T3;
+                                let b_ptr = &b.3 as *const T3;
+                                if !(T3::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 4
-                            if !unsafe {
-                                (T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.4),
-                                    OpaqueConst::from_ref(&b.4),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.4 as *const T4;
+                                let b_ptr = &b.4 as *const T4;
+                                if !(T4::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 5
-                            if !unsafe {
-                                (T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.5),
-                                    OpaqueConst::from_ref(&b.5),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.5 as *const T5;
+                                let b_ptr = &b.5 as *const T5;
+                                if !(T5::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 6
-                            if !unsafe {
-                                (T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.6),
-                                    OpaqueConst::from_ref(&b.6),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.6 as *const T6;
+                                let b_ptr = &b.6 as *const T6;
+                                if !(T6::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare last element
                             unsafe {
                                 (T7::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.7),
-                                    OpaqueConst::from_ref(&b.7),
+                                    OpaqueConst::new(&a.7 as *const T7),
+                                    OpaqueConst::new(&b.7 as *const T7),
                                 )
                             }
                         });
@@ -1281,64 +1373,73 @@ where
                                 unsafe { value.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>() };
                             write!(f, "(")?;
                             unsafe {
+                                let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.4 as *const T4;
                                 (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.4),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.5 as *const T5;
                                 (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.5),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.6 as *const T6;
                                 (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.6),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.7 as *const T7;
                                 (T7::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.7),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.8 as *const T8;
                                 (T8::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.8),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1350,90 +1451,106 @@ where
                             let b = unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>() };
 
                             // Compare element 0
-                            if !unsafe {
-                                (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.0),
-                                    OpaqueConst::from_ref(&b.0),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.0 as *const T0;
+                                let b_ptr = &b.0 as *const T0;
+                                if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 1
-                            if !unsafe {
-                                (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.1),
-                                    OpaqueConst::from_ref(&b.1),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.1 as *const T1;
+                                let b_ptr = &b.1 as *const T1;
+                                if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 2
-                            if !unsafe {
-                                (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.2),
-                                    OpaqueConst::from_ref(&b.2),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.2 as *const T2;
+                                let b_ptr = &b.2 as *const T2;
+                                if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 3
-                            if !unsafe {
-                                (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.3),
-                                    OpaqueConst::from_ref(&b.3),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.3 as *const T3;
+                                let b_ptr = &b.3 as *const T3;
+                                if !(T3::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 4
-                            if !unsafe {
-                                (T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.4),
-                                    OpaqueConst::from_ref(&b.4),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.4 as *const T4;
+                                let b_ptr = &b.4 as *const T4;
+                                if !(T4::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 5
-                            if !unsafe {
-                                (T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.5),
-                                    OpaqueConst::from_ref(&b.5),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.5 as *const T5;
+                                let b_ptr = &b.5 as *const T5;
+                                if !(T5::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 6
-                            if !unsafe {
-                                (T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.6),
-                                    OpaqueConst::from_ref(&b.6),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.6 as *const T6;
+                                let b_ptr = &b.6 as *const T6;
+                                if !(T6::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 7
-                            if !unsafe {
-                                (T7::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.7),
-                                    OpaqueConst::from_ref(&b.7),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.7 as *const T7;
+                                let b_ptr = &b.7 as *const T7;
+                                if !(T7::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare last element
                             unsafe {
                                 (T8::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.8),
-                                    OpaqueConst::from_ref(&b.8),
+                                    OpaqueConst::new(&a.8 as *const T8),
+                                    OpaqueConst::new(&b.8 as *const T8),
                                 )
                             }
                         });
@@ -1543,71 +1660,81 @@ where
                             };
                             write!(f, "(")?;
                             unsafe {
+                                let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.4 as *const T4;
                                 (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.4),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.5 as *const T5;
                                 (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.5),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.6 as *const T6;
                                 (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.6),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.7 as *const T7;
                                 (T7::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.7),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.8 as *const T8;
                                 (T8::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.8),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.9 as *const T9;
                                 (T9::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.9),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1621,100 +1748,118 @@ where
                                 unsafe { b.as_ref::<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>() };
 
                             // Compare element 0
-                            if !unsafe {
-                                (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.0),
-                                    OpaqueConst::from_ref(&b.0),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.0 as *const T0;
+                                let b_ptr = &b.0 as *const T0;
+                                if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 1
-                            if !unsafe {
-                                (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.1),
-                                    OpaqueConst::from_ref(&b.1),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.1 as *const T1;
+                                let b_ptr = &b.1 as *const T1;
+                                if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 2
-                            if !unsafe {
-                                (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.2),
-                                    OpaqueConst::from_ref(&b.2),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.2 as *const T2;
+                                let b_ptr = &b.2 as *const T2;
+                                if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 3
-                            if !unsafe {
-                                (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.3),
-                                    OpaqueConst::from_ref(&b.3),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.3 as *const T3;
+                                let b_ptr = &b.3 as *const T3;
+                                if !(T3::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 4
-                            if !unsafe {
-                                (T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.4),
-                                    OpaqueConst::from_ref(&b.4),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.4 as *const T4;
+                                let b_ptr = &b.4 as *const T4;
+                                if !(T4::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 5
-                            if !unsafe {
-                                (T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.5),
-                                    OpaqueConst::from_ref(&b.5),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.5 as *const T5;
+                                let b_ptr = &b.5 as *const T5;
+                                if !(T5::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 6
-                            if !unsafe {
-                                (T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.6),
-                                    OpaqueConst::from_ref(&b.6),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.6 as *const T6;
+                                let b_ptr = &b.6 as *const T6;
+                                if !(T6::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 7
-                            if !unsafe {
-                                (T7::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.7),
-                                    OpaqueConst::from_ref(&b.7),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.7 as *const T7;
+                                let b_ptr = &b.7 as *const T7;
+                                if !(T7::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 8
-                            if !unsafe {
-                                (T8::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.8),
-                                    OpaqueConst::from_ref(&b.8),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.8 as *const T8;
+                                let b_ptr = &b.8 as *const T8;
+                                if !(T8::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare last element
                             unsafe {
                                 (T9::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.9),
-                                    OpaqueConst::from_ref(&b.9),
+                                    OpaqueConst::new(&a.9 as *const T9),
+                                    OpaqueConst::new(&b.9 as *const T9),
                                 )
                             }
                         });
@@ -1829,78 +1974,89 @@ where
                             };
                             write!(f, "(")?;
                             unsafe {
+                                let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.4 as *const T4;
                                 (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.4),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.5 as *const T5;
                                 (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.5),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.6 as *const T6;
                                 (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.6),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.7 as *const T7;
                                 (T7::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.7),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.8 as *const T8;
                                 (T8::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.8),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.9 as *const T9;
                                 (T9::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.9),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.10 as *const T10;
                                 (T10::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.10),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -1916,110 +2072,130 @@ where
                             };
 
                             // Compare element 0
-                            if !unsafe {
-                                (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.0),
-                                    OpaqueConst::from_ref(&b.0),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.0 as *const T0;
+                                let b_ptr = &b.0 as *const T0;
+                                if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 1
-                            if !unsafe {
-                                (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.1),
-                                    OpaqueConst::from_ref(&b.1),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.1 as *const T1;
+                                let b_ptr = &b.1 as *const T1;
+                                if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 2
-                            if !unsafe {
-                                (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.2),
-                                    OpaqueConst::from_ref(&b.2),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.2 as *const T2;
+                                let b_ptr = &b.2 as *const T2;
+                                if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 3
-                            if !unsafe {
-                                (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.3),
-                                    OpaqueConst::from_ref(&b.3),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.3 as *const T3;
+                                let b_ptr = &b.3 as *const T3;
+                                if !(T3::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 4
-                            if !unsafe {
-                                (T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.4),
-                                    OpaqueConst::from_ref(&b.4),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.4 as *const T4;
+                                let b_ptr = &b.4 as *const T4;
+                                if !(T4::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 5
-                            if !unsafe {
-                                (T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.5),
-                                    OpaqueConst::from_ref(&b.5),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.5 as *const T5;
+                                let b_ptr = &b.5 as *const T5;
+                                if !(T5::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 6
-                            if !unsafe {
-                                (T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.6),
-                                    OpaqueConst::from_ref(&b.6),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.6 as *const T6;
+                                let b_ptr = &b.6 as *const T6;
+                                if !(T6::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 7
-                            if !unsafe {
-                                (T7::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.7),
-                                    OpaqueConst::from_ref(&b.7),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.7 as *const T7;
+                                let b_ptr = &b.7 as *const T7;
+                                if !(T7::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 8
-                            if !unsafe {
-                                (T8::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.8),
-                                    OpaqueConst::from_ref(&b.8),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.8 as *const T8;
+                                let b_ptr = &b.8 as *const T8;
+                                if !(T8::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 9
-                            if !unsafe {
-                                (T9::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.9),
-                                    OpaqueConst::from_ref(&b.9),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.9 as *const T9;
+                                let b_ptr = &b.9 as *const T9;
+                                if !(T9::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare last element
                             unsafe {
                                 (T10::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.10),
-                                    OpaqueConst::from_ref(&b.10),
+                                    OpaqueConst::new(&a.10 as *const T10),
+                                    OpaqueConst::new(&b.10 as *const T10),
                                 )
                             }
                         });
@@ -2152,85 +2328,97 @@ where
                             };
                             write!(f, "(")?;
                             unsafe {
+                                let ptr = &value.0 as *const T0;
                                 (T0::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.0),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.1 as *const T1;
                                 (T1::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.1),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.2 as *const T2;
                                 (T2::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.2),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.3 as *const T3;
                                 (T3::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.3),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.4 as *const T4;
                                 (T4::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.4),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.5 as *const T5;
                                 (T5::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.5),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.6 as *const T6;
                                 (T6::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.6),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.7 as *const T7;
                                 (T7::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.7),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.8 as *const T8;
                                 (T8::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.8),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.9 as *const T9;
                                 (T9::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.9),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.10 as *const T10;
                                 (T10::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.10),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
                             write!(f, ", ")?;
                             unsafe {
+                                let ptr = &value.11 as *const T11;
                                 (T11::SHAPE.vtable.debug.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&value.11),
+                                    OpaqueConst::new(ptr),
                                     f,
                                 )
                             }?;
@@ -2246,120 +2434,142 @@ where
                             };
 
                             // Compare element 0
-                            if !unsafe {
-                                (T0::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.0),
-                                    OpaqueConst::from_ref(&b.0),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.0 as *const T0;
+                                let b_ptr = &b.0 as *const T0;
+                                if !(T0::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 1
-                            if !unsafe {
-                                (T1::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.1),
-                                    OpaqueConst::from_ref(&b.1),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.1 as *const T1;
+                                let b_ptr = &b.1 as *const T1;
+                                if !(T1::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 2
-                            if !unsafe {
-                                (T2::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.2),
-                                    OpaqueConst::from_ref(&b.2),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.2 as *const T2;
+                                let b_ptr = &b.2 as *const T2;
+                                if !(T2::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 3
-                            if !unsafe {
-                                (T3::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.3),
-                                    OpaqueConst::from_ref(&b.3),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.3 as *const T3;
+                                let b_ptr = &b.3 as *const T3;
+                                if !(T3::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 4
-                            if !unsafe {
-                                (T4::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.4),
-                                    OpaqueConst::from_ref(&b.4),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.4 as *const T4;
+                                let b_ptr = &b.4 as *const T4;
+                                if !(T4::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 5
-                            if !unsafe {
-                                (T5::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.5),
-                                    OpaqueConst::from_ref(&b.5),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.5 as *const T5;
+                                let b_ptr = &b.5 as *const T5;
+                                if !(T5::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 6
-                            if !unsafe {
-                                (T6::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.6),
-                                    OpaqueConst::from_ref(&b.6),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.6 as *const T6;
+                                let b_ptr = &b.6 as *const T6;
+                                if !(T6::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 7
-                            if !unsafe {
-                                (T7::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.7),
-                                    OpaqueConst::from_ref(&b.7),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.7 as *const T7;
+                                let b_ptr = &b.7 as *const T7;
+                                if !(T7::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 8
-                            if !unsafe {
-                                (T8::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.8),
-                                    OpaqueConst::from_ref(&b.8),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.8 as *const T8;
+                                let b_ptr = &b.8 as *const T8;
+                                if !(T8::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 9
-                            if !unsafe {
-                                (T9::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.9),
-                                    OpaqueConst::from_ref(&b.9),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.9 as *const T9;
+                                let b_ptr = &b.9 as *const T9;
+                                if !(T9::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare element 10
-                            if !unsafe {
-                                (T10::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.10),
-                                    OpaqueConst::from_ref(&b.10),
-                                )
-                            } {
-                                return false;
+                            unsafe {
+                                let a_ptr = &a.10 as *const T10;
+                                let b_ptr = &b.10 as *const T10;
+                                if !(T10::SHAPE.vtable.eq.unwrap_unchecked())(
+                                    OpaqueConst::new(a_ptr),
+                                    OpaqueConst::new(b_ptr),
+                                ) {
+                                    return false;
+                                }
                             }
 
                             // Compare last element
                             unsafe {
                                 (T11::SHAPE.vtable.eq.unwrap_unchecked())(
-                                    OpaqueConst::from_ref(&a.11),
-                                    OpaqueConst::from_ref(&b.11),
+                                    OpaqueConst::new(&a.11 as *const T11),
+                                    OpaqueConst::new(&b.11 as *const T11),
                                 )
                             }
                         });

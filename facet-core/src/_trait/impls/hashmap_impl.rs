@@ -70,9 +70,9 @@ where
                                 if i > 0 {
                                     write!(f, ", ")?;
                                 }
-                                (k_debug)(OpaqueConst::from_ref(key), f)?;
+                                (k_debug)(OpaqueConst::new(key as *const _), f)?;
                                 write!(f, ": ")?;
-                                (v_debug)(OpaqueConst::from_ref(val), f)?;
+                                (v_debug)(OpaqueConst::new(val as *const _), f)?;
                             }
                             write!(f, "}}")
                         });
@@ -94,11 +94,11 @@ where
                                 && a.iter().all(|(key_a, val_a)| {
                                     b.get(key_a).is_some_and(|val_b| {
                                         (k_eq)(
-                                            OpaqueConst::from_ref(key_a),
-                                            OpaqueConst::from_ref(key_a),
+                                            OpaqueConst::new(key_a as *const _),
+                                            OpaqueConst::new(key_a as *const _),
                                         ) && (v_eq)(
-                                            OpaqueConst::from_ref(val_a),
-                                            OpaqueConst::from_ref(val_b),
+                                            OpaqueConst::new(val_a as *const _),
+                                            OpaqueConst::new(val_b as *const _),
                                         )
                                     })
                                 })
@@ -114,8 +114,16 @@ where
                             let mut hasher = HasherProxy::new(hasher_this, hasher_write_fn);
                             map.len().hash(&mut hasher);
                             for (k, v) in map {
-                                (k_hash)(OpaqueConst::from_ref(k), hasher_this, hasher_write_fn);
-                                (v_hash)(OpaqueConst::from_ref(v), hasher_this, hasher_write_fn);
+                                (k_hash)(
+                                    OpaqueConst::new(k as *const _),
+                                    hasher_this,
+                                    hasher_write_fn,
+                                );
+                                (v_hash)(
+                                    OpaqueConst::new(v as *const _),
+                                    hasher_this,
+                                    hasher_write_fn,
+                                );
                             }
                         });
                     }
@@ -153,13 +161,13 @@ where
                                 .get_value_ptr(|ptr, key| unsafe {
                                     let map = ptr.as_ref::<HashMap<K, V>>();
                                     map.get(key.as_ref())
-                                        .map(|v| OpaqueConst::new_unchecked(v as *const _))
+                                        .map(|v| OpaqueConst::new(v as *const _))
                                 })
                                 .iter(|ptr| unsafe {
                                     let map = ptr.as_ref::<HashMap<K, V>>();
                                     let keys: VecDeque<&K> = map.keys().collect();
                                     let iter_state = Box::new(HashMapIterator { map: ptr, keys });
-                                    Opaque::new_unchecked(Box::into_raw(iter_state) as *mut u8)
+                                    Opaque::new(Box::into_raw(iter_state) as *mut u8)
                                 })
                                 .iter_vtable(
                                     MapIterVTable::builder()
@@ -169,10 +177,8 @@ where
                                             while let Some(key) = state.keys.pop_front() {
                                                 if let Some(value) = map.get(key) {
                                                     return Some((
-                                                        OpaqueConst::new_unchecked(key as *const K),
-                                                        OpaqueConst::new_unchecked(
-                                                            value as *const V,
-                                                        ),
+                                                        OpaqueConst::new(key as *const K),
+                                                        OpaqueConst::new(value as *const V),
                                                     ));
                                                 }
                                             }
