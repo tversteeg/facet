@@ -455,8 +455,7 @@ unsafe impl Facet for std::net::SocketAddr {
     };
 }
 
-#[cfg(feature = "std")]
-unsafe impl Facet for std::net::IpAddr {
+unsafe impl Facet for core::net::IpAddr {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .id(ConstTypeId::of::<Self>())
@@ -466,7 +465,7 @@ unsafe impl Facet for std::net::IpAddr {
                     .affinity(ScalarAffinity::ip_addr().build())
                     .build(),
             ))
-            .vtable(value_vtable!(std::net::IpAddr, |f, _opts| write!(
+            .vtable(value_vtable!(core::net::IpAddr, |f, _opts| write!(
                 f,
                 "IpAddr"
             )))
@@ -474,8 +473,7 @@ unsafe impl Facet for std::net::IpAddr {
     };
 }
 
-#[cfg(feature = "std")]
-unsafe impl Facet for std::net::Ipv4Addr {
+unsafe impl Facet for core::net::Ipv4Addr {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .id(ConstTypeId::of::<Self>())
@@ -485,7 +483,7 @@ unsafe impl Facet for std::net::Ipv4Addr {
                     .affinity(ScalarAffinity::ip_addr().build())
                     .build(),
             ))
-            .vtable(value_vtable!(std::net::Ipv4Addr, |f, _opts| write!(
+            .vtable(value_vtable!(core::net::Ipv4Addr, |f, _opts| write!(
                 f,
                 "Ipv4Addr"
             )))
@@ -493,8 +491,7 @@ unsafe impl Facet for std::net::Ipv4Addr {
     };
 }
 
-#[cfg(feature = "std")]
-unsafe impl Facet for std::net::Ipv6Addr {
+unsafe impl Facet for core::net::Ipv6Addr {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .id(ConstTypeId::of::<Self>())
@@ -504,7 +501,7 @@ unsafe impl Facet for std::net::Ipv6Addr {
                     .affinity(ScalarAffinity::ip_addr().build())
                     .build(),
             ))
-            .vtable(value_vtable!(std::net::Ipv6Addr, |f, _opts| write!(
+            .vtable(value_vtable!(core::net::Ipv6Addr, |f, _opts| write!(
                 f,
                 "Ipv6Addr"
             )))
