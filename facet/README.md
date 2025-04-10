@@ -185,6 +185,11 @@ pub struct PrettyPrinter {
 }
 ```
 
+This is just a pretty printer, but an imaginative mind could come up with...
+
+  * A fully inspectable program state, through a browser interface?
+  * A modern debugger, exposing all the standard traits and then some instead of a bag of pointers?
+
 ## Use case: (de)serialization
 
 The `facet-peek` and `face-poke` allow reading and writing (constructing,
@@ -231,6 +236,30 @@ let foo_bar = poke.build::<FooBar>(Some(guard));
 ```
 
 The `inner code` here is the kind of code you would write in a deserializer, for example.
+
+## Use cases: beyond
+
+This could be extended to allow RPC, there could be an analoguous derive for traits,
+it could export statics so that binaries may be inspected — shapes would then be available
+instead of / in conjunction with debug info.
+
+Parsing CLI arguments is a form of deserialization.
+
+HTTP routing is a form of deserialization.
+
+This is suitable for all the things serde is bad at: binary formats (specialize
+for Vec<u8> without a serde_bytes hack), it could be extended to support formats
+like KDL/XML.
+
+I want the derive macros to support arbitrary attributes eventually, which will also
+be exposed through `Shape`.
+
+The types are all `non_exhaustive`, so there shouldn't be churn in the
+ecosystem: crates can do graceful degradation if some types don't implement the
+interfaces they expect.
+
+If you have questions or ideas, please open a GitHub issue or discussion — I'm
+so excited about this.
 
 ## Ecosystem
 
