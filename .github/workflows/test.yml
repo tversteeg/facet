@@ -39,11 +39,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup cargo cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          cache-directories: /home/runner/.cargo
-
       - name: Install just and cargo-nextest
         uses: taiki-e/install-action@v2
         with:
