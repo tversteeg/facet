@@ -3,6 +3,7 @@ use typeid::ConstTypeId;
 use crate::value_vtable;
 use crate::*;
 use core::alloc::Layout;
+use core::num::NonZero;
 
 unsafe impl Facet for ConstTypeId {
     const SHAPE: &'static Shape = &const {
@@ -101,11 +102,11 @@ unsafe impl Facet for bool {
 }
 
 macro_rules! impl_facet_for_integer {
-    ($type:ty, $affinity:expr) => {
+    ($type:ty, $affinity:expr, $nz_affinity:expr) => {
         unsafe impl Facet for $type {
             const SHAPE: &'static Shape = &const {
                 Shape::builder()
-                    .id(ConstTypeId::of::<$type>())
+                    .id(ConstTypeId::of::<Self>())
                     .layout(Layout::new::<Self>())
                     .def(Def::Scalar(
                         ScalarDef::builder().affinity($affinity).build(),
@@ -117,44 +118,84 @@ macro_rules! impl_facet_for_integer {
                     .build()
             };
         }
+
+        unsafe impl Facet for NonZero<$type> {
+            const SHAPE: &'static Shape = &const {
+                Shape::builder()
+                    .id(ConstTypeId::of::<Self>())
+                    .layout(Layout::new::<Self>())
+                    .def(Def::Scalar(
+                        ScalarDef::builder().affinity($nz_affinity).build(),
+                    ))
+                    .vtable(value_vtable!($type, |f, _opts| write!(
+                        f,
+                        stringify!(core::num::NonZero<$type>)
+                    )))
+                    .build()
+            };
+        }
     };
 }
 
 static MIN_U8: u8 = u8::MIN;
 static MAX_U8: u8 = u8::MAX;
+static MIN_NZ_U8: NonZero<u8> = NonZero::<u8>::MIN;
+static MAX_NZ_U8: NonZero<u8> = NonZero::<u8>::MAX;
 
 static MIN_I8: i8 = i8::MIN;
 static MAX_I8: i8 = i8::MAX;
+static MIN_NZ_I8: NonZero<i8> = NonZero::<i8>::MIN;
+static MAX_NZ_I8: NonZero<i8> = NonZero::<i8>::MAX;
 
 static MIN_U16: u16 = u16::MIN;
 static MAX_U16: u16 = u16::MAX;
+static MIN_NZ_U16: NonZero<u16> = NonZero::<u16>::MIN;
+static MAX_NZ_U16: NonZero<u16> = NonZero::<u16>::MAX;
 
 static MIN_I16: i16 = i16::MIN;
 static MAX_I16: i16 = i16::MAX;
+static MIN_NZ_I16: NonZero<i16> = NonZero::<i16>::MIN;
+static MAX_NZ_I16: NonZero<i16> = NonZero::<i16>::MAX;
 
 static MIN_U32: u32 = u32::MIN;
 static MAX_U32: u32 = u32::MAX;
+static MIN_NZ_U32: NonZero<u32> = NonZero::<u32>::MIN;
+static MAX_NZ_U32: NonZero<u32> = NonZero::<u32>::MAX;
 
 static MIN_I32: i32 = i32::MIN;
 static MAX_I32: i32 = i32::MAX;
+static MIN_NZ_I32: NonZero<i32> = NonZero::<i32>::MIN;
+static MAX_NZ_I32: NonZero<i32> = NonZero::<i32>::MAX;
 
 static MIN_U64: u64 = u64::MIN;
 static MAX_U64: u64 = u64::MAX;
+static MIN_NZ_U64: NonZero<u64> = NonZero::<u64>::MIN;
+static MAX_NZ_U64: NonZero<u64> = NonZero::<u64>::MAX;
 
 static MIN_I64: i64 = i64::MIN;
 static MAX_I64: i64 = i64::MAX;
+static MIN_NZ_I64: NonZero<i64> = NonZero::<i64>::MIN;
+static MAX_NZ_I64: NonZero<i64> = NonZero::<i64>::MAX;
 
 static MIN_U128: u128 = u128::MIN;
 static MAX_U128: u128 = u128::MAX;
+static MIN_NZ_U128: NonZero<u128> = NonZero::<u128>::MIN;
+static MAX_NZ_U128: NonZero<u128> = NonZero::<u128>::MAX;
 
 static MIN_I128: i128 = i128::MIN;
 static MAX_I128: i128 = i128::MAX;
+static MIN_NZ_I128: NonZero<i128> = NonZero::<i128>::MIN;
+static MAX_NZ_I128: NonZero<i128> = NonZero::<i128>::MAX;
 
 static MIN_USIZE: usize = usize::MIN;
 static MAX_USIZE: usize = usize::MAX;
+static MIN_NZ_USIZE: NonZero<usize> = NonZero::<usize>::MIN;
+static MAX_NZ_USIZE: NonZero<usize> = NonZero::<usize>::MAX;
 
 static MIN_ISIZE: isize = isize::MIN;
 static MAX_ISIZE: isize = isize::MAX;
+static MIN_NZ_ISIZE: NonZero<isize> = NonZero::<isize>::MIN;
+static MAX_NZ_ISIZE: NonZero<isize> = NonZero::<isize>::MAX;
 
 impl_facet_for_integer!(
     u8,
@@ -162,6 +203,11 @@ impl_facet_for_integer!(
         .unsigned_integer(8)
         .min(OpaqueConst::new(&raw const MIN_U8))
         .max(OpaqueConst::new(&raw const MAX_U8))
+        .build(),
+    ScalarAffinity::number()
+        .unsigned_integer(8)
+        .min(OpaqueConst::new(&raw const MIN_NZ_U8))
+        .max(OpaqueConst::new(&raw const MAX_NZ_U8))
         .build()
 );
 
@@ -171,6 +217,11 @@ impl_facet_for_integer!(
         .signed_integer(8)
         .min(OpaqueConst::new(&raw const MIN_I8))
         .max(OpaqueConst::new(&raw const MAX_I8))
+        .build(),
+    ScalarAffinity::number()
+        .signed_integer(8)
+        .min(OpaqueConst::new(&raw const MIN_NZ_I8))
+        .max(OpaqueConst::new(&raw const MAX_NZ_I8))
         .build()
 );
 
@@ -180,6 +231,11 @@ impl_facet_for_integer!(
         .unsigned_integer(16)
         .min(OpaqueConst::new(&raw const MIN_U16))
         .max(OpaqueConst::new(&raw const MAX_U16))
+        .build(),
+    ScalarAffinity::number()
+        .unsigned_integer(16)
+        .min(OpaqueConst::new(&raw const MIN_NZ_U16))
+        .max(OpaqueConst::new(&raw const MAX_NZ_U16))
         .build()
 );
 
@@ -189,6 +245,11 @@ impl_facet_for_integer!(
         .signed_integer(16)
         .min(OpaqueConst::new(&raw const MIN_I16))
         .max(OpaqueConst::new(&raw const MAX_I16))
+        .build(),
+    ScalarAffinity::number()
+        .signed_integer(16)
+        .min(OpaqueConst::new(&raw const MIN_NZ_I16))
+        .max(OpaqueConst::new(&raw const MAX_NZ_I16))
         .build()
 );
 
@@ -198,6 +259,11 @@ impl_facet_for_integer!(
         .unsigned_integer(32)
         .min(OpaqueConst::new(&raw const MIN_U32))
         .max(OpaqueConst::new(&raw const MAX_U32))
+        .build(),
+    ScalarAffinity::number()
+        .unsigned_integer(32)
+        .min(OpaqueConst::new(&raw const MIN_NZ_U32))
+        .max(OpaqueConst::new(&raw const MAX_NZ_U32))
         .build()
 );
 
@@ -207,6 +273,11 @@ impl_facet_for_integer!(
         .signed_integer(32)
         .min(OpaqueConst::new(&raw const MIN_I32))
         .max(OpaqueConst::new(&raw const MAX_I32))
+        .build(),
+    ScalarAffinity::number()
+        .signed_integer(32)
+        .min(OpaqueConst::new(&raw const MIN_NZ_I32))
+        .max(OpaqueConst::new(&raw const MAX_NZ_I32))
         .build()
 );
 
@@ -216,6 +287,11 @@ impl_facet_for_integer!(
         .unsigned_integer(64)
         .min(OpaqueConst::new(&raw const MIN_U64))
         .max(OpaqueConst::new(&raw const MAX_U64))
+        .build(),
+    ScalarAffinity::number()
+        .unsigned_integer(64)
+        .min(OpaqueConst::new(&raw const MIN_NZ_U64))
+        .max(OpaqueConst::new(&raw const MAX_NZ_U64))
         .build()
 );
 
@@ -225,6 +301,11 @@ impl_facet_for_integer!(
         .signed_integer(64)
         .min(OpaqueConst::new(&raw const MIN_I64))
         .max(OpaqueConst::new(&raw const MAX_I64))
+        .build(),
+    ScalarAffinity::number()
+        .signed_integer(64)
+        .min(OpaqueConst::new(&raw const MIN_NZ_I64))
+        .max(OpaqueConst::new(&raw const MAX_NZ_I64))
         .build()
 );
 
@@ -234,6 +315,11 @@ impl_facet_for_integer!(
         .unsigned_integer(128)
         .min(OpaqueConst::new(&raw const MIN_U128))
         .max(OpaqueConst::new(&raw const MAX_U128))
+        .build(),
+    ScalarAffinity::number()
+        .unsigned_integer(128)
+        .min(OpaqueConst::new(&raw const MIN_NZ_U128))
+        .max(OpaqueConst::new(&raw const MAX_NZ_U128))
         .build()
 );
 
@@ -243,6 +329,11 @@ impl_facet_for_integer!(
         .signed_integer(128)
         .min(OpaqueConst::new(&raw const MIN_I128))
         .max(OpaqueConst::new(&raw const MAX_I128))
+        .build(),
+    ScalarAffinity::number()
+        .signed_integer(128)
+        .min(OpaqueConst::new(&raw const MIN_NZ_I128))
+        .max(OpaqueConst::new(&raw const MAX_NZ_I128))
         .build()
 );
 
@@ -252,6 +343,11 @@ impl_facet_for_integer!(
         .unsigned_integer(core::mem::size_of::<usize>() * 8)
         .min(OpaqueConst::new(&raw const MIN_USIZE))
         .max(OpaqueConst::new(&raw const MAX_USIZE))
+        .build(),
+    ScalarAffinity::number()
+        .unsigned_integer(core::mem::size_of::<usize>() * 8)
+        .min(OpaqueConst::new(&raw const MIN_NZ_USIZE))
+        .max(OpaqueConst::new(&raw const MAX_NZ_USIZE))
         .build()
 );
 
@@ -261,6 +357,11 @@ impl_facet_for_integer!(
         .signed_integer(core::mem::size_of::<isize>() * 8)
         .min(OpaqueConst::new(&raw const MIN_ISIZE))
         .max(OpaqueConst::new(&raw const MAX_ISIZE))
+        .build(),
+    ScalarAffinity::number()
+        .signed_integer(core::mem::size_of::<isize>() * 8)
+        .min(OpaqueConst::new(&raw const MIN_NZ_ISIZE))
+        .max(OpaqueConst::new(&raw const MAX_NZ_ISIZE))
         .build()
 );
 
