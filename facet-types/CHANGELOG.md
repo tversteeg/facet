@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2](https://github.com/facet-rs/facet/compare/facet-types-v0.2.1...facet-types-v0.2.2) - 2025-04-10
+
+### Other
+
+- argument parsing yus
+- special attributes
+- add arbitrary attributes
+
 ## [0.2.1](https://github.com/facet-rs/facet/compare/facet-types-v0.2.0...facet-types-v0.2.1) - 2025-04-10
 
 ### Other

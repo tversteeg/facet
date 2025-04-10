@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7](https://github.com/facet-rs/facet/compare/facet-derive-v0.1.6...facet-derive-v0.1.7) - 2025-04-10
+
+### Other
+
+- Working with flag, just not positional
+- Arbitrary attributes
+- special attributes
+
 ## [0.1.6](https://github.com/facet-rs/facet/compare/facet-derive-v0.1.5...facet-derive-v0.1.6) - 2025-04-10
 
 ### Other
