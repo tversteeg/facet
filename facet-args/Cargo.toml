@@ -6,6 +6,10 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
+description = "Command-line argument parsing for the facet ecosystem"
+documentation = "https://docs.rs/facet-args"
+keywords = ["cli", "args", "parser", "facet"]
+categories = ["command-line-interface"]
 
 [dependencies]
 facet-poke.workspace = true
