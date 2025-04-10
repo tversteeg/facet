@@ -1,11 +1,17 @@
 
-# facet-toml
+
+<h1>
+<picture>
+<source srcset="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.webp">
+<img src="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.png" height="35" alt="Facet logo - a reflection library for Rust">
+</picture> &nbsp; facet-toml
+</h1>
 
 [![experimental](https://img.shields.io/badge/status-experimental-yellow)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/facet-yaml.svg)](https://crates.io/crates/facet-yaml)
-[![documentation](https://docs.rs/facet-yaml/badge.svg)](https://docs.rs/facet-yaml)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-yaml.svg)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/facet-toml.svg)](https://crates.io/crates/facet-toml)
+[![documentation](https://docs.rs/facet-toml/badge.svg)](https://docs.rs/facet-toml)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-toml.svg)](./LICENSE)
 
 Thanks to all individual and corporate sponsors, without whom this work could not exist:
 
@@ -24,7 +30,7 @@ Thanks to all individual and corporate sponsors, without whom this work could no
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/patreon-dark.svg">
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/patreon-light.svg" height="40" alt="Patreon">
     </picture>
-</a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="https://zed.dev">
+</a> <a href="https://zed.dev">
     <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-dark.svg">
     <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-light.svg" height="40" alt="Zed">
