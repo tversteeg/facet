@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.14](https://github.com/facet-rs/facet/compare/facet-v0.1.13...facet-v0.1.14) - 2025-04-10
+
+### Other
+
+- failing tests re: enum doc comments
+- Unify unit struct, tuple struct, struct processing
+- Capture struct field doc comments
+- Process doc comments simply as a slice of stringsl
+- uhh why join them actually
+- Doc extraction works well
+- Basic doc grabbing but I imagine we're not out of the woods yet
+- Fix wrong poke example, closes #111
+
 ## [0.1.13](https://github.com/facet-rs/facet/compare/facet-v0.1.12...facet-v0.1.13) - 2025-04-10
 
 ### Other

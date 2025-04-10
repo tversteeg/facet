@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.14](https://github.com/facet-rs/facet/compare/facet-derive-v0.1.13...facet-derive-v0.1.14) - 2025-04-10
+
+### Other
+
+- All tests work
+- Close — just missing variant docs afaict
+- Inline macros into derive macros, use gen_struct_field for enums fields as well
+- Unify unit struct, tuple struct, struct processing
+- Capture struct field doc comments
+- Process doc comments simply as a slice of stringsl
+- uhh why join them actually
+- Doc extraction works well
+- Basic doc grabbing but I imagine we're not out of the woods yet
+
 ## [0.1.13](https://github.com/facet-rs/facet/compare/facet-derive-v0.1.12...facet-derive-v0.1.13) - 2025-04-10
 
 ### Other

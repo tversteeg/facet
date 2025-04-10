@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3](https://github.com/facet-rs/facet/compare/facet-core-v0.3.2...facet-core-v0.3.3) - 2025-04-10
+
+### Other
+
+- Inline macros into derive macros, use gen_struct_field for enums fields as well
+- failing tests re: enum doc comments
+- Unify unit struct, tuple struct, struct processing
+- Capture struct field doc comments
+- Process doc comments simply as a slice of stringsl
+- Basic doc grabbing but I imagine we're not out of the woods yet
+
 ## [0.3.2](https://github.com/facet-rs/facet/compare/facet-core-v0.3.1...facet-core-v0.3.2) - 2025-04-10
 
 ### Other

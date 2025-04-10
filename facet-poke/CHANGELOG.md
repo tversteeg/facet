@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1](https://github.com/facet-rs/facet/compare/facet-poke-v0.4.0...facet-poke-v0.4.1) - 2025-04-10
+
+### Other
+
+- Basic doc grabbing but I imagine we're not out of the woods yet
+
 ## [0.4.0](https://github.com/facet-rs/facet/compare/facet-poke-v0.3.1...facet-poke-v0.4.0) - 2025-04-10
 
 ### Other
