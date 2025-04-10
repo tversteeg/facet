@@ -219,7 +219,9 @@ version = "0.1.2"
 dependencies = [
  "facet",
  "facet-poke",
+ "facet-pretty",
  "facet-trait",
+ "log",
 ]
 
 [[package]]
