@@ -1,6 +1,9 @@
 use crate::*;
 use core::{alloc::Layout, hash::Hash as _};
 
+#[cfg(feature = "std")]
+use std::vec::Vec;
+
 unsafe impl<T> Facet for Vec<T>
 where
     T: Facet,

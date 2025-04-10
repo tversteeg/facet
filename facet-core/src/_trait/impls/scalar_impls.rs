@@ -34,7 +34,8 @@ unsafe impl Facet for () {
     };
 }
 
-unsafe impl Facet for String {
+#[cfg(feature = "std")]
+unsafe impl Facet for std::string::String {
     const SHAPE: &'static Shape = &const {
         Shape::builder()
             .id(ConstTypeId::of::<String>())

@@ -7,7 +7,7 @@
 use crate::types::ParseError;
 pub use ::impls::impls;
 use core::fmt::{self, Debug};
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 use crate::opaque::{Opaque, OpaqueUninit};
 

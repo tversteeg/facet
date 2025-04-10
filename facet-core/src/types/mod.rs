@@ -5,8 +5,6 @@
 use core::alloc::Layout;
 use core::fmt;
 
-use typeid::ConstTypeId;
-
 mod list;
 pub use list::*;
 
@@ -19,7 +17,7 @@ pub use value::*;
 mod scalar_affinities;
 pub use scalar_affinities::*;
 
-use crate::Facet;
+use crate::{ConstTypeId, Facet};
 
 /// Schema for reflection of a type
 #[derive(Clone, Copy, Debug)]
@@ -128,7 +126,9 @@ impl Shape {
 
     /// Check if this shape is of the given type
     pub fn is_type<Other: Facet>(&'static self) -> bool {
-        self == Other::SHAPE
+        let l = self;
+        let r = Other::SHAPE;
+        l == r
     }
 
     /// Assert that this shape is of the given type, panicking if it's not

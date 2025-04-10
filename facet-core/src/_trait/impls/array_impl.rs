@@ -1,5 +1,3 @@
-use typeid::ConstTypeId;
-
 use crate::*;
 use core::alloc::Layout;
 

@@ -1,7 +1,6 @@
+#![cfg_attr(not(feature = "std"), no_std)]
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
-
-pub use typeid::ConstTypeId;
 
 // Opaque pointer utilities
 mod opaque;
@@ -13,6 +12,10 @@ pub mod spez;
 // Core trait definitions
 mod _trait;
 pub use _trait::*;
+
+// Const type Id
+mod typeid;
+pub use typeid::*;
 
 // Type definitions
 mod types;

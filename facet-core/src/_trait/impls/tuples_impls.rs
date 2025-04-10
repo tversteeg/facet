@@ -1,7 +1,7 @@
 //! GENERATED: DO NOT EDIT — this file is generated from `tuples_impls.rs.j2`
 //! file in the `facet-codegen` crate.
 
-use std::{alloc::Layout, fmt};
+use core::{alloc::Layout, fmt};
 
 use crate::{
     Characteristic, ConstTypeId, Def, Facet, Field, FieldFlags, MarkerTraits, OpaqueConst, Shape,

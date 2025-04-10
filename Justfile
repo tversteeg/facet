@@ -18,6 +18,7 @@ nostd:
     #!/usr/bin/env -S bash -euo pipefail
     source .envrc
     echo -e "\033[1;33m🧪 Checking without std...\033[0m"
+    export CARGO_TARGET_DIR=target/nostd
     cargo check --no-default-features -p facet-core
     cargo check --no-default-features -p facet
     cargo check --no-default-features -p facet-peek
