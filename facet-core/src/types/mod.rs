@@ -734,6 +734,9 @@ pub struct Variant {
 
     /// Kind of variant (unit, tuple, or struct)
     pub kind: VariantKind,
+
+    /// Doc comment for the variant
+    pub doc: &'static [&'static str],
 }
 
 impl Variant {
@@ -748,6 +751,7 @@ pub struct VariantBuilder {
     name: Option<&'static str>,
     discriminant: Option<Option<i64>>,
     kind: Option<VariantKind>,
+    doc: &'static [&'static str],
 }
 
 impl VariantBuilder {
@@ -758,6 +762,7 @@ impl VariantBuilder {
             name: None,
             discriminant: None,
             kind: None,
+            doc: &[],
         }
     }
 
@@ -779,12 +784,19 @@ impl VariantBuilder {
         self
     }
 
+    /// Sets the doc comment for the Variant
+    pub const fn doc(mut self, doc: &'static [&'static str]) -> Self {
+        self.doc = doc;
+        self
+    }
+
     /// Builds the Variant
     pub const fn build(self) -> Variant {
         Variant {
             name: self.name.unwrap(),
             discriminant: self.discriminant.unwrap(),
             kind: self.kind.unwrap(),
+            doc: self.doc,
         }
     }
 }

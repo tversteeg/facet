@@ -1,5 +1,5 @@
 use core::{fmt::Debug, mem::offset_of};
-use facet::{Def, Facet, FieldFlags, StructDef, StructKind};
+use facet::{Def, Facet, FieldFlags, StructDef, StructKind, VariantKind};
 
 #[test]
 fn unit_struct() {
@@ -184,6 +184,70 @@ fn tuple_struct_field_doc_comment_test() {
         assert_eq!(fields[1].doc, &[" This is another documented field"]);
     } else {
         panic!("Expected Struct innards");
+    }
+}
+
+#[test]
+fn enum_variants_with_comments() {
+    #[derive(Clone, Hash, PartialEq, Eq, ::facet::Facet)]
+    #[repr(u8)]
+    enum CommentedEnum {
+        /// This is variant A
+        #[allow(dead_code)]
+        A,
+        /// This is variant B
+        /// with multiple lines
+        #[allow(dead_code)]
+        B(u32),
+        /// This is variant C
+        /// which has named fields
+        #[allow(dead_code)]
+        C {
+            /// This is field x
+            x: u32,
+            /// This is field y
+            y: String,
+        },
+    }
+
+    let shape = CommentedEnum::SHAPE;
+
+    if let Def::Enum(enum_def) = shape.def {
+        assert_eq!(enum_def.variants.len(), 3);
+
+        // Check variant A
+        let variant_a = &enum_def.variants[0];
+        assert_eq!(variant_a.name, "A");
+        assert_eq!(variant_a.doc, &[" This is variant A"]);
+
+        // Check variant B
+        let variant_b = &enum_def.variants[1];
+        assert_eq!(variant_b.name, "B");
+        assert_eq!(
+            variant_b.doc,
+            &[" This is variant B", " with multiple lines"]
+        );
+
+        // Check variant C
+        let variant_c = &enum_def.variants[2];
+        assert_eq!(variant_c.name, "C");
+        assert_eq!(
+            variant_c.doc,
+            &[" This is variant C", " which has named fields"]
+        );
+
+        // Check fields of variant C
+        if let VariantKind::Struct { fields } = &variant_c.kind {
+            assert_eq!(fields.len(), 2);
+            assert_eq!(fields[0].name, "x");
+            assert_eq!(fields[0].doc, &[" This is field x"]);
+            assert_eq!(fields[1].name, "y");
+            assert_eq!(fields[1].doc, &[" This is field y"]);
+        } else {
+            panic!("Expected Struct variant");
+        }
+    } else {
+        panic!("Expected Enum definition");
     }
 }
 
