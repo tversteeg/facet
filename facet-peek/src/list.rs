@@ -93,4 +93,9 @@ impl<'mem> PeekList<'mem> {
             len: self.len(),
         }
     }
+
+    /// Def getter
+    pub fn def(&self) -> ListDef {
+        self.def
+    }
 }

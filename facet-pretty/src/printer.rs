@@ -8,7 +8,7 @@ use std::{
 };
 
 use facet_peek::Peek;
-use facet_trait::Facet;
+use facet_trait::{Facet, ShapeExt};
 
 use crate::{ansi, color::ColorGenerator};
 
@@ -18,6 +18,7 @@ pub struct PrettyPrinter {
     max_depth: Option<usize>,
     color_generator: ColorGenerator,
     use_colors: bool,
+    list_u8_as_bytes: bool,
 }
 
 impl Default for PrettyPrinter {
@@ -27,6 +28,7 @@ impl Default for PrettyPrinter {
             max_depth: None,
             color_generator: ColorGenerator::default(),
             use_colors: true,
+            list_u8_as_bytes: true,
         }
     }
 }
@@ -36,6 +38,7 @@ enum StackState {
     Start,
     ProcessStructField { field_index: usize },
     ProcessListItem { item_index: usize },
+    ProcessBytesItem { item_index: usize },
     ProcessMapEntry,
     Finish,
 }
@@ -205,11 +208,21 @@ impl PrettyPrinter {
 
                             // Print the list name
                             self.write_type_name(f, &list)?;
-                            self.write_punctuation(f, " [")?;
-                            writeln!(f)?;
 
-                            // Push back the item with the next state to continue processing list items
-                            item.state = StackState::ProcessListItem { item_index: 0 };
+                            if list.def().t.is_type::<u8>() && self.list_u8_as_bytes {
+                                // Push back the item with the next state to continue processing list items
+                                item.state = StackState::ProcessBytesItem { item_index: 0 };
+                                writeln!(f)?;
+                                write!(f, " ")?;
+
+                                // TODO: write all the bytes here instead?
+                            } else {
+                                // Push back the item with the next state to continue processing list items
+                                item.state = StackState::ProcessListItem { item_index: 0 };
+                                self.write_punctuation(f, " [")?;
+                                writeln!(f)?;
+                            }
+
                             item.format_depth += 1;
                             item.type_depth = new_type_depth;
                             stack.push_back(item);
@@ -352,6 +365,70 @@ impl PrettyPrinter {
                             type_depth: next_type_depth,
                             state: StackState::Start, // Use Start state to properly process the item
                         });
+                    }
+                }
+                StackState::ProcessBytesItem { item_index } => {
+                    if let Peek::List(list) = item.peek {
+                        if item_index >= list.len() {
+                            // All items processed, write closing bracket
+                            write!(
+                                f,
+                                "{:width$}",
+                                "",
+                                width = (item.format_depth - 1) * self.indent_size
+                            )?;
+                            continue;
+                        }
+
+                        // On the first byte, write the opening byte sequence indicator
+                        if item_index == 0 {
+                            write!(f, " ")?;
+                        }
+
+                        // Only display 16 bytes per line
+                        if item_index > 0 && item_index % 16 == 0 {
+                            writeln!(f)?;
+                            write!(
+                                f,
+                                "{:width$}",
+                                "",
+                                width = item.format_depth * self.indent_size
+                            )?;
+                        } else if item_index > 0 {
+                            write!(f, " ")?;
+                        }
+
+                        // Get the byte
+                        if let Some(Peek::Value(value)) = list.iter().nth(item_index) {
+                            let byte = unsafe { value.data().read::<u8>() };
+
+                            // Generate a color for this byte based on its value
+                            let mut hasher = DefaultHasher::new();
+                            byte.hash(&mut hasher);
+                            let hash = hasher.finish();
+                            let color = self.color_generator.generate_color(hash);
+
+                            // Apply color if needed
+                            if self.use_colors {
+                                color.write_fg(f)?;
+                            }
+
+                            // Display the byte in hex format
+                            write!(f, "{:02x}", byte)?;
+
+                            // Reset color if needed
+                            if self.use_colors {
+                                ansi::write_reset(f)?;
+                            }
+                        } else {
+                            unreachable!()
+                        }
+
+                        // Push back current item to continue after formatting byte
+                        item.state = StackState::ProcessBytesItem {
+                            item_index: item_index + 1,
+                        };
+                        stack.push_back(item);
                     }
                 }
                 StackState::ProcessMapEntry => {

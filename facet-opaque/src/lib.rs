@@ -139,6 +139,16 @@ impl<'mem> OpaqueConst<'mem> {
             PhantomData,
         )
     }
+
+    /// Exposes [`core::ptr::read`]
+    ///
+    /// # Safety
+    ///
+    /// `T` must be the actual underlying type of the pointed-to memory.
+    /// The memory must be properly initialized and aligned for type `T`.
+    pub unsafe fn read<T>(self) -> T {
+        unsafe { core::ptr::read(self.as_ptr()) }
+    }
 }
 
 /// A type-erased pointer to an initialized value
