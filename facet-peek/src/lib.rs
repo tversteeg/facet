@@ -20,6 +20,9 @@ pub use list::*;
 mod map;
 pub use map::*;
 
+mod option;
+pub use option::*;
+
 use facet_core::{Def, OpaqueConst, Shape};
 
 /// Lets you peek at the innards of a value
@@ -43,6 +46,9 @@ pub enum Peek<'mem> {
 
     /// cf. [`PeekEnum`]
     Enum(PeekEnum<'mem>),
+
+    /// cf. [`PeekOption`]
+    Option(PeekOption<'mem>),
 }
 
 impl<'mem> core::ops::Deref for Peek<'mem> {
@@ -55,6 +61,7 @@ impl<'mem> core::ops::Deref for Peek<'mem> {
             Peek::Map(map) => map,
             Peek::Struct(struct_) => struct_,
             Peek::Enum(enum_) => enum_,
+            Peek::Option(option) => option,
         }
     }
 }
@@ -82,6 +89,7 @@ impl<'mem> Peek<'mem> {
             Def::List(def) => Peek::List(PeekList::new(value, def)),
             Def::Scalar { .. } => Peek::Value(value),
             Def::Enum(def) => Peek::Enum(PeekEnum::new(value, def)),
+            Def::Option(def) => Peek::Option(PeekOption::new(value, def)),
             _ => todo!("unsupported def: {:?}", shape.def),
         }
     }
@@ -94,6 +102,7 @@ impl<'mem> Peek<'mem> {
             Self::Map(m) => *m,
             Self::Struct(s) => *s,
             Self::Enum(e) => *e,
+            Self::Option(o) => *o,
         }
     }
 }

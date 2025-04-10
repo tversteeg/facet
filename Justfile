@@ -11,6 +11,10 @@ veryquickcheck:
     #!/usr/bin/env -S bash -euo pipefail
     source .envrc
     just codegen-check
+    if [[ -z "${CI:-}" ]]; then
+        echo -e "\033[1;34m📝 Fixing code formatting...\033[0m"
+        cargo fmt --all
+    fi
     just rustfmt
     just absolve
 

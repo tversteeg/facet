@@ -24,6 +24,9 @@ pub use struct_::*;
 mod enum_;
 pub use enum_::*;
 
+mod option;
+pub use option::*;
+
 /// Allows writing values of different kinds.
 #[non_exhaustive]
 pub enum Poke<'mem> {
@@ -37,6 +40,8 @@ pub enum Poke<'mem> {
     Struct(PokeStruct<'mem>),
     /// An enum variant. See [`PokeEnum`].
     Enum(PokeEnumNoVariant<'mem>),
+    /// An option value. See [`PokeOption`].
+    Option(PokeOptionUninit<'mem>),
 }
 
 /// Ensures a value is dropped when the guard is dropped.
@@ -106,6 +111,10 @@ impl<'mem> Poke<'mem> {
             Def::Enum(enum_def) => {
                 Poke::Enum(unsafe { PokeEnumNoVariant::new(data, shape, enum_def) })
             }
+            Def::Option(option_def) => {
+                let pou = unsafe { PokeOptionUninit::new(data, shape, option_def) };
+                Poke::Option(pou)
+            }
             _ => todo!("unsupported def: {:?}", shape.def),
         }
     }
@@ -150,6 +159,14 @@ impl<'mem> Poke<'mem> {
         }
     }
 
+    /// Converts this Poke into a PokeOption, panicking if it's not an Option variant
+    pub fn into_option(self) -> PokeOptionUninit<'mem> {
+        match self {
+            Poke::Option(o) => o,
+            _ => panic!("expected Option variant"),
+        }
+    }
+
     /// Converts into a value, so we can manipulate it
     #[inline(always)]
     pub fn into_value(self) -> PokeValue<'mem> {
@@ -159,6 +176,7 @@ impl<'mem> Poke<'mem> {
             Poke::Map(m) => m.into_value(),
             Poke::Struct(s) => s.into_value(),
             Poke::Enum(e) => e.into_value(),
+            Poke::Option(o) => o.into_value(),
         }
     }
 
@@ -171,6 +189,7 @@ impl<'mem> Poke<'mem> {
             Poke::Map(poke_map_uninit) => poke_map_uninit.shape(),
             Poke::Struct(poke_struct) => poke_struct.shape(),
             Poke::Enum(poke_enum_no_variant) => poke_enum_no_variant.shape(),
+            Poke::Option(poke_option_uninit) => poke_option_uninit.shape(),
         }
     }
 }
