@@ -246,12 +246,88 @@ impl PrettyPrinter {
                             };
                             stack.push_back(item);
                         }
+                        Peek::Enum(enum_) => {
+                            // When recursing into an enum, increment format_depth
+                            // Only increment type_depth if we're moving to a different address
+                            let _new_type_depth =
+                                if core::ptr::eq(unsafe { enum_.data().as_ptr() }, ptr) {
+                                    item.type_depth // Same pointer, don't increment type_depth
+                                } else {
+                                    item.type_depth + 1 // Different pointer, increment type_depth
+                                };
+
+                            // Print the enum name
+                            self.write_type_name(f, &enum_)?;
+                            self.write_punctuation(f, "::")?;
+
+                            // Get the active variant name
+                            let variant_name = enum_.variant_name_active();
+
+                            // Apply color for variant name
+                            if self.use_colors {
+                                ansi::write_bold(f)?;
+                                write!(f, "{}", variant_name)?;
+                                ansi::write_reset(f)?;
+                            } else {
+                                write!(f, "{}", variant_name)?;
+                            }
+
+                            // Process the variant fields based on the variant kind
+                            match enum_.variant_kind_active() {
+                                facet_core::VariantKind::Unit => {
+                                    // Unit variant has no fields, nothing more to print
+                                }
+                                facet_core::VariantKind::Tuple { .. } => {
+                                    // Tuple variant, print the fields like a tuple
+                                    self.write_punctuation(f, "(")?;
+
+                                    // Check if there are any fields to print
+                                    let has_fields = enum_.fields().count() > 0;
+
+                                    if !has_fields {
+                                        self.write_punctuation(f, ")")?;
+                                        continue;
+                                    }
+
+                                    writeln!(f)?;
+
+                                    // Push back item to process fields
+                                    item.state = StackState::ProcessStructField { field_index: 0 };
+                                    item.format_depth += 1;
+                                    stack.push_back(item);
+                                }
+                                facet_core::VariantKind::Struct { .. } => {
+                                    // Struct variant, print the fields like a struct
+                                    self.write_punctuation(f, " {")?;
+
+                                    // Check if there are any fields to print
+                                    let has_fields = enum_.fields().count() > 0;
+
+                                    if !has_fields {
+                                        self.write_punctuation(f, " }")?;
+                                        continue;
+                                    }
+
+                                    writeln!(f)?;
+
+                                    // Push back item to process fields
+                                    item.state = StackState::ProcessStructField { field_index: 0 };
+                                    item.format_depth += 1;
+                                    stack.push_back(item);
+                                }
+                                _ => {
+                                    // Other variant kinds that might be added in the future
+                                    write!(f, " /* unsupported variant kind */")?;
+                                }
+                            }
+                        }
                         _ => {
-                            writeln!(f, "unsupported peek variant: {:?}", item.peek)?;
+                            write!(f, "unsupported peek variant: {:?}", item.peek)?;
                         }
                     }
                 }
                 StackState::ProcessStructField { field_index } => {
+                    // Handle both struct and enum fields
                     if let Peek::Struct(struct_) = item.peek {
                         let fields: Vec<_> = struct_.fields_with_metadata().collect();
 
@@ -288,7 +364,6 @@ impl PrettyPrinter {
                             self.write_punctuation(f, ",")?;
                             writeln!(f)?;
 
-                            // Process next field
                             item.state = StackState::ProcessStructField {
                                 field_index: field_index + 1,
                             };
@@ -317,6 +392,83 @@ impl PrettyPrinter {
                             stack.push_back(finish_item);
                             stack.push_back(start_item);
                         }
+                    } else if let Peek::Enum(enum_val) = item.peek {
+                        // Since PeekEnum implements Copy, we can use it directly
+
+                        // Get all fields directly
+                        let fields: Vec<_> = enum_val.fields().collect();
+
+                        // Check if we're done processing fields
+                        if field_index >= fields.len() {
+                            // Determine variant kind to use the right closing delimiter
+                            match enum_val.variant_kind_active() {
+                                facet_core::VariantKind::Tuple { .. } => {
+                                    // Close tuple variant with )
+                                    write!(
+                                        f,
+                                        "{:width$}{}",
+                                        "",
+                                        self.style_punctuation(")"),
+                                        width = (item.format_depth - 1) * self.indent_size
+                                    )?;
+                                }
+                                facet_core::VariantKind::Struct { .. } => {
+                                    // Close struct variant with }
+                                    write!(
+                                        f,
+                                        "{:width$}{}",
+                                        "",
+                                        self.style_punctuation("}"),
+                                        width = (item.format_depth - 1) * self.indent_size
+                                    )?;
+                                }
+                                _ => {}
+                            }
+                            continue;
+                        }
+
+                        // Get the current field
+                        let (field_name, field_peek) = fields[field_index];
+
+                        // Add indentation
+                        write!(
+                            f,
+                            "{:width$}",
+                            "",
+                            width = item.format_depth * self.indent_size
+                        )?;
+
+                        // For struct variants, print field name
+                        if let facet_core::VariantKind::Struct { .. } =
+                            enum_val.variant_kind_active()
+                        {
+                            self.write_field_name(f, field_name)?;
+                            self.write_punctuation(f, ": ")?;
+                        }
+
+                        // Set up to process the next field after this one
+                        item.state = StackState::ProcessStructField {
+                            field_index: field_index + 1,
+                        };
+
+                        // Create finish and start items for processing the field value
+                        let finish_item = StackItem {
+                            peek: field_peek, // field_peek is already a Peek which is Copy
+                            format_depth: item.format_depth,
+                            type_depth: item.type_depth + 1,
+                            state: StackState::Finish,
+                        };
+                        let start_item = StackItem {
+                            peek: field_peek, // field_peek is already a Peek which is Copy
+                            format_depth: item.format_depth,
+                            type_depth: item.type_depth + 1,
+                            state: StackState::Start,
+                        };
+
+                        // Push items to stack in the right order
+                        stack.push_back(item);
+                        stack.push_back(finish_item);
+                        stack.push_back(start_item);
                     }
                 }
                 StackState::ProcessListItem { item_index } => {

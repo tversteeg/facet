@@ -1,7 +1,9 @@
 use core::ptr::NonNull;
 use facet_core::{EnumDef, EnumRepr, Facet, FieldError, Opaque, OpaqueUninit, Shape, VariantKind};
 
-use super::{ISet, Poke, PokeValue};
+use crate::Guard;
+
+use super::{ISet, PokeValue};
 
 /// Represents an enum before a variant has been selected
 pub struct PokeEnumNoVariant<'mem> {
@@ -172,14 +174,14 @@ impl<'mem> PokeEnum<'mem> {
         self.selected_variant
     }
 
-    /// Get a field writer for a field in the currently selected variant.
+    /// Gets a field by name in the currently selected variant.
     ///
     /// # Errors
     ///
     /// Returns an error if:
     /// - The field name doesn't exist in the selected variant.
     /// - The selected variant is a unit variant (which has no fields).
-    pub fn variant_field_by_name<'s>(&'s mut self, name: &str) -> Result<Poke<'s>, FieldError> {
+    pub fn field_by_name(&self, name: &str) -> Result<(usize, crate::Poke<'mem>), FieldError> {
         let variant = &self.def.variants[self.selected_variant];
 
         // Find the field in the variant
@@ -190,30 +192,65 @@ impl<'mem> PokeEnum<'mem> {
             }
             VariantKind::Tuple { fields } => {
                 // For tuple variants, find the field by name
-                let field = fields
+                let (index, field) = fields
                     .iter()
-                    .find(|f| f.name == name)
+                    .enumerate()
+                    .find(|(_, f)| f.name == name)
                     .ok_or(FieldError::NoSuchStaticField)?;
 
                 // Get the field's address
                 let field_data = unsafe { self.data.field_uninit(field.offset) };
-                let poke = unsafe { Poke::unchecked_new(field_data, field.shape) };
-                Ok(poke)
+                let poke = unsafe { crate::Poke::unchecked_new(field_data, field.shape) };
+                Ok((index, poke))
             }
             VariantKind::Struct { fields } => {
                 // For struct variants, find the field by name
-                let field = fields
+                let (index, field) = fields
                     .iter()
-                    .find(|f| f.name == name)
+                    .enumerate()
+                    .find(|(_, f)| f.name == name)
                     .ok_or(FieldError::NoSuchStaticField)?;
 
                 // Get the field's address
                 let field_data = unsafe { self.data.field_uninit(field.offset) };
-                let poke = unsafe { Poke::unchecked_new(field_data, field.shape) };
-                Ok(poke)
+                let poke = unsafe { crate::Poke::unchecked_new(field_data, field.shape) };
+                Ok((index, poke))
             }
             _ => {
                 panic!("Unsupported enum variant kind: {:?}", variant.kind);
+            }
+        }
+    }
+
+    /// Get a field writer for a tuple field by index in the currently selected variant.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The index is out of bounds.
+    /// - The selected variant is not a tuple variant.
+    pub fn tuple_field(&self, index: usize) -> Result<crate::Poke<'mem>, FieldError> {
+        let variant = &self.def.variants[self.selected_variant];
+
+        // Make sure we're working with a tuple variant
+        match &variant.kind {
+            VariantKind::Tuple { fields } => {
+                // Check if the index is valid
+                if index >= fields.len() {
+                    return Err(FieldError::IndexOutOfBounds);
+                }
+
+                // Get the field at the specified index
+                let field = &fields[index];
+
+                // Get the field's address
+                let field_data = unsafe { self.data.field_uninit(field.offset) };
+                let poke = unsafe { crate::Poke::unchecked_new(field_data, field.shape) };
+                Ok(poke)
+            }
+            _ => {
+                // Not a tuple variant
+                Err(FieldError::NoSuchStaticField)
             }
         }
     }
@@ -222,8 +259,9 @@ impl<'mem> PokeEnum<'mem> {
     ///
     /// # Safety
     ///
-    /// The caller must ensure that the field is not already initialized.
-    pub unsafe fn mark_field_as_initialized(&mut self, field_index: usize) {
+    /// The caller must ensure that the field is initialized. Only call this after writing to
+    /// an address gotten through [`Self::field_by_name`] or [`Self::tuple_field`].
+    pub unsafe fn mark_initialized(&mut self, field_index: usize) {
         self.iset.set(field_index);
     }
 
@@ -284,22 +322,31 @@ impl<'mem> PokeEnum<'mem> {
         data
     }
 
-    /// Builds a value of type `T` from the PokeEnum.
+    /// Builds a value of type `T` from the PokeEnum, then deallocates the memory
+    /// that this PokeEnum was pointing to.
     ///
     /// # Panics
     ///
     /// This function will panic if:
     /// - Not all fields in the selected variant have been initialized.
     /// - The generic type parameter T does not match the shape that this PokeEnum is building.
-    pub fn build<T: Facet>(self) -> T {
-        self.assert_all_fields_initialized();
-        self.assert_matching_shape::<T>();
+    pub fn build<T: Facet>(self, guard: Option<Guard>) -> T {
+        let mut guard = guard;
+        let this = self;
+        // this changes drop order: guard must be dropped _after_ this.
+
+        this.assert_all_fields_initialized();
+        this.assert_matching_shape::<T>();
+        if let Some(guard) = &guard {
+            guard.shape.assert_type::<T>();
+        }
 
         let result = unsafe {
-            let ptr = self.data.as_bytes() as *const T;
+            let ptr = this.data.as_mut_bytes() as *const T;
             core::ptr::read(ptr)
         };
-        core::mem::forget(self);
+        guard.take(); // dealloc
+        core::mem::forget(this);
         result
     }
 

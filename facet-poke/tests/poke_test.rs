@@ -3,10 +3,17 @@ use facet_core::{Facet, OpaqueConst, OpaqueUninit};
 use facet_derive::Facet;
 use facet_poke::{Peek, Poke};
 
+use facet_pretty::FacetPretty as _;
 use owo_colors::{OwoColorize, Style};
 use std::{cmp::Ordering, collections::HashSet, fmt::Debug};
 
 use facet_core as facet;
+
+#[ctor]
+fn init_logger() {
+    color_backtrace::install();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+}
 
 // Allow dead code in test modules since we're not constructing all enum variants
 #[derive(Debug, PartialEq, Eq, Facet)]
@@ -111,9 +118,93 @@ fn build_foobar_after_default() {
     assert_eq!(foo_bar.bar, "Hello, World!");
 }
 
-#[ctor]
-fn init_backtrace() {
-    color_backtrace::install();
+#[test]
+fn build_enum() {
+    #[derive(Facet, PartialEq, Debug)]
+    #[repr(u8)]
+    #[allow(dead_code)]
+    enum FooBar {
+        Unit,
+        Foo(u32),
+        Bar(String),
+        StructLike { a: u32, b: String },
+    }
+
+    let v = FooBar::Unit;
+    eprintln!("{}", v.pretty());
+
+    let v = FooBar::Foo(42);
+    eprintln!("{}", v.pretty());
+
+    let v = FooBar::Bar("junjito".into());
+    eprintln!("{}", v.pretty());
+
+    let v = FooBar::StructLike {
+        a: 1,
+        b: "Hello".into(),
+    };
+    eprintln!("{}", v.pretty());
+
+    {
+        // now let's try to build an enum variant with a poke
+        let (poke, guard) = Poke::alloc::<FooBar>();
+        let pe = poke.into_enum();
+        let pe = pe.set_variant_by_name("Unit").unwrap();
+        let v = pe.build::<FooBar>(Some(guard));
+        assert_eq!(v, FooBar::Unit);
+    }
+
+    {
+        // Build the Foo variant with a u32 value
+        let (poke, guard) = Poke::alloc::<FooBar>();
+        let pe = poke.into_enum();
+        let mut pe = pe.set_variant_by_name("Foo").unwrap();
+        unsafe {
+            let poke_field = pe.tuple_field(0).unwrap();
+            poke_field.into_value().put(43_u32);
+            pe.mark_initialized(0);
+        }
+        let v = pe.build::<FooBar>(Some(guard));
+        assert_eq!(v, FooBar::Foo(43));
+    }
+
+    {
+        // Build the Bar variant with a String value
+        let (poke, guard) = Poke::alloc::<FooBar>();
+        let pe = poke.into_enum();
+        let mut pe = pe.set_variant_by_name("Bar").unwrap();
+        unsafe {
+            let poke_field = pe.tuple_field(0).unwrap();
+            poke_field.into_value().put(String::from("junjito"));
+            pe.mark_initialized(0);
+        }
+        let v = pe.build::<FooBar>(Some(guard));
+        assert_eq!(v, FooBar::Bar("junjito".into()));
+    }
+
+    {
+        // Build the StructLike variant with fields
+        let (poke, guard) = Poke::alloc::<FooBar>();
+        let pe = poke.into_enum();
+        let mut pe = pe.set_variant_by_name("StructLike").unwrap();
+        unsafe {
+            let (index_a, poke_a) = pe.field_by_name("a").unwrap();
+            poke_a.into_value().put(1_u32);
+            pe.mark_initialized(index_a);
+
+            let (index_b, poke_b) = pe.field_by_name("b").unwrap();
+            poke_b.into_value().put(String::from("Hello"));
+            pe.mark_initialized(index_b);
+        }
+        let v = pe.build::<FooBar>(Some(guard));
+        assert_eq!(
+            v,
+            FooBar::StructLike {
+                a: 1,
+                b: "Hello".into()
+            }
+        );
+    }
 }
 
 fn test_peek_pair<T>(val1: T, val2: T, expected_facts: HashSet<Fact>)
@@ -766,49 +857,56 @@ fn test_tuple_structs() {
     );
 }
 
-// Commented out enum tests for now as they may need special handling
-/*
 #[test]
 fn test_enums() {
-    #[derive(Facet, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    #[derive(Facet, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+    #[repr(u8)]
     enum TestEnum {
         Variant1,
         Variant2(i32),
         Variant3 { field: String },
     }
 
+    // Unit variant with equal values
     test_peek_pair(
-        "Enum-Unit",
         TestEnum::Variant1,
         TestEnum::Variant1,
-        true,
-        true,
-        true,
+        FactBuilder::new()
+            .debug()
+            .equal_and(true)
+            .ord_and(Ordering::Equal)
+            .clone()
+            .build(),
     );
 
+    // Tuple variant with different values
     test_peek_pair(
-        "Enum-Tuple",
         TestEnum::Variant2(42),
         TestEnum::Variant2(24),
-        true,
-        true,
-        true,
+        FactBuilder::new()
+            .debug()
+            .equal_and(false)
+            .ord_and(Ordering::Greater)
+            .clone()
+            .build(),
     );
 
+    // Struct variant with different values
     test_peek_pair(
-        "Enum-Struct",
         TestEnum::Variant3 {
             field: "Hello".to_string(),
         },
         TestEnum::Variant3 {
             field: "World".to_string(),
         },
-        true,
-        true,
-        true,
+        FactBuilder::new()
+            .debug()
+            .equal_and(false)
+            .ord_and(Ordering::Less)
+            .clone()
+            .build(),
     );
 }
-*/
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Fact {

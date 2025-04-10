@@ -1,3 +1,4 @@
 /target
 .aider*
 *~lock~
+/templates/output.rs
