@@ -28,6 +28,12 @@ operator! {
 }
 
 unsynn! {
+    enum TypeDecl {
+        Struct(Struct),
+        Enum(Enum),
+        TupleStruct(TupleStruct)
+    }
+
     enum Vis {
         Pub(KPub),
         PubCrate(Cons<KPub, ParenthesisGroupContaining<KCrate>>),
@@ -72,7 +78,7 @@ unsynn! {
         _vis: Option<Vis>,
         _kw_struct: KStruct,
         name: Ident,
-        body: BraceGroupContaining<CommaDelimitedVec<StructField>>,
+        body: Option<BraceGroupContaining<CommaDelimitedVec<StructField>>>,
     }
 
     struct Lifetime {
@@ -180,68 +186,18 @@ pub fn facet_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = TokenStream::from(input);
     let mut i = input.to_token_iter();
 
-    // Try to parse as struct first
-    if let Ok(parsed) = i.parse::<Struct>() {
-        return process_struct::process_struct(parsed);
+    // Parse as TypeDecl
+    match i.parse::<TypeDecl>() {
+        Ok(TypeDecl::Struct(parsed)) => process_struct::process_struct(parsed),
+        Ok(TypeDecl::TupleStruct(parsed)) => process_tuple_struct::process_tuple_struct(parsed),
+        Ok(TypeDecl::Enum(parsed)) => process_enum::process_enum(parsed),
+        Err(err) => {
+            panic!(
+                "Could not parse input as struct, tuple struct, or enum: {}\nError: {:?}",
+                input, err
+            );
+        }
     }
-    let struct_tokens_left = i.count();
-
-    // Try to parse as tuple struct
-    i = input.to_token_iter(); // Reset iterator
-    if let Ok(parsed) = i.parse::<TupleStruct>() {
-        return process_tuple_struct::process_tuple_struct(parsed);
-    }
-    let tuple_struct_tokens_left = i.count();
-
-    // Try to parse as enum
-    i = input.to_token_iter(); // Reset iterator
-    if let Ok(parsed) = i.parse::<Enum>() {
-        return process_enum::process_enum(parsed);
-    }
-    let enum_tokens_left = i.count();
-
-    let mut msg = format!(
-        "Could not parse input as struct, tuple struct, or enum: {}",
-        input
-    );
-
-    // Find which parsing left the fewest tokens
-    let min_tokens_left = struct_tokens_left
-        .min(tuple_struct_tokens_left)
-        .min(enum_tokens_left);
-
-    // Parse again for the one with fewest tokens left and show remaining tokens
-    if min_tokens_left == struct_tokens_left {
-        i = input.to_token_iter();
-        let err = i.parse::<Struct>().err();
-        msg = format!(
-            "{}\n====> Error parsing struct: {:?}\n====> Remaining tokens after struct parsing: {}",
-            msg,
-            err,
-            i.collect::<TokenStream>()
-        );
-    } else if min_tokens_left == tuple_struct_tokens_left {
-        i = input.to_token_iter();
-        let err = i.parse::<TupleStruct>().err();
-        msg = format!(
-            "{}\n====> Error parsing tuple struct: {:?}\n====> Remaining tokens after tuple struct parsing: {}",
-            msg,
-            err,
-            i.collect::<TokenStream>()
-        );
-    } else {
-        i = input.to_token_iter();
-        let err = i.parse::<Enum>().err();
-        msg = format!(
-            "{}\n====> Error parsing enum: {:?}\n====> Remaining tokens after enum parsing: {}",
-            msg,
-            err,
-            i.collect::<TokenStream>()
-        );
-    }
-
-    // If we get here, couldn't parse as struct, tuple struct, or enum
-    panic!("{msg}");
 }
 
 impl core::fmt::Display for Type {

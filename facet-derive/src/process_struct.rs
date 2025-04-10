@@ -13,64 +13,66 @@ pub(crate) fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
     let struct_name = parsed.name.to_string();
 
     // Generate field definitions
-    let field_definitions = parsed
-        .body
-        .content
-        .0
-        .iter()
-        .map(|field| {
-            let field_name = field.value.name.to_string();
+    let field_definitions = match &parsed.body {
+        Some(body) => body
+            .content
+            .0
+            .iter()
+            .map(|field| {
+                let field_name = field.value.name.to_string();
 
-            // Determine field flags
-            let mut flags = "facet::FieldFlags::EMPTY";
-            for attr in &field.value.attributes {
-                if let AttributeInner::Facet(attr) = &attr.body.content {
-                    match &attr.inner.content {
-                        FacetInner::Sensitive(_ksensitive) => {
-                            flags = "facet::FieldFlags::SENSITIVE"
+                // Determine field flags
+                let mut flags = "facet::FieldFlags::EMPTY";
+                for attr in &field.value.attributes {
+                    if let AttributeInner::Facet(attr) = &attr.body.content {
+                        match &attr.inner.content {
+                            FacetInner::Sensitive(_ksensitive) => {
+                                flags = "facet::FieldFlags::SENSITIVE"
+                            }
+                            FacetInner::Other(_) => {
+                                // nothing
+                            }
                         }
-                        FacetInner::Other(_) => {
-                            // nothing
-                        }
-                    }
-                    // Since FacetInner only has Sensitive variant, we can directly set flags
-                }
-            }
-
-            let mut attributes = vec![];
-            for attr in &field.value.attributes {
-                if let AttributeInner::Facet(attr) = &attr.body.content {
-                    match &attr.inner.content {
-                        FacetInner::Sensitive(_ksensitive) => {
-                            attributes.push("facet::FieldAttribute::Sensitive".to_string());
-                        }
-                        FacetInner::Other(token_trees) => {
-                            attributes.push(format!(
-                                r#"facet::FieldAttribute::Arbitrary({:?})"#,
-                                format!("{:?}", token_trees)
-                            ));
-                        }
+                        // Since FacetInner only has Sensitive variant, we can directly set flags
                     }
                 }
-            }
-            let attributes = attributes.join(",");
 
-            // Generate each field definition
-            format!(
-                "facet::Field::builder()
+                let mut attributes = vec![];
+                for attr in &field.value.attributes {
+                    if let AttributeInner::Facet(attr) = &attr.body.content {
+                        match &attr.inner.content {
+                            FacetInner::Sensitive(_ksensitive) => {
+                                attributes.push("facet::FieldAttribute::Sensitive".to_string());
+                            }
+                            FacetInner::Other(token_trees) => {
+                                attributes.push(format!(
+                                    r#"facet::FieldAttribute::Arbitrary({:?})"#,
+                                    format!("{:?}", token_trees)
+                                ));
+                            }
+                        }
+                    }
+                }
+                let attributes = attributes.join(",");
+
+                // Generate each field definition
+                format!(
+                    "facet::Field::builder()
                 .name(\"{field_name}\")
                 .shape(facet::shape_of(&|s: {struct_name}| s.{field_name}))
                 .offset(::core::mem::offset_of!({struct_name}, {field_name}))
                 .flags({flags})
                 .attributes(&[{attributes}])
                 .build()"
-            )
-        })
-        .collect::<Vec<String>>()
-        .join(
+                )
+            })
+            .collect::<Vec<String>>()
+            .join(
+                ",
             ",
-            ",
-        );
+            ),
+        None => String::new(),
+    };
 
     // Generate the impl
     let output = format!(

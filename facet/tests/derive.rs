@@ -2,6 +2,29 @@ use core::{fmt::Debug, mem::offset_of};
 use facet::{Def, Facet, FieldFlags, StructDef, StructKind};
 
 #[test]
+fn unit_struct() {
+    #[derive(Debug, Facet)]
+    struct UnitStruct;
+
+    if !cfg!(miri) {
+        let shape = UnitStruct::SHAPE;
+
+        // Check the name using Display
+        assert_eq!(format!("{}", shape), "UnitStruct");
+
+        assert_eq!(shape.layout.size(), 0);
+        assert_eq!(shape.layout.align(), 1);
+
+        if let Def::Struct(StructDef { kind, fields, .. }) = shape.def {
+            assert_eq!(kind, StructKind::Struct);
+            assert_eq!(fields.len(), 0);
+        } else {
+            panic!("Expected Struct innards");
+        }
+    }
+}
+
+#[test]
 fn simple_struct() {
     #[derive(Debug, Facet)]
     struct Blah {
