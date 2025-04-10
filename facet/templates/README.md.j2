@@ -188,11 +188,11 @@ We can build it fully through reflection:
 #     bar: String,
 # }
 
-use facet_poke::Poke;
+use facet_poke::PokeUninit;
 
 fn main() {
     // outer code: we know the type of `FooBar` — we pass `poke`
-    let (poke, guard) = Poke::alloc::<FooBar>();
+    let (poke, guard) = PokeUninit::alloc::<FooBar>();
 
     let foo_bar;
     {

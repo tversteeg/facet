@@ -5,7 +5,7 @@ use core::alloc::Layout;
 
 pub use facet_peek::*;
 
-use facet_core::{Def, Facet, OpaqueUninit, Shape};
+use facet_core::{Def, Facet, Opaque, OpaqueUninit, Shape};
 
 mod value;
 pub use value::*;
@@ -249,6 +249,50 @@ pub enum Poke<'mem> {
 }
 
 impl<'mem> Poke<'mem> {
+    /// Creates a new peek, for easy manipulation of some opaque data.
+    ///
+    /// # Safety
+    ///
+    /// `data` must be initialized and well-aligned, and point to a value
+    /// of the type described by `shape`.
+    pub unsafe fn unchecked_new(data: Opaque<'mem>, shape: &'static Shape) -> Self {
+        match shape.def {
+            Def::Struct(struct_def) => Poke::Struct(unsafe {
+                let mut ps =
+                    PokeStruct::new(OpaqueUninit::new(data.as_mut_byte_ptr()), shape, struct_def);
+                for (i, _f) in ps.def().fields.iter().enumerate() {
+                    ps.mark_initialized(i);
+                }
+                ps
+            }),
+            Def::Map(map_def) => {
+                let pm = unsafe { PokeMap::new(data, shape, map_def) };
+                Poke::Map(pm)
+            }
+            Def::List(list_def) => {
+                let pl = unsafe { PokeList::new(data, shape, list_def) };
+                Poke::List(pl)
+            }
+            Def::Scalar { .. } => Poke::Scalar(unsafe { PokeValue::new(data, shape) }),
+            Def::Enum(_enum_def) => {
+                todo!("we need to get the active variant somehow")
+            }
+            Def::Option(option_def) => {
+                let po = unsafe { PokeOption::new(data, shape, option_def) };
+                Poke::Option(po)
+            }
+            _ => todo!("unsupported def: {:?}", shape.def),
+        }
+    }
+
+    /// Borrows the value for a different kind of inspection.
+    #[inline(always)]
+    pub fn borrow<T: Facet>(data: &'mem mut T) -> Poke<'mem> {
+        let shape = T::SHAPE;
+        let data = Opaque::new(data);
+        unsafe { Poke::unchecked_new(data, shape) }
+    }
+
     /// Converts this Poke into a PokeValue, panicking if it's not a Scalar variant
     pub fn into_scalar(self) -> PokeValue<'mem> {
         match self {

@@ -126,8 +126,10 @@ impl<'mem> PokeOption<'mem> {
     }
 
     /// Replace the current value with Some
-    pub fn replace_with_some(self, value: OpaqueConst<'_>) -> Self {
-        unsafe { (self.vtable().replace_with_fn)(self.data, Some(value)) };
+    pub fn replace_with_some<T>(self, value: T) -> Self {
+        let value_opaque = OpaqueConst::new(&raw const value);
+        unsafe { (self.vtable().replace_with_fn)(self.data, Some(value_opaque)) };
+        core::mem::forget(value);
         self
     }
 

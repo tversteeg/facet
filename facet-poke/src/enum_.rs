@@ -169,6 +169,33 @@ pub struct PokeEnum<'mem> {
 }
 
 impl<'mem> PokeEnum<'mem> {
+    /// Coerce back into a `PokeValue`
+    #[inline(always)]
+    pub fn into_value(self) -> PokeValueUninit<'mem> {
+        unsafe { PokeValueUninit::new(self.data, self.shape) }
+    }
+
+    /// Creates a new PokeEnum from raw data
+    ///
+    /// # Safety
+    ///
+    /// The data buffer must match the size and alignment of the enum shape described by shape
+    #[allow(dead_code)]
+    pub(crate) unsafe fn new(
+        data: OpaqueUninit<'mem>,
+        shape: &'static Shape,
+        def: EnumDef,
+        selected_variant: usize,
+    ) -> Self {
+        Self {
+            data,
+            iset: Default::default(),
+            shape,
+            def,
+            selected_variant,
+        }
+    }
+
     #[inline(always)]
     /// Shape getter
     pub fn shape(&self) -> &'static Shape {
