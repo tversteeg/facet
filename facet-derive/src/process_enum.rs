@@ -46,16 +46,20 @@ pub(crate) fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
         match &var_like.value {
             EnumVariantLike::Unit(unit) => {
                 let variant_name = unit.name.to_string();
+                let maybe_doc = build_maybe_doc(&unit.attributes);
+
                 variant_expressions.push(format!(
                     "facet::Variant::builder()
                     .name({variant_name:?})
                     .discriminant(Some({discriminant_value}))
                     .kind(facet::VariantKind::Unit)
+                    {maybe_doc}
                     .build()",
                 ));
             }
             EnumVariantLike::Tuple(tuple) => {
                 let variant_name = tuple.name.to_string();
+                let maybe_doc = build_maybe_doc(&tuple.attributes);
 
                 // Generate shadow struct for this tuple variant to calculate offsets
                 let shadow_struct_name = format!("__Shadow{}_{}", enum_name, variant_name);
@@ -105,12 +109,14 @@ pub(crate) fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
                             .name({variant_name:?})
                             .discriminant(Some({discriminant_value}))
                             .kind(facet::VariantKind::Tuple {{ fields: FIELDS }})
+                            {maybe_doc}
                             .build()
                     }}",
                 ));
             }
             EnumVariantLike::Struct(struct_var) => {
                 let variant_name = struct_var.name.to_string();
+                let maybe_doc = build_maybe_doc(&struct_var.attributes);
 
                 // Generate shadow struct for this struct variant to calculate offsets
                 let shadow_struct_name = format!("__Shadow{}_{}", enum_name, variant_name);
@@ -159,6 +165,7 @@ pub(crate) fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
                             .name({variant_name:?})
                             .discriminant(Some({discriminant_value}))
                             .kind(facet::VariantKind::Struct {{ fields: FIELDS }})
+                            {maybe_doc}
                             .build()
                     }}",
                 ));
