@@ -107,7 +107,7 @@ pub(crate) fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
 
                 // Build the list of fields and types
                 let fields_with_types = struct_var
-                    ._brace
+                    .fields
                     .content
                     .0
                     .iter()
@@ -127,7 +127,7 @@ pub(crate) fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
 
                 // Build the list of field types with calculated offsets
                 let fields_with_offsets = struct_var
-                    ._brace
+                    .fields
                     .content
                     .0
                     .iter()

@@ -127,7 +127,7 @@ fn build_enum() {
         Unit,
         Foo(u32),
         Bar(String),
-        // StructLike { a: u32, b: String },
+        StructLike { a: u32, b: String },
     }
 
     let v = FooBar::Unit;
@@ -137,6 +137,12 @@ fn build_enum() {
     eprintln!("{}", v.pretty());
 
     let v = FooBar::Bar("junjito".into());
+    eprintln!("{}", v.pretty());
+
+    let v = FooBar::StructLike {
+        a: 1,
+        b: "Hello".into(),
+    };
     eprintln!("{}", v.pretty());
 }
 

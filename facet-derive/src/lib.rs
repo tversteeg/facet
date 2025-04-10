@@ -153,8 +153,8 @@ unsynn! {
 
     enum EnumVariantLike {
         Tuple(TupleVariant),
-        Unit(UnitVariant),
         Struct(StructVariant),
+        Unit(UnitVariant),
     }
 
     struct UnitVariant {
@@ -171,9 +171,9 @@ unsynn! {
 
     struct StructVariant {
         // Skip any doc comments on variants
-        _doc_attributes: Vec<Attribute>,
+        attributes: Vec<Attribute>,
         name: Ident,
-        _brace: BraceGroupContaining<CommaDelimitedVec<StructField>>,
+        fields: BraceGroupContaining<CommaDelimitedVec<StructField>>,
     }
 }
 

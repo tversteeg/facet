@@ -68,20 +68,20 @@ macro_rules! enum_struct_variant {
     ($enum:ty, $variant:ident, {$(($field:ident: $field_type:ty, $offset:expr)),*}, $discriminant:expr) => {{
         static FIELDS: &[$crate::Field] = &[
             $(
-                $crate::Field {
-                    name: stringify!($field),
-                    shape_fn: <$field_type>::shape,
-                    offset: $offset, // Explicit offset including discriminant
-                    flags: $crate::FieldFlags::EMPTY,
-                }
+                $crate::Field::builder()
+                    .name(stringify!($field))
+                    .shape(<$field_type>::SHAPE)
+                    .offset($offset) // Explicit offset including discriminant
+                    .flags($crate::FieldFlags::EMPTY)
+                    .build()
             ),*
         ];
 
-        $crate::Variant {
-            name: stringify!($variant),
-            discriminant: Some($discriminant),
-            kind: $crate::VariantKind::Struct { fields: FIELDS },
-        }
+        $crate::Variant::builder()
+            .name(stringify!($variant))
+            .discriminant(Some($discriminant))
+            .kind($crate::VariantKind::Struct { fields: FIELDS })
+            .build()
     }};
 }
 
