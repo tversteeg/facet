@@ -41,9 +41,28 @@ impl<'mem> OpaqueUninit<'mem> {
     ///
     /// The pointer must be properly aligned for T and point to allocated memory
     /// that can be safely written to.
-    pub unsafe fn write<T>(self, value: T) -> Opaque<'mem> {
+    pub unsafe fn put<T>(self, value: T) -> Opaque<'mem> {
         unsafe {
             core::ptr::write(self.0 as *mut T, value);
+            self.assume_init()
+        }
+    }
+
+    /// Copies data from the source pointer to this location and converts to an initialized pointer
+    ///
+    /// # Safety
+    ///
+    /// - The destination pointer must be properly aligned and point to allocated memory
+    ///   that can be safely written to.
+    /// - The source pointer must point to properly initialized data.
+    /// - Both pointers must refer to objects of the same type and size.
+    pub unsafe fn write(self, source: OpaqueConst<'_>) -> Opaque<'mem> {
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                source.as_byte_ptr(),
+                self.0,
+                core::mem::size_of_val(&*source.as_byte_ptr()),
+            );
             self.assume_init()
         }
     }

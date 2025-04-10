@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-use facet_core::{Facet, Opaque, OpaqueConst};
+use facet_core::{Facet, Opaque};
 use facet_poke::Poke;
 use log::*;
 
@@ -230,14 +230,11 @@ fn deserialize_scalar_field<'mem>(
         Poke::Scalar(ps_scalar) => {
             if ps_scalar.shape().is_type::<String>() {
                 let s = value.to_string();
-                let opaque = OpaqueConst::new(&s);
-                unsafe { ps_scalar.write(opaque) };
-                core::mem::forget(s);
+                ps_scalar.put(s);
             } else if ps_scalar.shape().is_type::<u64>() {
                 match value.parse::<u64>() {
                     Ok(num) => {
-                        let opaque = OpaqueConst::new(&num);
-                        unsafe { ps_scalar.write(opaque) };
+                        ps_scalar.put(num);
                     }
                     Err(_) => {
                         return Err(UrlEncodedError::InvalidNumber(

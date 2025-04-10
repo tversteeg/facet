@@ -95,7 +95,7 @@ pub type CloneIntoFn = for<'src, 'dst> unsafe fn(
 pub const fn clone_into_fn_for<T: Clone>() -> Option<CloneIntoFn> {
     Some(|source: OpaqueConst<'_>, target: OpaqueUninit<'_>| unsafe {
         let source_val = source.as_ref::<T>();
-        target.write(source_val.clone())
+        target.put(source_val.clone())
     })
 }
 
@@ -109,7 +109,7 @@ pub type DefaultInPlaceFn = for<'mem> unsafe fn(target: OpaqueUninit<'mem>) -> O
 
 /// Generates a [`DefaultInPlaceFn`] for a concrete type
 pub const fn default_in_place_fn_for<T: Default>() -> Option<DefaultInPlaceFn> {
-    Some(|target: OpaqueUninit<'_>| unsafe { target.write(T::default()) })
+    Some(|target: OpaqueUninit<'_>| unsafe { target.put(T::default()) })
 }
 
 //======== Conversion ========
@@ -130,7 +130,7 @@ pub type ParseFn =
 pub const fn parse_fn_for<T: core::str::FromStr>() -> Option<ParseFn> {
     Some(|s: &str, target: OpaqueUninit<'_>| unsafe {
         match s.parse::<T>() {
-            Ok(value) => Ok(target.write(value)),
+            Ok(value) => Ok(target.put(value)),
             Err(_) => Err(ParseError::Generic("failed to parse string")),
         }
     })

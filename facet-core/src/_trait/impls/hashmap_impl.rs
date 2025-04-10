@@ -79,10 +79,10 @@ where
                     }
 
                     builder =
-                        builder.default_in_place(|target| unsafe { target.write(Self::default()) });
+                        builder.default_in_place(|target| unsafe { target.put(Self::default()) });
 
                     builder = builder
-                        .clone_into(|src, dst| unsafe { dst.write(src.as_ref::<HashMap<K, V>>()) });
+                        .clone_into(|src, dst| unsafe { dst.put(src.as_ref::<HashMap<K, V>>()) });
 
                     if K::SHAPE.vtable.eq.is_some() && V::SHAPE.vtable.eq.is_some() {
                         builder = builder.eq(|a, b| unsafe {
@@ -139,7 +139,7 @@ where
                         &const {
                             MapVTable::builder()
                                 .init_in_place_with_capacity(|uninit, capacity| unsafe {
-                                    Ok(uninit.write(Self::with_capacity_and_hasher(
+                                    Ok(uninit.put(Self::with_capacity_and_hasher(
                                         capacity,
                                         S::default(),
                                     )))

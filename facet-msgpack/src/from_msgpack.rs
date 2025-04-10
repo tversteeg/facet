@@ -1,7 +1,7 @@
 use crate::constants::*;
 use crate::errors::Error as DecodeError;
 
-use facet_core::{Facet, Opaque, OpaqueConst};
+use facet_core::{Facet, Opaque};
 use facet_poke::Poke;
 use log::trace;
 
@@ -99,12 +99,11 @@ pub fn from_slice_opaque<'mem>(
                 trace!("Deserializing scalar");
                 if pv.shape().is_type::<String>() {
                     let s = decoder.decode_string()?;
-                    let data = unsafe { pv.write(OpaqueConst::new(&s)) };
-                    core::mem::forget(s);
+                    let data = pv.put(s);
                     data
                 } else if pv.shape().is_type::<u64>() {
                     let n = decoder.decode_u64()?;
-                    unsafe { pv.write(OpaqueConst::new(&n)) }
+                    pv.put(n)
                 } else {
                     todo!("Unsupported scalar type: {}", pv.shape())
                 }

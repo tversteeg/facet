@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-use facet_core::{Facet, Opaque, OpaqueConst};
+use facet_core::{Facet, Opaque};
 use facet_poke::Poke;
 use toml_edit::{DocumentMut, Item, TomlError, Value};
 
@@ -65,17 +65,13 @@ fn deserialize_item<'mem>(poke: Poke<'mem>, value: &Item) -> Result<Opaque<'mem>
                     .as_value()
                     .ok_or_else(|| format!("Expected value, got: {}", value.type_name()))?;
                 let u = toml_to_u64(v)?;
-                let opaque = OpaqueConst::new(&u);
-                unsafe { ps.write(opaque) }
+                ps.put(u)
             } else if ps.shape().is_type::<String>() {
                 let s = value
                     .as_str()
                     .ok_or_else(|| AnyErr(format!("Expected string, got: {}", value.type_name())))?
                     .to_string();
-                let opaque = OpaqueConst::new(&s);
-                let res = unsafe { ps.write(opaque) };
-                core::mem::forget(s);
-                res
+                ps.put(s)
             } else {
                 return Err(format!("Unsupported scalar type: {}", ps.shape()).into());
             }

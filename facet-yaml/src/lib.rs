@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-use facet_core::{Facet, Opaque, OpaqueConst};
+use facet_core::{Facet, Opaque};
 use facet_poke::Poke;
 use yaml_rust2::{Yaml, YamlLoader};
 
@@ -80,17 +80,13 @@ fn deserialize_value<'mem>(poke: Poke<'mem>, value: &Yaml) -> Result<Opaque<'mem
         Poke::Scalar(ps) => {
             if ps.shape().is_type::<u64>() {
                 let u = yaml_to_u64(value)?;
-                let opaque = OpaqueConst::new(&u);
-                unsafe { ps.write(opaque) }
+                ps.put(u)
             } else if ps.shape().is_type::<String>() {
                 let s = value
                     .as_str()
                     .ok_or_else(|| AnyErr(format!("Expected string, got: {}", yaml_type(value))))?
                     .to_string();
-                let opaque = OpaqueConst::new(&s);
-                let res = unsafe { ps.write(opaque) };
-                core::mem::forget(s);
-                res
+                ps.put(s)
             } else {
                 return Err(format!("Unsupported scalar type: {}", ps.shape()).into());
             }

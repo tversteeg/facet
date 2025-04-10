@@ -120,7 +120,7 @@ pub trait SpezDefaultInPlaceYes {
 }
 impl<T: Default> SpezDefaultInPlaceYes for &SpezEmpty<T> {
     unsafe fn spez_default_in_place<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem> {
-        unsafe { target.write(<T as Default>::default()) }
+        unsafe { target.put(<T as Default>::default()) }
     }
 }
 
@@ -162,7 +162,7 @@ pub trait SpezCloneIntoYes {
 }
 impl<T: Clone> SpezCloneIntoYes for &Spez<T> {
     unsafe fn spez_clone_into<'mem>(&self, target: OpaqueUninit<'mem>) -> Opaque<'mem> {
-        unsafe { target.write(self.0.clone()) }
+        unsafe { target.put(self.0.clone()) }
     }
 }
 
@@ -206,7 +206,7 @@ impl<T: core::str::FromStr> SpezParseYes for &SpezEmpty<T> {
     unsafe fn spez_parse(&self, s: &str, target: OpaqueUninit) -> Result<(), ParseError> {
         match <T as core::str::FromStr>::from_str(s) {
             Ok(value) => {
-                unsafe { target.write(value) };
+                unsafe { target.put(value) };
                 Ok(())
             }
             Err(_) => Err(ParseError::Generic(

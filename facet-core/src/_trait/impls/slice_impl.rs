@@ -50,11 +50,11 @@ where
                             }
                         })
                         .marker_traits(T::SHAPE.vtable.marker_traits)
-                        .default_in_place(|ptr| unsafe { ptr.write(&[] as &[T]) })
+                        .default_in_place(|ptr| unsafe { ptr.put(&[] as &[T]) })
                         .clone_into(|src, dst| unsafe {
                             // This works because we're cloning a shared reference (&[T]), not the actual slice data.
                             // We're just copying the fat pointer (ptr + length) that makes up the slice reference.
-                            dst.write(src.as_ref::<&[T]>())
+                            dst.put(src.as_ref::<&[T]>())
                         });
 
                     if T::SHAPE.vtable.debug.is_some() {

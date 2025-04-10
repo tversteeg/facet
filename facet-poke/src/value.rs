@@ -83,41 +83,16 @@ impl<'mem> PokeValue<'mem> {
         }
     }
 
-    /// Performs a bitwise copy from a given const pointer into this value.
-    ///
-    /// # Safety
-    ///
-    /// The `source` must be a valid, initialized pointer to a value of the same type
-    /// as described by this `PokeValue`'s shape.
-    ///
-    /// Also, `source` is moved out of after this function is called, so it cannot be used
-    /// anymore — it should be deallocated, but it should not be "dropped" anymore: you
-    /// can use `core::mem::forget` for this.
-    pub unsafe fn write<'src>(self, source: OpaqueConst<'src>) -> Opaque<'mem> {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                source.as_ptr(),
-                self.data.as_mut_bytes(),
-                self.shape.layout.size(),
-            );
-            self.data.assume_init()
-        }
-    }
-
     /// Place a value in the space provided
     ///
     /// This function places a value of type T into the destination space,
     /// checking that T exactly matches the expected shape.
-    pub fn put<'src, T>(self, source: T) -> Opaque<'mem>
+    pub fn put<'src, T>(self, value: T) -> Opaque<'mem>
     where
         T: Facet + 'src,
     {
         self.shape.assert_type::<T>();
-
-        let source_as_const = OpaqueConst::new(&raw const source);
-        let result = unsafe { self.write(source_as_const) };
-        core::mem::forget(source);
-        result
+        unsafe { self.data.put(value) }
     }
 
     /// Attempts to set the value to its default

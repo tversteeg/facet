@@ -23,8 +23,8 @@ where
                         .drop_in_place(|value| unsafe {
                             core::ptr::drop_in_place(value.as_mut::<Vec<T>>());
                         })
-                        .default_in_place(|target| unsafe { target.write(Self::default()) })
-                        .clone_into(|src, dst| unsafe { dst.write(src.as_ref::<Vec<T>>()) });
+                        .default_in_place(|target| unsafe { target.put(Self::default()) })
+                        .clone_into(|src, dst| unsafe { dst.put(src.as_ref::<Vec<T>>()) });
 
                     if T::SHAPE.vtable.debug.is_some() {
                         builder = builder.debug(|value, f| {
@@ -98,7 +98,7 @@ where
                         &const {
                             ListVTable::builder()
                         .init_in_place_with_capacity(|data, capacity| unsafe {
-                            Ok(data.write(Self::with_capacity(capacity)))
+                            Ok(data.put(Self::with_capacity(capacity)))
                         })
                         .push(|ptr, item| unsafe {
                             let vec = ptr.as_mut::<Vec<T>>();

@@ -1,6 +1,5 @@
 use facet_core::Facet;
 use facet_core::FieldAttribute;
-use facet_core::OpaqueConst;
 
 use facet_poke::{Poke, PokeStruct};
 
@@ -10,22 +9,13 @@ fn parse_field(field: Poke, value: &str, field_index: usize, ps: &mut PokeStruct
 
     if field_shape.is_type::<bool>() {
         log::trace!("Boolean field detected, setting to true");
-        unsafe {
-            field
-                .into_value()
-                .write(OpaqueConst::new(&true as *const bool))
-        };
+        field.into_value().put(true);
         unsafe { ps.mark_initialized(field_index) }
     } else if field_shape.is_type::<String>() {
         log::trace!("String field detected");
         let value = value.to_string();
-        unsafe {
-            field
-                .into_value()
-                .write(OpaqueConst::new(&value as *const String))
-        };
+        field.into_value().put(value);
         unsafe { ps.mark_initialized(field_index) };
-        std::mem::forget(value);
     } else {
         let parse = field_shape.vtable.parse.unwrap_or_else(|| {
             log::trace!("No parse function found for shape {}", field.shape());
