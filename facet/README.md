@@ -58,53 +58,6 @@ The `SHAPE` associated constant fully describes a type:
   * VTable for various standard traits:
     * Display, Debug, Clone, Default, Drop etc.
 
-## Use case: (de)serialization
-
-The `facet-peek` and `face-poke` allow reading and writing (constructing,
-initializing) any type that implements `Facet` — this makes it trivial to
-write deserializers, see `facet-json`, `facet-yaml`, `facet-urlencoded`, etc.
-
-Say we have this struct:
-
-```rust,ignore
-use facet::Facet;
-
-#[derive(Debug, PartialEq, Eq, Facet)]
-struct FooBar {
-    foo: u64,
-    bar: String,
-}
-```
-
-We can build it fully through reflection:
-
-```rust
-// outer code: we know the type of `FooBar` — we pass `poke`
-let (poke, guard) = Poke::alloc::<FooBar>();
-
-{
-    // inner code: all we have is a `poke` — our function is not generic,
-    // `Poke` is not generic.
-    let mut poke = poke.into_struct();
-    poke.set_by_name("foo", OpaqueConst::from_ref(&42u64))
-        .unwrap();
-
-    {
-        let bar = String::from("Hello, World!");
-        poke.set_by_name("bar", OpaqueConst::from_ref(&bar))
-            .unwrap();
-        // bar has been moved out of
-        core::mem::forget(bar);
-    }
-}
-
-// outer code: we know the type of `FooBar` again, we can
-// move out of the `Poke`
-let foo_bar = poke.build::<FooBar>(Some(guard));
-```
-
-The `inner code` here is the kind of code you would write in a deserializer, for example.
-
 ## Use case: inspection, pretty printing, debugging, specialization
 
 The `Debug` trait is severely limited because it cannot be specialized.
@@ -194,6 +147,90 @@ Vec<Person> [
 
 Because we know the shaep of `T`, we can format different things differently,
 if we wanted to:
+
+```rust,ignore
+    let mut file = std::fs::File::open("/dev/urandom").expect("Failed to open /dev/urandom");
+    let mut bytes = vec![0u8; 128];
+    std::io::Read::read_exact(&mut file, &mut bytes).expect("Failed to read from /dev/urandom");
+    println!("{}", bytes.pretty());
+```
+
+```bash
+facet on  main [!] via 🦀 v1.86.0
+❯ cargo run --example vec_u8
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running `target/debug/examples/vec_u8`
+Vec<u8>
+  aa c5 ce 2a 79 95 a6 c6 63 ca 69 5f 12 d5 7e fc
+  f4 40 60 48 c4 ee 10 7c 12 a2 67 3d 2f 9a c4 ca
+  b3 7e 91 5c 67 16 41 35 92 31 22 0f 23 6a ad c1
+  f4 b3 c2 60 38 13 02 47 25 7e f9 48 9b 11 b5 0e
+  cb 5d c6 b1 43 23 bd a7 8c 6c 7d e6 7b 72 b7 26
+  1a 2c e2 b8 e9 1a a6 e7 f6 b2 9b c7 88 76 d2 be
+  59 79 27 00 0b 3e 88 a3 ce 8a 14 ec 72 f9 eb 23
+  d4 36 93 a5 e9 b9 00 de 6a 3f 64 b8 49 05 3f 22
+```
+
+And because we can make this decicsion at runtime, it can be an option on the pretty-printer itself:
+
+```rust
+/// A formatter for pretty-printing Facet types
+pub struct PrettyPrinter {
+    indent_size: usize,
+    max_depth: Option<usize>,
+    color_generator: ColorGenerator,
+    use_colors: bool,
+    // ⬇️ here
+    list_u8_as_bytes: bool,
+}
+```
+
+## Use case: (de)serialization
+
+The `facet-peek` and `face-poke` allow reading and writing (constructing,
+initializing) any type that implements `Facet` — this makes it trivial to
+write deserializers, see `facet-json`, `facet-yaml`, `facet-urlencoded`, etc.
+
+Say we have this struct:
+
+```rust,ignore
+use facet::Facet;
+
+#[derive(Debug, PartialEq, Eq, Facet)]
+struct FooBar {
+    foo: u64,
+    bar: String,
+}
+```
+
+We can build it fully through reflection:
+
+```rust
+// outer code: we know the type of `FooBar` — we pass `poke`
+let (poke, guard) = Poke::alloc::<FooBar>();
+
+{
+    // inner code: all we have is a `poke` — our function is not generic,
+    // `Poke` is not generic.
+    let mut poke = poke.into_struct();
+    poke.set_by_name("foo", OpaqueConst::from_ref(&42u64))
+        .unwrap();
+
+    {
+        let bar = String::from("Hello, World!");
+        poke.set_by_name("bar", OpaqueConst::from_ref(&bar))
+            .unwrap();
+        // bar has been moved out of
+        core::mem::forget(bar);
+    }
+}
+
+// outer code: we know the type of `FooBar` again, we can
+// move out of the `Poke`
+let foo_bar = poke.build::<FooBar>(Some(guard));
+```
+
+The `inner code` here is the kind of code you would write in a deserializer, for example.
 
 ## Ecosystem
 
