@@ -173,7 +173,7 @@ Vec<u8>
 
 And because we can make this decicsion at runtime, it can be an option on the pretty-printer itself:
 
-```rust
+```rust,ignore
 /// A formatter for pretty-printing Facet types
 pub struct PrettyPrinter {
     indent_size: usize,
@@ -210,7 +210,7 @@ struct FooBar {
 
 We can build it fully through reflection:
 
-```rust
+```rust,ignore
 // outer code: we know the type of `FooBar` — we pass `poke`
 let (poke, guard) = Poke::alloc::<FooBar>();
 
