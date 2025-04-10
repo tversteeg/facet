@@ -215,7 +215,7 @@ dependencies = [
 
 [[package]]
 name = "facet-args"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "color-backtrace",
  "ctor",
@@ -280,7 +280,7 @@ dependencies = [
 
 [[package]]
 name = "facet-msgpack"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "color-backtrace",
  "ctor",
@@ -320,7 +320,7 @@ dependencies = [
 
 [[package]]
 name = "facet-pretty"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "facet-derive",
  "facet-peek",
@@ -364,7 +364,7 @@ dependencies = [
 
 [[package]]
 name = "facet-urlencoded"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "facet-derive",
  "facet-poke",
@@ -375,7 +375,7 @@ dependencies = [
 
 [[package]]
 name = "facet-yaml"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "facet-derive",
  "facet-poke",
