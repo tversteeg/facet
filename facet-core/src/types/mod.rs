@@ -14,6 +14,8 @@ pub use map::*;
 mod value;
 pub use value::*;
 
+use crate::Facet;
+
 /// Schema for reflection of a type
 #[derive(Clone, Copy, Debug)]
 #[non_exhaustive]
@@ -770,6 +772,21 @@ impl Default for EnumRepr {
 /// Represents the unique identifier for a scalar type based on its fully qualified name.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct ScalarId(u64);
+
+unsafe impl Facet for ScalarId {
+    const SHAPE: &'static Shape = &Shape::builder()
+        .layout(Layout::new::<Self>())
+        .vtable(crate::value_vtable!(String, |f, _opts| write!(
+            f,
+            "ScalarId"
+        )))
+        .def(Def::Scalar(
+            ScalarDef::builder()
+                .fully_qualified_type_name("facet_core::ScalarId")
+                .build(),
+        ))
+        .build();
+}
 
 impl ScalarId {
     const fn from_fully_qualified_type_name(name: &'static str) -> Self {
