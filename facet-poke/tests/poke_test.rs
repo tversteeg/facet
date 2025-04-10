@@ -10,8 +10,9 @@ use std::{cmp::Ordering, collections::HashSet, fmt::Debug};
 use facet_core as facet;
 
 #[ctor]
-fn init_backtrace() {
+fn init_logger() {
     color_backtrace::install();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 }
 
 // Allow dead code in test modules since we're not constructing all enum variants

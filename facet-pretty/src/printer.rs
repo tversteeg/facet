@@ -294,7 +294,6 @@ impl PrettyPrinter {
                                     // Push back item to process fields
                                     item.state = StackState::ProcessStructField { field_index: 0 };
                                     item.format_depth += 1;
-                                    item.type_depth = item.type_depth + 1;
                                     stack.push_back(item);
                                 }
                                 facet_core::VariantKind::Struct { .. } => {
@@ -314,7 +313,6 @@ impl PrettyPrinter {
                                     // Push back item to process fields
                                     item.state = StackState::ProcessStructField { field_index: 0 };
                                     item.format_depth += 1;
-                                    item.type_depth = item.type_depth + 1;
                                     stack.push_back(item);
                                 }
                                 _ => {
@@ -366,7 +364,6 @@ impl PrettyPrinter {
                             self.write_punctuation(f, ",")?;
                             writeln!(f)?;
 
-                            // Process next field
                             item.state = StackState::ProcessStructField {
                                 field_index: field_index + 1,
                             };
