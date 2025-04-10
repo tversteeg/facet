@@ -88,7 +88,7 @@ pub(crate) fn process_enum(parsed: Enum) -> proc_macro::TokenStream {
                     .iter()
                     .enumerate()
                     .map(|(idx, field)| {
-                        let field_name = format!("{idx}");
+                        let field_name = format!("_{idx}");
                         gen_struct_field(&field_name, &shadow_struct_name, &field.value.attributes)
                     })
                     .collect::<Vec<String>>()
@@ -216,7 +216,10 @@ unsafe impl facet::Facet for {enum_name} {{
             .def(facet::Def::Enum(facet::EnumDef::builder()
                 // Use variant expressions that just reference the shadow structs
                 // which are now defined above
-                .variants(facet::enum_variants!({enum_name}, [{variants}]))
+                .variants(&const {{
+                    static VARIANTS: &[facet::Variant] = &[ {variants} ];
+                    VARIANTS
+                }})
                 .repr(facet::EnumRepr::{repr_type})
                 .build()))
             {maybe_container_doc}
