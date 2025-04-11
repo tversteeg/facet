@@ -150,6 +150,8 @@ fn generate_readme_files(has_diffs: &mut bool, opts: &Options) {
 [![documentation](https://docs.rs/{0}/badge.svg)](https://docs.rs/{0})
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/{0}.svg)](./LICENSE)
 
+_Logo by [Misiasart](https://misiasart.com/)_
+
 Thanks to all individual and corporate sponsors, without whom this work could not exist:
 
 <p> <a href="https://ko-fi.com/fasterthanlime">

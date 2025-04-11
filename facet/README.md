@@ -13,6 +13,8 @@
 [![documentation](https://docs.rs/facet/badge.svg)](https://docs.rs/facet)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet.svg)](./LICENSE)
 
+_Logo by [Misiasart](https://misiasart.com/)_
+
 Thanks to all individual and corporate sponsors, without whom this work could not exist:
 
 <p> <a href="https://ko-fi.com/fasterthanlime">
