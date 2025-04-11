@@ -739,7 +739,14 @@ impl PrettyPrinter {
         // Apply color if needed and display
         if self.use_colors {
             // We need to use direct ANSI codes for RGB colors
-            write!(f, "\x1b[38;2;{};{};{}m{}", color.r, color.g, color.b, DisplayWrapper(&value))?;
+            write!(
+                f,
+                "\x1b[38;2;{};{};{}m{}",
+                color.r,
+                color.g,
+                color.b,
+                DisplayWrapper(&value)
+            )?;
             write!(f, "\x1b[0m")?;
         } else {
             write!(f, "{}", DisplayWrapper(&value))?;
