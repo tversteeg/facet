@@ -1,117 +1,27 @@
 extern crate alloc;
 
-use crate::value_vtable;
 use crate::*;
+#[cfg(feature = "std")]
+use alloc::{borrow::Cow, string::String};
 use core::alloc::Layout;
-use core::num::NonZero;
-use core::option::Option;
+#[cfg(feature = "std")]
+use core::net::SocketAddr;
+use core::{
+    net::{IpAddr, Ipv4Addr, Ipv6Addr},
+    num::NonZero,
+    option::Option,
+};
 use typeid::ConstTypeId;
 
-unsafe impl Facet for ConstTypeId {
-    const SHAPE: &'static Shape = &const {
-        Shape::builder()
-            .id(ConstTypeId::of::<ConstTypeId>())
-            .layout(Layout::new::<Self>())
-            .def(Def::Scalar(
-                ScalarDef::builder()
-                    .affinity(ScalarAffinity::opaque().build())
-                    .build(),
-            ))
-            .vtable(value_vtable!((), |f, _opts| write!(f, "ConstTypeId")))
-            .build()
-    };
-}
-
-unsafe impl Facet for () {
-    const SHAPE: &'static Shape = &const {
-        Shape::builder()
-            .id(ConstTypeId::of::<()>())
-            .layout(Layout::new::<Self>())
-            .def(Def::Scalar(
-                ScalarDef::builder()
-                    .affinity(ScalarAffinity::empty().build())
-                    .build(),
-            ))
-            .vtable(value_vtable!((), |f, _opts| write!(f, "()")))
-            .build()
-    };
-}
-
-#[cfg(feature = "std")]
-unsafe impl Facet for alloc::string::String {
-    const SHAPE: &'static Shape = &const {
-        Shape::builder()
-            .id(ConstTypeId::of::<String>())
-            .layout(Layout::new::<Self>())
-            .def(Def::Scalar(
-                ScalarDef::builder()
-                    // `String` is always on the heap
-                    .affinity(ScalarAffinity::string().max_inline_length(0).build())
-                    .build(),
-            ))
-            .vtable(value_vtable!(String, |f, _opts| write!(f, "String")))
-            .build()
-    };
-}
-
-unsafe impl Facet for &str {
-    const SHAPE: &'static Shape = &const {
-        Shape::builder()
-            .id(ConstTypeId::of::<&str>())
-            .layout(Layout::new::<Self>())
-            .def(Def::Scalar(
-                ScalarDef::builder()
-                    .affinity(ScalarAffinity::string().build())
-                    .build(),
-            ))
-            .vtable(value_vtable!(&str, |f, _opts| write!(f, "&str")))
-            .build()
-    };
-}
-
-#[cfg(feature = "std")]
-unsafe impl Facet for alloc::borrow::Cow<'_, str> {
-    const SHAPE: &'static Shape = &const {
-        Shape::builder()
-            .id(ConstTypeId::of::<alloc::borrow::Cow<'_, str>>())
-            .layout(Layout::new::<Self>())
-            .def(Def::Scalar(
-                ScalarDef::builder()
-                    .affinity(ScalarAffinity::string().build())
-                    .build(),
-            ))
-            .vtable(value_vtable!(
-                alloc::borrow::Cow<'_, str>,
-                |f, _opts| write!(f, "Cow<'_, str>")
-            ))
-            .build()
-    };
-}
-
-unsafe impl Facet for bool {
-    const SHAPE: &'static Shape = &const {
-        Shape::builder()
-            .id(ConstTypeId::of::<bool>())
-            .layout(Layout::new::<Self>())
-            .def(Def::Scalar(
-                ScalarDef::builder()
-                    .affinity(ScalarAffinity::boolean().build())
-                    .build(),
-            ))
-            .vtable(value_vtable!(bool, |f, _opts| write!(f, "bool")))
-            .build()
-    };
-}
-
-macro_rules! impl_facet_for_integer {
-    ($type:ty, $affinity:expr, $nz_affinity:expr) => {
+macro_rules! impl_facet_for_type {
+    ($type:ty, $exact_type:expr) => {
         unsafe impl Facet for $type {
             const SHAPE: &'static Shape = &const {
                 Shape::builder()
                     .id(ConstTypeId::of::<Self>())
                     .layout(Layout::new::<Self>())
                     .def(Def::Scalar(
-                        ScalarDef::builder().affinity($affinity).build(),
+                        ScalarDef::builder().exact_type($exact_type).build(),
                     ))
                     .vtable(value_vtable!($type, |f, _opts| write!(
                         f,
@@ -120,396 +30,48 @@ macro_rules! impl_facet_for_integer {
                     .build()
             };
         }
-
-        unsafe impl Facet for NonZero<$type> {
-            const SHAPE: &'static Shape = &const {
-                Shape::builder()
-                    .id(ConstTypeId::of::<Self>())
-                    .layout(Layout::new::<Self>())
-                    .def(Def::Scalar(
-                        ScalarDef::builder().affinity($nz_affinity).build(),
-                    ))
-                    .vtable(value_vtable!($type, |f, _opts| write!(
-                        f,
-                        "core::num::NonZero<{}>",
-                        stringify!($type)
-                    )))
-                    .build()
-            };
-        }
     };
 }
 
-static MIN_U8: u8 = u8::MIN;
-static MAX_U8: u8 = u8::MAX;
-static MIN_NZ_U8: NonZero<u8> = NonZero::<u8>::MIN;
-static MAX_NZ_U8: NonZero<u8> = NonZero::<u8>::MAX;
-
-static MIN_I8: i8 = i8::MIN;
-static MAX_I8: i8 = i8::MAX;
-static MIN_NZ_I8: NonZero<i8> = NonZero::<i8>::MIN;
-static MAX_NZ_I8: NonZero<i8> = NonZero::<i8>::MAX;
-
-static MIN_U16: u16 = u16::MIN;
-static MAX_U16: u16 = u16::MAX;
-static MIN_NZ_U16: NonZero<u16> = NonZero::<u16>::MIN;
-static MAX_NZ_U16: NonZero<u16> = NonZero::<u16>::MAX;
-
-static MIN_I16: i16 = i16::MIN;
-static MAX_I16: i16 = i16::MAX;
-static MIN_NZ_I16: NonZero<i16> = NonZero::<i16>::MIN;
-static MAX_NZ_I16: NonZero<i16> = NonZero::<i16>::MAX;
-
-static MIN_U32: u32 = u32::MIN;
-static MAX_U32: u32 = u32::MAX;
-static MIN_NZ_U32: NonZero<u32> = NonZero::<u32>::MIN;
-static MAX_NZ_U32: NonZero<u32> = NonZero::<u32>::MAX;
-
-static MIN_I32: i32 = i32::MIN;
-static MAX_I32: i32 = i32::MAX;
-static MIN_NZ_I32: NonZero<i32> = NonZero::<i32>::MIN;
-static MAX_NZ_I32: NonZero<i32> = NonZero::<i32>::MAX;
-
-static MIN_U64: u64 = u64::MIN;
-static MAX_U64: u64 = u64::MAX;
-static MIN_NZ_U64: NonZero<u64> = NonZero::<u64>::MIN;
-static MAX_NZ_U64: NonZero<u64> = NonZero::<u64>::MAX;
-
-static MIN_I64: i64 = i64::MIN;
-static MAX_I64: i64 = i64::MAX;
-static MIN_NZ_I64: NonZero<i64> = NonZero::<i64>::MIN;
-static MAX_NZ_I64: NonZero<i64> = NonZero::<i64>::MAX;
-
-static MIN_U128: u128 = u128::MIN;
-static MAX_U128: u128 = u128::MAX;
-static MIN_NZ_U128: NonZero<u128> = NonZero::<u128>::MIN;
-static MAX_NZ_U128: NonZero<u128> = NonZero::<u128>::MAX;
-
-static MIN_I128: i128 = i128::MIN;
-static MAX_I128: i128 = i128::MAX;
-static MIN_NZ_I128: NonZero<i128> = NonZero::<i128>::MIN;
-static MAX_NZ_I128: NonZero<i128> = NonZero::<i128>::MAX;
-
-static MIN_USIZE: usize = usize::MIN;
-static MAX_USIZE: usize = usize::MAX;
-static MIN_NZ_USIZE: NonZero<usize> = NonZero::<usize>::MIN;
-static MAX_NZ_USIZE: NonZero<usize> = NonZero::<usize>::MAX;
-
-static MIN_ISIZE: isize = isize::MIN;
-static MAX_ISIZE: isize = isize::MAX;
-static MIN_NZ_ISIZE: NonZero<isize> = NonZero::<isize>::MIN;
-static MAX_NZ_ISIZE: NonZero<isize> = NonZero::<isize>::MAX;
-
-impl_facet_for_integer!(
-    u8,
-    ScalarAffinity::number()
-        .unsigned_integer(8)
-        .min(OpaqueConst::new(&raw const MIN_U8))
-        .max(OpaqueConst::new(&raw const MAX_U8))
-        .build(),
-    ScalarAffinity::number()
-        .unsigned_integer(8)
-        .min(OpaqueConst::new(&raw const MIN_NZ_U8))
-        .max(OpaqueConst::new(&raw const MAX_NZ_U8))
-        .build()
-);
-
-impl_facet_for_integer!(
-    i8,
-    ScalarAffinity::number()
-        .signed_integer(8)
-        .min(OpaqueConst::new(&raw const MIN_I8))
-        .max(OpaqueConst::new(&raw const MAX_I8))
-        .build(),
-    ScalarAffinity::number()
-        .signed_integer(8)
-        .min(OpaqueConst::new(&raw const MIN_NZ_I8))
-        .max(OpaqueConst::new(&raw const MAX_NZ_I8))
-        .build()
-);
-
-impl_facet_for_integer!(
-    u16,
-    ScalarAffinity::number()
-        .unsigned_integer(16)
-        .min(OpaqueConst::new(&raw const MIN_U16))
-        .max(OpaqueConst::new(&raw const MAX_U16))
-        .build(),
-    ScalarAffinity::number()
-        .unsigned_integer(16)
-        .min(OpaqueConst::new(&raw const MIN_NZ_U16))
-        .max(OpaqueConst::new(&raw const MAX_NZ_U16))
-        .build()
-);
-
-impl_facet_for_integer!(
-    i16,
-    ScalarAffinity::number()
-        .signed_integer(16)
-        .min(OpaqueConst::new(&raw const MIN_I16))
-        .max(OpaqueConst::new(&raw const MAX_I16))
-        .build(),
-    ScalarAffinity::number()
-        .signed_integer(16)
-        .min(OpaqueConst::new(&raw const MIN_NZ_I16))
-        .max(OpaqueConst::new(&raw const MAX_NZ_I16))
-        .build()
-);
-
-impl_facet_for_integer!(
-    u32,
-    ScalarAffinity::number()
-        .unsigned_integer(32)
-        .min(OpaqueConst::new(&raw const MIN_U32))
-        .max(OpaqueConst::new(&raw const MAX_U32))
-        .build(),
-    ScalarAffinity::number()
-        .unsigned_integer(32)
-        .min(OpaqueConst::new(&raw const MIN_NZ_U32))
-        .max(OpaqueConst::new(&raw const MAX_NZ_U32))
-        .build()
-);
-
-impl_facet_for_integer!(
-    i32,
-    ScalarAffinity::number()
-        .signed_integer(32)
-        .min(OpaqueConst::new(&raw const MIN_I32))
-        .max(OpaqueConst::new(&raw const MAX_I32))
-        .build(),
-    ScalarAffinity::number()
-        .signed_integer(32)
-        .min(OpaqueConst::new(&raw const MIN_NZ_I32))
-        .max(OpaqueConst::new(&raw const MAX_NZ_I32))
-        .build()
-);
-
-impl_facet_for_integer!(
-    u64,
-    ScalarAffinity::number()
-        .unsigned_integer(64)
-        .min(OpaqueConst::new(&raw const MIN_U64))
-        .max(OpaqueConst::new(&raw const MAX_U64))
-        .build(),
-    ScalarAffinity::number()
-        .unsigned_integer(64)
-        .min(OpaqueConst::new(&raw const MIN_NZ_U64))
-        .max(OpaqueConst::new(&raw const MAX_NZ_U64))
-        .build()
-);
-
-impl_facet_for_integer!(
-    i64,
-    ScalarAffinity::number()
-        .signed_integer(64)
-        .min(OpaqueConst::new(&raw const MIN_I64))
-        .max(OpaqueConst::new(&raw const MAX_I64))
-        .build(),
-    ScalarAffinity::number()
-        .signed_integer(64)
-        .min(OpaqueConst::new(&raw const MIN_NZ_I64))
-        .max(OpaqueConst::new(&raw const MAX_NZ_I64))
-        .build()
-);
-
-impl_facet_for_integer!(
-    u128,
-    ScalarAffinity::number()
-        .unsigned_integer(128)
-        .min(OpaqueConst::new(&raw const MIN_U128))
-        .max(OpaqueConst::new(&raw const MAX_U128))
-        .build(),
-    ScalarAffinity::number()
-        .unsigned_integer(128)
-        .min(OpaqueConst::new(&raw const MIN_NZ_U128))
-        .max(OpaqueConst::new(&raw const MAX_NZ_U128))
-        .build()
-);
-
-impl_facet_for_integer!(
-    i128,
-    ScalarAffinity::number()
-        .signed_integer(128)
-        .min(OpaqueConst::new(&raw const MIN_I128))
-        .max(OpaqueConst::new(&raw const MAX_I128))
-        .build(),
-    ScalarAffinity::number()
-        .signed_integer(128)
-        .min(OpaqueConst::new(&raw const MIN_NZ_I128))
-        .max(OpaqueConst::new(&raw const MAX_NZ_I128))
-        .build()
-);
-
-impl_facet_for_integer!(
-    usize,
-    ScalarAffinity::number()
-        .unsigned_integer(core::mem::size_of::<usize>() * 8)
-        .min(OpaqueConst::new(&raw const MIN_USIZE))
-        .max(OpaqueConst::new(&raw const MAX_USIZE))
-        .build(),
-    ScalarAffinity::number()
-        .unsigned_integer(core::mem::size_of::<usize>() * 8)
-        .min(OpaqueConst::new(&raw const MIN_NZ_USIZE))
-        .max(OpaqueConst::new(&raw const MAX_NZ_USIZE))
-        .build()
-);
-
-impl_facet_for_integer!(
-    isize,
-    ScalarAffinity::number()
-        .signed_integer(core::mem::size_of::<isize>() * 8)
-        .min(OpaqueConst::new(&raw const MIN_ISIZE))
-        .max(OpaqueConst::new(&raw const MAX_ISIZE))
-        .build(),
-    ScalarAffinity::number()
-        .signed_integer(core::mem::size_of::<isize>() * 8)
-        .min(OpaqueConst::new(&raw const MIN_NZ_ISIZE))
-        .max(OpaqueConst::new(&raw const MAX_NZ_ISIZE))
-        .build()
-);
-
-// Constants for f32
-static MIN_F32: f32 = f32::MIN;
-static MAX_F32: f32 = f32::MAX;
-static POSITIVE_INFINITY_F32: f32 = f32::INFINITY;
-static NEGATIVE_INFINITY_F32: f32 = f32::NEG_INFINITY;
-static NAN_F32: f32 = f32::NAN;
-static POSITIVE_ZERO_F32: f32 = 0.0f32;
-static NEGATIVE_ZERO_F32: f32 = -0.0f32;
-
-// Constants for f64
-static MIN_F64: f64 = f64::MIN;
-static MAX_F64: f64 = f64::MAX;
-static POSITIVE_INFINITY_F64: f64 = f64::INFINITY;
-static NEGATIVE_INFINITY_F64: f64 = f64::NEG_INFINITY;
-static NAN_F64: f64 = f64::NAN;
-static POSITIVE_ZERO_F64: f64 = 0.0f64;
-static NEGATIVE_ZERO_F64: f64 = -0.0f64;
-
-unsafe impl Facet for f32 {
-    const SHAPE: &'static Shape = &const {
-        Shape::builder()
-            .id(ConstTypeId::of::<f32>())
-            .layout(Layout::new::<Self>())
-            .def(Def::Scalar(
-                ScalarDef::builder()
-                    .affinity(
-                        ScalarAffinity::number()
-                            .float(1, 8, 23)
-                            .min(OpaqueConst::new(&raw const MIN_F32))
-                            .max(OpaqueConst::new(&raw const MAX_F32))
-                            .positive_infinity(OpaqueConst::new(&raw const POSITIVE_INFINITY_F32))
-                            .negative_infinity(OpaqueConst::new(&raw const NEGATIVE_INFINITY_F32))
-                            .nan_sample(OpaqueConst::new(&raw const NAN_F32))
-                            .positive_zero(OpaqueConst::new(&raw const POSITIVE_ZERO_F32))
-                            .negative_zero(OpaqueConst::new(&raw const NEGATIVE_ZERO_F32))
-                            .build(),
-                    )
-                    .build(),
-            ))
-            .vtable(value_vtable!(f32, |f, _opts| write!(f, "f32")))
-            .build()
-    };
-}
-
-unsafe impl Facet for f64 {
-    const SHAPE: &'static Shape = &const {
-        Shape::builder()
-            .id(ConstTypeId::of::<f64>())
-            .layout(Layout::new::<Self>())
-            .def(Def::Scalar(
-                ScalarDef::builder()
-                    .affinity(
-                        ScalarAffinity::number()
-                            .float(1, 11, 52)
-                            .min(OpaqueConst::new(&raw const MIN_F64))
-                            .max(OpaqueConst::new(&raw const MAX_F64))
-                            .positive_infinity(OpaqueConst::new(&raw const POSITIVE_INFINITY_F64))
-                            .negative_infinity(OpaqueConst::new(&raw const NEGATIVE_INFINITY_F64))
-                            .nan_sample(OpaqueConst::new(&raw const NAN_F64))
-                            .positive_zero(OpaqueConst::new(&raw const POSITIVE_ZERO_F64))
-                            .negative_zero(OpaqueConst::new(&raw const NEGATIVE_ZERO_F64))
-                            .build(),
-                    )
-                    .build(),
-            ))
-            .vtable(value_vtable!(f64, |f, _opts| write!(f, "f64")))
-            .build()
-    };
-}
-
+impl_facet_for_type!((), ScalarType::Unit);
+impl_facet_for_type!(ConstTypeId, ScalarType::ConstTypeId);
+impl_facet_for_type!(bool, ScalarType::Bool);
+impl_facet_for_type!(&str, ScalarType::Str);
 #[cfg(feature = "std")]
-unsafe impl Facet for core::net::SocketAddr {
-    const SHAPE: &'static Shape = &const {
-        Shape::builder()
-            .id(ConstTypeId::of::<Self>())
-            .layout(Layout::new::<Self>())
-            .def(Def::Scalar(
-                ScalarDef::builder()
-                    .affinity(ScalarAffinity::socket_addr().build())
-                    .build(),
-            ))
-            .vtable(value_vtable!(core::net::SocketAddr, |f, _opts| write!(
-                f,
-                "SocketAddr"
-            )))
-            .build()
-    };
-}
-
-unsafe impl Facet for core::net::IpAddr {
-    const SHAPE: &'static Shape = &const {
-        Shape::builder()
-            .id(ConstTypeId::of::<Self>())
-            .layout(Layout::new::<Self>())
-            .def(Def::Scalar(
-                ScalarDef::builder()
-                    .affinity(ScalarAffinity::ip_addr().build())
-                    .build(),
-            ))
-            .vtable(value_vtable!(core::net::IpAddr, |f, _opts| write!(
-                f,
-                "IpAddr"
-            )))
-            .build()
-    };
-}
-
-unsafe impl Facet for core::net::Ipv4Addr {
-    const SHAPE: &'static Shape = &const {
-        Shape::builder()
-            .id(ConstTypeId::of::<Self>())
-            .layout(Layout::new::<Self>())
-            .def(Def::Scalar(
-                ScalarDef::builder()
-                    .affinity(ScalarAffinity::ip_addr().build())
-                    .build(),
-            ))
-            .vtable(value_vtable!(core::net::Ipv4Addr, |f, _opts| write!(
-                f,
-                "Ipv4Addr"
-            )))
-            .build()
-    };
-}
-
-unsafe impl Facet for core::net::Ipv6Addr {
-    const SHAPE: &'static Shape = &const {
-        Shape::builder()
-            .id(ConstTypeId::of::<Self>())
-            .layout(Layout::new::<Self>())
-            .def(Def::Scalar(
-                ScalarDef::builder()
-                    .affinity(ScalarAffinity::ip_addr().build())
-                    .build(),
-            ))
-            .vtable(value_vtable!(core::net::Ipv6Addr, |f, _opts| write!(
-                f,
-                "Ipv6Addr"
-            )))
-            .build()
-    };
-}
+impl_facet_for_type!(String, ScalarType::String);
+#[cfg(feature = "std")]
+impl_facet_for_type!(Cow<'_, str>, ScalarType::CowStr);
+impl_facet_for_type!(u8, ScalarType::U8);
+impl_facet_for_type!(u16, ScalarType::U16);
+impl_facet_for_type!(u32, ScalarType::U32);
+impl_facet_for_type!(u64, ScalarType::U64);
+impl_facet_for_type!(u128, ScalarType::U128);
+impl_facet_for_type!(usize, ScalarType::USize);
+impl_facet_for_type!(i8, ScalarType::I8);
+impl_facet_for_type!(i16, ScalarType::I16);
+impl_facet_for_type!(i32, ScalarType::I32);
+impl_facet_for_type!(i64, ScalarType::I64);
+impl_facet_for_type!(i128, ScalarType::I128);
+impl_facet_for_type!(isize, ScalarType::ISize);
+impl_facet_for_type!(NonZero<u8>, ScalarType::NonZeroU8);
+impl_facet_for_type!(NonZero<u16>, ScalarType::NonZeroU16);
+impl_facet_for_type!(NonZero<u32>, ScalarType::NonZeroU32);
+impl_facet_for_type!(NonZero<u64>, ScalarType::NonZeroU64);
+impl_facet_for_type!(NonZero<u128>, ScalarType::NonZeroU128);
+impl_facet_for_type!(NonZero<usize>, ScalarType::NonZeroUSize);
+impl_facet_for_type!(NonZero<i8>, ScalarType::NonZeroI8);
+impl_facet_for_type!(NonZero<i16>, ScalarType::NonZeroI16);
+impl_facet_for_type!(NonZero<i32>, ScalarType::NonZeroI32);
+impl_facet_for_type!(NonZero<i64>, ScalarType::NonZeroI64);
+impl_facet_for_type!(NonZero<i128>, ScalarType::NonZeroI128);
+impl_facet_for_type!(NonZero<isize>, ScalarType::NonZeroISize);
+impl_facet_for_type!(f32, ScalarType::F32);
+impl_facet_for_type!(f64, ScalarType::F64);
+#[cfg(feature = "std")]
+impl_facet_for_type!(SocketAddr, ScalarType::SocketAddr);
+impl_facet_for_type!(IpAddr, ScalarType::IpAddr);
+impl_facet_for_type!(Ipv4Addr, ScalarType::Ipv4Addr);
+impl_facet_for_type!(Ipv6Addr, ScalarType::Ipv6Addr);
 
 unsafe impl<T: Facet> Facet for Option<T> {
     const SHAPE: &'static Shape = &const {
@@ -553,4 +115,57 @@ unsafe impl<T: Facet> Facet for Option<T> {
             )))
             .build()
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Simple check using the exhaustive enum property to ensure every scalar their facet trait been implemented.
+    ///
+    /// Doesn't need to actually run.
+    #[allow(dead_code)]
+    fn _ensure_facet_impl() {
+        match ScalarType::Unit {
+            ScalarType::Unit => <()>::SHAPE,
+            ScalarType::Bool => bool::SHAPE,
+            ScalarType::Str => <&str>::SHAPE,
+            #[cfg(feature = "std")]
+            ScalarType::String => String::SHAPE,
+            #[cfg(feature = "std")]
+            ScalarType::CowStr => Cow::SHAPE,
+            ScalarType::F32 => f32::SHAPE,
+            ScalarType::F64 => f64::SHAPE,
+            ScalarType::U8 => u8::SHAPE,
+            ScalarType::U16 => u16::SHAPE,
+            ScalarType::U32 => u32::SHAPE,
+            ScalarType::U64 => u64::SHAPE,
+            ScalarType::U128 => u128::SHAPE,
+            ScalarType::USize => usize::SHAPE,
+            ScalarType::I8 => i8::SHAPE,
+            ScalarType::I16 => i16::SHAPE,
+            ScalarType::I32 => i32::SHAPE,
+            ScalarType::I64 => i64::SHAPE,
+            ScalarType::I128 => i128::SHAPE,
+            ScalarType::ISize => isize::SHAPE,
+            ScalarType::NonZeroU8 => NonZero::<u8>::SHAPE,
+            ScalarType::NonZeroU16 => NonZero::<u16>::SHAPE,
+            ScalarType::NonZeroU32 => NonZero::<u32>::SHAPE,
+            ScalarType::NonZeroU64 => NonZero::<u64>::SHAPE,
+            ScalarType::NonZeroU128 => NonZero::<u128>::SHAPE,
+            ScalarType::NonZeroUSize => NonZero::<usize>::SHAPE,
+            ScalarType::NonZeroI8 => NonZero::<i8>::SHAPE,
+            ScalarType::NonZeroI16 => NonZero::<i16>::SHAPE,
+            ScalarType::NonZeroI32 => NonZero::<i32>::SHAPE,
+            ScalarType::NonZeroI64 => NonZero::<i64>::SHAPE,
+            ScalarType::NonZeroI128 => NonZero::<i128>::SHAPE,
+            ScalarType::NonZeroISize => NonZero::<isize>::SHAPE,
+            #[cfg(feature = "std")]
+            ScalarType::SocketAddr => SocketAddr::SHAPE,
+            ScalarType::IpAddr => IpAddr::SHAPE,
+            ScalarType::Ipv4Addr => Ipv4Addr::SHAPE,
+            ScalarType::Ipv6Addr => Ipv6Addr::SHAPE,
+            ScalarType::ConstTypeId => ConstTypeId::SHAPE,
+        };
+    }
 }

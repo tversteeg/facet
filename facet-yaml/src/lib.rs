@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-use facet_core::{Facet, Opaque};
+use facet_core::{Facet, Opaque, ScalarType};
 use facet_poke::PokeUninit;
 use yaml_rust2::{Yaml, YamlLoader};
 
@@ -76,46 +76,55 @@ fn from_str_opaque<'mem>(poke: PokeUninit<'mem>, yaml: &str) -> Result<Opaque<'m
 }
 
 fn deserialize_value<'mem>(poke: PokeUninit<'mem>, value: &Yaml) -> Result<Opaque<'mem>, AnyErr> {
-    let opaque = match poke {
-        PokeUninit::Scalar(ps) => {
-            if ps.shape().is_type::<u64>() {
-                let u = yaml_to_u64(value)?;
-                ps.put(u)
-            } else if ps.shape().is_type::<String>() {
-                let s = value
-                    .as_str()
-                    .ok_or_else(|| AnyErr(format!("Expected string, got: {}", yaml_type(value))))?
-                    .to_string();
-                ps.put(s)
-            } else {
-                return Err(format!("Unsupported scalar type: {}", ps.shape()).into());
-            }
-        }
-        PokeUninit::List(_) => todo!(),
-        PokeUninit::Map(_) => todo!(),
-        PokeUninit::Struct(mut ps) => match value {
-            Yaml::Hash(hash) => {
-                for (k, v) in hash {
-                    let k = k
-                        .as_str()
-                        .ok_or_else(|| format!("Expected string key, got: {}", yaml_type(k)))?;
-                    let (index, field_poke) = ps
-                        .field_by_name(k)
-                        .map_err(|e| format!("Field '{}' error: {}", k, e))?;
-                    let _v = deserialize_value(field_poke, v)
-                        .map_err(|e| format!("Error deserializing field '{}': {}", k, e))?;
-                    unsafe {
-                        ps.mark_initialized(index);
+    let opaque =
+        match poke {
+            PokeUninit::Scalar(ps) => {
+                match ps.shape().scalar_exact_type().ok_or_else(|| {
+                    AnyErr(format!("Unsupported custom scalar type: {}", ps.shape()))
+                })? {
+                    ScalarType::U64 => {
+                        let u = yaml_to_u64(value)?;
+                        ps.put(u)
+                    }
+                    ScalarType::String => {
+                        let s = value
+                            .as_str()
+                            .ok_or_else(|| {
+                                AnyErr(format!("Expected string, got: {}", yaml_type(value)))
+                            })?
+                            .to_string();
+                        ps.put(s)
+                    }
+                    _ => {
+                        return Err(format!("Unsupported scalar type: {}", ps.shape()).into());
                     }
                 }
-                ps.build_in_place()
             }
-            _ => {
-                return Err(format!("Expected a YAML hash, got: {:?}", value).into());
-            }
-        },
-        PokeUninit::Enum(_) => todo!(),
-        _ => todo!("unsupported poke type"),
-    };
+            PokeUninit::List(_) => todo!(),
+            PokeUninit::Map(_) => todo!(),
+            PokeUninit::Struct(mut ps) => match value {
+                Yaml::Hash(hash) => {
+                    for (k, v) in hash {
+                        let k = k
+                            .as_str()
+                            .ok_or_else(|| format!("Expected string key, got: {}", yaml_type(k)))?;
+                        let (index, field_poke) = ps
+                            .field_by_name(k)
+                            .map_err(|e| format!("Field '{}' error: {}", k, e))?;
+                        let _v = deserialize_value(field_poke, v)
+                            .map_err(|e| format!("Error deserializing field '{}': {}", k, e))?;
+                        unsafe {
+                            ps.mark_initialized(index);
+                        }
+                    }
+                    ps.build_in_place()
+                }
+                _ => {
+                    return Err(format!("Expected a YAML hash, got: {:?}", value).into());
+                }
+            },
+            PokeUninit::Enum(_) => todo!(),
+            _ => todo!("unsupported poke type"),
+        };
     Ok(opaque)
 }

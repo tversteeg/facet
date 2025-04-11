@@ -2,8 +2,8 @@
 
 extern crate alloc;
 
-use core::alloc::Layout;
 use core::fmt;
+use core::{alloc::Layout, num::NonZero};
 
 mod list;
 pub use list::*;
@@ -20,7 +20,7 @@ pub use option::*;
 mod scalar_affinities;
 pub use scalar_affinities::*;
 
-use crate::{ConstTypeId, Facet};
+use crate::{ConstTypeId, Facet, OpaqueConst};
 
 /// Schema for reflection of a type
 #[derive(Clone, Copy, Debug)]
@@ -129,6 +129,14 @@ impl Shape {
     /// Returns a builder for shape
     pub const fn builder() -> ShapeBuilder {
         ShapeBuilder::new()
+    }
+
+    /// Return the exact type of the scalar if it's a scalar and the exact type is set
+    pub const fn scalar_exact_type(&self) -> Option<ScalarType> {
+        match self.def {
+            Def::Scalar(scalar_def) => scalar_def.exact_type,
+            _ => None,
+        }
     }
 
     /// Check if this shape is of the given type
@@ -915,6 +923,337 @@ impl Default for EnumRepr {
     }
 }
 
+/// All scalar types supported.
+///
+/// Can be used to handle the different scalar variants.
+///
+/// It is not `#[non_exhaustive]` by design, so any additional type would mean a breaking change.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum ScalarType {
+    /// Unit tuple `()`.
+    Unit,
+    /// Primitive type `bool`.
+    Bool,
+    /// Primitive type `str`.
+    Str,
+    /// `alloc::string::String`.
+    #[cfg(feature = "std")]
+    String,
+    /// `alloc::borrow::Cow<'_, str>`.
+    #[cfg(feature = "std")]
+    CowStr,
+    /// Primitive type `f32`.
+    F32,
+    /// Primitive type `f64`.
+    F64,
+    /// Primitive type `u8`.
+    U8,
+    /// Primitive type `u16`.
+    U16,
+    /// Primitive type `u32`.
+    U32,
+    /// Primitive type `u64`.
+    U64,
+    /// Primitive type `u128`.
+    U128,
+    /// Primitive type `usize`.
+    USize,
+    /// Primitive type `i8`.
+    I8,
+    /// Primitive type `i16`.
+    I16,
+    /// Primitive type `i32`.
+    I32,
+    /// Primitive type `i64`.
+    I64,
+    /// Primitive type `i128`.
+    I128,
+    /// Primitive type `isize`.
+    ISize,
+    /// `core::num::NonZero<u8>`.
+    NonZeroU8,
+    /// `core::num::NonZero<u16>`.
+    NonZeroU16,
+    /// `core::num::NonZero<u32>`.
+    NonZeroU32,
+    /// `core::num::NonZero<u64>`.
+    NonZeroU64,
+    /// `core::num::NonZero<u128>`.
+    NonZeroU128,
+    /// `core::num::NonZero<usize>`.
+    NonZeroUSize,
+    /// `core::num::NonZero<i8>`.
+    NonZeroI8,
+    /// `core::num::NonZero<i16>`.
+    NonZeroI16,
+    /// `core::num::NonZero<i32>`.
+    NonZeroI32,
+    /// `core::num::NonZero<i64>`.
+    NonZeroI64,
+    /// `core::num::NonZero<i128>`.
+    NonZeroI128,
+    /// `core::num::NonZero<isize>`.
+    NonZeroISize,
+    /// `core::net::SocketAddr`.
+    #[cfg(feature = "std")]
+    SocketAddr,
+    /// `core::net::IpAddr`.
+    IpAddr,
+    /// `core::net::Ipv4Addr`.
+    Ipv4Addr,
+    /// `core::net::Ipv6Addr`.
+    Ipv6Addr,
+    /// `facet_core::typeid::ConstTypeId`.
+    ConstTypeId,
+}
+
+impl ScalarType {
+    /// Get the associated affinity of the exact type.
+    pub const fn affinity(&self) -> ScalarAffinity {
+        // Constants for f32
+        static MIN_F32: f32 = f32::MIN;
+        static MAX_F32: f32 = f32::MAX;
+        static POSITIVE_INFINITY_F32: f32 = f32::INFINITY;
+        static NEGATIVE_INFINITY_F32: f32 = f32::NEG_INFINITY;
+        static NAN_F32: f32 = f32::NAN;
+        static POSITIVE_ZERO_F32: f32 = 0.0f32;
+        static NEGATIVE_ZERO_F32: f32 = -0.0f32;
+
+        // Constants for f64
+        static MIN_F64: f64 = f64::MIN;
+        static MAX_F64: f64 = f64::MAX;
+        static POSITIVE_INFINITY_F64: f64 = f64::INFINITY;
+        static NEGATIVE_INFINITY_F64: f64 = f64::NEG_INFINITY;
+        static NAN_F64: f64 = f64::NAN;
+        static POSITIVE_ZERO_F64: f64 = 0.0f64;
+        static NEGATIVE_ZERO_F64: f64 = -0.0f64;
+
+        // Constants for integers
+
+        static MIN_U8: u8 = u8::MIN;
+        static MAX_U8: u8 = u8::MAX;
+        static MIN_NZ_U8: NonZero<u8> = NonZero::<u8>::MIN;
+        static MAX_NZ_U8: NonZero<u8> = NonZero::<u8>::MAX;
+
+        static MIN_I8: i8 = i8::MIN;
+        static MAX_I8: i8 = i8::MAX;
+        static MIN_NZ_I8: NonZero<i8> = NonZero::<i8>::MIN;
+        static MAX_NZ_I8: NonZero<i8> = NonZero::<i8>::MAX;
+
+        static MIN_U16: u16 = u16::MIN;
+        static MAX_U16: u16 = u16::MAX;
+        static MIN_NZ_U16: NonZero<u16> = NonZero::<u16>::MIN;
+        static MAX_NZ_U16: NonZero<u16> = NonZero::<u16>::MAX;
+
+        static MIN_I16: i16 = i16::MIN;
+        static MAX_I16: i16 = i16::MAX;
+        static MIN_NZ_I16: NonZero<i16> = NonZero::<i16>::MIN;
+        static MAX_NZ_I16: NonZero<i16> = NonZero::<i16>::MAX;
+
+        static MIN_U32: u32 = u32::MIN;
+        static MAX_U32: u32 = u32::MAX;
+        static MIN_NZ_U32: NonZero<u32> = NonZero::<u32>::MIN;
+        static MAX_NZ_U32: NonZero<u32> = NonZero::<u32>::MAX;
+
+        static MIN_I32: i32 = i32::MIN;
+        static MAX_I32: i32 = i32::MAX;
+        static MIN_NZ_I32: NonZero<i32> = NonZero::<i32>::MIN;
+        static MAX_NZ_I32: NonZero<i32> = NonZero::<i32>::MAX;
+
+        static MIN_U64: u64 = u64::MIN;
+        static MAX_U64: u64 = u64::MAX;
+        static MIN_NZ_U64: NonZero<u64> = NonZero::<u64>::MIN;
+        static MAX_NZ_U64: NonZero<u64> = NonZero::<u64>::MAX;
+
+        static MIN_I64: i64 = i64::MIN;
+        static MAX_I64: i64 = i64::MAX;
+        static MIN_NZ_I64: NonZero<i64> = NonZero::<i64>::MIN;
+        static MAX_NZ_I64: NonZero<i64> = NonZero::<i64>::MAX;
+
+        static MIN_U128: u128 = u128::MIN;
+        static MAX_U128: u128 = u128::MAX;
+        static MIN_NZ_U128: NonZero<u128> = NonZero::<u128>::MIN;
+        static MAX_NZ_U128: NonZero<u128> = NonZero::<u128>::MAX;
+
+        static MIN_I128: i128 = i128::MIN;
+        static MAX_I128: i128 = i128::MAX;
+        static MIN_NZ_I128: NonZero<i128> = NonZero::<i128>::MIN;
+        static MAX_NZ_I128: NonZero<i128> = NonZero::<i128>::MAX;
+
+        static MIN_USIZE: usize = usize::MIN;
+        static MAX_USIZE: usize = usize::MAX;
+        static MIN_NZ_USIZE: NonZero<usize> = NonZero::<usize>::MIN;
+        static MAX_NZ_USIZE: NonZero<usize> = NonZero::<usize>::MAX;
+
+        static MIN_ISIZE: isize = isize::MIN;
+        static MAX_ISIZE: isize = isize::MAX;
+        static MIN_NZ_ISIZE: NonZero<isize> = NonZero::<isize>::MIN;
+        static MAX_NZ_ISIZE: NonZero<isize> = NonZero::<isize>::MAX;
+
+        match self {
+            Self::Unit => ScalarAffinity::empty().build(),
+
+            Self::Bool => ScalarAffinity::boolean().build(),
+
+            Self::Str => ScalarAffinity::string().build(),
+            // `String` is always on the heap
+            #[cfg(feature = "std")]
+            Self::String => ScalarAffinity::string().max_inline_length(0).build(),
+            #[cfg(feature = "std")]
+            Self::CowStr => ScalarAffinity::string().build(),
+
+            Self::F32 => ScalarAffinity::number()
+                .float(1, 8, 23)
+                .min(OpaqueConst::new(&raw const MIN_F32))
+                .max(OpaqueConst::new(&raw const MAX_F32))
+                .positive_infinity(OpaqueConst::new(&raw const POSITIVE_INFINITY_F32))
+                .negative_infinity(OpaqueConst::new(&raw const NEGATIVE_INFINITY_F32))
+                .nan_sample(OpaqueConst::new(&raw const NAN_F32))
+                .positive_zero(OpaqueConst::new(&raw const POSITIVE_ZERO_F32))
+                .negative_zero(OpaqueConst::new(&raw const NEGATIVE_ZERO_F32))
+                .build(),
+            Self::F64 => ScalarAffinity::number()
+                .float(1, 11, 52)
+                .min(OpaqueConst::new(&raw const MIN_F64))
+                .max(OpaqueConst::new(&raw const MAX_F64))
+                .positive_infinity(OpaqueConst::new(&raw const POSITIVE_INFINITY_F64))
+                .negative_infinity(OpaqueConst::new(&raw const NEGATIVE_INFINITY_F64))
+                .nan_sample(OpaqueConst::new(&raw const NAN_F64))
+                .positive_zero(OpaqueConst::new(&raw const POSITIVE_ZERO_F64))
+                .negative_zero(OpaqueConst::new(&raw const NEGATIVE_ZERO_F64))
+                .build(),
+            Self::U8 => ScalarAffinity::number()
+                .unsigned_integer(8)
+                .min(OpaqueConst::new(&raw const MIN_U8))
+                .max(OpaqueConst::new(&raw const MAX_U8))
+                .build(),
+            Self::U16 => ScalarAffinity::number()
+                .unsigned_integer(16)
+                .min(OpaqueConst::new(&raw const MIN_U16))
+                .max(OpaqueConst::new(&raw const MAX_U16))
+                .build(),
+            Self::U32 => ScalarAffinity::number()
+                .unsigned_integer(32)
+                .min(OpaqueConst::new(&raw const MIN_U32))
+                .max(OpaqueConst::new(&raw const MAX_U32))
+                .build(),
+            Self::U64 => ScalarAffinity::number()
+                .unsigned_integer(64)
+                .min(OpaqueConst::new(&raw const MIN_U64))
+                .max(OpaqueConst::new(&raw const MAX_U64))
+                .build(),
+            Self::U128 => ScalarAffinity::number()
+                .unsigned_integer(128)
+                .min(OpaqueConst::new(&raw const MIN_U128))
+                .max(OpaqueConst::new(&raw const MAX_U128))
+                .build(),
+            Self::USize => ScalarAffinity::number()
+                .unsigned_integer(core::mem::size_of::<usize>() * 8)
+                .min(OpaqueConst::new(&raw const MIN_USIZE))
+                .max(OpaqueConst::new(&raw const MAX_USIZE))
+                .build(),
+            Self::I8 => ScalarAffinity::number()
+                .signed_integer(8)
+                .min(OpaqueConst::new(&raw const MIN_I8))
+                .max(OpaqueConst::new(&raw const MAX_I8))
+                .build(),
+            Self::I16 => ScalarAffinity::number()
+                .signed_integer(16)
+                .min(OpaqueConst::new(&raw const MIN_I16))
+                .max(OpaqueConst::new(&raw const MAX_I16))
+                .build(),
+            Self::I32 => ScalarAffinity::number()
+                .signed_integer(32)
+                .min(OpaqueConst::new(&raw const MIN_I32))
+                .max(OpaqueConst::new(&raw const MAX_I32))
+                .build(),
+            Self::I64 => ScalarAffinity::number()
+                .signed_integer(64)
+                .min(OpaqueConst::new(&raw const MIN_I64))
+                .max(OpaqueConst::new(&raw const MAX_I64))
+                .build(),
+            Self::I128 => ScalarAffinity::number()
+                .signed_integer(128)
+                .min(OpaqueConst::new(&raw const MIN_I128))
+                .max(OpaqueConst::new(&raw const MAX_I128))
+                .build(),
+            Self::ISize => ScalarAffinity::number()
+                .signed_integer(core::mem::size_of::<isize>() * 8)
+                .min(OpaqueConst::new(&raw const MIN_ISIZE))
+                .max(OpaqueConst::new(&raw const MAX_ISIZE))
+                .build(),
+            Self::NonZeroU8 => ScalarAffinity::number()
+                .unsigned_integer(8)
+                .min(OpaqueConst::new(&raw const MIN_NZ_U8))
+                .max(OpaqueConst::new(&raw const MAX_NZ_U8))
+                .build(),
+            Self::NonZeroU16 => ScalarAffinity::number()
+                .unsigned_integer(16)
+                .min(OpaqueConst::new(&raw const MIN_NZ_U16))
+                .max(OpaqueConst::new(&raw const MAX_NZ_U16))
+                .build(),
+            Self::NonZeroU32 => ScalarAffinity::number()
+                .unsigned_integer(32)
+                .min(OpaqueConst::new(&raw const MIN_NZ_U32))
+                .max(OpaqueConst::new(&raw const MAX_NZ_U32))
+                .build(),
+            Self::NonZeroU64 => ScalarAffinity::number()
+                .unsigned_integer(64)
+                .min(OpaqueConst::new(&raw const MIN_NZ_U64))
+                .max(OpaqueConst::new(&raw const MAX_NZ_U64))
+                .build(),
+            Self::NonZeroU128 => ScalarAffinity::number()
+                .unsigned_integer(128)
+                .min(OpaqueConst::new(&raw const MIN_NZ_U128))
+                .max(OpaqueConst::new(&raw const MAX_NZ_U128))
+                .build(),
+            Self::NonZeroUSize => ScalarAffinity::number()
+                .unsigned_integer(core::mem::size_of::<usize>() * 8)
+                .min(OpaqueConst::new(&raw const MIN_NZ_USIZE))
+                .max(OpaqueConst::new(&raw const MAX_NZ_USIZE))
+                .build(),
+            Self::NonZeroI8 => ScalarAffinity::number()
+                .signed_integer(8)
+                .min(OpaqueConst::new(&raw const MIN_NZ_I8))
+                .max(OpaqueConst::new(&raw const MAX_NZ_I8))
+                .build(),
+            Self::NonZeroI16 => ScalarAffinity::number()
+                .signed_integer(16)
+                .min(OpaqueConst::new(&raw const MIN_NZ_I16))
+                .max(OpaqueConst::new(&raw const MAX_NZ_I16))
+                .build(),
+            Self::NonZeroI32 => ScalarAffinity::number()
+                .signed_integer(32)
+                .min(OpaqueConst::new(&raw const MIN_NZ_I32))
+                .max(OpaqueConst::new(&raw const MAX_NZ_I32))
+                .build(),
+            Self::NonZeroI64 => ScalarAffinity::number()
+                .signed_integer(64)
+                .min(OpaqueConst::new(&raw const MIN_NZ_I64))
+                .max(OpaqueConst::new(&raw const MAX_NZ_I64))
+                .build(),
+            Self::NonZeroI128 => ScalarAffinity::number()
+                .signed_integer(128)
+                .min(OpaqueConst::new(&raw const MIN_NZ_I128))
+                .max(OpaqueConst::new(&raw const MAX_NZ_I128))
+                .build(),
+            Self::NonZeroISize => ScalarAffinity::number()
+                .signed_integer(core::mem::size_of::<isize>() * 8)
+                .min(OpaqueConst::new(&raw const MIN_NZ_ISIZE))
+                .max(OpaqueConst::new(&raw const MAX_NZ_ISIZE))
+                .build(),
+
+            #[cfg(feature = "std")]
+            Self::SocketAddr => ScalarAffinity::socket_addr().build(),
+            Self::IpAddr => ScalarAffinity::ip_addr().build(),
+            Self::Ipv4Addr => ScalarAffinity::ip_addr().build(),
+            Self::Ipv6Addr => ScalarAffinity::ip_addr().build(),
+
+            Self::ConstTypeId => ScalarAffinity::opaque().build(),
+        }
+    }
+}
+
 /// Definition for scalar types
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[repr(C)]
@@ -923,6 +1262,8 @@ pub struct ScalarDef {
     /// Affinity of the scalar — is spiritually more like a number, more like a string, something else?
     /// example: an IPv4 address is both. good luck.
     pub affinity: ScalarAffinity,
+    /// Exact scalar type if defined.
+    pub exact_type: Option<ScalarType>,
 }
 
 impl ScalarDef {
@@ -936,13 +1277,17 @@ impl ScalarDef {
 #[derive(Default)]
 pub struct ScalarDefBuilder {
     affinity: Option<ScalarAffinity>,
+    exact_type: Option<ScalarType>,
 }
 
 impl ScalarDefBuilder {
     /// Creates a new ScalarDefBuilder
     #[allow(clippy::new_without_default)]
     pub const fn new() -> Self {
-        Self { affinity: None }
+        Self {
+            affinity: None,
+            exact_type: None,
+        }
     }
 
     /// Sets the affinity for the ScalarDef
@@ -951,10 +1296,18 @@ impl ScalarDefBuilder {
         self
     }
 
+    /// Sets the exact type and also automatically the affinity for the ScalarDef
+    pub const fn exact_type(mut self, exact_type: ScalarType) -> Self {
+        self.exact_type = Some(exact_type);
+        self.affinity = Some(exact_type.affinity());
+        self
+    }
+
     /// Builds the ScalarDef
     pub const fn build(self) -> ScalarDef {
         ScalarDef {
             affinity: self.affinity.unwrap(),
+            exact_type: self.exact_type,
         }
     }
 }
