@@ -86,11 +86,7 @@ miri *args:
     #!/usr/bin/env -S bash -euo pipefail
     source .envrc
     export CARGO_TARGET_DIR=target/miri
-    if [[ -n "${CI:-}" ]]; then
-        export RUSTUP_TOOLCHAIN=nightly
-    else
-        export RUSTUP_TOOLCHAIN=nightly-2025-04-05
-    fi
+    export RUSTUP_TOOLCHAIN=nightly-2025-04-05
     echo -e "\033[1;31m🧪 Running tests under Miri...\033[0m"
     rustup toolchain install
     rustup component add miri rust-src
@@ -122,3 +118,23 @@ docsrs *args:
     #!/usr/bin/env -S bash -eux
     source .envrc
     RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc {{args}}
+
+docker-build-push:
+    #!/usr/bin/env -S bash -eu
+    source .envrc
+    echo -e "\033[1;34m🐳 Building and pushing Docker image for CI...\033[0m"
+
+    # Set variables
+    IMAGE_NAME="ghcr.io/facet-rs/facet-ci"
+    TAG="$(date +%Y%m%d)-$(git rev-parse --short HEAD)"
+
+    # Build Docker image (standard build for macOS compatibility)
+    docker build \
+      -t "${IMAGE_NAME}:${TAG}" \
+      -t "${IMAGE_NAME}:latest" \
+      -f Dockerfile \
+      .
+
+    # Push both tags
+    docker push "${IMAGE_NAME}:${TAG}"
+    docker push "${IMAGE_NAME}:latest"
