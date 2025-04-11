@@ -14,33 +14,32 @@ pub(crate) fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
 
     // Generate field definitions
     let kind;
-    let fields = match &parsed.body {
-        Some(body) => match body {
-            StructBody::Struct(body) => {
-                kind = "facet::StructKind::Struct";
-                body.content
-                    .0
-                    .iter()
-                    .map(|field| {
-                        let field_name = field.value.name.to_string();
-                        gen_struct_field(&field_name, &struct_name, &field.value.attributes)
-                    })
-                    .collect::<Vec<String>>()
-            }
-            StructBody::TupleStruct(body) => {
-                kind = "facet::StructKind::TupleStruct";
-                body.content
-                    .0
-                    .iter()
-                    .enumerate()
-                    .map(|(index, field)| {
-                        let field_name = format!("{index}");
-                        gen_struct_field(&field_name, &struct_name, &field.value.attributes)
-                    })
-                    .collect::<Vec<String>>()
-            }
-        },
-        None => {
+    let fields = match &parsed.kind {
+        StructKind::Struct(body) => {
+            kind = "facet::StructKind::Struct";
+            body.content
+                .0
+                .iter()
+                .map(|field| {
+                    let field_name = field.value.name.to_string();
+                    gen_struct_field(&field_name, &struct_name, &field.value.attributes)
+                })
+                .collect::<Vec<String>>()
+        }
+        StructKind::TupleStruct(body) => {
+            kind = "facet::StructKind::TupleStruct";
+            body.first
+                .content
+                .0
+                .iter()
+                .enumerate()
+                .map(|(index, field)| {
+                    let field_name = format!("{index}");
+                    gen_struct_field(&field_name, &struct_name, &field.value.attributes)
+                })
+                .collect::<Vec<String>>()
+        }
+        StructKind::UnitStruct(_) => {
             kind = "facet::StructKind::Unit";
             vec![]
         }

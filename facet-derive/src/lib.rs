@@ -75,13 +75,13 @@ unsynn! {
         _vis: Option<Vis>,
         _kw_struct: KStruct,
         name: Ident,
-        // if None, Unit struct
-        body: Option<StructBody>,
+        kind: StructKind,
     }
 
-    enum StructBody {
+    enum StructKind {
         Struct(BraceGroupContaining<CommaDelimitedVec<StructField>>),
-        TupleStruct(ParenthesisGroupContaining<CommaDelimitedVec<TupleField>>),
+        TupleStruct(Cons<ParenthesisGroupContaining<CommaDelimitedVec<TupleField>>, Semi>),
+        UnitStruct(Semi)
     }
 
     struct Lifetime {
@@ -187,12 +187,14 @@ pub fn facet_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut i = input.to_token_iter();
 
     // Parse as TypeDecl
-    match i.parse::<TypeDecl>() {
-        Ok(TypeDecl::Struct(parsed)) => process_struct::process_struct(parsed),
-        Ok(TypeDecl::Enum(parsed)) => process_enum::process_enum(parsed),
+    match i.parse::<Cons<TypeDecl, EndOfStream>>() {
+        Ok(it) => match it.first {
+            TypeDecl::Struct(parsed) => process_struct::process_struct(parsed),
+            TypeDecl::Enum(parsed) => process_enum::process_enum(parsed),
+        },
         Err(err) => {
             panic!(
-                "Could not parse type declaration: {}\nError: {:?}",
+                "Could not parse type declaration: {}\nError: {}",
                 input, err
             );
         }
