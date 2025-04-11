@@ -3,14 +3,14 @@
 <picture>
 <source srcset="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.webp">
 <img src="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.png" height="35" alt="Facet logo - a reflection library for Rust">
-</picture> &nbsp; facet-pretty
+</picture> &nbsp; facet-testhelpers
 </h1>
 
 [![experimental](https://img.shields.io/badge/status-experimental-yellow)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/facet-pretty.svg)](https://crates.io/crates/facet-pretty)
-[![documentation](https://docs.rs/facet-pretty/badge.svg)](https://docs.rs/facet-pretty)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-pretty.svg)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/facet-testhelpers.svg)](https://crates.io/crates/facet-testhelpers)
+[![documentation](https://docs.rs/facet-testhelpers/badge.svg)](https://docs.rs/facet-testhelpers)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/facet-testhelpers.svg)](./LICENSE)
 
 _Logo by [Misiasart](https://misiasart.com/)_
 
@@ -38,7 +38,8 @@ Thanks to all individual and corporate sponsors, without whom this work could no
 </picture>
 </a> </p>
          
-Provides pretty-printing capabilities for Facet types.
+Lightweight test helpers: a log facade that always does tracing (with colors),
+and color-backtrace using the btparse backend.
 
 
 ## License
