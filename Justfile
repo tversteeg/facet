@@ -114,7 +114,7 @@ ship:
 release:
     cargo ws publish --publish-as-is --allow-dirty
 
-docsrs:
+docsrs *args:
     #!/usr/bin/env -S bash -eux
     source .envrc
-    RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc
+    RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc {{args}}
