@@ -1,9 +1,9 @@
+use facet::Facet;
 use facet_pretty::FacetPretty;
 
 #[test]
 fn test_arg_parse() {
     facet_testhelpers::setup();
-    use facet::Facet;
 
     #[derive(Facet)]
     struct Args {

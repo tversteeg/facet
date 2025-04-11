@@ -1,7 +1,8 @@
 use std::num::NonZero;
 
-use facet::{Facet, Peek};
+use facet::Facet;
 use facet_json::{to_json, to_json_string};
+use facet_reflect::Peek;
 
 #[test]
 fn test_to_json() {
