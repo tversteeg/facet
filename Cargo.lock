@@ -218,7 +218,7 @@ checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
 name = "facet"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "facet-core",
  "facet-derive",
@@ -227,7 +227,7 @@ dependencies = [
 
 [[package]]
 name = "facet-args"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "color-backtrace",
  "ctor",
@@ -266,7 +266,7 @@ dependencies = [
 
 [[package]]
 name = "facet-json"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "facet-json-read",
  "facet-json-write",
@@ -274,7 +274,7 @@ dependencies = [
 
 [[package]]
 name = "facet-json-read"
-version = "0.1.11"
+version = "0.1.12"
 dependencies = [
  "color-backtrace",
  "ctor",
@@ -287,7 +287,7 @@ dependencies = [
 
 [[package]]
 name = "facet-json-write"
-version = "0.1.11"
+version = "0.1.12"
 dependencies = [
  "color-backtrace",
  "ctor",
@@ -303,7 +303,7 @@ dependencies = [
 
 [[package]]
 name = "facet-msgpack"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "color-backtrace",
  "ctor",
@@ -324,7 +324,7 @@ dependencies = [
 
 [[package]]
 name = "facet-poke"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "color-backtrace",
  "ctor",
@@ -339,7 +339,7 @@ dependencies = [
 
 [[package]]
 name = "facet-pretty"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "facet-core",
  "facet-derive",
@@ -348,7 +348,7 @@ dependencies = [
 
 [[package]]
 name = "facet-samplelibc"
-version = "0.1.10"
+version = "0.1.11"
 dependencies = [
  "cc",
  "facet",
@@ -356,7 +356,7 @@ dependencies = [
 
 [[package]]
 name = "facet-toml"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "facet-core",
  "facet-derive",
@@ -366,7 +366,7 @@ dependencies = [
 
 [[package]]
 name = "facet-urlencoded"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "facet-core",
  "facet-derive",
@@ -377,7 +377,7 @@ dependencies = [
 
 [[package]]
 name = "facet-yaml"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "facet-core",
  "facet-derive",
