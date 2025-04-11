@@ -16,7 +16,7 @@ std = ["alloc"]
 alloc = []
 
 [dependencies]
-facet-core = { path = "../facet-core", version = "0.5.0" }
+facet-core = { path = "../facet-core", version = "0.5.1" }
 
 [dev-dependencies]
 facet = { path = "../facet" }

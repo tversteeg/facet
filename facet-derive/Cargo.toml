@@ -1,6 +1,6 @@
 [package]
 name = "facet-derive"
-version = "0.1.17"
+version = "0.1.18"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -24,4 +24,4 @@ unsynn = "0.0.26"
 
 # cf. https://hachyderm.io/@epage/114141126315983016
 [target.'cfg(any())'.dependencies]
-facet-core = { path = "../facet-core", version = "0.5.0" }
+facet-core = { path = "../facet-core", version = "0.5.1" }

@@ -1,6 +1,6 @@
 [package]
 name = "facet-json"
-version = "0.1.15"
+version = "0.2.0"
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -11,7 +11,7 @@ keywords = ["facet", "json", "serialization", "deserialization"]
 categories = ["encoding", "development-tools"]
 
 [dependencies]
-facet-core = { version = "0.5.0", path = "../facet-core" }
+facet-core = { version = "0.5.1", path = "../facet-core" }
 facet-reflect = { version = "0.6.0", path = "../facet-reflect" }
 log = "0.4.27"
 

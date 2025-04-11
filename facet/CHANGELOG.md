@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.19](https://github.com/facet-rs/facet/compare/facet-v0.1.18...facet-v0.1.19) - 2025-04-11
+
+### Other
+
+- Derive Facet for #[repr(C)] enums (merged) ([#163](https://github.com/facet-rs/facet/pull/163))
+- Clean code generation ([#161](https://github.com/facet-rs/facet/pull/161))
+- Revert to facet-{core,derive,reflect} deps, closes #156 ([#159](https://github.com/facet-rs/facet/pull/159))
+- Light deps ([#158](https://github.com/facet-rs/facet/pull/158))
+- wip reflect ([#155](https://github.com/facet-rs/facet/pull/155))
+- Support generic ADTs ([#130](https://github.com/facet-rs/facet/pull/130))
+
 ## [0.1.18](https://github.com/facet-rs/facet/compare/facet-v0.1.17...facet-v0.1.18) - 2025-04-11
 
 ### Added

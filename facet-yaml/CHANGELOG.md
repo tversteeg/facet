@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.12](https://github.com/facet-rs/facet/compare/facet-yaml-v0.1.11...facet-yaml-v0.1.12) - 2025-04-11
+
+### Other
+
+- Revert to facet-{core,derive,reflect} deps, closes #156 ([#159](https://github.com/facet-rs/facet/pull/159))
+- Light deps ([#158](https://github.com/facet-rs/facet/pull/158))
+- wip reflect ([#155](https://github.com/facet-rs/facet/pull/155))
+
 ## [0.1.11](https://github.com/facet-rs/facet/compare/facet-yaml-v0.1.10...facet-yaml-v0.1.11) - 2025-04-11
 
 ### Other
