@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.17](https://github.com/facet-rs/facet/compare/facet-v0.1.16...facet-v0.1.17) - 2025-04-11
+
+### Other
+
+- Logo credit
+
 ## [0.1.16](https://github.com/facet-rs/facet/compare/facet-v0.1.15...facet-v0.1.16) - 2025-04-11
 
 ### Other

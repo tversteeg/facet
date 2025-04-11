@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.13](https://github.com/facet-rs/facet/compare/facet-json-write-v0.1.12...facet-json-write-v0.1.13) - 2025-04-11
+
+### Other
+
+- Formatting
+- Allow json serialization of static string types
+- Logo credit
+
 ## [0.1.12](https://github.com/facet-rs/facet/compare/facet-json-write-v0.1.11...facet-json-write-v0.1.12) - 2025-04-11
 
 ### Other

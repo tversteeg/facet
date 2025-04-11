@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.10](https://github.com/facet-rs/facet/compare/facet-urlencoded-v0.1.9...facet-urlencoded-v0.1.10) - 2025-04-11
+
+### Other
+
+- Logo credit
+
 ## [0.1.8](https://github.com/facet-rs/facet/compare/facet-urlencoded-v0.1.7...facet-urlencoded-v0.1.8) - 2025-04-10
 
 ### Other
