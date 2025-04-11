@@ -171,6 +171,16 @@ fn deserialize_item<'mem>(poke: PokeUninit<'mem>, item: &Item) -> Result<Opaque<
         PokeUninit::List(_) => todo!(),
         PokeUninit::Map(_) => todo!(),
         PokeUninit::Struct(mut ps) => {
+            // Item is a unit struct, parse as a scalar
+            if item.is_value() {
+                return deserialize_item(
+                    ps.field(0)
+                        .map_err(|e| format!("Unit struct is missing value: {e}"))?,
+                    item,
+                );
+            }
+
+            // Otherwise we expect a table
             let table = item.as_table_like().ok_or_else(|| {
                 format!("Expected table like structure, got {}", item.type_name())
             })?;
