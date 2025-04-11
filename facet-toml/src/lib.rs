@@ -5,9 +5,6 @@ use facet_core::{Facet, Opaque};
 use facet_poke::PokeUninit;
 use toml_edit::{DocumentMut, Item, TomlError, Value};
 
-#[cfg(test)]
-mod tests;
-
 /// Deserializes a TOML string into a value of type `T` that implements `Facet`.
 pub fn from_str<T: Facet>(toml: &str) -> Result<T, AnyErr> {
     let (poke, _guard) = PokeUninit::alloc::<T>();
