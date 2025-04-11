@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/facet-rs/facet/compare/facet-core-v0.4.2...facet-core-v0.5.0) - 2025-04-11
+
+### Other
+
+- support only primitive repr and make derive stricter. ([#139](https://github.com/facet-rs/facet/pull/139))
+
 ## [0.4.2](https://github.com/facet-rs/facet/compare/facet-core-v0.4.1...facet-core-v0.4.2) - 2025-04-11
 
 ### Added
