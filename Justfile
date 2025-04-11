@@ -110,4 +110,4 @@ ship:
     just release
 
 release:
-    cargo ws publish --publish-as-is
+    cargo ws publish --publish-as-is --allow-dirty
