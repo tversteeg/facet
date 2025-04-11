@@ -20,12 +20,13 @@ jobs:
         shell: bash
         run: |
           just
+          echo "yay"
 
   miri:
     runs-on: arc-runners
 
     container:
-      image: ghcr.io/facet-rs/facet-ci:latest
+      image: ghcr.io/facet-rs/facet-ci:latest-miri
     steps:
       - uses: actions/checkout@v4
 
