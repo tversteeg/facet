@@ -69,7 +69,6 @@ fn test_nonzero() {
 
 #[test]
 fn test_hashmap_to_json() {
-
     let mut json_data = std::collections::HashMap::<&str, &str>::new();
     json_data.insert("foo", "bar");
 
@@ -94,9 +93,7 @@ fn test_static_strings() {
         foo: &'static str,
     }
 
-    let test_struct = StaticFoo {
-        foo: "foo",
-    };
+    let test_struct = StaticFoo { foo: "foo" };
 
     let peek = Peek::new(&test_struct);
     let json = to_json_string(peek, false);
@@ -107,18 +104,14 @@ fn test_static_strings() {
         foo: Option<&'static str>,
     }
 
-    let test_struct = OptStaticFoo {
-        foo: None,
-    };
+    let test_struct = OptStaticFoo { foo: None };
 
     let peek = Peek::new(&test_struct);
     let json = to_json_string(peek, false);
 
     assert_eq!(json, r#"{"foo":null}"#);
 
-    let test_struct = OptStaticFoo {
-        foo: Some("foo"),
-    };
+    let test_struct = OptStaticFoo { foo: Some("foo") };
 
     let peek = Peek::new(&test_struct);
     let json = to_json_string(peek, false);
