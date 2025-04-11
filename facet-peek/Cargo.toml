@@ -11,7 +11,7 @@ keywords = ["reflection", "introspection", "reading", "facet"]
 categories = ["development-tools", "rust-patterns", "parsing"]
 
 [dependencies]
-facet-core.workspace = true
+facet-core = { path = "../facet-core" }
 
 [features]
 std = ["facet-core/std", "alloc"]

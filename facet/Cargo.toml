@@ -11,8 +11,8 @@ keywords = ["facet", "introspection", "reflection"]
 categories = ["development-tools"]
 
 [dependencies]
-facet-core.workspace = true
-facet-derive.workspace = true
+facet-core = { path = "../facet-core" }
+facet-derive = { path = "../facet-derive" }
 
 [features]
 # Does nothing, only used for tests
@@ -22,4 +22,4 @@ alloc = ["facet-core/alloc"]
 default = ["std"]
 
 [dev-dependencies]
-facet-poke.workspace = true
+facet-poke = { path = "../facet-poke" }
