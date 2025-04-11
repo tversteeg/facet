@@ -79,7 +79,7 @@ unsynn! {
 
     struct ReprInner {
         _kw_repr: KRepr,
-        attr: ParenthesisGroupContaining<Ident>,
+        attr: ParenthesisGroupContaining<CommaDelimitedVec<Ident>>,
     }
 
     struct Struct {

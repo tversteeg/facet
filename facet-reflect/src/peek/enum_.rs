@@ -1,4 +1,4 @@
-use facet_core::{EnumDef, EnumRepr, Shape, Variant, VariantKind};
+use facet_core::{EnumDef, EnumRepr, OpaqueConst, Shape, Variant, VariantKind};
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
@@ -8,6 +8,11 @@ use alloc::boxed::Box;
 /// Lets you read from an enum (implements read-only enum operations)
 #[derive(Clone, Copy)]
 pub struct PeekEnum<'mem> {
+    /// The internal data storage for the enum
+    ///
+    /// Note that this stores both the discriminant and the variant data
+    /// (if any), and the layout depends on the enum representation.
+    /// Use [`Self::variant_data`] to get a pointer to the variant data.
     value: crate::PeekValue<'mem>,
     def: EnumDef,
 }
@@ -140,6 +145,12 @@ impl<'mem> PeekEnum<'mem> {
         &self.active_variant().kind
     }
 
+    /// Returns a pointer to the data of the active variant
+    pub(crate) fn variant_data(self) -> OpaqueConst<'mem> {
+        let variant_offset = self.active_variant().offset;
+        unsafe { self.value.data().field(variant_offset) }
+    }
+
     /// Returns a Peek handle to a field of a tuple or struct variant
     pub fn field(self, field_name: &str) -> Option<crate::Peek<'mem>> {
         let variant = self.active_variant();
@@ -149,13 +160,13 @@ impl<'mem> PeekEnum<'mem> {
             VariantKind::Tuple { fields } => {
                 // For tuple variants, find by name
                 let field = fields.iter().find(|f| f.name == field_name)?;
-                let field_data = unsafe { self.value.data().field(field.offset) };
+                let field_data = unsafe { self.variant_data().field(field.offset) };
                 Some(unsafe { crate::Peek::unchecked_new(field_data, field.shape) })
             }
             VariantKind::Struct { fields } => {
                 // For struct variants, find by name
                 let field = fields.iter().find(|f| f.name == field_name)?;
-                let field_data = unsafe { self.value.data().field(field.offset) };
+                let field_data = unsafe { self.variant_data().field(field.offset) };
                 Some(unsafe { crate::Peek::unchecked_new(field_data, field.shape) })
             }
             _ => None, // Handle other variant kinds that might be added in the future
@@ -173,7 +184,7 @@ impl<'mem> PeekEnum<'mem> {
                 }
 
                 let field = &fields[index];
-                let field_data = unsafe { self.value.data().field(field.offset) };
+                let field_data = unsafe { self.variant_data().field(field.offset) };
                 Some(unsafe { crate::Peek::unchecked_new(field_data, field.shape) })
             }
             _ => None, // Not a tuple variant
@@ -195,7 +206,7 @@ impl<'mem> PeekEnum<'mem> {
             > + 'mem,
     > {
         let variant = self.active_variant();
-        let data = self.value.data();
+        let data = self.variant_data();
 
         match &variant.kind {
             VariantKind::Struct { fields } => {
@@ -220,7 +231,7 @@ impl<'mem> PeekEnum<'mem> {
     #[cfg(feature = "alloc")]
     pub fn fields(self) -> Box<dyn Iterator<Item = (&'static str, crate::Peek<'mem>)> + 'mem> {
         let variant = self.active_variant();
-        let data = self.value.data();
+        let data = self.variant_data();
 
         match &variant.kind {
             VariantKind::Struct { fields } => Box::new(fields.iter().map(move |field| {
