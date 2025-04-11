@@ -1,4 +1,3 @@
-use super::*;
 use facet_core as facet;
 use facet_derive::Facet;
 
@@ -15,7 +14,7 @@ fn test_deserialize_person() {
             age = 30
         "#;
 
-    let person: Person = from_str(toml).expect("Failed to parse TOML");
+    let person: Person = facet_toml::from_str(toml).expect("Failed to parse TOML");
     assert_eq!(
         person,
         Person {

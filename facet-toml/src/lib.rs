@@ -1,12 +1,17 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
+mod to_scalar;
+
+use std::{
+    borrow::Cow,
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
+    num::NonZero,
+};
+
 use facet_core::{Facet, Opaque};
 use facet_poke::PokeUninit;
-use toml_edit::{DocumentMut, Item, TomlError, Value};
-
-#[cfg(test)]
-mod tests;
+use toml_edit::{DocumentMut, Item, TomlError};
 
 /// Deserializes a TOML string into a value of type `T` that implements `Facet`.
 pub fn from_str<T: Facet>(toml: &str) -> Result<T, AnyErr> {
@@ -39,39 +44,126 @@ impl From<&str> for AnyErr {
     }
 }
 
-fn toml_to_u64(ty: &Value) -> Result<u64, AnyErr> {
-    match ty {
-        Value::Float(r) => Ok(*r.value() as u64),
-        Value::Integer(i) => Ok(*i.value() as u64),
-        Value::String(s) => s
-            .value()
-            .parse::<u64>()
-            .map_err(|_| AnyErr("Failed to parse string as u64".into())),
-        Value::Boolean(b) => Ok(if *b.value() { 1 } else { 0 }),
-        _ => Err(AnyErr(format!("Cannot convert {} to u64", ty.type_name()))),
-    }
-}
-
 fn from_str_opaque<'mem>(poke: PokeUninit<'mem>, toml: &str) -> Result<Opaque<'mem>, AnyErr> {
     let docs: DocumentMut = toml.parse().map_err(|e| TomlError::to_string(&e))?;
     deserialize_item(poke, docs.as_item())
 }
 
-fn deserialize_item<'mem>(poke: PokeUninit<'mem>, value: &Item) -> Result<Opaque<'mem>, AnyErr> {
+fn deserialize_item<'mem>(poke: PokeUninit<'mem>, item: &Item) -> Result<Opaque<'mem>, AnyErr> {
     let opaque = match poke {
         PokeUninit::Scalar(ps) => {
-            if ps.shape().is_type::<u64>() {
-                let v = value
-                    .as_value()
-                    .ok_or_else(|| format!("Expected value, got: {}", value.type_name()))?;
-                let u = toml_to_u64(v)?;
-                ps.put(u)
-            } else if ps.shape().is_type::<String>() {
-                let s = value
-                    .as_str()
-                    .ok_or_else(|| AnyErr(format!("Expected string, got: {}", value.type_name())))?
-                    .to_string();
-                ps.put(s)
+            let shape = ps.shape();
+            if shape.is_type::<String>() {
+                ps.put(to_scalar::string(item)?)
+            } else if shape.is_type::<Cow<'_, str>>() {
+                ps.put(Cow::Owned(to_scalar::string(item)?))
+            } else if shape.is_type::<bool>() {
+                ps.put(to_scalar::boolean(item)?)
+            } else if shape.is_type::<f64>() {
+                ps.put(to_scalar::number::<f64>(item)?)
+            } else if shape.is_type::<f32>() {
+                ps.put(to_scalar::number::<f32>(item)?)
+            } else if shape.is_type::<usize>() {
+                ps.put(to_scalar::number::<usize>(item)?)
+            } else if shape.is_type::<u128>() {
+                ps.put(to_scalar::number::<u128>(item)?)
+            } else if shape.is_type::<u64>() {
+                ps.put(to_scalar::number::<u64>(item)?)
+            } else if shape.is_type::<u32>() {
+                ps.put(to_scalar::number::<u32>(item)?)
+            } else if shape.is_type::<u16>() {
+                ps.put(to_scalar::number::<u16>(item)?)
+            } else if shape.is_type::<u8>() {
+                ps.put(to_scalar::number::<u8>(item)?)
+            } else if shape.is_type::<isize>() {
+                ps.put(to_scalar::number::<isize>(item)?)
+            } else if shape.is_type::<i128>() {
+                ps.put(to_scalar::number::<i128>(item)?)
+            } else if shape.is_type::<i64>() {
+                ps.put(to_scalar::number::<i64>(item)?)
+            } else if shape.is_type::<i32>() {
+                ps.put(to_scalar::number::<i32>(item)?)
+            } else if shape.is_type::<i16>() {
+                ps.put(to_scalar::number::<i16>(item)?)
+            } else if shape.is_type::<i8>() {
+                ps.put(to_scalar::number::<i8>(item)?)
+            } else if shape.is_type::<NonZero<usize>>() {
+                // TODO: create a to_scalar::nonzero_number method when we can use a trait to do so
+                ps.put(
+                    NonZero::new(to_scalar::number::<usize>(item)?).ok_or_else(|| {
+                        AnyErr("Could not convert number to non-zero variant".to_string())
+                    })?,
+                )
+            } else if shape.is_type::<NonZero<u128>>() {
+                ps.put(
+                    NonZero::new(to_scalar::number::<u128>(item)?).ok_or_else(|| {
+                        AnyErr("Could not convert number to non-zero variant".to_string())
+                    })?,
+                )
+            } else if shape.is_type::<NonZero<u64>>() {
+                ps.put(
+                    NonZero::new(to_scalar::number::<u64>(item)?).ok_or_else(|| {
+                        AnyErr("Could not convert number to non-zero variant".to_string())
+                    })?,
+                )
+            } else if shape.is_type::<NonZero<u32>>() {
+                ps.put(
+                    NonZero::new(to_scalar::number::<u32>(item)?).ok_or_else(|| {
+                        AnyErr("Could not convert number to non-zero variant".to_string())
+                    })?,
+                )
+            } else if shape.is_type::<NonZero<u16>>() {
+                ps.put(
+                    NonZero::new(to_scalar::number::<u16>(item)?).ok_or_else(|| {
+                        AnyErr("Could not convert number to non-zero variant".to_string())
+                    })?,
+                )
+            } else if shape.is_type::<NonZero<u8>>() {
+                ps.put(NonZero::new(to_scalar::number::<u8>(item)?).ok_or_else(|| {
+                    AnyErr("Could not convert number to non-zero variant".to_string())
+                })?)
+            } else if shape.is_type::<NonZero<isize>>() {
+                ps.put(
+                    NonZero::new(to_scalar::number::<isize>(item)?).ok_or_else(|| {
+                        AnyErr("Could not convert number to non-zero variant".to_string())
+                    })?,
+                )
+            } else if shape.is_type::<NonZero<i128>>() {
+                ps.put(
+                    NonZero::new(to_scalar::number::<i128>(item)?).ok_or_else(|| {
+                        AnyErr("Could not convert number to non-zero variant".to_string())
+                    })?,
+                )
+            } else if shape.is_type::<NonZero<i64>>() {
+                ps.put(
+                    NonZero::new(to_scalar::number::<i64>(item)?).ok_or_else(|| {
+                        AnyErr("Could not convert number to non-zero variant".to_string())
+                    })?,
+                )
+            } else if shape.is_type::<NonZero<i32>>() {
+                ps.put(
+                    NonZero::new(to_scalar::number::<i32>(item)?).ok_or_else(|| {
+                        AnyErr("Could not convert number to non-zero variant".to_string())
+                    })?,
+                )
+            } else if shape.is_type::<NonZero<i16>>() {
+                ps.put(
+                    NonZero::new(to_scalar::number::<i16>(item)?).ok_or_else(|| {
+                        AnyErr("Could not convert number to non-zero variant".to_string())
+                    })?,
+                )
+            } else if shape.is_type::<NonZero<i8>>() {
+                ps.put(NonZero::new(to_scalar::number::<i8>(item)?).ok_or_else(|| {
+                    AnyErr("Could not convert number to non-zero variant".to_string())
+                })?)
+            } else if shape.is_type::<SocketAddr>() {
+                ps.put(to_scalar::from_str::<SocketAddr>(item, "socket address")?)
+            } else if shape.is_type::<IpAddr>() {
+                ps.put(to_scalar::from_str::<IpAddr>(item, "ip address")?)
+            } else if shape.is_type::<Ipv4Addr>() {
+                ps.put(to_scalar::from_str::<Ipv4Addr>(item, "ipv4 address")?)
+            } else if shape.is_type::<Ipv6Addr>() {
+                ps.put(to_scalar::from_str::<Ipv6Addr>(item, "ipv6 address")?)
             } else {
                 return Err(format!("Unsupported scalar type: {}", ps.shape()).into());
             }
@@ -79,8 +171,8 @@ fn deserialize_item<'mem>(poke: PokeUninit<'mem>, value: &Item) -> Result<Opaque
         PokeUninit::List(_) => todo!(),
         PokeUninit::Map(_) => todo!(),
         PokeUninit::Struct(mut ps) => {
-            let table = value.as_table_like().ok_or_else(|| {
-                format!("Expected table like structure, got {}", value.type_name())
+            let table = item.as_table_like().ok_or_else(|| {
+                format!("Expected table like structure, got {}", item.type_name())
             })?;
 
             for (k, v) in table.iter() {
