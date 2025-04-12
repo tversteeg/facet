@@ -2,7 +2,7 @@
 #![doc = include_str!("../README.md")]
 
 use facet_core::{Facet, Opaque};
-use facet_reflect::PokeUninit;
+use facet_reflect::{PokeUninit, ScalarType};
 use yaml_rust2::{Yaml, YamlLoader};
 
 /// Deserializes a YAML string into a value of type `T` that implements `Facet`.
@@ -74,20 +74,22 @@ fn from_str_opaque<'mem>(poke: PokeUninit<'mem>, yaml: &str) -> Result<Opaque<'m
 
 fn deserialize_value<'mem>(poke: PokeUninit<'mem>, value: &Yaml) -> Result<Opaque<'mem>, AnyErr> {
     let opaque = match poke {
-        PokeUninit::Scalar(ps) => {
-            if ps.shape().is_type::<u64>() {
+        PokeUninit::Scalar(ps) => match ps.scalar_type() {
+            Some(ScalarType::U64) => {
                 let u = yaml_to_u64(value)?;
                 ps.put(u)
-            } else if ps.shape().is_type::<String>() {
+            }
+            Some(ScalarType::String) => {
                 let s = value
                     .as_str()
                     .ok_or_else(|| AnyErr(format!("Expected string, got: {}", yaml_type(value))))?
                     .to_string();
                 ps.put(s)
-            } else {
+            }
+            Some(_) | None => {
                 return Err(format!("Unsupported scalar type: {}", ps.shape()).into());
             }
-        }
+        },
         PokeUninit::List(_) => todo!(),
         PokeUninit::Map(_) => todo!(),
         PokeUninit::Struct(mut ps) => match value {

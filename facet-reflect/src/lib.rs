@@ -13,3 +13,6 @@ pub use poke::*;
 
 mod peek;
 pub use peek::*;
+
+mod scalar;
+pub use scalar::*;

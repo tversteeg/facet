@@ -3,7 +3,9 @@ use std::num::NonZero;
 use crate::parser::{JsonParseErrorKind, JsonParseErrorWithContext, JsonParser};
 
 use facet_core::{Facet, Opaque, OpaqueUninit};
-use facet_reflect::{PokeList, PokeMap, PokeOption, PokeStruct, PokeUninit, PokeValueUninit};
+use facet_reflect::{
+    PokeList, PokeMap, PokeOption, PokeStruct, PokeUninit, PokeValueUninit, ScalarType,
+};
 use log::trace;
 
 /// Deserializes a JSON string into a value of type `T` that implements `Facet`.
@@ -155,24 +157,28 @@ pub(crate) fn deserialize_value<'input, 'mem>(
                             pv: PokeValueUninit<'mem>,
                         ) -> Result<Opaque<'mem>, JsonParseErrorWithContext<'input>>
                         {
-                            if pv.shape().is_type::<String>() {
-                                let s = parser.parse_string()?;
-                                let data = pv.put(s);
-                                return Ok(data);
-                            }
-                            if pv.shape().is_type::<bool>() {
-                                let b = parser.parse_bool()?;
-                                return Ok(pv.put(b));
-                            }
-                            if pv.shape().is_type::<f32>() {
-                                let n = parser.parse_f64()? as f32;
-                                return Ok(pv.put(n));
-                            }
-                            if pv.shape().is_type::<f64>() {
-                                let n = parser.parse_f64()?;
-                                return Ok(pv.put(n));
+                            match pv.scalar_type() {
+                                Some(ScalarType::Bool) => {
+                                    let b = parser.parse_bool()?;
+                                    return Ok(pv.put(b));
+                                }
+                                Some(ScalarType::String) => {
+                                    let s = parser.parse_string()?;
+                                    let data = pv.put(s);
+                                    return Ok(data);
+                                }
+                                Some(ScalarType::F32) => {
+                                    let n = parser.parse_f64()? as f32;
+                                    return Ok(pv.put(n));
+                                }
+                                Some(ScalarType::F64) => {
+                                    let n = parser.parse_f64()?;
+                                    return Ok(pv.put(n));
+                                }
+                                _ => (),
                             }
 
+                            // TODO: implement with match above
                             unsigneds!(parser, pv, u8, u16, u32, u64, u128, usize);
                             signeds!(parser, pv, i8, i16, i32, i64, i128, isize);
 

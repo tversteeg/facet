@@ -1,4 +1,4 @@
-use crate::peek::Peek;
+use crate::{ScalarType, peek::Peek};
 use facet_core::{Facet, Opaque, OpaqueConst, OpaqueUninit, Shape, TryFromError, ValueVTable};
 
 /// A strongly-typed value writer that ensures type safety at compile-time
@@ -61,6 +61,7 @@ impl<'mem> PokeValueUninit<'mem> {
     pub fn shape(&self) -> &'static Shape {
         self.shape
     }
+
     /// Creates a value write-proxy from its essential components
     ///
     /// # Safety
@@ -153,6 +154,11 @@ impl<'mem> PokeValueUninit<'mem> {
         } else {
             Err(self)
         }
+    }
+
+    /// Get the scalar type if set.
+    pub fn scalar_type(&self) -> Option<ScalarType> {
+        ScalarType::try_from_shape(self.shape)
     }
 }
 
@@ -274,5 +280,10 @@ impl<'mem> PokeValue<'mem> {
         } else {
             f.write_str("<no display impl>")
         }
+    }
+
+    /// Get the scalar type if set.
+    pub fn scalar_type(&self) -> Option<ScalarType> {
+        ScalarType::try_from_shape(self.shape)
     }
 }
