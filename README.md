@@ -7,6 +7,7 @@
 </h1>
 
 [![experimental](https://img.shields.io/badge/status-experimental-yellow)](https://github.com/fasterthanlime/facet)
+[![built with depot](https://depot.dev/badges/built-with-depot.svg)](https:/depot.dev?utm_source=facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
 [![crates.io](https://img.shields.io/crates/v/facet.svg)](https://crates.io/crates/facet)
 [![documentation](https://docs.rs/facet/badge.svg)](https://docs.rs/facet)
@@ -37,7 +38,7 @@ Thanks to all individual and corporate sponsors, without whom this work could no
 <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-light.svg" height="40" alt="Zed">
 </picture>
 </a> </p>
-         
+
 facet provides "const fn" reflection for Rust.
 
 The `Facet` trait is meant to be derived for _every single type in the Rust
