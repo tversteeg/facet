@@ -4,17 +4,13 @@
 pub mod error;
 mod to_scalar;
 
-use std::{
-    borrow::Cow,
-    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
-    num::NonZero,
-};
+use core::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use error::AnyErr;
 use facet_core::{Facet, Opaque, VariantKind};
 use facet_reflect::{
     PokeEnumNoVariant, PokeListUninit, PokeMapUninit, PokeOptionUninit, PokeStruct, PokeUninit,
-    PokeValueUninit,
+    PokeValueUninit, ScalarType,
 };
 use toml_edit::{DocumentMut, Item, TomlError};
 
@@ -133,112 +129,39 @@ fn deserialize_as_scalar<'mem>(
     poke: PokeValueUninit<'mem>,
     item: &Item,
 ) -> Result<Opaque<'mem>, AnyErr> {
-    let shape = poke.shape();
-
-    Ok(if shape.is_type::<String>() {
-        poke.put(to_scalar::string(item)?)
-    } else if shape.is_type::<Cow<'_, str>>() {
-        poke.put(Cow::Owned(to_scalar::string(item)?))
-    } else if shape.is_type::<bool>() {
-        poke.put(to_scalar::boolean(item)?)
-    } else if shape.is_type::<f64>() {
-        poke.put(to_scalar::number::<f64>(item)?)
-    } else if shape.is_type::<f32>() {
-        poke.put(to_scalar::number::<f32>(item)?)
-    } else if shape.is_type::<usize>() {
-        poke.put(to_scalar::number::<usize>(item)?)
-    } else if shape.is_type::<u128>() {
-        poke.put(to_scalar::number::<u128>(item)?)
-    } else if shape.is_type::<u64>() {
-        poke.put(to_scalar::number::<u64>(item)?)
-    } else if shape.is_type::<u32>() {
-        poke.put(to_scalar::number::<u32>(item)?)
-    } else if shape.is_type::<u16>() {
-        poke.put(to_scalar::number::<u16>(item)?)
-    } else if shape.is_type::<u8>() {
-        poke.put(to_scalar::number::<u8>(item)?)
-    } else if shape.is_type::<isize>() {
-        poke.put(to_scalar::number::<isize>(item)?)
-    } else if shape.is_type::<i128>() {
-        poke.put(to_scalar::number::<i128>(item)?)
-    } else if shape.is_type::<i64>() {
-        poke.put(to_scalar::number::<i64>(item)?)
-    } else if shape.is_type::<i32>() {
-        poke.put(to_scalar::number::<i32>(item)?)
-    } else if shape.is_type::<i16>() {
-        poke.put(to_scalar::number::<i16>(item)?)
-    } else if shape.is_type::<i8>() {
-        poke.put(to_scalar::number::<i8>(item)?)
-    } else if shape.is_type::<NonZero<usize>>() {
-        // TODO: create a to_scalar::nonzero_number method when we can use a trait to do so
-        poke.put(
-            NonZero::new(to_scalar::number::<usize>(item)?)
-                .ok_or("Could not convert number to non-zero variant")?,
-        )
-    } else if shape.is_type::<NonZero<u128>>() {
-        poke.put(
-            NonZero::new(to_scalar::number::<u128>(item)?)
-                .ok_or("Could not convert number to non-zero variant")?,
-        )
-    } else if shape.is_type::<NonZero<u64>>() {
-        poke.put(
-            NonZero::new(to_scalar::number::<u64>(item)?)
-                .ok_or("Could not convert number to non-zero variant")?,
-        )
-    } else if shape.is_type::<NonZero<u32>>() {
-        poke.put(
-            NonZero::new(to_scalar::number::<u32>(item)?)
-                .ok_or("Could not convert number to non-zero variant")?,
-        )
-    } else if shape.is_type::<NonZero<u16>>() {
-        poke.put(
-            NonZero::new(to_scalar::number::<u16>(item)?)
-                .ok_or("Could not convert number to non-zero variant")?,
-        )
-    } else if shape.is_type::<NonZero<u8>>() {
-        poke.put(
-            NonZero::new(to_scalar::number::<u8>(item)?)
-                .ok_or("Could not convert number to non-zero variant")?,
-        )
-    } else if shape.is_type::<NonZero<isize>>() {
-        poke.put(
-            NonZero::new(to_scalar::number::<isize>(item)?)
-                .ok_or("Could not convert number to non-zero variant")?,
-        )
-    } else if shape.is_type::<NonZero<i128>>() {
-        poke.put(
-            NonZero::new(to_scalar::number::<i128>(item)?)
-                .ok_or("Could not convert number to non-zero variant")?,
-        )
-    } else if shape.is_type::<NonZero<i64>>() {
-        poke.put(
-            NonZero::new(to_scalar::number::<i64>(item)?)
-                .ok_or("Could not convert number to non-zero variant")?,
-        )
-    } else if shape.is_type::<NonZero<i32>>() {
-        poke.put(
-            NonZero::new(to_scalar::number::<i32>(item)?)
-                .ok_or("Could not convert number to non-zero variant")?,
-        )
-    } else if shape.is_type::<NonZero<i16>>() {
-        poke.put(
-            NonZero::new(to_scalar::number::<i16>(item)?)
-                .ok_or("Could not convert number to non-zero variant")?,
-        )
-    } else if shape.is_type::<NonZero<i8>>() {
-        poke.put(
-            NonZero::new(to_scalar::number::<i8>(item)?)
-                .ok_or("Could not convert number to non-zero variant")?,
-        )
-    } else if shape.is_type::<SocketAddr>() {
-        poke.put(to_scalar::from_str::<SocketAddr>(item, "socket address")?)
-    } else if shape.is_type::<IpAddr>() {
-        poke.put(to_scalar::from_str::<IpAddr>(item, "ip address")?)
-    } else if shape.is_type::<Ipv4Addr>() {
-        poke.put(to_scalar::from_str::<Ipv4Addr>(item, "ipv4 address")?)
-    } else if shape.is_type::<Ipv6Addr>() {
-        poke.put(to_scalar::from_str::<Ipv6Addr>(item, "ipv6 address")?)
-    } else {
-        return Err(format!("Unsupported scalar type: {}", poke.shape()).into());
-    })
+    match poke
+        .scalar_type()
+        .ok_or_else(|| format!("Unsupported scalar type: {}", poke.shape()))?
+    {
+        ScalarType::Bool => Ok(poke.put(to_scalar::boolean(item)?)),
+        #[cfg(feature = "std")]
+        ScalarType::String => Ok(poke.put(to_scalar::string(item)?)),
+        #[cfg(feature = "std")]
+        ScalarType::CowStr => Ok(poke.put(std::borrow::Cow::Owned(to_scalar::string(item)?))),
+        ScalarType::F32 => Ok(poke.put(to_scalar::number::<f32>(item)?)),
+        ScalarType::F64 => Ok(poke.put(to_scalar::number::<f64>(item)?)),
+        ScalarType::U8 => Ok(poke.put(to_scalar::number::<u8>(item)?)),
+        ScalarType::U16 => Ok(poke.put(to_scalar::number::<u16>(item)?)),
+        ScalarType::U32 => Ok(poke.put(to_scalar::number::<u32>(item)?)),
+        ScalarType::U64 => Ok(poke.put(to_scalar::number::<u64>(item)?)),
+        ScalarType::USize => Ok(poke.put(to_scalar::number::<usize>(item)?)),
+        ScalarType::I8 => Ok(poke.put(to_scalar::number::<i8>(item)?)),
+        ScalarType::I16 => Ok(poke.put(to_scalar::number::<i16>(item)?)),
+        ScalarType::I32 => Ok(poke.put(to_scalar::number::<i32>(item)?)),
+        ScalarType::I64 => Ok(poke.put(to_scalar::number::<i64>(item)?)),
+        ScalarType::ISize => Ok(poke.put(to_scalar::number::<isize>(item)?)),
+        #[cfg(feature = "std")]
+        ScalarType::SocketAddr => Ok(poke.put(to_scalar::from_str::<std::net::SocketAddr>(
+            item,
+            "socket address",
+        )?)),
+        ScalarType::IpAddr => Ok(poke.put(to_scalar::from_str::<IpAddr>(item, "ip address")?)),
+        ScalarType::Ipv4Addr => {
+            Ok(poke.put(to_scalar::from_str::<Ipv4Addr>(item, "ipv4 address")?))
+        }
+        ScalarType::Ipv6Addr => {
+            Ok(poke.put(to_scalar::from_str::<Ipv6Addr>(item, "ipv6 address")?))
+        }
+        _ => Err(format!("Unsupported scalar type: {}", poke.shape()).into()),
+    }
 }
