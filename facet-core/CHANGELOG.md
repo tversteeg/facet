@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3](https://github.com/facet-rs/facet/compare/facet-core-v0.5.2...facet-core-v0.5.3) - 2025-04-12
+
+### Other
+
+- Impl `Facet` for `Arc<T>` ([#180](https://github.com/facet-rs/facet/pull/180))
+- Install cargo-tarpaulin in Docker, and collect + report coverage in CI ([#177](https://github.com/facet-rs/facet/pull/177))
+- Split facet-core/types into multiple modules, prepare for Arc<T> etc. ([#174](https://github.com/facet-rs/facet/pull/174))
+- Fix minor typo ([#176](https://github.com/facet-rs/facet/pull/176))
+
 ## [0.5.2](https://github.com/facet-rs/facet/compare/facet-core-v0.5.1...facet-core-v0.5.2) - 2025-04-12
 
 ### Other

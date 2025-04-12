@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/facet-rs/facet/compare/facet-yaml-v0.2.0...facet-yaml-v0.3.0) - 2025-04-12
+
+### Added
+
+- *(reflect)* add `ScalarType` enum ([#173](https://github.com/facet-rs/facet/pull/173))
+
+### Other
+
+- Install cargo-tarpaulin in Docker, and collect + report coverage in CI ([#177](https://github.com/facet-rs/facet/pull/177))
+- Add most CI improvements from #166 ([#172](https://github.com/facet-rs/facet/pull/172))
+
 ## [0.2.0](https://github.com/facet-rs/facet/compare/facet-yaml-v0.1.12...facet-yaml-v0.2.0) - 2025-04-12
 
 ### Other

@@ -80,7 +80,7 @@ checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
 name = "facet"
-version = "0.1.20"
+version = "0.2.0"
 dependencies = [
  "cargo-husky",
  "facet-core",
@@ -90,14 +90,14 @@ dependencies = [
 
 [[package]]
 name = "facet-ansi"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "anstyle",
 ]
 
 [[package]]
 name = "facet-args"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "facet",
  "facet-core",
@@ -120,7 +120,7 @@ dependencies = [
 
 [[package]]
 name = "facet-core"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "bitflags",
  "impls",
@@ -128,7 +128,7 @@ dependencies = [
 
 [[package]]
 name = "facet-derive"
-version = "0.1.19"
+version = "0.1.20"
 dependencies = [
  "facet-core",
  "unsynn",
@@ -136,7 +136,7 @@ dependencies = [
 
 [[package]]
 name = "facet-json"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "facet",
  "facet-core",
@@ -147,7 +147,7 @@ dependencies = [
 
 [[package]]
 name = "facet-msgpack"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "facet",
  "facet-core",
@@ -158,7 +158,7 @@ dependencies = [
 
 [[package]]
 name = "facet-pretty"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "facet",
  "facet-ansi",
@@ -168,7 +168,7 @@ dependencies = [
 
 [[package]]
 name = "facet-reflect"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "facet",
  "facet-ansi",
@@ -181,7 +181,7 @@ dependencies = [
 
 [[package]]
 name = "facet-samplelibc"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "cc",
  "facet",
@@ -189,7 +189,7 @@ dependencies = [
 
 [[package]]
 name = "facet-testhelpers"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "color-backtrace",
  "facet-ansi",
@@ -198,7 +198,7 @@ dependencies = [
 
 [[package]]
 name = "facet-toml"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "facet",
  "facet-core",
@@ -209,7 +209,7 @@ dependencies = [
 
 [[package]]
 name = "facet-urlencoded"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "facet",
  "facet-core",
@@ -220,7 +220,7 @@ dependencies = [
 
 [[package]]
 name = "facet-yaml"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "facet",
  "facet-core",

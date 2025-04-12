@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/facet-rs/facet/compare/facet-v0.1.20...facet-v0.2.0) - 2025-04-12
+
+### Other
+
+- Fix docs.rs build failure, closes #178 ([#179](https://github.com/facet-rs/facet/pull/179))
+- Install cargo-tarpaulin in Docker, and collect + report coverage in CI ([#177](https://github.com/facet-rs/facet/pull/177))
+- Add most CI improvements from #166 ([#172](https://github.com/facet-rs/facet/pull/172))
+
 ## [0.1.20](https://github.com/facet-rs/facet/compare/facet-v0.1.19...facet-v0.1.20) - 2025-04-12
 
 ### Other

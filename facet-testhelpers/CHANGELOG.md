@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2](https://github.com/facet-rs/facet/compare/facet-testhelpers-v0.1.1...facet-testhelpers-v0.1.2) - 2025-04-12
+
+### Other
+
+- Install cargo-tarpaulin in Docker, and collect + report coverage in CI ([#177](https://github.com/facet-rs/facet/pull/177))
+- Use anstyle ([#170](https://github.com/facet-rs/facet/pull/170))
+- Opaque initialization of Some ([#169](https://github.com/facet-rs/facet/pull/169))
+
 ## [0.1.1](https://github.com/facet-rs/facet/compare/facet-testhelpers-v0.1.0...facet-testhelpers-v0.1.1) - 2025-04-12
 
 ### Other

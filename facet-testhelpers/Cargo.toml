@@ -1,6 +1,6 @@
 [package]
 name = "facet-testhelpers"
-version = "0.1.1"
+version = "0.1.2"
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -14,5 +14,5 @@ description = "A collection of testing helpers and utilities for Facet projects"
 color-backtrace = { version = "0.7.0", default-features = false, features = [
     "use-btparse-crate",
 ] }
-facet-ansi = { version = "0.1.1", path = "../facet-ansi" }
+facet-ansi = { version = "0.2.0", path = "../facet-ansi" }
 log = { version = "0.4.27", features = ["std"] }

@@ -15,8 +15,8 @@ num-traits = { version = "0.2.19", default-features = false }
 toml_edit = { version = "0.22.24", default-features = false, features = [
     "parse",
 ] }
-facet-core = { version = "0.5.2", path = "../facet-core" }
-facet-reflect = { version = "0.6.1", path = "../facet-reflect" }
+facet-core = { version = "0.5.3", path = "../facet-core" }
+facet-reflect = { version = "0.6.2", path = "../facet-reflect" }
 
 [dev-dependencies]
 facet = { path = "../facet" }

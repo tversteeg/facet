@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.16](https://github.com/facet-rs/facet/compare/facet-samplelibc-v0.1.15...facet-samplelibc-v0.1.16) - 2025-04-12
+
+### Other
+
+- Install cargo-tarpaulin in Docker, and collect + report coverage in CI ([#177](https://github.com/facet-rs/facet/pull/177))
+
 ## [0.1.15](https://github.com/facet-rs/facet/compare/facet-samplelibc-v0.1.14...facet-samplelibc-v0.1.15) - 2025-04-12
 
 ### Other
