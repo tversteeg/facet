@@ -22,6 +22,9 @@ pub use enum_::*;
 mod option;
 pub use option::*;
 
+mod smart_pointer;
+pub use smart_pointer::*;
+
 /// Allows initializing values of different kinds.
 #[non_exhaustive]
 pub enum PokeUninit<'mem> {
@@ -37,6 +40,8 @@ pub enum PokeUninit<'mem> {
     Enum(PokeEnumNoVariant<'mem>),
     /// An option value. See [`PokeOption`].
     Option(PokeOptionUninit<'mem>),
+    /// A smart pointer. See [`PokeSmartPointer`].
+    SmartPointer(PokeSmartPointerUninit<'mem>),
 }
 
 /// Ensures a value is dropped when the guard is dropped.
@@ -110,6 +115,10 @@ impl<'mem> PokeUninit<'mem> {
                 let pou = unsafe { PokeOptionUninit::new(data, shape, option_def) };
                 PokeUninit::Option(pou)
             }
+            Def::SmartPointer(smart_pointer_def) => {
+                let psu = unsafe { PokeSmartPointerUninit::new(data, shape, smart_pointer_def) };
+                PokeUninit::SmartPointer(psu)
+            }
             _ => todo!("unsupported def: {:?}", shape.def),
         }
     }
@@ -135,6 +144,14 @@ impl<'mem> PokeUninit<'mem> {
         match self {
             PokeUninit::Map(m) => m,
             _ => panic!("expected Map variant"),
+        }
+    }
+
+    /// Converts this Poke into a PokeSmartPointer, panicking if it's not a SmartPointer variant
+    pub fn into_smart_pointer(self) -> PokeSmartPointerUninit<'mem> {
+        match self {
+            PokeUninit::SmartPointer(s) => s,
+            _ => panic!("expected SmartPointer variant"),
         }
     }
 
@@ -172,6 +189,7 @@ impl<'mem> PokeUninit<'mem> {
             PokeUninit::Struct(s) => s.into_value(),
             PokeUninit::Enum(e) => e.into_value(),
             PokeUninit::Option(o) => o.into_value(),
+            PokeUninit::SmartPointer(s) => s.into_value(),
         }
     }
 
@@ -185,6 +203,9 @@ impl<'mem> PokeUninit<'mem> {
             PokeUninit::Struct(poke_struct) => poke_struct.shape(),
             PokeUninit::Enum(poke_enum_no_variant) => poke_enum_no_variant.shape(),
             PokeUninit::Option(poke_option_uninit) => poke_option_uninit.shape(),
+            PokeUninit::SmartPointer(poke_smart_pointer_uninit) => {
+                poke_smart_pointer_uninit.shape()
+            }
         }
     }
 }
@@ -243,6 +264,8 @@ pub enum Poke<'mem> {
     Enum(PokeEnum<'mem>),
     /// An option value. See [`PokeOption`].
     Option(PokeOption<'mem>),
+    /// A smart pointer. See [`PokeSmartPointer`].
+    SmartPointer(PokeSmartPointer<'mem>),
 }
 
 impl<'mem> Poke<'mem> {
@@ -278,6 +301,10 @@ impl<'mem> Poke<'mem> {
                 let po = unsafe { PokeOption::new(data, shape, option_def) };
                 Poke::Option(po)
             }
+            Def::SmartPointer(smart_pointer_def) => {
+                let ps = unsafe { PokeSmartPointer::new(data, shape, smart_pointer_def) };
+                Poke::SmartPointer(ps)
+            }
             _ => todo!("unsupported def: {:?}", shape.def),
         }
     }
@@ -288,6 +315,14 @@ impl<'mem> Poke<'mem> {
         let shape = T::SHAPE;
         let data = Opaque::new(data);
         unsafe { Poke::unchecked_new(data, shape) }
+    }
+
+    /// Converts this Poke into a PokeSmartPointer, panicking if it's not a SmartPointer variant
+    pub fn into_smart_pointer(self) -> PokeSmartPointer<'mem> {
+        match self {
+            Poke::SmartPointer(s) => s,
+            _ => panic!("expected SmartPointer variant"),
+        }
     }
 
     /// Converts this Poke into a PokeValue, panicking if it's not a Scalar variant
@@ -348,6 +383,7 @@ impl<'mem> Poke<'mem> {
             Poke::Struct(poke_struct) => poke_struct.shape(),
             Poke::Enum(poke_enum) => poke_enum.shape(),
             Poke::Option(poke_option) => poke_option.shape(),
+            Poke::SmartPointer(poke_smart_pointer) => poke_smart_pointer.shape(),
         }
     }
 }
