@@ -12,7 +12,10 @@ use std::{
 
 use error::AnyErr;
 use facet_core::{Facet, Opaque, VariantKind};
-use facet_reflect::{PokeEnumNoVariant, PokeStruct, PokeUninit, PokeValueUninit};
+use facet_reflect::{
+    PokeEnumNoVariant, PokeListUninit, PokeMapUninit, PokeOptionUninit, PokeStruct, PokeUninit,
+    PokeValueUninit,
+};
 use toml_edit::{DocumentMut, Item, TomlError};
 
 /// Deserializes a TOML string into a value of type `T` that implements `Facet`.
@@ -29,11 +32,12 @@ fn from_str_opaque<'mem>(poke: PokeUninit<'mem>, toml: &str) -> Result<Opaque<'m
 
 fn deserialize_item<'mem>(poke: PokeUninit<'mem>, item: &Item) -> Result<Opaque<'mem>, AnyErr> {
     match poke {
-        PokeUninit::Scalar(poke) => deserialize_as_scalar(poke, item),
-        PokeUninit::List(_) => todo!(),
-        PokeUninit::Map(_) => todo!(),
         PokeUninit::Struct(poke) => deserialize_as_struct(poke, item),
         PokeUninit::Enum(poke) => deserialize_as_enum(poke, item),
+        PokeUninit::Option(poke) => deserialize_as_option(poke, item),
+        PokeUninit::List(poke) => deserialize_as_list(poke, item),
+        PokeUninit::Map(poke) => deserialize_as_map(poke, item),
+        PokeUninit::Scalar(poke) => deserialize_as_scalar(poke, item),
         _ => todo!("unsupported poke type"),
     }
 }
@@ -102,6 +106,27 @@ fn deserialize_as_enum<'mem>(
     } else {
         todo!()
     }
+}
+
+fn deserialize_as_option<'mem>(
+    _poke: PokeOptionUninit<'mem>,
+    _item: &Item,
+) -> Result<Opaque<'mem>, AnyErr> {
+    todo!()
+}
+
+fn deserialize_as_list<'mem>(
+    _poke: PokeListUninit<'mem>,
+    _item: &Item,
+) -> Result<Opaque<'mem>, AnyErr> {
+    todo!()
+}
+
+fn deserialize_as_map<'mem>(
+    _poke: PokeMapUninit<'mem>,
+    _item: &Item,
+) -> Result<Opaque<'mem>, AnyErr> {
+    todo!()
 }
 
 fn deserialize_as_scalar<'mem>(
