@@ -1,12 +1,10 @@
 //! Tests for scalar values.
 
-use std::{
-    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
-    num::NonZero,
-};
+use core::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use facet::Facet;
 
+#[cfg(feature = "std")]
 #[test]
 fn test_string() {
     #[derive(Debug, Facet, PartialEq)]
@@ -55,11 +53,12 @@ fn test_bool() {
     );
 }
 
+#[cfg(feature = "std")]
 #[test]
 fn test_socket_addr() {
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
-        value: SocketAddr,
+        value: std::net::SocketAddr,
     }
 
     assert_eq!(
@@ -168,20 +167,6 @@ fn test_usize() {
 }
 
 #[test]
-fn test_u128() {
-    #[derive(Debug, Facet, PartialEq)]
-    struct Root {
-        value: u128,
-    }
-
-    assert_eq!(
-        facet_toml::from_str::<Root>("value = 1").expect("Failed to parse TOML"),
-        Root { value: 1 },
-    );
-    assert!(facet_toml::from_str::<Root>("value = -1").is_err());
-}
-
-#[test]
 fn test_u64() {
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
@@ -251,19 +236,6 @@ fn test_isize() {
 }
 
 #[test]
-fn test_i128() {
-    #[derive(Debug, Facet, PartialEq)]
-    struct Root {
-        value: i128,
-    }
-
-    assert_eq!(
-        facet_toml::from_str::<Root>("value = 1").expect("Failed to parse TOML"),
-        Root { value: 1 },
-    );
-}
-
-#[test]
 fn test_i64() {
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
@@ -312,191 +284,5 @@ fn test_i8() {
     assert_eq!(
         facet_toml::from_str::<Root>("value = 1").expect("Failed to parse TOML"),
         Root { value: 1 },
-    );
-}
-
-#[test]
-fn test_nonzero_usize() {
-    #[derive(Debug, Facet, PartialEq)]
-    struct Root {
-        value: NonZero<usize>,
-    }
-
-    assert_eq!(
-        facet_toml::from_str::<Root>("value = 1").expect("Failed to parse TOML"),
-        Root {
-            value: NonZero::new(1).unwrap()
-        },
-    );
-    assert!(facet_toml::from_str::<Root>("value = -1").is_err());
-}
-
-#[test]
-fn test_nonzero_u128() {
-    #[derive(Debug, Facet, PartialEq)]
-    struct Root {
-        value: NonZero<u128>,
-    }
-
-    assert_eq!(
-        facet_toml::from_str::<Root>("value = 1").expect("Failed to parse TOML"),
-        Root {
-            value: NonZero::new(1).unwrap()
-        },
-    );
-    assert!(facet_toml::from_str::<Root>("value = -1").is_err());
-}
-
-#[test]
-fn test_nonzero_u64() {
-    #[derive(Debug, Facet, PartialEq)]
-    struct Root {
-        value: NonZero<u64>,
-    }
-
-    assert_eq!(
-        facet_toml::from_str::<Root>("value = 1").expect("Failed to parse TOML"),
-        Root {
-            value: NonZero::new(1).unwrap()
-        },
-    );
-    assert!(facet_toml::from_str::<Root>("value = -1").is_err());
-}
-
-#[test]
-fn test_nonzero_u32() {
-    #[derive(Debug, Facet, PartialEq)]
-    struct Root {
-        value: NonZero<u32>,
-    }
-
-    assert_eq!(
-        facet_toml::from_str::<Root>("value = 1").expect("Failed to parse TOML"),
-        Root {
-            value: NonZero::new(1).unwrap()
-        },
-    );
-    assert!(facet_toml::from_str::<Root>("value = -1").is_err());
-}
-
-#[test]
-fn test_nonzero_u16() {
-    #[derive(Debug, Facet, PartialEq)]
-    struct Root {
-        value: NonZero<u16>,
-    }
-
-    assert_eq!(
-        facet_toml::from_str::<Root>("value = 1").expect("Failed to parse TOML"),
-        Root {
-            value: NonZero::new(1).unwrap()
-        },
-    );
-    assert!(facet_toml::from_str::<Root>("value = -1").is_err());
-}
-
-#[test]
-fn test_nonzero_u8() {
-    #[derive(Debug, Facet, PartialEq)]
-    struct Root {
-        value: NonZero<u8>,
-    }
-
-    assert_eq!(
-        facet_toml::from_str::<Root>("value = 1").expect("Failed to parse TOML"),
-        Root {
-            value: NonZero::new(1).unwrap()
-        },
-    );
-    assert!(facet_toml::from_str::<Root>("value = -1").is_err());
-}
-
-#[test]
-fn test_nonzero_isize() {
-    #[derive(Debug, Facet, PartialEq)]
-    struct Root {
-        value: NonZero<isize>,
-    }
-
-    assert_eq!(
-        facet_toml::from_str::<Root>("value = 1").expect("Failed to parse TOML"),
-        Root {
-            value: NonZero::new(1).unwrap()
-        },
-    );
-}
-
-#[test]
-fn test_nonzero_i128() {
-    #[derive(Debug, Facet, PartialEq)]
-    struct Root {
-        value: NonZero<i128>,
-    }
-
-    assert_eq!(
-        facet_toml::from_str::<Root>("value = 1").expect("Failed to parse TOML"),
-        Root {
-            value: NonZero::new(1).unwrap()
-        },
-    );
-}
-
-#[test]
-fn test_nonzero_i64() {
-    #[derive(Debug, Facet, PartialEq)]
-    struct Root {
-        value: NonZero<i64>,
-    }
-
-    assert_eq!(
-        facet_toml::from_str::<Root>("value = 1").expect("Failed to parse TOML"),
-        Root {
-            value: NonZero::new(1).unwrap()
-        },
-    );
-}
-
-#[test]
-fn test_nonzero_i32() {
-    #[derive(Debug, Facet, PartialEq)]
-    struct Root {
-        value: NonZero<i32>,
-    }
-
-    assert_eq!(
-        facet_toml::from_str::<Root>("value = 1").expect("Failed to parse TOML"),
-        Root {
-            value: NonZero::new(1).unwrap()
-        },
-    );
-}
-
-#[test]
-fn test_nonzero_i16() {
-    #[derive(Debug, Facet, PartialEq)]
-    struct Root {
-        value: NonZero<i16>,
-    }
-
-    assert_eq!(
-        facet_toml::from_str::<Root>("value = 1").expect("Failed to parse TOML"),
-        Root {
-            value: NonZero::new(1).unwrap()
-        },
-    );
-}
-
-#[test]
-fn test_nonzero_i8() {
-    #[derive(Debug, Facet, PartialEq)]
-    struct Root {
-        value: NonZero<i8>,
-    }
-
-    assert_eq!(
-        facet_toml::from_str::<Root>("value = 1").expect("Failed to parse TOML"),
-        Root {
-            value: NonZero::new(1).unwrap()
-        },
     );
 }

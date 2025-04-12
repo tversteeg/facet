@@ -4,15 +4,11 @@
 pub mod error;
 mod to_scalar;
 
-use std::{
-    borrow::Cow,
-    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
-    num::NonZero,
-};
+use core::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use error::AnyErr;
 use facet_core::{Def, Facet};
-use facet_reflect::Wip;
+use facet_reflect::{ScalarType, Wip};
 use toml_edit::{DocumentMut, Item, TomlError};
 
 /// Deserializes a TOML string into a value of type `T` that implements `Facet`.
@@ -34,10 +30,11 @@ fn deserialize_item<'a>(wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, AnyErr> {
     let shape = wip.shape();
     match shape.def {
         Def::Scalar(_) => deserialize_as_scalar(wip, item),
-        Def::List(_) => todo!(),
-        Def::Map(_) => todo!(),
+        Def::List(_) => deserialize_as_list(wip, item),
+        Def::Map(_) => deserialize_as_map(wip, item),
         Def::Struct(_) => deserialize_as_struct(wip, item),
         Def::Enum(_) => deserialize_as_enum(wip, item),
+        Def::SmartPointer(_) => deserialize_as_smartpointer(wip, item),
         _ => Err(AnyErr(format!("Unsupported type: {:?}", shape))),
     }
 }
@@ -106,123 +103,123 @@ fn deserialize_as_enum<'a>(wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, AnyErr>
     }
 }
 
-fn deserialize_as_scalar<'a>(mut wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, AnyErr> {
-    let shape = wip.shape();
+fn deserialize_as_list<'a>(mut wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, AnyErr> {
+    todo!()
+}
 
-    if shape.is_type::<String>() {
-        let val = to_scalar::string(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<Cow<'_, str>>() {
-        let val = Cow::Owned(to_scalar::string(item)?);
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<bool>() {
-        let val = to_scalar::boolean(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<f64>() {
-        let val = to_scalar::number::<f64>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<f32>() {
-        let val = to_scalar::number::<f32>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<usize>() {
-        let val = to_scalar::number::<usize>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<u128>() {
-        let val = to_scalar::number::<u128>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<u64>() {
-        let val = to_scalar::number::<u64>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<u32>() {
-        let val = to_scalar::number::<u32>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<u16>() {
-        let val = to_scalar::number::<u16>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<u8>() {
-        let val = to_scalar::number::<u8>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<isize>() {
-        let val = to_scalar::number::<isize>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<i128>() {
-        let val = to_scalar::number::<i128>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<i64>() {
-        let val = to_scalar::number::<i64>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<i32>() {
-        let val = to_scalar::number::<i32>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<i16>() {
-        let val = to_scalar::number::<i16>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<i8>() {
-        let val = to_scalar::number::<i8>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<usize>>() {
-        // TODO: create a to_scalar::nonzero_number method when we can use a trait to do so
-        let val = NonZero::new(to_scalar::number::<usize>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<u128>>() {
-        let val = NonZero::new(to_scalar::number::<u128>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<u64>>() {
-        let val = NonZero::new(to_scalar::number::<u64>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<u32>>() {
-        let val = NonZero::new(to_scalar::number::<u32>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<u16>>() {
-        let val = NonZero::new(to_scalar::number::<u16>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<u8>>() {
-        let val = NonZero::new(to_scalar::number::<u8>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<isize>>() {
-        let val = NonZero::new(to_scalar::number::<isize>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<i128>>() {
-        let val = NonZero::new(to_scalar::number::<i128>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<i64>>() {
-        let val = NonZero::new(to_scalar::number::<i64>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<i32>>() {
-        let val = NonZero::new(to_scalar::number::<i32>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<i16>>() {
-        let val = NonZero::new(to_scalar::number::<i16>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<i8>>() {
-        let val = NonZero::new(to_scalar::number::<i8>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<SocketAddr>() {
-        let val = to_scalar::from_str::<SocketAddr>(item, "socket address")?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<IpAddr>() {
-        let val = to_scalar::from_str::<IpAddr>(item, "ip address")?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<Ipv4Addr>() {
-        let val = to_scalar::from_str::<Ipv4Addr>(item, "ipv4 address")?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<Ipv6Addr>() {
-        let val = to_scalar::from_str::<Ipv6Addr>(item, "ipv6 address")?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else {
-        return Err(AnyErr(format!("Unsupported scalar type: {}", wip.shape())));
+fn deserialize_as_map<'a>(mut wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, AnyErr> {
+    todo!()
+}
+
+fn deserialize_as_smartpointer<'a>(mut wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, AnyErr> {
+    todo!()
+}
+
+fn deserialize_as_scalar<'a>(mut wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, AnyErr> {
+    match ScalarType::try_from_shape(wip.shape())
+        .ok_or_else(|| format!("Unsupported scalar type: {}", wip.shape()))?
+    {
+        ScalarType::Bool => {
+            wip = wip
+                .put(to_scalar::boolean(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        #[cfg(feature = "std")]
+        ScalarType::String => {
+            wip = wip
+                .put(to_scalar::string(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        #[cfg(feature = "std")]
+        ScalarType::CowStr => {
+            todo!()
+        }
+        ScalarType::F32 => {
+            wip = wip
+                .put(to_scalar::number::<f32>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::F64 => {
+            wip = wip
+                .put(to_scalar::number::<f64>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::U8 => {
+            wip = wip
+                .put(to_scalar::number::<u8>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::U16 => {
+            wip = wip
+                .put(to_scalar::number::<u16>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::U32 => {
+            wip = wip
+                .put(to_scalar::number::<u32>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::U64 => {
+            wip = wip
+                .put(to_scalar::number::<u64>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::USize => {
+            wip = wip
+                .put(to_scalar::number::<usize>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::I8 => {
+            wip = wip
+                .put(to_scalar::number::<i8>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::I16 => {
+            wip = wip
+                .put(to_scalar::number::<i16>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::I32 => {
+            wip = wip
+                .put(to_scalar::number::<i32>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::I64 => {
+            wip = wip
+                .put(to_scalar::number::<i64>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::ISize => {
+            wip = wip
+                .put(to_scalar::number::<isize>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        #[cfg(feature = "std")]
+        ScalarType::SocketAddr => {
+            wip = wip
+                .put(to_scalar::from_str::<std::net::SocketAddr>(
+                    item,
+                    "socket address",
+                )?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::IpAddr => {
+            wip = wip
+                .put(to_scalar::from_str::<IpAddr>(item, "ip address")?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::Ipv4Addr => {
+            wip = wip
+                .put(to_scalar::from_str::<Ipv4Addr>(item, "ipv4 address")?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::Ipv6Addr => {
+            wip = wip
+                .put(to_scalar::from_str::<Ipv6Addr>(item, "ipv6 address")?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        _ => return Err(AnyErr(format!("Unsupported scalar type: {}", wip.shape()))),
     }
+
     Ok(wip)
 }
