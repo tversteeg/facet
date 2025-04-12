@@ -8,7 +8,6 @@ use crate::{Peek, ScalarType};
 pub struct PeekValue<'mem> {
     data: OpaqueConst<'mem>,
     shape: &'static Shape,
-    scalar_type: Option<ScalarType>,
 }
 
 impl core::fmt::Display for PeekValue<'_> {
@@ -62,13 +61,7 @@ impl<'mem> PeekValue<'mem> {
     /// `data` must be initialized and well-aligned, and point to a value
     /// of the type described by `shape`.
     pub(crate) unsafe fn unchecked_new(data: OpaqueConst<'mem>, shape: &'static Shape) -> Self {
-        let scalar_type = ScalarType::try_from_shape(shape);
-
-        Self {
-            data,
-            shape,
-            scalar_type,
-        }
+        Self { data, shape }
     }
 
     /// Returns the vtable
@@ -262,7 +255,7 @@ impl<'mem> PeekValue<'mem> {
     }
 
     /// Get the scalar type if set.
-    pub const fn scalar_type(&self) -> Option<ScalarType> {
-        self.scalar_type
+    pub fn scalar_type(&self) -> Option<ScalarType> {
+        ScalarType::try_from_shape(self.shape)
     }
 }

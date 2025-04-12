@@ -28,7 +28,6 @@ impl<'mem, T: Facet> TypedPokeValueUninit<'mem, T> {
 pub struct PokeValueUninit<'mem> {
     data: OpaqueUninit<'mem>,
     shape: &'static Shape,
-    scalar_type: Option<ScalarType>,
 }
 
 impl core::fmt::Debug for PokeValueUninit<'_> {
@@ -69,13 +68,7 @@ impl<'mem> PokeValueUninit<'mem> {
     ///
     /// The data buffer must match the size and alignment of the shape.
     pub(crate) unsafe fn new(data: OpaqueUninit<'mem>, shape: &'static Shape) -> Self {
-        let scalar_type = ScalarType::try_from_shape(shape);
-
-        Self {
-            data,
-            shape,
-            scalar_type,
-        }
+        Self { data, shape }
     }
 
     /// Gets the vtable for the value
@@ -164,8 +157,8 @@ impl<'mem> PokeValueUninit<'mem> {
     }
 
     /// Get the scalar type if set.
-    pub const fn scalar_type(&self) -> Option<ScalarType> {
-        self.scalar_type
+    pub fn scalar_type(&self) -> Option<ScalarType> {
+        ScalarType::try_from_shape(self.shape)
     }
 }
 
@@ -195,7 +188,6 @@ impl<'mem, T: Facet> TypedPokeValue<'mem, T> {
 pub struct PokeValue<'mem> {
     data: Opaque<'mem>,
     shape: &'static Shape,
-    scalar_type: Option<ScalarType>,
 }
 
 impl core::fmt::Debug for PokeValue<'_> {
@@ -237,13 +229,7 @@ impl<'mem> PokeValue<'mem> {
     ///
     /// The data must be a valid, initialized instance of the type described by shape.
     pub(crate) unsafe fn new(data: Opaque<'mem>, shape: &'static Shape) -> Self {
-        let scalar_type = ScalarType::try_from_shape(shape);
-
-        Self {
-            data,
-            shape,
-            scalar_type,
-        }
+        Self { data, shape }
     }
 
     /// Gets the vtable for the value
@@ -297,7 +283,7 @@ impl<'mem> PokeValue<'mem> {
     }
 
     /// Get the scalar type if set.
-    pub const fn scalar_type(&self) -> Option<ScalarType> {
-        self.scalar_type
+    pub fn scalar_type(&self) -> Option<ScalarType> {
+        ScalarType::try_from_shape(self.shape)
     }
 }
