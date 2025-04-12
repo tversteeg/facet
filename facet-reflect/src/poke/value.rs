@@ -1,4 +1,4 @@
-use crate::peek::Peek;
+use crate::{ScalarType, peek::Peek};
 use facet_core::{Facet, Opaque, OpaqueConst, OpaqueUninit, Shape, TryFromError, ValueVTable};
 
 /// A strongly-typed value writer that ensures type safety at compile-time
@@ -28,6 +28,7 @@ impl<'mem, T: Facet> TypedPokeValueUninit<'mem, T> {
 pub struct PokeValueUninit<'mem> {
     data: OpaqueUninit<'mem>,
     shape: &'static Shape,
+    scalar_type: Option<ScalarType>,
 }
 
 impl core::fmt::Debug for PokeValueUninit<'_> {
@@ -61,13 +62,20 @@ impl<'mem> PokeValueUninit<'mem> {
     pub fn shape(&self) -> &'static Shape {
         self.shape
     }
+
     /// Creates a value write-proxy from its essential components
     ///
     /// # Safety
     ///
     /// The data buffer must match the size and alignment of the shape.
     pub(crate) unsafe fn new(data: OpaqueUninit<'mem>, shape: &'static Shape) -> Self {
-        Self { data, shape }
+        let scalar_type = ScalarType::try_from_shape(shape);
+
+        Self {
+            data,
+            shape,
+            scalar_type,
+        }
     }
 
     /// Gets the vtable for the value
@@ -154,6 +162,11 @@ impl<'mem> PokeValueUninit<'mem> {
             Err(self)
         }
     }
+
+    /// Get the scalar type if set.
+    pub const fn scalar_type(&self) -> Option<ScalarType> {
+        self.scalar_type
+    }
 }
 
 /// A strongly-typed value writer for initialized values that ensures type safety at compile-time
@@ -182,6 +195,7 @@ impl<'mem, T: Facet> TypedPokeValue<'mem, T> {
 pub struct PokeValue<'mem> {
     data: Opaque<'mem>,
     shape: &'static Shape,
+    scalar_type: Option<ScalarType>,
 }
 
 impl core::fmt::Debug for PokeValue<'_> {
@@ -223,7 +237,13 @@ impl<'mem> PokeValue<'mem> {
     ///
     /// The data must be a valid, initialized instance of the type described by shape.
     pub(crate) unsafe fn new(data: Opaque<'mem>, shape: &'static Shape) -> Self {
-        Self { data, shape }
+        let scalar_type = ScalarType::try_from_shape(shape);
+
+        Self {
+            data,
+            shape,
+            scalar_type,
+        }
     }
 
     /// Gets the vtable for the value
@@ -274,5 +294,10 @@ impl<'mem> PokeValue<'mem> {
         } else {
             f.write_str("<no display impl>")
         }
+    }
+
+    /// Get the scalar type if set.
+    pub const fn scalar_type(&self) -> Option<ScalarType> {
+        self.scalar_type
     }
 }

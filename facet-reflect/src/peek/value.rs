@@ -1,13 +1,14 @@
 use core::cmp::Ordering;
 use facet_core::{Opaque, OpaqueConst, Shape, TypeNameOpts, ValueVTable};
 
-use crate::Peek;
+use crate::{Peek, ScalarType};
 
 /// Lets you read from a value (implements read-only [`ValueVTable`] proxies)
 #[derive(Clone, Copy)]
 pub struct PeekValue<'mem> {
     data: OpaqueConst<'mem>,
     shape: &'static Shape,
+    scalar_type: Option<ScalarType>,
 }
 
 impl core::fmt::Display for PeekValue<'_> {
@@ -61,7 +62,13 @@ impl<'mem> PeekValue<'mem> {
     /// `data` must be initialized and well-aligned, and point to a value
     /// of the type described by `shape`.
     pub(crate) unsafe fn unchecked_new(data: OpaqueConst<'mem>, shape: &'static Shape) -> Self {
-        Self { data, shape }
+        let scalar_type = ScalarType::try_from_shape(shape);
+
+        Self {
+            data,
+            shape,
+            scalar_type,
+        }
     }
 
     /// Returns the vtable
@@ -252,5 +259,10 @@ impl<'mem> PeekValue<'mem> {
     #[inline(always)]
     pub fn wrap(self) -> Peek<'mem> {
         unsafe { Peek::unchecked_new(self.data, self.shape) }
+    }
+
+    /// Get the scalar type if set.
+    pub const fn scalar_type(&self) -> Option<ScalarType> {
+        self.scalar_type
     }
 }
