@@ -128,8 +128,13 @@ impl<'mem> PokeOption<'mem> {
     /// Replace the current value with Some
     pub fn replace_with_some<T>(self, value: T) -> Self {
         let value_opaque = OpaqueConst::new(&raw const value);
-        unsafe { (self.vtable().replace_with_fn)(self.data, Some(value_opaque)) };
         core::mem::forget(value);
+        self.replace_with_some_opaque(value_opaque)
+    }
+
+    /// Replace the current value with some type-erased inner value.
+    pub fn replace_with_some_opaque(self, value: OpaqueConst<'mem>) -> Self {
+        unsafe { (self.vtable().replace_with_fn)(self.data, Some(value)) };
         self
     }
 
@@ -139,6 +144,12 @@ impl<'mem> PokeOption<'mem> {
         unsafe {
             crate::PokeValueUninit::new(OpaqueUninit::new(self.data.as_mut_byte_ptr()), self.shape)
         }
+    }
+
+    /// Takes ownership of this `PokeOption` and returns the underlying data.
+    #[inline]
+    pub fn build_in_place(self) -> Opaque<'mem> {
+        self.data
     }
 
     /// Builds an `Option<T>` from the PokeOption, then deallocates the memory
