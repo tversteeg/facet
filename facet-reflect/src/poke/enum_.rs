@@ -4,7 +4,9 @@ extern crate alloc;
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
 
-use facet_core::{EnumDef, EnumRepr, Facet, FieldError, Opaque, OpaqueUninit, Shape, VariantKind};
+use facet_core::{
+    EnumDef, EnumRepr, Facet, FieldError, Opaque, OpaqueUninit, Shape, Variant, VariantKind,
+};
 
 use crate::Guard;
 
@@ -29,6 +31,7 @@ impl<'mem> PokeEnumNoVariant<'mem> {
     pub fn shape(&self) -> &'static Shape {
         self.shape
     }
+
     /// Creates a new PokeEnumNoVariant from raw data
     ///
     /// # Safety
@@ -145,6 +148,19 @@ impl<'mem> PokeEnumNoVariant<'mem> {
             def: self.def,
             selected_variant: variant_index,
         })
+    }
+
+    /// Try to find the variant by name.
+    pub fn variant_by_name(&self, name: &str) -> Option<&Variant> {
+        self.def
+            .variants
+            .iter()
+            .find(|variant| variant.name == name)
+    }
+
+    /// Whether the enum has a variant.
+    pub fn contains_variant_with_name(&self, name: &str) -> bool {
+        self.def.variants.iter().any(|variant| variant.name == name)
     }
 }
 
