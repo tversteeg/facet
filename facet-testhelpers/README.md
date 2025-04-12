@@ -1,4 +1,3 @@
-
 <h1>
 <picture>
 <source srcset="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.webp">
@@ -6,6 +5,7 @@
 </picture> &nbsp; facet-testhelpers
 </h1>
 
+[![built with depot](https://depot.dev/badges/built-with-depot.svg)](https:/depot.dev?utm_source=facet)
 [![experimental](https://img.shields.io/badge/status-experimental-yellow)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
 [![crates.io](https://img.shields.io/crates/v/facet-testhelpers.svg)](https://crates.io/crates/facet-testhelpers)
@@ -37,16 +37,7 @@ Thanks to all individual and corporate sponsors, without whom this work could no
 <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-light.svg" height="40" alt="Zed">
 </picture>
 </a> </p>
-         
+
 Lightweight test helpers: a log facade that always does tracing (with colors),
 and color-backtrace using the btparse backend.
 
-
-## License
-
-Licensed under either of:
-
-- Apache License, Version 2.0 ([LICENSE-APACHE](https://github.com/facet-rs/facet/blob/main/LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
-- MIT license ([LICENSE-MIT](https://github.com/facet-rs/facet/blob/main/LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
-
-at your option.

@@ -15,26 +15,24 @@ struct Person {
     age: u32,
 }
 
-fn main() {
-    // Create a struct to serialize
-    let person = Person {
-        name: "Alice".to_string(),
-        age: 30,
-    };
+// Create a struct to serialize
+let person = Person {
+    name: "Alice".to_string(),
+    age: 30,
+};
 
-    // Create a Peek object from the struct
-    let peek = Peek::new(&person);
+// Create a Peek object from the struct
+let peek = Peek::new(&person);
 
-    // Serialize to JSON (true = pretty-print)
-    let json = to_json_string(peek, true);
+// Serialize to JSON (true = pretty-print)
+let json = to_json_string(peek, true);
 
-    println!("{}", json);
-    // Output:
-    // {
-    //   "name": "Alice",
-    //   "age": 30
-    // }
-}
+println!("{}", json);
+// Output:
+// {
+//   "name": "Alice",
+//   "age": 30
+// }
 ```
 
 ### Deserialization Example
@@ -49,14 +47,12 @@ struct Person {
     age: u32,
 }
 
-fn main() {
-    // JSON string to deserialize
-    let json = r#"{"name":"Bob","age":25}"#;
+// JSON string to deserialize
+let json = r#"{"name":"Bob","age":25}"#;
 
-    // Deserialize the JSON to a Person struct
-    let person: Person = from_str(json).unwrap();
+// Deserialize the JSON to a Person struct
+let person: Person = from_str(json).unwrap();
 
-    println!("{:?}", person);
-    // Output: Person { name: "Bob", age: 25 }
-}
+println!("{:?}", person);
+// Output: Person { name: "Bob", age: 25 }
 ```

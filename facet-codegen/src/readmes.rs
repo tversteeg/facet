@@ -144,59 +144,10 @@ fn process_readme_template(
 
 // Define header and footer templates
 fn generate_header(crate_name: &str) -> String {
-    format!(
-        r#"
-<h1>
-<picture>
-<source srcset="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.webp">
-<img src="https://github.com/facet-rs/facet/raw/main/static/logo-v2/logo-only.png" height="35" alt="Facet logo - a reflection library for Rust">
-</picture> &nbsp; {0}
-</h1>
-
-[![experimental](https://img.shields.io/badge/status-experimental-yellow)](https://github.com/fasterthanlime/facet)
-[![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
-[![crates.io](https://img.shields.io/crates/v/{0}.svg)](https://crates.io/crates/{0})
-[![documentation](https://docs.rs/{0}/badge.svg)](https://docs.rs/{0})
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/{0}.svg)](./LICENSE)
-
-_Logo by [Misiasart](https://misiasart.com/)_
-
-Thanks to all individual and corporate sponsors, without whom this work could not exist:
-
-<p> <a href="https://ko-fi.com/fasterthanlime">
-<picture>
-<source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/ko-fi-dark.svg">
-<img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/ko-fi-light.svg" height="40" alt="Ko-fi">
-</picture>
-</a> <a href="https://github.com/sponsors/fasterthanlime">
-<picture>
-<source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/github-dark.svg">
-<img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/github-light.svg" height="40" alt="GitHub Sponsors">
-</picture>
-</a> <a href="https://patreon.com/fasterthanlime">
-<picture>
-<source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/patreon-dark.svg">
-<img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/patreon-light.svg" height="40" alt="Patreon">
-</picture>
-</a> <a href="https://zed.dev">
-<picture>
-<source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-dark.svg">
-<img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-light.svg" height="40" alt="Zed">
-</picture>
-</a> </p>
-         "#,
-        crate_name
-    )
+    let template = include_str!("header.md");
+    template.replace("{CRATE}", crate_name)
 }
 
 fn generate_footer() -> String {
-    r#"
-## License
-
-Licensed under either of:
-
-- Apache License, Version 2.0 ([LICENSE-APACHE](https://github.com/facet-rs/facet/blob/main/LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
-- MIT license ([LICENSE-MIT](https://github.com/facet-rs/facet/blob/main/LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
-
-at your option."#.to_string()
+    include_str!("footer.md").to_string()
 }
