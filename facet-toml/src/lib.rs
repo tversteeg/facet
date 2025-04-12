@@ -9,7 +9,7 @@ use std::{
     num::NonZero,
 };
 
-use facet_core::{Facet, Opaque};
+use facet_core::{Facet, Opaque, VariantKind};
 use facet_reflect::PokeUninit;
 use toml_edit::{DocumentMut, Item, TomlError};
 
@@ -171,6 +171,23 @@ fn deserialize_item<'mem>(poke: PokeUninit<'mem>, item: &Item) -> Result<Opaque<
         PokeUninit::List(_) => todo!(),
         PokeUninit::Map(_) => todo!(),
         PokeUninit::Struct(mut ps) => {
+            // Item is a single value, parse as a scalar
+            if item.is_value() {
+                if ps.def().fields.len() > 1 {
+                    return Err(
+                        "Failed trying to parse a single value as a struct with multiple fields"
+                            .into(),
+                    );
+                }
+
+                return deserialize_item(
+                    ps.field(0)
+                        .map_err(|e| format!("Unit struct is missing value: {e}"))?,
+                    item,
+                );
+            }
+
+            // Otherwise we expect a table
             let table = item.as_table_like().ok_or_else(|| {
                 format!("Expected table like structure, got {}", item.type_name())
             })?;
@@ -187,7 +204,28 @@ fn deserialize_item<'mem>(poke: PokeUninit<'mem>, item: &Item) -> Result<Opaque<
             }
             ps.build_in_place()
         }
-        PokeUninit::Enum(_) => todo!(),
+        PokeUninit::Enum(pe) => {
+            // Item is a single value, try to get the variant with the name
+            if item.is_value() {
+                let value = item
+                    .as_str()
+                    .ok_or_else(|| format!("Expected string, got: {}", item.type_name()))?;
+
+                let variant = pe
+                    .variant_by_name(value)
+                    .ok_or_else(|| format!("Enum does not have a variant named '{value}'"))?;
+
+                if variant.kind != VariantKind::Unit {
+                    return Err(format!("variant '{value}' is not a unit variant").into());
+                }
+
+                pe.set_variant_by_name(value)
+                    .map_err(|err| err.to_string())?
+                    .build_in_place()
+            } else {
+                todo!()
+            }
+        }
         _ => todo!("unsupported poke type"),
     };
     Ok(opaque)
