@@ -28,6 +28,7 @@ impl<'mem> PokeStruct<'mem> {
     pub fn shape(&self) -> &'static Shape {
         self.shape
     }
+
     /// Creates a new PokeStruct
     ///
     /// # Safety
