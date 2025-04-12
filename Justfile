@@ -122,13 +122,14 @@ ship:
     just release
 
 release:
-    cmd_group "cargo ws publish --publish-as-is --allow-dirty"
+    source .envrc
+    cargo ws publish --publish-as-is --allow-dirty
 
 docsrs *args:
     #!/usr/bin/env -S bash -eux
     source .envrc
     export RUSTDOCFLAGS="--cfg docsrs"
-    cmd_group "cargo +nightly doc {{args}}"
+    cargo +nightly doc {{args}}
 
 msrv:
     cargo hack check --feature-powerset --locked --rust-version --ignore-private --workspace --all-targets --keep-going --exclude-no-default-features
