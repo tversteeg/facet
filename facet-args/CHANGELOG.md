@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/facet-rs/facet/compare/facet-args-v0.1.12...facet-args-v0.2.0) - 2025-04-12
+
+### Other
+
+- different place in readme
+- Sponsored by depot
+
 ## [0.1.12](https://github.com/facet-rs/facet/compare/facet-args-v0.1.11...facet-args-v0.1.12) - 2025-04-11
 
 ### Other

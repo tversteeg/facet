@@ -1,6 +1,6 @@
 [package]
 name = "facet-reflect"
-version = "0.6.0"
+version = "0.6.1"
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -16,7 +16,7 @@ std = ["alloc"]
 alloc = []
 
 [dependencies]
-facet-core = { path = "../facet-core", version = "0.5.1" }
+facet-core = { path = "../facet-core", version = "0.5.2" }
 
 [dev-dependencies]
 facet = { path = "../facet" }

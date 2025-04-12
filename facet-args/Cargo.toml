@@ -12,11 +12,11 @@ keywords = ["cli", "args", "parser", "facet"]
 categories = ["command-line-interface"]
 
 [dependencies]
-facet-reflect = { path = "../facet-reflect", version = "0.6.0" }
-facet-core = { path = "../facet-core", version = "0.5.1" }
+facet-reflect = { path = "../facet-reflect", version = "0.6.1" }
+facet-core = { path = "../facet-core", version = "0.5.2" }
 log = "0.4.27"
 
 [dev-dependencies]
 facet = { path = "../facet" }
-facet-pretty = { path = "../facet-pretty", version = "0.1.12" }
-facet-testhelpers = { version = "0.1.0", path = "../facet-testhelpers" }
+facet-pretty = { path = "../facet-pretty", version = "0.2.0" }
+facet-testhelpers = { version = "0.1.1", path = "../facet-testhelpers" }

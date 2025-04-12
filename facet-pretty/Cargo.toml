@@ -17,9 +17,9 @@ keywords = [
 categories = ["development-tools", "visualization", "command-line-utilities"]
 
 [dependencies]
-facet-core = { version = "0.5.1", path = "../facet-core" }
-facet-reflect = { version = "0.6.0", path = "../facet-reflect" }
-facet-ansi = { version = "0.1.0", path = "../facet-ansi" }
+facet-core = { version = "0.5.2", path = "../facet-core" }
+facet-reflect = { version = "0.6.1", path = "../facet-reflect" }
+facet-ansi = { version = "0.1.1", path = "../facet-ansi" }
 
 [dev-dependencies]
 facet = { path = "../facet" }

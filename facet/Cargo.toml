@@ -1,6 +1,6 @@
 [package]
 name = "facet"
-version = "0.1.19"
+version = "0.1.20"
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -11,9 +11,9 @@ keywords = ["facet", "introspection", "reflection"]
 categories = ["development-tools"]
 
 [dependencies]
-facet-core = { path = "../facet-core", version = "0.5.1", default-features = false }
-facet-derive = { path = "../facet-derive", version = "0.1.18", optional = true }
-facet-reflect = { path = "../facet-reflect", version = "0.6.0", optional = true }
+facet-core = { path = "../facet-core", version = "0.5.2", default-features = false }
+facet-derive = { path = "../facet-derive", version = "0.1.19", optional = true }
+facet-reflect = { path = "../facet-reflect", version = "0.6.1", optional = true }
 
 [features]
 reflect = ["dep:facet-reflect"]   # Enables reflection via Peek and Poke types
@@ -24,4 +24,4 @@ derive = ["dep:facet-derive"]     # Enables the derive macro
 default = ["std", "derive"]
 
 [dev-dependencies]
-facet-reflect = { path = "../facet-reflect", version = "0.6.0" }
+facet-reflect = { path = "../facet-reflect", version = "0.6.1" }
