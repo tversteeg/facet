@@ -5,7 +5,6 @@
 </picture> &nbsp; facet-pretty
 </h1>
 
-[![built with depot](https://depot.dev/badges/built-with-depot.svg)](https:/depot.dev?utm_source=facet)
 [![experimental](https://img.shields.io/badge/status-experimental-yellow)](https://github.com/fasterthanlime/facet)
 [![free of syn](https://img.shields.io/badge/free%20of-syn-hotpink)](https://github.com/fasterthanlime/free-of-syn)
 [![crates.io](https://img.shields.io/crates/v/facet-pretty.svg)](https://crates.io/crates/facet-pretty)
@@ -36,6 +35,8 @@ Thanks to all individual and corporate sponsors, without whom this work could no
 <source media="(prefers-color-scheme: dark)" srcset="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-dark.svg">
 <img src="https://github.com/facet-rs/facet/raw/main/static/sponsors-v2/zed-light.svg" height="40" alt="Zed">
 </picture>
+</a> <a href="https://depot.dev?utm_source=facet">
+    <img src="https://depot.dev/badges/built-with-depot.svg" alt="built with depot">
 </a> </p>
 
 Provides pretty-printing capabilities for Facet types.
