@@ -7,6 +7,8 @@ use facet::Facet;
 #[cfg(feature = "std")]
 #[test]
 fn test_string() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: String,
@@ -20,24 +22,28 @@ fn test_string() {
     );
 }
 
-// TODO: uncomment when lifetimes work properly
-// #[test]
-// fn test_cow_string() {
-//     #[derive(Debug, Facet, PartialEq)]
-//     struct Root {
-//         value: Cow<'static, str>,
-//     }
+#[cfg(feature = "std")]
+#[test]
+fn test_cow_string() {
+    facet_testhelpers::setup();
 
-//     assert_eq!(
-//         facet_toml::from_str::<Root>("value = 'string'").expect("Failed to parse TOML"),
-//         Root {
-//             value: Cow::Borrowed("string")
-//         },
-//     );
-// }
+    #[derive(Debug, Facet, PartialEq)]
+    struct Root {
+        value: std::borrow::Cow<'static, str>,
+    }
+
+    assert_eq!(
+        facet_toml::from_str::<Root>("value = 'string'").expect("Failed to parse TOML"),
+        Root {
+            value: std::borrow::Cow::Borrowed("string")
+        },
+    );
+}
 
 #[test]
 fn test_bool() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: bool,
@@ -56,6 +62,8 @@ fn test_bool() {
 #[cfg(feature = "std")]
 #[test]
 fn test_socket_addr() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: std::net::SocketAddr,
@@ -72,6 +80,8 @@ fn test_socket_addr() {
 
 #[test]
 fn test_ip_addr() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: IpAddr,
@@ -94,6 +104,8 @@ fn test_ip_addr() {
 
 #[test]
 fn test_ipv4_addr() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: Ipv4Addr,
@@ -111,6 +123,8 @@ fn test_ipv4_addr() {
 
 #[test]
 fn test_ipv6_addr() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: Ipv6Addr,
@@ -128,6 +142,8 @@ fn test_ipv6_addr() {
 
 #[test]
 fn test_f64() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: f64,
@@ -141,6 +157,8 @@ fn test_f64() {
 
 #[test]
 fn test_f32() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: f32,
@@ -154,6 +172,8 @@ fn test_f32() {
 
 #[test]
 fn test_usize() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: usize,
@@ -168,6 +188,8 @@ fn test_usize() {
 
 #[test]
 fn test_u64() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: u64,
@@ -182,6 +204,8 @@ fn test_u64() {
 
 #[test]
 fn test_u32() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: u32,
@@ -196,6 +220,8 @@ fn test_u32() {
 
 #[test]
 fn test_u16() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: u16,
@@ -210,6 +236,8 @@ fn test_u16() {
 
 #[test]
 fn test_u8() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: u8,
@@ -224,6 +252,8 @@ fn test_u8() {
 
 #[test]
 fn test_isize() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: isize,
@@ -237,6 +267,8 @@ fn test_isize() {
 
 #[test]
 fn test_i64() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: i64,
@@ -250,6 +282,8 @@ fn test_i64() {
 
 #[test]
 fn test_i32() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: i32,
@@ -263,6 +297,8 @@ fn test_i32() {
 
 #[test]
 fn test_i16() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: i16,
@@ -276,6 +312,8 @@ fn test_i16() {
 
 #[test]
 fn test_i8() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: i8,
