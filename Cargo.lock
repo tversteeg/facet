@@ -224,8 +224,11 @@ name = "facet-toml"
 version = "0.3.0"
 dependencies = [
  "facet",
+ "facet-ansi",
  "facet-core",
  "facet-reflect",
+ "facet-testhelpers",
+ "log",
  "num-traits",
  "toml_edit",
 ]
