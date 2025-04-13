@@ -4,8 +4,6 @@ precommit:
 prepush:
     just clippy
     just test
-    just doc-tests
-    just docs
 
 ci:
     just precommit
