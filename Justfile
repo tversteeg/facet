@@ -1,26 +1,22 @@
-default:
-    just precommit
-    just prepush
+# Just is a task runner, like Make but without the build system / dependency tracking part.
+# docs: https://github.com/casey/just
+#
+# The `-ci` variants are ran in CI, they do command grouping on GitHub Actions, set consistent env vars etc.,
+# but they require bash.
+#
+# The non`-ci` variants can be run locally without having bash installed.
 
-precommit:
-    just genfmt
+default: precommit prepush
 
-prepush:
-    just clippy
-    just test
+precommit: genfmt
+prepush: clippy test
 
-ci:
-    just precommit
-    just prepush
-    just docs
-    just msrv
-    just miri
+ci: precommit prepush docs msrv miri
 
-genfmt:
-    just lockfile
-    just codegen
+genfmt: lockfile codegen fmtfix absolve
+
+fmtfix:
     cargo fmt --all
-    just absolve
 
 nostd:
     # Run alloc but no-std checks with specified target directory
@@ -84,8 +80,7 @@ doc-tests-ci *args:
 codegen *args:
     cargo run -p facet-codegen -- {{args}}
 
-code-quality:
-    just codegen --check
+code-quality: codegen
     cargo fmt --check --all
     just absolve
 
