@@ -1,11 +1,12 @@
-extern crate alloc;
 use crate::{ReflectError, ValueId};
 use core::{alloc::Layout, marker::PhantomData};
 use facet_ansi::Stylize;
 use facet_core::{Def, Facet, FieldError, Opaque, OpaqueConst, OpaqueUninit, Shape, Variant};
-use indexmap::IndexMap;
+use flat_map::FlatMap;
 
 mod enum_;
+
+mod flat_map;
 
 /// Represents a frame in the initialization stack
 pub struct Frame {
@@ -93,7 +94,7 @@ pub struct Wip<'a> {
     frames: alloc::vec::Vec<Frame>,
 
     /// keeps track of initialization of out-of-tree frames
-    istates: IndexMap<ValueId, IState>,
+    istates: FlatMap<ValueId, IState>,
 
     /// lifetime of the shortest reference we hold
     phantom: PhantomData<&'a ()>,
@@ -109,7 +110,7 @@ impl<'a> Wip<'a> {
         };
         Self {
             guard: Some(guard),
-            frames: vec![Frame {
+            frames: alloc::vec![Frame {
                 data,
                 shape,
                 index: None,
@@ -180,7 +181,7 @@ impl<'a> Wip<'a> {
 
         self.istates.insert(root.id(), root.istate);
 
-        for (id, is) in &self.istates {
+        for (id, is) in self.istates.iter() {
             let field_count = match id.shape.def {
                 Def::Struct(def) => def.fields.len(),
                 Def::Enum(_) => {
@@ -315,7 +316,7 @@ impl<'a> Wip<'a> {
             index.yellow(),
             shape.blue(),
         );
-        if let Some(iset) = self.istates.shift_remove(&frame.id()) {
+        if let Some(iset) = self.istates.remove(&frame.id()) {
             log::trace!(
                 "[{}] Restoring saved state for {}",
                 self.frames.len(),
@@ -609,7 +610,7 @@ impl Drop for Wip<'_> {
             self.frames.len(),
             self.istates.len()
         );
-        for (id, is) in &self.istates {
+        for (id, is) in self.istates.iter() {
             log::trace!(
                 "[{}]: variant={:?} initialized={:016b} {}",
                 is.depth.yellow(),
@@ -619,7 +620,7 @@ impl Drop for Wip<'_> {
             );
         }
 
-        let mut depths: Vec<usize> = self.istates.values().map(|is| is.depth).collect();
+        let mut depths: alloc::vec::Vec<usize> = self.istates.values().map(|is| is.depth).collect();
         depths.sort_unstable();
         depths.dedup();
 
@@ -627,7 +628,7 @@ impl Drop for Wip<'_> {
             log::trace!("Dropping istates with depth {}", depth.yellow(),);
 
             // Find and drop values at this depth level
-            let mut to_remove = Vec::new();
+            let mut to_remove = alloc::vec::Vec::new();
             self.istates.retain(|id, is| {
                 if is.depth == *depth {
                     log::trace!(
