@@ -26,8 +26,8 @@ pub use value::*;
 mod option;
 pub use option::*;
 
-mod smart_pointer;
-pub use smart_pointer::*;
+mod smartptr;
+pub use smartptr::*;
 
 mod scalar;
 pub use scalar::*;
@@ -227,7 +227,7 @@ pub enum Def {
     /// Various kinds of structs, see [`StructKind`]
     ///
     /// e.g. `struct Struct { field: u32 }`, `struct TupleStruct(u32, u32);`, `(u32, u32)`
-    Struct(StructDef),
+    Struct(Struct),
 
     /// Map — keys are dynamic (and strings, sorry), values are homogeneous
     ///

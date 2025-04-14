@@ -16,6 +16,7 @@ pub(crate) fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
     let (generics_def, generics_use) = generics_split_for_impl(parsed.generics.as_ref());
     let kind;
     let where_clauses;
+
     let fields = match &parsed.kind {
         StructKind::Struct { clauses, fields } => {
             kind = "::facet::StructKind::Struct";
@@ -74,6 +75,54 @@ pub(crate) fn process_struct(parsed: Struct) -> proc_macro::TokenStream {
     let maybe_container_doc = build_maybe_doc(&parsed.attributes);
     let where_clauses = where_clauses.map_or(String::new(), ToString::to_string);
 
+    let mut invariant_maybe = "".to_string();
+    let invariant_attrs = parsed
+        .attributes
+        .iter()
+        .filter_map(|attr| match &attr.body.content {
+            AttributeInner::Facet(facet_attr) => match &facet_attr.inner.content {
+                FacetInner::Invariants(invariant_inner) => Some(invariant_inner),
+                _ => None,
+            },
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+
+    if !invariant_attrs.is_empty() {
+        let tests = invariant_attrs
+            .iter()
+            .map(|invariant| {
+                let invariant_name = invariant.value.as_str();
+                format!(
+                    r#"
+                    if !value.{invariant_name}() {{
+                        return false;
+                    }}
+                    "#
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        let invariant_fn = format!(
+            r#"
+            unsafe fn invariants<'mem>(value: ::facet::OpaqueConst<'mem>) -> bool {{
+                let value = value.get::<{struct_name}<{generics_use}>>();
+                {tests}
+                true
+            }}
+            "#
+        );
+
+        invariant_maybe = format!(
+            r#"
+            {invariant_fn}
+
+            vtable.invariants = Some(invariants);
+            "#
+        );
+    }
+
     // Generate the impl
     let output = format!(
         r#"
@@ -84,14 +133,20 @@ unsafe impl<{generics_def}> ::facet::Facet for {struct_name}<{generics_use}> {wh
     const SHAPE: &'static ::facet::Shape = &const {{
         let fields: &'static [::facet::Field] = &const {{[{fields}]}};
 
+        let vtable = &const {{
+            let mut vtable = ::facet::value_vtable_inner!(
+                Self,
+                |f, _opts| ::core::fmt::Write::write_str(f, "{struct_name}")
+            );
+            {invariant_maybe}
+            vtable
+        }};
+
         ::facet::Shape::builder()
             .id(::facet::ConstTypeId::of::<Self>())
             .layout(::core::alloc::Layout::new::<Self>())
-            .vtable(::facet::value_vtable!(
-                Self,
-                |f, _opts| ::core::fmt::Write::write_str(f, "{struct_name}")
-            ))
-            .def(::facet::Def::Struct(::facet::StructDef::builder()
+            .vtable(vtable)
+            .def(::facet::Def::Struct(::facet::Struct::builder()
                 .kind({kind})
                 .fields(fields)
                 .build()))

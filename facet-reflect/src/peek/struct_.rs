@@ -1,28 +1,22 @@
-use facet_core::StructDef;
+use facet_core::{Field, FieldError, Struct};
 
-use crate::{Peek, PeekValue};
+use crate::ConstValue;
 
 /// Lets you read from a struct (implements read-only struct operations)
 #[derive(Clone, Copy)]
 pub struct PeekStruct<'mem> {
-    value: PeekValue<'mem>,
-    // I suppose this could be a `&'static` as well, idk
-    def: StructDef,
-}
+    /// the underlying value
+    pub(crate) value: ConstValue<'mem>,
 
-impl<'mem> core::ops::Deref for PeekStruct<'mem> {
-    type Target = PeekValue<'mem>;
-
-    #[inline(always)]
-    fn deref(&self) -> &Self::Target {
-        &self.value
-    }
+    /// the definition of the struct!
+    pub(crate) def: Struct,
 }
 
 impl<'mem> PeekStruct<'mem> {
-    /// Create a new peek struct
-    pub(crate) fn new(value: PeekValue<'mem>, def: StructDef) -> Self {
-        Self { value, def }
+    /// Returns the struct definition
+    #[inline(always)]
+    pub fn def(&self) -> &Struct {
+        &self.def
     }
 
     /// Returns the number of fields in this struct
@@ -31,58 +25,40 @@ impl<'mem> PeekStruct<'mem> {
         self.def.fields.len()
     }
 
-    /// Returns the name of the field at the given index
-    #[inline(always)]
-    pub fn field_name(&self, index: usize) -> Option<&'static str> {
-        self.def.fields.get(index).map(|field| field.name)
-    }
-
     /// Returns the value of the field at the given index
     #[inline(always)]
-    pub fn field_value(&self, index: usize) -> Option<Peek<'mem>> {
-        self.def.fields.get(index).map(|field| unsafe {
-            let field_data = self.data().field(field.offset);
-            Peek::unchecked_new(field_data, field.shape)
-        })
-    }
-
-    /// Returns the value of the field with the given name
-    #[inline(always)]
-    pub fn get_field(&self, name: &str) -> Option<Peek<'mem>> {
+    pub fn field(&self, index: usize) -> Result<ConstValue<'mem>, FieldError> {
         self.def
             .fields
-            .iter()
-            .position(|field| field.name == name)
-            .and_then(|index| self.field_value(index))
+            .get(index)
+            .map(|field| unsafe {
+                let field_data = self.value.data().field(field.offset);
+                ConstValue {
+                    data: field_data,
+                    shape: field.shape,
+                }
+            })
+            .ok_or(FieldError::IndexOutOfBounds)
+    }
+
+    /// Gets the value of the field with the given name
+    #[inline]
+    pub fn field_by_name(&self, name: &str) -> Result<ConstValue<'mem>, FieldError> {
+        for (i, field) in self.def.fields.iter().enumerate() {
+            if field.name == name {
+                return self.field(i);
+            }
+        }
+        Err(FieldError::NoSuchField)
     }
 
     /// Iterates over all fields in this struct, providing both name and value
     #[inline]
-    pub fn fields(&self) -> impl Iterator<Item = (&'static str, Peek<'mem>)> + '_ {
+    pub fn fields(&self) -> impl Iterator<Item = (&'static Field, ConstValue<'mem>)> + '_ {
         (0..self.field_count()).filter_map(|i| {
-            let name = self.field_name(i)?;
-            let value = self.field_value(i)?;
-            Some((name, value))
-        })
-    }
-
-    /// Returns the struct definition
-    #[inline(always)]
-    pub fn def(&self) -> &StructDef {
-        &self.def
-    }
-
-    /// Iterates over all fields in this struct, providing index, name, value, and the field definition
-    #[inline]
-    pub fn fields_with_metadata(
-        &self,
-    ) -> impl Iterator<Item = (usize, &'static str, Peek<'mem>, &'static facet_core::Field)> + '_
-    {
-        (0..self.field_count()).filter_map(|i| {
-            let name = self.field_name(i)?;
-            let value = self.field_value(i)?;
-            let field = &self.def.fields[i];
-            Some((i, name, value, field))
+            let field = self.def.fields.get(i)?;
+            let value = self.field(i).ok()?;
+            Some((field, value))
         })
     }
 }

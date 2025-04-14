@@ -1,3 +1,7 @@
+default:
+    just precommit
+    just prepush
+
 precommit:
     just genfmt
 
@@ -49,8 +53,11 @@ nostd-ci:
     cmd_group "cargo check --no-default-features --features alloc -p facet"
     cmd_group "cargo check --no-default-features --features alloc -p facet-reflect"
 
-clippy:
+clippy-all:
     cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+clippy:
+    cargo clippy --workspace --all-targets -- -D warnings
 
 test *args:
     cargo nextest run {{args}} < /dev/null

@@ -12,16 +12,21 @@ categories = ["development-tools", "rust-patterns"]
 
 [features]
 default = ["std"]
-std = ["alloc"]
+std = ["alloc", "indexmap"]
 alloc = []
 
 [dependencies]
+facet-ansi = { path = "../facet-ansi" }
 facet-core = { path = "../facet-core", version = "0.5.3" }
+indexmap = { version = "2.9.0", optional = true }
+log = "0.4.27"
 
 [dev-dependencies]
+eyre = "0.6.12"
 facet = { path = "../facet" }
 facet-ansi = { path = "../facet-ansi" }
-facet-pretty = { path = "../facet-pretty" }
+# facet-pretty = { path = "../facet-pretty" }
 facet-samplelibc = { path = "../facet-samplelibc" }
 facet-testhelpers = { path = "../facet-testhelpers" }
 log = "0.4.27"
+tempfile = "3.19.1"

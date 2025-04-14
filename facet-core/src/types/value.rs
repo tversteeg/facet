@@ -63,6 +63,15 @@ impl TypeNameOpts {
     }
 }
 
+//======== Invariants ========
+
+/// Function to validate the invariants of a value. If it returns false, the value is considered invalid.
+///
+/// # Safety
+///
+/// The `value` parameter must point to aligned, initialized memory of the correct type.
+pub type InvariantsFn = for<'mem> unsafe fn(value: OpaqueConst<'mem>) -> bool;
+
 //======== Memory Management ========
 
 /// Function to drop a value
@@ -221,16 +230,6 @@ pub type HasherWriteFn = for<'mem> unsafe fn(hasher_self: Opaque<'mem>, bytes: &
 /// Provides an implementation of [`core::hash::Hasher`] for a given hasher pointer and write function
 ///
 /// See [`HashFn`] for more details on the parameters.
-///
-/// Example usage (for a type that already implements `Hasher`)
-///
-/// ```rust,ignore
-/// hash: Some(|value, hasher_self, hasher_write_fn| unsafe {
-///     value
-///         .as_ref::<Self>()
-///         .hash(&mut HasherProxy::new(hasher_self, hasher_write_fn));
-/// }),
-/// ```
 pub struct HasherProxy<'a> {
     hasher_this: Opaque<'a>,
     hasher_write_fn: HasherWriteFn,
@@ -311,6 +310,9 @@ pub type DebugFn = for<'mem> unsafe fn(
 pub struct ValueVTable {
     /// cf. [`TypeNameFn`]
     pub type_name: TypeNameFn,
+
+    /// cf. [`InvariantsFn`]
+    pub invariants: Option<InvariantsFn>,
 
     /// cf. [`DisplayFn`]
     pub display: Option<DisplayFn>,
@@ -396,6 +398,7 @@ pub struct ValueVTableBuilder {
     ord: Option<CmpFn>,
     hash: Option<HashFn>,
     drop_in_place: Option<DropInPlaceFn>,
+    invariants: Option<InvariantsFn>,
     parse: Option<ParseFn>,
     try_from: Option<TryFromFn>,
 }
@@ -416,6 +419,7 @@ impl ValueVTableBuilder {
             ord: None,
             hash: None,
             drop_in_place: None,
+            invariants: None,
             parse: None,
             try_from: None,
         }
@@ -538,6 +542,12 @@ impl ValueVTableBuilder {
         self
     }
 
+    /// Sets the invariants function for this builder.
+    pub const fn invariants(mut self, invariants: InvariantsFn) -> Self {
+        self.invariants = Some(invariants);
+        self
+    }
+
     /// Sets the drop_in_place function for this builder if Some.
     pub const fn drop_in_place_maybe(mut self, drop_in_place: Option<DropInPlaceFn>) -> Self {
         self.drop_in_place = drop_in_place;
@@ -572,6 +582,7 @@ impl ValueVTableBuilder {
     pub const fn build(self) -> ValueVTable {
         ValueVTable {
             type_name: self.type_name.unwrap(),
+            invariants: self.invariants,
             display: self.display,
             debug: self.debug,
             default_in_place: self.default_in_place,

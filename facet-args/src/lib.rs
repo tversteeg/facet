@@ -1,53 +1,41 @@
-use facet_core::{Facet, FieldAttribute};
-use facet_reflect::{PokeStruct, PokeUninit};
+#![warn(missing_docs)]
+#![warn(clippy::std_instead_of_core)]
+#![warn(clippy::std_instead_of_alloc)]
+#![forbid(unsafe_code)]
+#![doc = include_str!("../README.md")]
 
-fn parse_field(field: PokeUninit, value: &str, field_index: usize, ps: &mut PokeStruct<'_>) {
-    let field_shape = field.shape();
-    log::trace!("Field shape: {}", field_shape);
+use facet_core::{Def, Facet, FieldAttribute};
+use facet_reflect::{ReflectError, Wip};
 
-    let field = match field {
-        PokeUninit::Scalar(pv) => {
-            let pv = match pv.typed::<String>() {
-                Ok(pv) => {
-                    pv.put(value.to_string());
-                    unsafe { ps.mark_initialized(field_index) }
-                    return;
-                }
-                Err(pv) => pv,
-            };
-            let pv = match pv.typed::<bool>() {
-                Ok(pv) => {
-                    log::trace!("Boolean field detected, setting to true");
-                    pv.put(value.to_lowercase() == "true");
-                    unsafe { ps.mark_initialized(field_index) }
-                    return;
-                }
-                Err(pv) => pv,
-            };
-            PokeUninit::Scalar(pv)
+fn parse_field<'mem>(wip: Wip<'mem>, value: &str) -> Result<Wip<'mem>, ReflectError> {
+    let shape = wip.shape();
+    match shape.def {
+        Def::Scalar(_) => {
+            if shape.is_type::<String>() {
+                wip.put(value.to_string())
+            } else if shape.is_type::<bool>() {
+                log::trace!("Boolean field detected, setting to true");
+                wip.put(value.to_lowercase() == "true")
+            } else {
+                wip.parse(value)
+            }
         }
-        field => field,
-    };
-
-    let parse = field_shape.vtable.parse.unwrap_or_else(|| {
-        log::trace!("No parse function found for shape {}", field.shape());
-        panic!("shape {} does not support parse", field.shape())
-    });
-    log::trace!("Parsing field value");
-    unsafe { (parse)(value, field.into_value().data()) }.unwrap_or_else(|e| {
-        log::trace!("Failed to parse field: {}", e);
-        panic!("Failed to parse field of shape {}: {}", field_shape, e)
-    });
-    unsafe { ps.mark_initialized(field_index) }
+        _def => {
+            return Err(ReflectError::OperationFailed {
+                shape,
+                operation: "parsing field",
+            });
+        }
+    }?
+    .pop()
 }
 
+/// Parses command-line arguments
 pub fn from_slice<T: Facet>(s: &[&str]) -> T {
     log::trace!("Entering from_slice function");
     let mut s = s;
-    let (poke, guard) = PokeUninit::alloc::<T>();
+    let mut wip = Wip::alloc::<T>();
     log::trace!("Allocated Poke for type T");
-    let mut ps = poke.into_struct();
-    log::trace!("Converted Poke into struct");
 
     while let Some(token) = s.first() {
         log::trace!("Processing token: {}", token);
@@ -55,28 +43,37 @@ pub fn from_slice<T: Facet>(s: &[&str]) -> T {
 
         if let Some(key) = token.strip_prefix("--") {
             log::trace!("Found named argument: {}", key);
-            let (field_index, field) = ps.field_by_name(key).unwrap();
+            let field_index = match wip.field_index(key) {
+                Some(index) => index,
+                None => panic!("Unknown argument: {}", key),
+            };
+            let field = wip.field(field_index).unwrap();
+
             if field.shape().is_type::<bool>() {
-                parse_field(field, "true", field_index, &mut ps);
+                wip = parse_field(field, "true").unwrap();
             } else {
                 let value = s.first().expect("expected value after argument");
                 log::trace!("Field value: {}", value);
                 s = &s[1..];
-                parse_field(field, value, field_index, &mut ps);
+                wip = parse_field(field, value).unwrap();
             }
         } else {
             log::trace!("Encountered positional argument: {}", token);
-            for f in ps.def().fields {
+            let Def::Struct(sd) = wip.shape().def else {
+                panic!("Expected struct definition");
+            };
+
+            for (field_index, f) in sd.fields.iter().enumerate() {
                 if f.attributes
                     .iter()
                     .any(|a| matches!(a, FieldAttribute::Arbitrary(a) if a.contains("positional")))
                 {
-                    let (field_index, field) = ps.field_by_name(f.name).unwrap();
-                    parse_field(field, token, field_index, &mut ps);
+                    let field = wip.field(field_index).unwrap();
+                    wip = parse_field(field, token).unwrap();
                     break;
                 }
             }
         }
     }
-    ps.build(Some(guard))
+    wip.build().unwrap().materialize().unwrap()
 }

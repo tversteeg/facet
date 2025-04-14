@@ -27,6 +27,9 @@ pub enum Characteristic {
     /// Implements Clone
     Clone,
 
+    /// Implements Display
+    Display,
+
     /// Implements Debug
     Debug,
 
@@ -44,6 +47,9 @@ pub enum Characteristic {
 
     /// Implements Default
     Default,
+
+    /// Implements FromStr
+    FromStr,
 }
 
 impl Characteristic {
@@ -97,12 +103,14 @@ impl Shape {
 
             // Functionality traits
             Characteristic::Clone => self.vtable.clone_into.is_some(),
+            Characteristic::Display => self.vtable.display.is_some(),
             Characteristic::Debug => self.vtable.debug.is_some(),
             Characteristic::PartialEq => self.vtable.eq.is_some(),
             Characteristic::PartialOrd => self.vtable.partial_ord.is_some(),
             Characteristic::Ord => self.vtable.ord.is_some(),
             Characteristic::Hash => self.vtable.hash.is_some(),
             Characteristic::Default => self.vtable.default_in_place.is_some(),
+            Characteristic::FromStr => self.vtable.parse.is_some(),
         }
     }
 
@@ -129,6 +137,11 @@ impl Shape {
     /// Check if this shape implements the Clone trait
     pub const fn is_clone(&'static self) -> bool {
         self.is(Characteristic::Clone)
+    }
+
+    /// Check if this shape implements the Display trait
+    pub const fn is_display(&'static self) -> bool {
+        self.vtable.display.is_some()
     }
 
     /// Check if this shape implements the Debug trait
@@ -159,6 +172,11 @@ impl Shape {
     /// Check if this shape implements the Default trait
     pub const fn is_default(&'static self) -> bool {
         self.is(Characteristic::Default)
+    }
+
+    /// Check if this shape implements the FromStr trait
+    pub const fn is_from_str(&'static self) -> bool {
+        self.is(Characteristic::FromStr)
     }
 
     /// Writes the name of this type to the given formatter

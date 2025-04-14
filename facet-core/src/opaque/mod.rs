@@ -5,7 +5,7 @@
 use core::{marker::PhantomData, ptr::NonNull};
 
 /// A type-erased pointer to an uninitialized value
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct OpaqueUninit<'mem>(*mut u8, PhantomData<&'mem mut ()>);
 
 impl<'mem> OpaqueUninit<'mem> {
@@ -48,32 +48,13 @@ impl<'mem> OpaqueUninit<'mem> {
         }
     }
 
-    /// Copies data from the source pointer to this location and converts to an initialized pointer
-    ///
-    /// # Safety
-    ///
-    /// - The destination pointer must be properly aligned and point to allocated memory
-    ///   that can be safely written to.
-    /// - The source pointer must point to properly initialized data.
-    /// - Both pointers must refer to objects of the same type and size.
-    pub unsafe fn write(self, source: OpaqueConst<'_>) -> Opaque<'mem> {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                source.as_byte_ptr(),
-                self.0,
-                core::mem::size_of_val(&*source.as_byte_ptr()),
-            );
-            self.assume_init()
-        }
-    }
-
     /// Returns the underlying raw pointer as a byte pointer
-    pub fn as_mut_bytes(self) -> *mut u8 {
+    pub fn as_mut_byte_ptr(self) -> *mut u8 {
         self.0
     }
 
     /// Returns the underlying raw pointer as a const byte pointer
-    pub fn as_bytes(self) -> *const u8 {
+    pub fn as_byte_ptr(self) -> *const u8 {
         self.0
     }
 
@@ -82,7 +63,7 @@ impl<'mem> OpaqueUninit<'mem> {
     /// # Safety
     ///
     /// Offset is within the bounds of the allocated memory
-    pub unsafe fn field_uninit(self, offset: usize) -> OpaqueUninit<'mem> {
+    pub unsafe fn field_uninit_at(self, offset: usize) -> OpaqueUninit<'mem> {
         OpaqueUninit(unsafe { self.0.byte_add(offset) }, PhantomData)
     }
 
@@ -143,7 +124,8 @@ impl<'mem> OpaqueConst<'mem> {
     /// # Safety
     ///
     /// `T` must be the _actual_ underlying type. You're downcasting with no guardrails.
-    pub const unsafe fn as_ref<'borrow: 'mem, T>(self) -> &'borrow T {
+    pub const unsafe fn get<'borrow: 'mem, T>(self) -> &'borrow T {
+        // TODO: rename to `get`, or something else? it's technically a borrow...
         unsafe { &*(self.0.as_ptr() as *const T) }
     }
 
@@ -228,7 +210,7 @@ impl<'mem> Opaque<'mem> {
     /// calling as_mut is UB.
     ///
     /// Basically this is UB land. Careful.
-    pub const unsafe fn as_ref<'borrow: 'mem, T>(self) -> &'borrow T {
+    pub const unsafe fn get<'borrow: 'mem, T>(self) -> &'borrow T {
         unsafe { &*(self.0.as_ptr() as *const T) }
     }
 
