@@ -1,5 +1,5 @@
 use facet::Facet;
-use facet_reflect::ConstValue;
+use facet_reflect::Peek;
 
 #[derive(Facet)]
 struct TestStruct {
@@ -9,12 +9,14 @@ struct TestStruct {
 
 #[test]
 fn peek_struct() {
+    facet_testhelpers::setup();
+
     // Create test struct instance
     let test_struct = TestStruct {
         number: 42,
         text: "hello".to_string(),
     };
-    let peek_value = ConstValue::new(&test_struct);
+    let peek_value = Peek::new(&test_struct);
 
     // Convert to struct and check we can convert to PeekStruct
     let peek_struct = peek_value
@@ -30,9 +32,9 @@ fn peek_struct() {
         .expect("Should have a text field");
 
     // Test field values
-    let number_value = number_field.get::<i32>();
+    let number_value = number_field.get::<i32>().unwrap();
     assert_eq!(*number_value, 42);
 
-    let text_value = text_field.get::<String>();
-    assert_eq!(text_value.as_str(), "hello");
+    let text_value = text_field.get::<String>().unwrap();
+    assert_eq!(text_value, "hello");
 }

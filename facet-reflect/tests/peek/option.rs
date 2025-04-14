@@ -1,10 +1,12 @@
-use facet_reflect::ConstValue;
+use facet_reflect::Peek;
 
 #[test]
 fn peek_option() {
+    facet_testhelpers::setup();
+
     // Test with Some value
     let some_value = Some(42);
-    let peek_value = ConstValue::new(&some_value);
+    let peek_value = Peek::new(&some_value);
 
     // Convert to option
     let peek_option = peek_value
@@ -17,12 +19,12 @@ fn peek_option() {
 
     // Get the inner value
     let inner_value = peek_option.value().expect("Should have a value");
-    let value = inner_value.get::<i32>();
+    let value = inner_value.get::<i32>().unwrap();
     assert_eq!(*value, 42);
 
     // Test with None value
     let none_value: Option<i32> = None;
-    let peek_value = ConstValue::new(&none_value);
+    let peek_value = Peek::new(&none_value);
 
     // Convert to option
     let peek_option = peek_value
