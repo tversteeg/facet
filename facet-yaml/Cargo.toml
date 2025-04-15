@@ -12,8 +12,8 @@ categories = ["encoding", "parsing", "data-structures"]
 
 [dependencies]
 yaml-rust2 = "0.10.0"
-facet-core = { version = "0.5.3", path = "../facet-core" }
-facet-reflect = { version = "0.6.2", path = "../facet-reflect" }
+facet-core = { version = "0.7.0", path = "../facet-core" }
+facet-reflect = { version = "0.7.0", path = "../facet-reflect" }
 
 [dev-dependencies]
-facet = { path = "../facet", version = "0.2.0" }
+facet = { path = "../facet", version = "0.7.0" }

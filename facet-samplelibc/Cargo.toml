@@ -1,6 +1,6 @@
 [package]
 name = "facet-samplelibc"
-version = "0.1.16"
+version = "0.7.0"
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -14,4 +14,4 @@ categories = ["development-tools::ffi"]
 cc = "1.2.18"
 
 [dependencies]
-facet = { path = "../facet", version = "0.2.0" }
+facet = { path = "../facet", version = "0.7.0" }

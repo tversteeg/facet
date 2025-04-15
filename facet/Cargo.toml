@@ -1,6 +1,6 @@
 [package]
 name = "facet"
-version = "0.2.0"
+version = "0.7.0"
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -18,11 +18,13 @@ std = ["facet-core/std", "alloc"] # Uses libstd and alloc
 alloc = ["facet-core/alloc"]      # Enables alloc support
 
 [dependencies]
-facet-core = { path = "../facet-core", version = "0.5.3", default-features = false }
-facet-derive = { path = "../facet-derive", version = "0.1.20" }
-facet-reflect = { path = "../facet-reflect", version = "0.6.2", optional = true }
+facet-core = { path = "../facet-core", version = "0.7.0", default-features = false }
+facet-derive = { path = "../facet-derive", version = "0.7.0" }
+facet-reflect = { path = "../facet-reflect", version = "0.7.0", optional = true }
 
 [dev-dependencies]
-cargo-husky = { version = "1.5.0", default-features = false, features = ["user-hooks"] }
+cargo-husky = { version = "1.5.0", default-features = false, features = [
+    "user-hooks",
+] }
 eyre = { version = "0.6.12", default-features = false }
-facet-reflect = { path = "../facet-reflect", version = "0.6.2" }
+facet-reflect = { path = "../facet-reflect", version = "0.7.0" }
