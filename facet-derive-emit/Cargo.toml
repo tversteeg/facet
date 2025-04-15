@@ -18,3 +18,7 @@ categories = ["development-tools", "encoding"]
 
 [dependencies]
 facet-derive-parse = { version = "0.3.0", path = "../facet-derive-parse" }
+
+[dev-dependencies]
+insta = { git = "https://github.com/mitsuhiko/insta" }
+rust-format = { version = "0.3.4", features = ["proc-macro2", "token_stream"] }

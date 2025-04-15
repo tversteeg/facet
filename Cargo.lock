@@ -198,6 +198,8 @@ name = "facet-derive-emit"
 version = "0.3.0"
 dependencies = [
  "facet-derive-parse",
+ "insta",
+ "rust-format",
 ]
 
 [[package]]
@@ -549,6 +551,15 @@ name = "redox_termios"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "20145670ba436b55d91fc92d25e71160fbfbdd57831631c8d7d36377a476f1cb"
+
+[[package]]
+name = "rust-format"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60e7c00b6c3bf5e38a880eec01d7e829d12ca682079f8238a464def3c4b31627"
+dependencies = [
+ "proc-macro2",
+]
 
 [[package]]
 name = "rustix"
