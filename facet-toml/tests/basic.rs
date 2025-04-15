@@ -8,6 +8,8 @@ struct Person {
 
 #[test]
 fn test_deserialize_person() {
+    facet_testhelpers::setup();
+
     let toml = r#"
             name = "Alice"
             age = 30

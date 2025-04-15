@@ -4,6 +4,8 @@ use facet::Facet;
 
 #[test]
 fn test_table_to_struct() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: i32,
@@ -32,6 +34,8 @@ fn test_table_to_struct() {
 
 #[test]
 fn test_unit_struct() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: i32,
@@ -58,6 +62,8 @@ fn test_unit_struct() {
 
 #[test]
 fn test_nested_unit_struct() {
+    facet_testhelpers::setup();
+
     #[derive(Debug, Facet, PartialEq)]
     struct Root {
         value: i32,

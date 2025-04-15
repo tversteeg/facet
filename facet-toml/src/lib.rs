@@ -4,46 +4,53 @@
 pub mod error;
 mod to_scalar;
 
-use std::{
-    borrow::Cow,
-    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
-    num::NonZero,
-};
+use core::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use error::AnyErr;
-use facet_core::{Def, Facet};
-use facet_reflect::Wip;
+use facet_ansi::Stylize as _;
+use facet_core::{Def, Facet, StructKind};
+use facet_reflect::{ScalarType, Wip};
+use log::trace;
 use toml_edit::{DocumentMut, Item, TomlError};
 
 /// Deserializes a TOML string into a value of type `T` that implements `Facet`.
 pub fn from_str<T: Facet>(toml: &str) -> Result<T, AnyErr> {
-    let wip = Wip::alloc::<T>();
-    let wip = from_str_value(wip, toml)?;
-    let heap_value = wip.build().map_err(|e| AnyErr(e.to_string()))?;
-    heap_value
-        .materialize::<T>()
-        .map_err(|e| AnyErr(e.to_string()))
-}
+    trace!("Starting deserialization");
 
-fn from_str_value<'a>(wip: Wip<'a>, toml: &str) -> Result<Wip<'a>, AnyErr> {
+    let wip = Wip::alloc::<T>();
+
     let docs: DocumentMut = toml.parse().map_err(|e| TomlError::to_string(&e))?;
-    deserialize_item(wip, docs.as_item())
+    let wip = deserialize_item(wip, docs.as_item())?;
+
+    let heap_value = wip.build().map_err(|e| AnyErr(e.to_string()))?;
+    let result = heap_value
+        .materialize::<T>()
+        .map_err(|e| AnyErr(e.to_string()))?;
+
+    trace!("Finished deserialization");
+
+    Ok(result)
 }
 
 fn deserialize_item<'a>(wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, AnyErr> {
-    let shape = wip.shape();
-    match shape.def {
+    trace!("Deserializing {}", item.type_name().blue());
+
+    match wip.shape().def {
         Def::Scalar(_) => deserialize_as_scalar(wip, item),
-        Def::List(_) => todo!(),
-        Def::Map(_) => todo!(),
+        Def::List(_) => deserialize_as_list(wip, item),
+        Def::Map(_) => deserialize_as_map(wip, item),
         Def::Struct(_) => deserialize_as_struct(wip, item),
         Def::Enum(_) => deserialize_as_enum(wip, item),
-        _ => Err(AnyErr(format!("Unsupported type: {:?}", shape))),
+        Def::Option(_) => deserialize_as_option(wip, item),
+        Def::SmartPointer(_) => deserialize_as_smartpointer(wip, item),
+        _ => Err(AnyErr(format!("Unsupported type: {:?}", wip.shape()))),
     }
 }
 
 fn deserialize_as_struct<'a>(mut wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, AnyErr> {
-    // Parse as the inner struct type if item is a single value and the struct is a unit struct
+    trace!("Deserializing {}", "struct".blue());
+
+    // Parse as a the inner struct type if item is a single value and the struct is a unit struct
     if item.is_value() {
         // Only allow unit structs
         let shape = wip.shape();
@@ -84,145 +91,279 @@ fn deserialize_as_struct<'a>(mut wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, A
         wip = wip.pop().map_err(|e| AnyErr(e.to_string()))?;
     }
 
+    trace!("Finished deserializing {}", "struct".blue());
+
     Ok(wip)
 }
 
 fn deserialize_as_enum<'a>(wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, AnyErr> {
-    if item.is_value() {
-        let variant_name = item
-            .as_str()
-            .ok_or_else(|| AnyErr(format!("Expected string, got: {}", item.type_name())))?;
+    trace!("Deserializing {}", "enum".blue());
 
-        // Use variant_named to select the variant by name
-        wip.variant_named(variant_name).map_err(|e| {
-            AnyErr(format!(
-                "Error selecting enum variant '{}': {}",
-                variant_name, e
-            ))
-        })
-    } else {
-        // TODO: Handle non-unit enum variants
-        Err(AnyErr("Non-unit enum variants not yet supported".into()))
+    let wip = match item {
+        Item::None => todo!(),
+
+        Item::Value(value) => {
+            trace!("Entering {}", "value".cyan());
+
+            // A value can be an inline table, so parse it as such
+            if let Some(inline_table) = value.as_inline_table() {
+                if let Some((key, field)) = inline_table.iter().next() {
+                    trace!(
+                        "Entering {} with key {}",
+                        "inline table".cyan(),
+                        key.cyan().bold()
+                    );
+
+                    if inline_table.len() > 1 {
+                        return Err(AnyErr(
+                            "Cannot parse enum from inline table because it got multiple fields"
+                                .to_string(),
+                        ));
+                    } else {
+                        return build_enum_from_variant_name(
+                            wip,
+                            key,
+                            // TODO: remove clone
+                            &Item::Value(field.clone()),
+                        );
+                    }
+                } else {
+                    return Err(AnyErr(
+                        "Inline table doesn't have any fields to parse into enum variant"
+                            .to_string(),
+                    ));
+                }
+            }
+
+            let variant_name = value
+                .as_str()
+                .ok_or_else(|| format!("Expected string, got: {}", value.type_name()))?;
+
+            build_enum_from_variant_name(wip, variant_name, item)?
+        }
+
+        Item::Table(table) => {
+            if let Some((key, field)) = table.iter().next() {
+                trace!("Entering {} with key {}", "table".cyan(), key.cyan().bold());
+
+                if table.len() > 1 {
+                    return Err(AnyErr(
+                        "Cannot parse enum from inline table because it got multiple fields"
+                            .to_string(),
+                    ));
+                } else {
+                    build_enum_from_variant_name(wip, key, field)?
+                }
+            } else {
+                return Err(AnyErr(
+                    "Inline table doesn't have any fields to parse into enum variant".to_string(),
+                ));
+            }
+        }
+
+        Item::ArrayOfTables(_array_of_tables) => todo!(),
+    };
+
+    trace!("Finished deserializing {}", "enum".blue());
+
+    Ok(wip)
+}
+
+fn build_enum_from_variant_name<'a>(
+    mut wip: Wip<'a>,
+    variant_name: &str,
+    item: &Item,
+) -> Result<Wip<'a>, AnyErr> {
+    // Select the variant
+    wip = wip
+        .variant_named(variant_name)
+        .map_err(|e| AnyErr(e.to_string()))?;
+    // Safe to unwrap because the variant got just selected
+    let variant = wip.selected_variant().unwrap();
+
+    if variant.data.kind == StructKind::Unit {
+        // No need to do anything, we can just set the variant since it's a unit enum
+        return Ok(wip);
     }
+
+    // Push all fields
+    for (index, field) in variant.data.fields.iter().enumerate() {
+        wip = wip
+            .field_named(field.name)
+            .map_err(|e| format!("Field by name on enum does not exist: {e}"))?;
+
+        // Try to get the TOML value as a table to extract the field
+        if let Some(item) = item.as_table_like() {
+            // Base the field name on what type of struct we are
+            let field_name = if let StructKind::TupleStruct | StructKind::Tuple = variant.data.kind
+            {
+                &index.to_string()
+            } else {
+                // It must be a struct field
+                field.name
+            };
+
+            // Try to get the TOML field matching the Rust name
+            let Some(field) = item.get(field_name) else {
+                return Err(format!("TOML field '{}' not found", field_name).into());
+            };
+
+            wip = deserialize_item(wip, field)?;
+
+            wip = wip.pop().map_err(|e| AnyErr(e.to_string()))?;
+        } else if item.is_value() {
+            wip = deserialize_item(wip, item)?;
+        } else {
+            return Err(format!("TOML {} is not a recognized type", item.type_name()).into());
+        }
+    }
+
+    Ok(wip)
+}
+
+fn deserialize_as_list<'a>(mut _wip: Wip<'a>, _item: &Item) -> Result<Wip<'a>, AnyErr> {
+    trace!("Deserializing {}", "array".blue());
+
+    trace!("Finished deserializing {}", "array".blue());
+
+    todo!();
+}
+
+fn deserialize_as_map<'a>(mut _wip: Wip<'a>, _item: &Item) -> Result<Wip<'a>, AnyErr> {
+    trace!("Deserializing {}", "ap".blue());
+
+    trace!("Finished deserializing {}", "ap".blue());
+
+    todo!();
+}
+
+fn deserialize_as_option<'a>(mut _wip: Wip<'a>, _item: &Item) -> Result<Wip<'a>, AnyErr> {
+    trace!("Deserializing {}", "ption".blue());
+
+    trace!("Finished deserializing {}", "ption".blue());
+
+    todo!();
+}
+
+fn deserialize_as_smartpointer<'a>(mut _wip: Wip<'a>, _item: &Item) -> Result<Wip<'a>, AnyErr> {
+    trace!("Deserializing {}", "smart".blue());
+
+    trace!("Finished deserializing {}", "smart".blue());
+
+    todo!();
 }
 
 fn deserialize_as_scalar<'a>(mut wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, AnyErr> {
-    let shape = wip.shape();
+    trace!("Deserializing {}", "scalar".blue());
 
-    if shape.is_type::<String>() {
-        let val = to_scalar::string(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<Cow<'_, str>>() {
-        let val = Cow::Owned(to_scalar::string(item)?);
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<bool>() {
-        let val = to_scalar::boolean(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<f64>() {
-        let val = to_scalar::number::<f64>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<f32>() {
-        let val = to_scalar::number::<f32>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<usize>() {
-        let val = to_scalar::number::<usize>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<u128>() {
-        let val = to_scalar::number::<u128>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<u64>() {
-        let val = to_scalar::number::<u64>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<u32>() {
-        let val = to_scalar::number::<u32>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<u16>() {
-        let val = to_scalar::number::<u16>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<u8>() {
-        let val = to_scalar::number::<u8>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<isize>() {
-        let val = to_scalar::number::<isize>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<i128>() {
-        let val = to_scalar::number::<i128>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<i64>() {
-        let val = to_scalar::number::<i64>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<i32>() {
-        let val = to_scalar::number::<i32>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<i16>() {
-        let val = to_scalar::number::<i16>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<i8>() {
-        let val = to_scalar::number::<i8>(item)?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<usize>>() {
-        // TODO: create a to_scalar::nonzero_number method when we can use a trait to do so
-        let val = NonZero::new(to_scalar::number::<usize>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<u128>>() {
-        let val = NonZero::new(to_scalar::number::<u128>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<u64>>() {
-        let val = NonZero::new(to_scalar::number::<u64>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<u32>>() {
-        let val = NonZero::new(to_scalar::number::<u32>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<u16>>() {
-        let val = NonZero::new(to_scalar::number::<u16>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<u8>>() {
-        let val = NonZero::new(to_scalar::number::<u8>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<isize>>() {
-        let val = NonZero::new(to_scalar::number::<isize>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<i128>>() {
-        let val = NonZero::new(to_scalar::number::<i128>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<i64>>() {
-        let val = NonZero::new(to_scalar::number::<i64>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<i32>>() {
-        let val = NonZero::new(to_scalar::number::<i32>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<i16>>() {
-        let val = NonZero::new(to_scalar::number::<i16>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<NonZero<i8>>() {
-        let val = NonZero::new(to_scalar::number::<i8>(item)?)
-            .ok_or_else(|| AnyErr("Could not convert number to non-zero variant".into()))?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<SocketAddr>() {
-        let val = to_scalar::from_str::<SocketAddr>(item, "socket address")?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<IpAddr>() {
-        let val = to_scalar::from_str::<IpAddr>(item, "ip address")?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<Ipv4Addr>() {
-        let val = to_scalar::from_str::<Ipv4Addr>(item, "ipv4 address")?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else if shape.is_type::<Ipv6Addr>() {
-        let val = to_scalar::from_str::<Ipv6Addr>(item, "ipv6 address")?;
-        wip = wip.put(val).map_err(|e| AnyErr(e.to_string()))?;
-    } else {
-        return Err(AnyErr(format!("Unsupported scalar type: {}", wip.shape())));
+    match ScalarType::try_from_shape(wip.shape())
+        .ok_or_else(|| format!("Unsupported scalar type: {}", wip.shape()))?
+    {
+        ScalarType::Bool => {
+            wip = wip
+                .put(to_scalar::boolean(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        #[cfg(feature = "std")]
+        ScalarType::String => {
+            wip = wip
+                .put(to_scalar::string(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        #[cfg(feature = "std")]
+        ScalarType::CowStr => {
+            wip = wip
+                .put(std::borrow::Cow::Owned(to_scalar::string(item)?))
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::F32 => {
+            wip = wip
+                .put(to_scalar::number::<f32>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::F64 => {
+            wip = wip
+                .put(to_scalar::number::<f64>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::U8 => {
+            wip = wip
+                .put(to_scalar::number::<u8>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::U16 => {
+            wip = wip
+                .put(to_scalar::number::<u16>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::U32 => {
+            wip = wip
+                .put(to_scalar::number::<u32>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::U64 => {
+            wip = wip
+                .put(to_scalar::number::<u64>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::USize => {
+            wip = wip
+                .put(to_scalar::number::<usize>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::I8 => {
+            wip = wip
+                .put(to_scalar::number::<i8>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::I16 => {
+            wip = wip
+                .put(to_scalar::number::<i16>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::I32 => {
+            wip = wip
+                .put(to_scalar::number::<i32>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::I64 => {
+            wip = wip
+                .put(to_scalar::number::<i64>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::ISize => {
+            wip = wip
+                .put(to_scalar::number::<isize>(item)?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        #[cfg(feature = "std")]
+        ScalarType::SocketAddr => {
+            wip = wip
+                .put(to_scalar::from_str::<std::net::SocketAddr>(
+                    item,
+                    "socket address",
+                )?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::IpAddr => {
+            wip = wip
+                .put(to_scalar::from_str::<IpAddr>(item, "ip address")?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::Ipv4Addr => {
+            wip = wip
+                .put(to_scalar::from_str::<Ipv4Addr>(item, "ipv4 address")?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        ScalarType::Ipv6Addr => {
+            wip = wip
+                .put(to_scalar::from_str::<Ipv6Addr>(item, "ipv6 address")?)
+                .map_err(|e| AnyErr(e.to_string()))?
+        }
+        _ => return Err(AnyErr(format!("Unsupported scalar type: {}", wip.shape()))),
     }
+
+    trace!("Finished deserializing {}", "scalar".blue());
+
     Ok(wip)
 }
