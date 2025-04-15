@@ -6,6 +6,7 @@
 
 use core::fmt::{self, Debug, Display, Formatter};
 
+use anstyle::AnsiColor;
 // Re-export Style from anstyle
 pub use anstyle::Style;
 
@@ -137,11 +138,11 @@ pub trait ColorStyle {
     /// Create a new style with bright white foreground color
     fn fg_bright_white(self) -> Style;
     /// Create a new style with bold formatting
-    fn fg_bold(self) -> Style;
+    fn with_bold(self) -> Style;
     /// Create a new style with dimmed formatting
-    fn fg_dimmed(self) -> Style;
+    fn with_dimmed(self) -> Style;
     /// Create a new style with underline formatting
-    fn fg_underline(self) -> Style;
+    fn with_underline(self) -> Style;
 }
 
 impl ColorStyle for Style {
@@ -207,15 +208,15 @@ impl ColorStyle for Style {
         self.fg_color(Some(anstyle::Color::Ansi(anstyle::AnsiColor::BrightWhite)))
     }
 
-    fn fg_bold(self) -> Style {
+    fn with_bold(self) -> Style {
         self.bold()
     }
 
-    fn fg_dimmed(self) -> Style {
+    fn with_dimmed(self) -> Style {
         self.dimmed()
     }
 
-    fn fg_underline(self) -> Style {
+    fn with_underline(self) -> Style {
         self.underline()
     }
 }
@@ -354,8 +355,18 @@ pub trait Stylize {
     where
         Self: Sized;
 
+    /// Apply italic style to a value.
+    fn italic(self) -> Styled<Self>
+    where
+        Self: Sized;
+
     /// Apply dimmed style to a value.
-    fn dimmed(self) -> Styled<Self>
+    fn dim(self) -> Styled<Self>
+    where
+        Self: Sized;
+
+    /// Apply black background style to a value.
+    fn on_black(self) -> Styled<Self>
     where
         Self: Sized;
 }
@@ -433,7 +444,15 @@ impl<T> Stylize for T {
         self.style(Style::new().underline())
     }
 
-    fn dimmed(self) -> Styled<Self> {
+    fn italic(self) -> Styled<Self> {
+        self.style(Style::new().italic())
+    }
+
+    fn dim(self) -> Styled<Self> {
         self.style(Style::new().dimmed())
+    }
+
+    fn on_black(self) -> Styled<Self> {
+        self.style(Style::new().bg_color(Some(anstyle::Color::Ansi(AnsiColor::Black))))
     }
 }

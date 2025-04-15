@@ -1,5 +1,5 @@
 [package]
-name = "facet-codegen"
+name = "facet-dev"
 publish = false
 version = "0.1.1"
 authors.workspace = true
@@ -7,13 +7,18 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Code generation utilities for Facet"
+description = "Internal development utilities for Facet"
 keywords = ["code-generation", "templates"]
 categories = ["development-tools"]
 
 [dependencies]
+atty = "0.2.14"
+console = "0.15.11"
 facet-ansi = { version = "0.2.0", path = "../facet-ansi" }
 facet-testhelpers = { version = "0.1.2", path = "../facet-testhelpers" }
 fs-err = "3.1.0"
 log = "0.4.27"
+num_cpus = "1.16.0"
+rayon = "1.10.0"
 similar = { version = "2.4.0", features = ["inline"] }
+termion = "4.0.5"

@@ -8,15 +8,10 @@
 
 default: precommit prepush
 
-precommit: genfmt
+precommit: code-quality
 prepush: clippy test
 
 ci: precommit prepush docs msrv miri
-
-genfmt: lockfile codegen fmtfix absolve
-
-fmtfix:
-    cargo fmt --all
 
 nostd:
     # Run alloc but no-std checks with specified target directory
@@ -78,17 +73,16 @@ doc-tests-ci *args:
     echo -e "\033[1;36m📚 Running documentation tests...\033[0m"
     cmd_group "cargo test --doc {{args}}"
 
-codegen *args:
-    cargo run -p facet-codegen -- {{args}}
+gen *args:
+    cargo run -p facet-dev gen -- {{args}}
 
-code-quality: codegen
-    cargo fmt --check --all
+code-quality: gen
     just absolve
 
 code-quality-ci:
     #!/usr/bin/env -S bash -euo pipefail
     source .envrc
-    cmd_group "just codegen --check"
+    cmd_group "just gen --check"
     cmd_group "cargo fmt --check --all"
     cmd_group "just absolve"
 
