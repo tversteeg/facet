@@ -12,8 +12,8 @@ keywords = ["code-generation", "templates"]
 categories = ["development-tools"]
 
 [dependencies]
-facet-ansi = { version = "0.7.0", path = "../facet-ansi" }
-facet-testhelpers = { version = "0.7.0", path = "../facet-testhelpers" }
+facet-ansi = { version = "0.8.0", path = "../facet-ansi" }
+facet-testhelpers = { version = "0.8.0", path = "../facet-testhelpers" }
 fs-err = "3.1.0"
 log = "0.4.27"
 num_cpus = "1.16.0"

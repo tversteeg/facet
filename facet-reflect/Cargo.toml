@@ -1,6 +1,6 @@
 [package]
 name = "facet-reflect"
-version = "0.7.0"
+version = "0.8.0"
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -17,8 +17,8 @@ alloc = []
 
 [dependencies]
 bitflags = "2.9.0"
-facet-ansi = { path = "../facet-ansi", version = "0.7.0" }
-facet-core = { path = "../facet-core", version = "0.7.0" }
+facet-ansi = { path = "../facet-ansi", version = "0.8.0" }
+facet-core = { path = "../facet-core", version = "0.8.0" }
 log = "0.4.27"
 
 [dev-dependencies]
