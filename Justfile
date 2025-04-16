@@ -114,7 +114,7 @@ absolve:
 ship:
     cargo ws publish
 
-release:
+publish:
     cargo ws publish --publish-as-is --allow-dirty
 
 docsrs *args:
