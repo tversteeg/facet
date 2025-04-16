@@ -7,7 +7,7 @@ mod to_scalar;
 use core::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use error::AnyErr;
-use facet_core::{Def, Facet, StructKind};
+use facet_core::{Def, Facet, Struct, StructKind};
 use facet_reflect::{ScalarType, Wip};
 use log::trace;
 use toml_edit::{DocumentMut, Item, TomlError};
@@ -39,7 +39,7 @@ fn deserialize_item<'a>(wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, AnyErr> {
         Def::Scalar(_) => deserialize_as_scalar(wip, item),
         Def::List(_) => deserialize_as_list(wip, item),
         Def::Map(_) => deserialize_as_map(wip, item),
-        Def::Struct(_) => deserialize_as_struct(wip, item),
+        Def::Struct(def) => deserialize_as_struct(wip, def, item),
         Def::Enum(_) => deserialize_as_enum(wip, item),
         Def::Option(_) => deserialize_as_option(wip, item),
         Def::SmartPointer(_) => deserialize_as_smartpointer(wip, item),
@@ -47,7 +47,11 @@ fn deserialize_item<'a>(wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, AnyErr> {
     }
 }
 
-fn deserialize_as_struct<'a>(mut wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, AnyErr> {
+fn deserialize_as_struct<'a>(
+    mut wip: Wip<'a>,
+    def: Struct,
+    item: &Item,
+) -> Result<Wip<'a>, AnyErr> {
     trace!("Deserializing {}", "struct".blue());
 
     // Parse as a the inner struct type if item is a single value and the struct is a unit struct
@@ -79,15 +83,27 @@ fn deserialize_as_struct<'a>(mut wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, A
         ))
     })?;
 
-    for (k, v) in table.iter() {
-        let field_index = wip
-            .field_index(k)
-            .ok_or_else(|| AnyErr(format!("Field '{}' not found", k)))?;
+    for field in def.fields {
         wip = wip
-            .field(field_index)
-            .map_err(|e| AnyErr(format!("Field '{}' error: {}", k, e)))?;
-        wip = deserialize_item(wip, v)
-            .map_err(|e| AnyErr(format!("Error deserializing field '{}': {}", k, e)))?;
+            .field_named(field.name)
+            .map_err(|e| AnyErr(e.to_string()))?;
+
+        // Find the matching TOML field
+        let field_item = table.get(field.name);
+        match field_item {
+            Some(field_item) => wip = deserialize_item(wip, field_item)?,
+            None => {
+                if let Def::Option(..) = field.shape().def {
+                    // TODO: how to push none
+                    wip = wip.push_some().map_err(|e| AnyErr(e.to_string()))?;
+                    wip = wip
+                        .pop_some_push_none()
+                        .map_err(|e| AnyErr(e.to_string()))?;
+                } else {
+                    return Err(AnyErr(format!("Expected field '{}'", field.name)));
+                }
+            }
+        }
         wip = wip.pop().map_err(|e| AnyErr(e.to_string()))?;
     }
 
@@ -343,12 +359,16 @@ fn deserialize_as_map<'a>(mut wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, AnyE
     Ok(wip)
 }
 
-fn deserialize_as_option<'a>(mut _wip: Wip<'a>, _item: &Item) -> Result<Wip<'a>, AnyErr> {
+fn deserialize_as_option<'a>(mut wip: Wip<'a>, item: &Item) -> Result<Wip<'a>, AnyErr> {
     trace!("Deserializing {}", "option".blue());
+
+    wip = wip.push_some().map_err(|e| AnyErr(e.to_string()))?;
+
+    wip = deserialize_item(wip, item)?;
 
     trace!("Finished deserializing {}", "option".blue());
 
-    todo!();
+    Ok(wip)
 }
 
 fn deserialize_as_smartpointer<'a>(mut _wip: Wip<'a>, _item: &Item) -> Result<Wip<'a>, AnyErr> {
