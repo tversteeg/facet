@@ -112,15 +112,9 @@ absolve:
     fi
 
 ship:
-    #!/usr/bin/env -S bash -eux
-    release-plz update
-    git add .
-    git commit -m "⬆️ crate upgrades"
-    git push
-    just release
+    cargo ws publish
 
 release:
-    source .envrc
     cargo ws publish --publish-as-is --allow-dirty
 
 docsrs *args:
