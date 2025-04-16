@@ -23,4 +23,4 @@ log = "0.4.27"
 
 [dev-dependencies]
 facet = { path = "../facet" }
-facet-testhelpers = { version = "0.7.0", path = "../facet-testhelpers" }
+facet-testhelpers = { path = "../facet-testhelpers" }

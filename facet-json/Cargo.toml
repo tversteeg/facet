@@ -24,5 +24,5 @@ log = "0.4.27"
 [dev-dependencies]
 eyre = "0.6.12"
 facet = { path = "../facet" }
-facet-testhelpers = { version = "0.7.0", path = "../facet-testhelpers" }
+facet-testhelpers = { path = "../facet-testhelpers" }
 insta = { git = "https://github.com/mitsuhiko/insta" }
