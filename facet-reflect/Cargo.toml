@@ -1,6 +1,6 @@
 [package]
 name = "facet-reflect"
-version = "0.8.2"
+version = "0.9.0"
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -17,7 +17,7 @@ alloc = ["owo-colors/alloc", "facet-core/alloc"]
 
 [dependencies]
 bitflags = "2.9.0"
-facet-core = { path = "../facet-core", version = "0.8.0", default-features = false }
+facet-core = { path = "../facet-core", version = "0.9.0", default-features = false }
 log = "0.4.27"
 owo-colors = "4.2.0"
 
