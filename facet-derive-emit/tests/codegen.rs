@@ -765,3 +765,15 @@ fn enum_with_multiple_attributes_per_variant() {
         "#
     ));
 }
+
+#[test]
+fn visibility() {
+    insta::assert_snapshot!(expand(
+        r#"
+        #[derive(Facet)]
+        pub struct Test<T> {
+            pub(crate) a: T,
+        }
+        "#
+    ));
+}

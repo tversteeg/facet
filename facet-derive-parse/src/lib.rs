@@ -75,10 +75,10 @@ unsynn! {
 
     /// Represents visibility modifiers for items.
     pub enum Vis {
-        /// Public visibility, indicated by the "pub" keyword.
-        Pub(KPub),
         /// `pub(in? crate::foo::bar)`/`pub(in? ::foo::bar)`
         PubIn(Cons<KPub, ParenthesisGroupContaining<Cons<Option<KIn>, ModPath>>>),
+        /// Public visibility, indicated by the "pub" keyword.
+        Pub(KPub),
     }
 
     /// Represents an attribute annotation, typically in the form `#[attr]`.
