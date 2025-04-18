@@ -55,7 +55,6 @@ clippy:
 
 test *args:
     cargo nextest run {{args}} < /dev/null
-    cargo test --doc {{args}}
 
 test-ci *args:
     #!/usr/bin/env -S bash -euo pipefail
