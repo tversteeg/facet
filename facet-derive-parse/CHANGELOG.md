@@ -6,3 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.10.0](https://github.com/facet-rs/facet/compare/facet-derive-parse-v0.9.1...facet-derive-parse-v0.10.0) - 2025-04-18
+
+### Other
+
+- Allow manually defining enum discriminants

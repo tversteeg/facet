@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0](https://github.com/facet-rs/facet/compare/facet-reflect-v0.9.1...facet-reflect-v0.10.0) - 2025-04-18
+
+### Other
+
+- Never restore state when pushing a map key and also attempt not to track them.
+
 ## [0.9.1](https://github.com/facet-rs/facet/compare/facet-reflect-v0.9.0...facet-reflect-v0.9.1) - 2025-04-18
 
 ### Other

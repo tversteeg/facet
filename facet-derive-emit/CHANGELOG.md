@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0](https://github.com/facet-rs/facet/compare/facet-derive-emit-v0.9.1...facet-derive-emit-v0.10.0) - 2025-04-18
+
+### Other
+
+- Allow manually defining enum discriminants
+
 ## [0.9.1](https://github.com/facet-rs/facet/compare/facet-derive-emit-v0.9.0...facet-derive-emit-v0.9.1) - 2025-04-18
 
 ### Other
