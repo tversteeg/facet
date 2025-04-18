@@ -6,6 +6,8 @@
 #
 # The non`-ci` variants can be run locally without having bash installed.
 
+set dotenv-load
+
 default: precommit prepush
 
 precommit: code-quality
