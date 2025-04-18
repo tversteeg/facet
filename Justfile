@@ -114,10 +114,14 @@ absolve:
     fi
 
 ship:
-    cargo ws publish
+    release-plz update
+    git add .
+    git commit -m "Upgrades"
+    git push
+    just publish
 
 publish:
-    cargo ws publish --publish-as-is --allow-dirty
+    release-plz update --backend github --git-token $PUBLISH_GITHUB_TOKEN
 
 docsrs *args:
     #!/usr/bin/env -S bash -eux
