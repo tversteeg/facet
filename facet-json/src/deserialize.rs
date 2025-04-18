@@ -305,11 +305,25 @@ pub fn from_slice_wip<'input, 'a>(
                             bail!(JsonErrorKind::UnexpectedEof);
                         };
 
+                        trace!("Beginning pushback...");
                         wip = wip.begin_pushback().unwrap();
                         match c {
                             b']' => {
                                 // an array just closed, somewhere
                                 pos += 1;
+                                trace!("Oh it's already closed!");
+                                match why {
+                                    WhyValue::TopLevel => {}
+                                    WhyValue::ArrayElement => {
+                                        wip = wip.pop().unwrap();
+                                    }
+                                    WhyValue::ObjectValue => {
+                                        wip = wip.pop().unwrap();
+                                    }
+                                    WhyValue::ObjectKey => {
+                                        todo!()
+                                    }
+                                }
                             }
                             _ => {
                                 // okay, next we expect an item and a separator (or the end of the array)
@@ -381,6 +395,8 @@ pub fn from_slice_wip<'input, 'a>(
                             WhyValue::ObjectKey => {
                                 // Look for field with matching name or rename attribute
                                 let field_shape = wip.shape();
+
+                                trace!("got object key {}", value.on_yellow());
                                 if let Def::Struct(struct_def) = field_shape.def {
                                     let field = struct_def.fields.iter().find(|f| {
                                         // Check original name
@@ -399,6 +415,7 @@ pub fn from_slice_wip<'input, 'a>(
                                     });
 
                                     if let Some(field) = field {
+                                        trace!("found field {:?}", field.on_blue().black());
                                         wip = wip.field_named(field.name).unwrap();
                                     } else {
                                         // Field not found - original or renamed
