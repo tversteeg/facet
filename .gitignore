@@ -4,3 +4,4 @@
 *~lock~
 /templates/output.rs
 tarpaulin-report.html
+.env
