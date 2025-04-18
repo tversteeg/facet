@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.3](https://github.com/facet-rs/facet/compare/facet-json-v0.9.2...facet-json-v0.9.3) - 2025-04-18
+
+### Other
+
+- update Cargo.toml dependencies
+
 ## [0.9.2](https://github.com/facet-rs/facet/compare/facet-json-v0.9.1...facet-json-v0.9.2) - 2025-04-18
 
 ### Other
