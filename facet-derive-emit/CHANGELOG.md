@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0](https://github.com/facet-rs/facet/compare/facet-derive-emit-v0.11.0...facet-derive-emit-v0.12.0) - 2025-04-19
+
+### Added
+
+- *(json)* Support default attribute.
+- feat(json) Support default at the container level
+
 ## [0.11.0](https://github.com/facet-rs/facet/compare/facet-derive-emit-v0.10.1...facet-derive-emit-v0.11.0) - 2025-04-19
 
 ### Added
