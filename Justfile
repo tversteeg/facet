@@ -115,6 +115,23 @@ absolve:
     fi
 
 ship:
+    #!/usr/bin/env -S bash -euo pipefail
+    # Refuse to run if not on main branch or not up to date with origin/main
+    branch="$(git rev-parse --abbrev-ref HEAD)"
+    if [[ "$branch" != "main" ]]; then
+    echo -e "\033[1;31m❌ Refusing to run: not on 'main' branch (current: $branch)\033[0m"
+    exit 1
+    fi
+    git fetch origin main
+    local_rev="$(git rev-parse HEAD)"
+    remote_rev="$(git rev-parse origin/main)"
+    if [[ "$local_rev" != "$remote_rev" ]]; then
+    echo -e "\033[1;31m❌ Refusing to run: local main branch is not up to date with origin/main\033[0m"
+    echo -e "Local HEAD:  $local_rev"
+    echo -e "Origin HEAD: $remote_rev"
+    echo -e "Please pull/rebase to update."
+    exit 1
+    fi
     release-plz update
     git add .
     git commit -m "Upgrades"
