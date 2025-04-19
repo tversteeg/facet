@@ -281,6 +281,7 @@ dependencies = [
 name = "facet-toml"
 version = "0.12.0"
 dependencies = [
+ "ariadne",
  "facet",
  "facet-core",
  "facet-reflect",
