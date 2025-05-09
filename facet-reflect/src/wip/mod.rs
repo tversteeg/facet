@@ -1,4 +1,4 @@
-use crate::{ReflectError, ValueId};
+use crate::{Peek, ReflectError, ValueId};
 use crate::{debug, trace};
 #[cfg(feature = "log")]
 use alloc::string::ToString;
@@ -15,6 +15,7 @@ use facet_core::{
     Variant,
 };
 use flat_map::FlatMap;
+use std::sync::Arc;
 
 use alloc::string::String;
 
@@ -226,10 +227,19 @@ impl Frame {
                     );
                     self.istate.fields = ISet::all(variant.data.fields);
                 } else {
-                    panic!(
+                    trace!(
                         "[{}] Trying to mark enum as initialized without variant",
                         self.istate.depth
                     );
+
+                    // now let's find which variant was set with a Peek
+                    let peek = unsafe {
+                        Peek::unchecked_new(self.data.assume_init().as_const(), self.shape)
+                    };
+                    let enum_peek = peek.into_enum().unwrap();
+                    let variant = enum_peek.active_variant().unwrap();
+                    self.istate.variant = Some(*variant);
+                    self.istate.fields = ISet::all(variant.data.fields);
                 }
             }
             _ => {
@@ -1008,7 +1018,9 @@ impl<'facet_lifetime> Wip<'facet_lifetime> {
 
         unsafe {
             default_in_place(frame.data);
+            trace!("Marking frame as fully initialized...");
             frame.mark_fully_initialized();
+            trace!("Marking frame as fully initialized... done!");
         }
 
         let shape = frame.shape;
