@@ -15,7 +15,6 @@ use facet_core::{
     Variant,
 };
 use flat_map::FlatMap;
-use std::sync::Arc;
 
 use alloc::string::String;
 
@@ -239,7 +238,12 @@ impl Frame {
                     let enum_peek = peek.into_enum().unwrap();
                     let variant = enum_peek.active_variant().unwrap();
                     self.istate.variant = Some(*variant);
-                    self.istate.fields = ISet::all(variant.data.fields);
+                    if variant.data.fields.is_empty() {
+                        // for unit variants, we mark "fields zero" as initialized
+                        self.istate.fields.set(0);
+                    } else {
+                        self.istate.fields = ISet::all(variant.data.fields);
+                    }
                 }
             }
             _ => {
@@ -645,6 +649,7 @@ impl<'facet_lifetime> Wip<'facet_lifetime> {
                         for i in 0..sd.fields.len() {
                             if !istate.fields.has(i) {
                                 let field = &sd.fields[i];
+                                trace!("Found uninitialized field: {}", field.name);
                                 return Err(ReflectError::UninitializedField {
                                     shape: id.shape,
                                     field_name: field.name,
@@ -679,6 +684,7 @@ impl<'facet_lifetime> Wip<'facet_lifetime> {
                             // Check each field, just like for structs
                             for (i, field) in variant.data.fields.iter().enumerate() {
                                 if !istate.fields.has(i) {
+                                    trace!("Found uninitialized field: {}", field.name);
                                     return Err(ReflectError::UninitializedEnumField {
                                         shape: id.shape,
                                         variant_name: variant.name,
