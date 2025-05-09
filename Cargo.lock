@@ -368,6 +368,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "facet-json"
+version = "0.23.0"
+dependencies = [
+ "eyre",
+ "facet",
+ "facet-core",
+ "facet-deserialize",
+ "facet-reflect",
+ "facet-serialize",
+ "facet-testhelpers 0.17.1",
+ "insta",
+ "log",
+]
+
+[[package]]
 name = "facet-pretty"
 version = "0.23.0"
 dependencies = [

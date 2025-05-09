@@ -44,3 +44,28 @@ Tests that exercise the `#[derive(Facet)]` macro cannot live in `facet-core`
 because it does not depend on `facet-derive`. Such tests should either be
 snapshot tests in `facet-derive-emit` or integration tests in the main `facet`
 crate, which brings all the necessary components together.
+
+### Def and Type enums
+
+In the facet system, there are two separate enum types that describe types:
+
+- `Type`: Represents the Rust type system classification. This includes:
+  - `Type::User`: User-defined types like structs, enums, and unions
+  - `Type::Sequence`: Sequence types like tuples, arrays, etc.
+  - `Type::Primitive`: Built-in primitive types
+  - `Type::Pointer`: Reference and pointer types
+
+- `Def`: Represents common, well-known data structures for interacting with values:
+  - `Def::Map`: Dictionary or map-like structures
+  - `Def::List`: Ordered list or sequence of homogeneous values
+  - `Def::Array`: Fixed-size homogeneous arrays
+  - `Def::Option`: Optional values
+  - `Def::Scalar`: Simple scalar values
+  - `Def::Undefined`: Used when no specific `Def` applies; in this case, check `Type`
+
+When working with type information:
+1. First check `Def` for common collection types like maps, lists, etc.
+2. For user-defined types, use `Type::User` and check for `UserType::Struct`, `UserType::Enum`, etc.
+3. For tuples, use `Type::Sequence(SequenceType::Tuple)`.
+
+This design lets facet handle both generic data structures (`Def`) and Rust's specific type system (`Type`).

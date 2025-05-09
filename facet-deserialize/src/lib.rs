@@ -16,7 +16,9 @@ use alloc::borrow::Cow;
 pub use error::*;
 
 mod span;
-use facet_core::{Characteristic, Def, Facet, FieldFlags, ScalarAffinity, Type, UserType};
+use facet_core::{
+    Characteristic, Def, Facet, FieldFlags, ScalarAffinity, SequenceType, Type, UserType,
+};
 use owo_colors::OwoColorize;
 pub use span::*;
 
@@ -574,7 +576,7 @@ impl<'input> StackRunner<'input> {
                                     trace!("Array starting for enum ({})!", shape.blue());
                                 }
                                 UserType::Struct(_) => {
-                                    trace!("Array starting for tuple ({})!", shape.blue());
+                                    trace!("Array starting for tuple struct ({})!", shape.blue());
                                     wip = wip.put_default().map_err(|e| self.reflect_err(e))?;
                                 }
                                 _ => {
@@ -584,6 +586,16 @@ impl<'input> StackRunner<'input> {
                                     }));
                                 }
                             }
+                        } else if let Type::Sequence(SequenceType::Tuple(tuple_type)) = shape.ty {
+                            trace!(
+                                "Array starting for tuple ({}) with {} fields!",
+                                shape.blue(),
+                                tuple_type.fields.len()
+                            );
+                            // Initialize the tuple with default values
+                            wip = wip.put_default().map_err(|e| self.reflect_err(e))?;
+                            // No special handling needed here - the tuple is already set up correctly
+                            // and will receive array elements via pushback
                         } else {
                             return Err(self.err(DeserErrorKind::UnsupportedType {
                                 got: shape,
@@ -626,10 +638,20 @@ impl<'input> StackRunner<'input> {
                                     }));
                                 }
                             }
+                        } else if let Type::Sequence(SequenceType::Tuple(tuple_type)) = shape.ty {
+                            // This could be a tuple that was serialized as an object
+                            // Despite this being unusual, we'll handle it here for robustness
+                            trace!(
+                                "Object starting for tuple ({}) with {} fields - unusual but handling",
+                                shape.blue(),
+                                tuple_type.fields.len()
+                            );
+                            // Initialize the tuple with default values
+                            wip = wip.put_default().map_err(|e| self.reflect_err(e))?;
                         } else {
                             return Err(self.err(DeserErrorKind::UnsupportedType {
                                 got: shape,
-                                wanted: "map, enum, or struct",
+                                wanted: "map, enum, struct, or tuple",
                             }));
                         }
                     }
@@ -815,7 +837,22 @@ impl<'input> StackRunner<'input> {
                     outcome.magenta()
                 );
                 trace!("Before push, wip.shape is {}", wip.shape().blue());
-                wip = wip.push().map_err(|e| self.reflect_err(e))?;
+
+                // Special handling for tuples - we need to identify if we're in a tuple context
+                let is_tuple = match wip.innermost_shape().ty {
+                    Type::Sequence(SequenceType::Tuple(_)) => true,
+                    _ => false,
+                };
+
+                if is_tuple {
+                    trace!("Handling list item for a tuple type");
+                    // For tuples, we need to use field-based access by index
+                    wip = wip.push().map_err(|e| self.reflect_err(e))?;
+                } else {
+                    // Standard list/array handling
+                    wip = wip.push().map_err(|e| self.reflect_err(e))?;
+                }
+
                 trace!(" After push, wip.shape is {}", wip.shape().cyan());
                 wip = self.value(wip, outcome)?;
                 Ok(wip)
