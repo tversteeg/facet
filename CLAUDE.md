@@ -11,6 +11,15 @@ them by editing the corresponding `README.md.in`, not `README.md`.
 All crates have their own readme template, except for the `facet/` crate, which
 has it in the top-level `README.md.in`
 
+### Testing
+
+Always use `cargo nextest run` instead of `cargo test` to run tests. Nextest provides better isolation between tests and avoids issues with shared test environments.
+
+For example:
+- Run a specific test: `cargo nextest run test_name`
+- Run tests in a specific module: `cargo nextest run module_name`
+- Run tests with debug output: `cargo nextest run --no-capture test_name`
+
 ### Pre-commit Hooks
 
 When committing changes, facet-dev will run to check for code generation and formatting changes.
