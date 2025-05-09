@@ -29,7 +29,7 @@ members = [
     # "facet-urlencoded",
     # "facet-yaml",
     # "facet-jsonschema",
-    # "facet-deserialize",
+    "facet-deserialize",
     # "facet-bench",
 ]
 exclude = ["outside-workspace"]

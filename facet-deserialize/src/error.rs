@@ -3,7 +3,7 @@ use ariadne::{Color, Config, IndexType, Label, Report, ReportKind, Source};
 
 use alloc::string::String;
 
-use facet_core::{Def, Shape};
+use facet_core::{Shape, Type, UserType};
 use facet_reflect::ReflectError;
 use owo_colors::OwoColorize;
 
@@ -178,8 +178,8 @@ impl core::fmt::Display for DeserErrorMessage<'_> {
                     wanted.green()
                 )
             }
-            DeserErrorKind::NoSuchVariant { name, enum_shape } => match enum_shape.def {
-                Def::Enum(ed) => {
+            DeserErrorKind::NoSuchVariant { name, enum_shape } => {
+                if let Type::User(UserType::Enum(ed)) = enum_shape.ty {
                     write!(
                         f,
                         "Enum variant not found: {} in enum {}. Available variants: [",
@@ -196,17 +196,18 @@ impl core::fmt::Display for DeserErrorMessage<'_> {
                         first = false;
                     }
 
-                    write!(f, "]")
-                }
-                _ => {
+                    write!(f, "]")?;
+                    Ok(())
+                } else {
                     write!(
                         f,
-                        "Enum variant not found: {} in enum {}. No variants available (not an enum)",
+                        "Enum variant not found: {} in non-enum type {}",
                         name.red(),
                         enum_shape.yellow()
-                    )
+                    )?;
+                    Ok(())
                 }
-            },
+            }
         }
     }
 }

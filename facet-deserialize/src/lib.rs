@@ -16,7 +16,7 @@ use alloc::borrow::Cow;
 pub use error::*;
 
 mod span;
-use facet_core::{Characteristic, Def, Facet, FieldFlags, ScalarAffinity};
+use facet_core::{Characteristic, Def, Facet, FieldFlags, ScalarAffinity, Type, UserType};
 use owo_colors::OwoColorize;
 pub use span::*;
 
@@ -385,8 +385,8 @@ impl<'input> StackRunner<'input> {
         trace!("Popping because {:?}", reason.yellow());
 
         let container_shape = wip.shape();
-        match container_shape.def {
-            Def::Struct(sd) => {
+        match container_shape.ty {
+            Type::User(UserType::Struct(sd)) => {
                 let mut has_unset = false;
 
                 trace!("Let's check all fields are initialized");
@@ -460,7 +460,7 @@ impl<'input> StackRunner<'input> {
                     }
                 }
             }
-            Def::Enum(_) => {
+            Type::User(UserType::Enum(_)) => {
                 trace!(
                     "TODO: make sure enums are initialized (support container-level and field-level default, etc.)"
                 );
@@ -483,8 +483,8 @@ impl<'input> StackRunner<'input> {
     ) -> Result<Wip<'facet>, DeserError<'input>> {
         match scalar {
             Scalar::String(cow) => {
-                match wip.innermost_shape().def {
-                    Def::Enum(_) => {
+                match wip.innermost_shape().ty {
+                    Type::User(UserType::Enum(_)) => {
                         if wip.selected_variant().is_some() {
                             // If we already have a variant selected, just put the string
                             wip.put(cow.to_string()).map_err(|e| self.reflect_err(e))
@@ -530,6 +530,7 @@ impl<'input> StackRunner<'input> {
             }
             _ => {
                 if matches!(wip.shape().def, Def::Option(_)) {
+                    // TODO: Update option handling
                     trace!("Starting Some(_) option for {}", wip.shape().blue());
                     wip = wip.push_some().map_err(|e| self.reflect_err(e))?;
                     self.stack.push(Instruction::Pop(PopReason::Some));
@@ -554,13 +555,6 @@ impl<'input> StackRunner<'input> {
                         trace!("Array starting for list ({})!", shape.blue());
                         wip = wip.put_default().map_err(|e| self.reflect_err(e))?;
                     }
-                    Def::Enum(_) => {
-                        trace!("Array starting for enum ({})!", shape.blue());
-                    }
-                    Def::Struct(_) => {
-                        trace!("Array starting for tuple ({})!", shape.blue());
-                        wip = wip.put_default().map_err(|e| self.reflect_err(e))?;
-                    }
                     Def::Scalar(sd) => {
                         if matches!(sd.affinity, ScalarAffinity::Empty(_)) {
                             trace!("Empty tuple/scalar, nice");
@@ -573,13 +567,31 @@ impl<'input> StackRunner<'input> {
                         }
                     }
                     _ => {
-                        return Err(self.err(DeserErrorKind::UnsupportedType {
-                            got: shape,
-                            wanted: "array, list, tuple, or slice",
-                        }));
+                        // For non-collection types, check the Type enum
+                        if let Type::User(user_ty) = shape.ty {
+                            match user_ty {
+                                UserType::Enum(_) => {
+                                    trace!("Array starting for enum ({})!", shape.blue());
+                                }
+                                UserType::Struct(_) => {
+                                    trace!("Array starting for tuple ({})!", shape.blue());
+                                    wip = wip.put_default().map_err(|e| self.reflect_err(e))?;
+                                }
+                                _ => {
+                                    return Err(self.err(DeserErrorKind::UnsupportedType {
+                                        got: shape,
+                                        wanted: "array, list, tuple, or slice",
+                                    }));
+                                }
+                            }
+                        } else {
+                            return Err(self.err(DeserErrorKind::UnsupportedType {
+                                got: shape,
+                                wanted: "array, list, tuple, or slice",
+                            }));
+                        }
                     }
                 }
-
                 trace!("Beginning pushback");
                 self.stack.push(Instruction::ListItemOrListClose);
                 wip = wip.begin_pushback().map_err(|e| self.reflect_err(e))?;
@@ -595,19 +607,31 @@ impl<'input> StackRunner<'input> {
                         trace!("Object starting for map value ({})!", shape.blue());
                         wip = wip.put_default().map_err(|e| self.reflect_err(e))?;
                     }
-                    Def::Enum(_ed) => {
-                        trace!("Object starting for enum value ({})!", shape.blue());
-                        // nothing to do here
-                    }
-                    Def::Struct(_) => {
-                        trace!("Object starting for struct value ({})!", shape.blue());
-                        // nothing to do here
-                    }
                     _ => {
-                        return Err(self.err(DeserErrorKind::UnsupportedType {
-                            got: shape,
-                            wanted: "map, enum, or struct",
-                        }));
+                        // For non-collection types, check the Type enum
+                        if let Type::User(user_ty) = shape.ty {
+                            match user_ty {
+                                UserType::Enum(_) => {
+                                    trace!("Object starting for enum value ({})!", shape.blue());
+                                    // nothing to do here
+                                }
+                                UserType::Struct(_) => {
+                                    trace!("Object starting for struct value ({})!", shape.blue());
+                                    // nothing to do here
+                                }
+                                _ => {
+                                    return Err(self.err(DeserErrorKind::UnsupportedType {
+                                        got: shape,
+                                        wanted: "map, enum, or struct",
+                                    }));
+                                }
+                            }
+                        } else {
+                            return Err(self.err(DeserErrorKind::UnsupportedType {
+                                got: shape,
+                                wanted: "map, enum, or struct",
+                            }));
+                        }
                     }
                 }
 
@@ -634,8 +658,9 @@ impl<'input> StackRunner<'input> {
                 let mut needs_pop = true;
                 let mut handled_by_flatten = false;
 
-                match wip.innermost_shape().def {
-                    Def::Struct(sd) => {
+                let shape = wip.innermost_shape();
+                match shape.ty {
+                    Type::User(UserType::Struct(sd)) => {
                         // First try to find a direct field match
                         if let Some(index) = wip.field_index(&key) {
                             trace!("It's a struct field");
@@ -692,7 +717,7 @@ impl<'input> StackRunner<'input> {
                             }
                         }
                     }
-                    Def::Enum(_ed) => match wip.find_variant(&key) {
+                    Type::User(UserType::Enum(_ed)) => match wip.find_variant(&key) {
                         Some((index, variant)) => {
                             trace!("Variant {} selected", variant.name.blue());
                             wip = wip.variant(index).map_err(|e| self.reflect_err(e))?;
@@ -725,15 +750,17 @@ impl<'input> StackRunner<'input> {
                             }
                         }
                     },
-                    Def::Map(_) => {
-                        wip = wip.push_map_key().map_err(|e| self.reflect_err(e))?;
-                        wip = wip.put(key.to_string()).map_err(|e| self.reflect_err(e))?;
-                        wip = wip.push_map_value().map_err(|e| self.reflect_err(e))?;
-                    }
                     _ => {
-                        return Err(self.err(DeserErrorKind::Unimplemented(
-                            "object key for non-struct/map",
-                        )));
+                        // Check if it's a map
+                        if let Def::Map(_) = shape.def {
+                            wip = wip.push_map_key().map_err(|e| self.reflect_err(e))?;
+                            wip = wip.put(key.to_string()).map_err(|e| self.reflect_err(e))?;
+                            wip = wip.push_map_value().map_err(|e| self.reflect_err(e))?;
+                        } else {
+                            return Err(self.err(DeserErrorKind::Unimplemented(
+                                "object key for non-struct/map",
+                            )));
+                        }
                     }
                 }
 
