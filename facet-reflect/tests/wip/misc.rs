@@ -984,3 +984,16 @@ fn wip_build_tuple_through_listlike_api_coerce() -> eyre::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn wip_build_option_none_through_default() -> eyre::Result<()> {
+    facet_testhelpers::setup();
+
+    let wip = Wip::alloc::<Option<u32>>()?;
+    let wip = wip.put_default()?;
+    let hv = wip.build()?;
+    let option = hv.materialize::<Option<u32>>()?;
+    assert_eq!(option, None);
+
+    Ok(())
+}

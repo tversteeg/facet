@@ -462,10 +462,136 @@ impl<'input> StackRunner<'input> {
                     }
                 }
             }
-            Type::User(UserType::Enum(_)) => {
-                trace!(
-                    "TODO: make sure enums are initialized (support container-level and field-level default, etc.)"
-                );
+            Type::User(UserType::Enum(ed)) => {
+                trace!("Checking if enum is initialized correctly");
+
+                // Check if a variant has been selected
+                if let Some(variant) = wip.selected_variant() {
+                    trace!("Variant {} is selected", variant.name.blue());
+
+                    // Check if all fields in the variant are initialized
+                    if variant.data.fields.len() > 0 {
+                        let mut has_unset = false;
+
+                        for (index, field) in variant.data.fields.iter().enumerate() {
+                            let is_set = wip.is_field_set(index).map_err(|err| {
+                                trace!("Error checking field set status: {:?}", err);
+                                self.reflect_err(err)
+                            })?;
+
+                            if !is_set {
+                                if field.flags.contains(FieldFlags::DEFAULT) {
+                                    wip = wip.field(index).map_err(|e| self.reflect_err(e))?;
+                                    if let Some(default_in_place_fn) = field.vtable.default_fn {
+                                        wip = wip
+                                            .put_from_fn(default_in_place_fn)
+                                            .map_err(|e| self.reflect_err(e))?;
+                                        trace!(
+                                            "Field #{} {:?} in variant {} was set to default value (via custom fn)",
+                                            index.yellow(),
+                                            field.blue(),
+                                            variant.name
+                                        );
+                                    } else {
+                                        if !field.shape().is(Characteristic::Default) {
+                                            return Err(self.reflect_err(
+                                                ReflectError::DefaultAttrButNoDefaultImpl {
+                                                    shape: field.shape(),
+                                                },
+                                            ));
+                                        }
+                                        wip = wip.put_default().map_err(|e| self.reflect_err(e))?;
+                                        trace!(
+                                            "Field #{} {:?} in variant {} was set to default value (via default impl)",
+                                            index.yellow(),
+                                            field.blue(),
+                                            variant.name
+                                        );
+                                    }
+                                    wip = wip.pop().map_err(|e| self.reflect_err(e))?;
+                                } else {
+                                    trace!(
+                                        "Field #{} {:?} in variant {} is not initialized",
+                                        index.yellow(),
+                                        field.blue(),
+                                        variant.name
+                                    );
+                                    has_unset = true;
+                                }
+                            }
+                        }
+
+                        if has_unset && container_shape.has_default_attr() {
+                            trace!("Enum has DEFAULT attr but variant has uninitialized fields");
+                            // Handle similar to struct, allocate and build default value for variant
+                            let default_val = Wip::alloc_shape(container_shape)
+                                .map_err(|e| self.reflect_err(e))?
+                                .put_default()
+                                .map_err(|e| self.reflect_err(e))?
+                                .build()
+                                .map_err(|e| self.reflect_err(e))?;
+
+                            let peek = default_val.peek();
+                            let peek_enum = peek.into_enum().map_err(|e| self.reflect_err(e))?;
+                            let default_variant = peek_enum
+                                .active_variant()
+                                .map_err(|e| self.err(DeserErrorKind::VariantError(e)))?;
+
+                            if default_variant == &variant {
+                                // It's the same variant, fill in the missing fields
+                                for (index, field) in variant.data.fields.iter().enumerate() {
+                                    let is_set = wip.is_field_set(index).map_err(|err| {
+                                        trace!("Error checking field set status: {:?}", err);
+                                        self.reflect_err(err)
+                                    })?;
+                                    if !is_set {
+                                        if let Ok(Some(def_field)) = peek_enum.field(index) {
+                                            wip = wip
+                                                .field(index)
+                                                .map_err(|e| self.reflect_err(e))?;
+                                            wip = wip
+                                                .put_shape(def_field.data(), field.shape())
+                                                .map_err(|e| self.reflect_err(e))?;
+                                            wip = wip.pop().map_err(|e| self.reflect_err(e))?;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else if container_shape.has_default_attr() {
+                    // No variant selected, but enum has default attribute - set to default
+                    trace!("No variant selected but enum has DEFAULT attr; setting to default");
+                    let default_val = Wip::alloc_shape(container_shape)
+                        .map_err(|e| self.reflect_err(e))?
+                        .put_default()
+                        .map_err(|e| self.reflect_err(e))?
+                        .build()
+                        .map_err(|e| self.reflect_err(e))?;
+
+                    let peek = default_val.peek();
+                    let peek_enum = peek.into_enum().map_err(|e| self.reflect_err(e))?;
+                    let default_variant_idx = peek_enum
+                        .variant_index()
+                        .map_err(|e| self.err(DeserErrorKind::VariantError(e)))?;
+
+                    // Select the default variant
+                    wip = wip
+                        .variant(default_variant_idx)
+                        .map_err(|e| self.reflect_err(e))?;
+
+                    // Copy all fields from default value
+                    let variant = &ed.variants[default_variant_idx];
+                    for (index, field) in variant.data.fields.iter().enumerate() {
+                        if let Ok(Some(def_field)) = peek_enum.field(index) {
+                            wip = wip.field(index).map_err(|e| self.reflect_err(e))?;
+                            wip = wip
+                                .put_shape(def_field.data(), field.shape())
+                                .map_err(|e| self.reflect_err(e))?;
+                            wip = wip.pop().map_err(|e| self.reflect_err(e))?;
+                        }
+                    }
+                }
             }
             _ => {
                 trace!(

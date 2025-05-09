@@ -4,7 +4,7 @@ use ariadne::{Color, Config, IndexType, Label, Report, ReportKind, Source};
 use alloc::string::String;
 
 use facet_core::{Shape, Type, UserType};
-use facet_reflect::ReflectError;
+use facet_reflect::{ReflectError, VariantError};
 use owo_colors::OwoColorize;
 
 use crate::{Outcome, Span};
@@ -103,6 +103,8 @@ pub enum DeserErrorKind {
         /// The enum shape definition where the variant was looked up
         enum_shape: &'static Shape,
     },
+    /// An error occurred when reflecting an enum variant (index) from a user type.
+    VariantError(VariantError),
 }
 
 impl<'input> DeserError<'input> {
@@ -207,6 +209,9 @@ impl core::fmt::Display for DeserErrorMessage<'_> {
                     )?;
                     Ok(())
                 }
+            }
+            DeserErrorKind::VariantError(e) => {
+                write!(f, "Variant error: {e}")
             }
         }
     }

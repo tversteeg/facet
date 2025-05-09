@@ -226,8 +226,8 @@ impl Frame {
                     );
                     self.istate.fields = ISet::all(variant.data.fields);
                 } else {
-                    trace!(
-                        "[{}] Warning: trying to mark enum as initialized without variant",
+                    panic!(
+                        "[{}] Trying to mark enum as initialized without variant",
                         self.istate.depth
                     );
                 }
