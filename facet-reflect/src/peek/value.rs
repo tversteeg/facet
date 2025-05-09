@@ -325,10 +325,7 @@ impl<'mem, 'facet_lifetime> Peek<'mem, 'facet_lifetime> {
     /// Tries to identify this value as a tuple
     pub fn into_tuple(self) -> Result<PeekTuple<'mem, 'facet_lifetime>, ReflectError> {
         if let Type::Sequence(SequenceType::Tuple(ty)) = self.shape.ty {
-            Ok(PeekTuple {
-                value: self,
-                ty: ty,
-            })
+            Ok(PeekTuple { value: self, ty })
         } else {
             Err(ReflectError::WasNotA {
                 expected: "tuple",

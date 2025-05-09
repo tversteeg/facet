@@ -564,7 +564,7 @@ where
             }
             SerializeTask::TupleFields(peek_tuple) => {
                 // Push fields in reverse order
-                for (i, field_peek) in peek_tuple.fields().rev() {
+                for (_, field_peek) in peek_tuple.fields().rev() {
                     // Get the innermost peek value - this is essential for proper serialization
                     // to unwrap transparent wrappers and get to the actual value
                     let innermost_peek = field_peek.innermost_peek();

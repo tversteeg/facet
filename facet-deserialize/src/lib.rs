@@ -839,10 +839,10 @@ impl<'input> StackRunner<'input> {
                 trace!("Before push, wip.shape is {}", wip.shape().blue());
 
                 // Special handling for tuples - we need to identify if we're in a tuple context
-                let is_tuple = match wip.innermost_shape().ty {
-                    Type::Sequence(SequenceType::Tuple(_)) => true,
-                    _ => false,
-                };
+                let is_tuple = matches!(
+                    wip.innermost_shape().ty,
+                    Type::Sequence(SequenceType::Tuple(_))
+                );
 
                 if is_tuple {
                     trace!("Handling list item for a tuple type");
