@@ -1328,6 +1328,24 @@ impl<'facet_lifetime> Wip<'facet_lifetime> {
                     let shape = self.element_shape()?;
                     (shape, "list")
                 }
+                (Type::Sequence(SequenceType::Tuple(tt)), _) => {
+                    // Handle tuples - similar to tuple struct handling
+                    let field_index = {
+                        // Borrow frame mutably (already done) to update list_index
+                        let next_idx = frame.istate.list_index.unwrap_or(0);
+                        frame.istate.list_index = Some(next_idx + 1);
+                        next_idx
+                    };
+                    // Check if the field index is valid
+                    if field_index >= tt.fields.len() {
+                        return Err(ReflectError::FieldError {
+                            shape: seq_shape,
+                            field_error: FieldError::NoSuchField,
+                        });
+                    }
+                    // Get the shape of the field at the calculated index
+                    (tt.fields[field_index].shape(), "tuple")
+                }
                 (Type::User(UserType::Struct(sd)), _)
                     if sd.kind == facet_core::StructKind::Tuple =>
                 {
@@ -1397,7 +1415,7 @@ impl<'facet_lifetime> Wip<'facet_lifetime> {
                 _ => {
                     // If it's not a list, tuple struct, or enum, it's an error
                     return Err(ReflectError::WasNotA {
-                        expected: "list, array, tuple struct, or tuple enum variant",
+                        expected: "list, array, tuple, tuple struct, or tuple enum variant",
                         actual: seq_shape,
                     });
                 }
@@ -1787,7 +1805,7 @@ impl<'facet_lifetime> Wip<'facet_lifetime> {
                             }
                         }
                         _ => match parent_shape.ty {
-                            // Handle Empty Unit Types (including empty tuple structs)
+                            // Handle Empty Unit Types (including empty tuple structs and tuples)
                             Type::User(UserType::Struct(sd))
                                 if sd.kind == facet_core::StructKind::Tuple
                                     && sd.fields.is_empty() =>
@@ -1803,6 +1821,50 @@ impl<'facet_lifetime> Wip<'facet_lifetime> {
                                 }
                                 // Element frame is implicitly moved/consumed, but nothing to dealloc if it was also unit
                                 unsafe { self.mark_moved_out_of(&mut frame) };
+                            }
+
+                            // Handle tuples (Type::Sequence(SequenceType::Tuple))
+                            Type::Sequence(SequenceType::Tuple(tt)) => {
+                                // Get the field index from list_index saved during push
+                                let previous_index = parent_frame.istate.list_index.unwrap_or(1);
+                                let field_index = previous_index - 1; // -1 because we incremented *after* using the index in push
+
+                                if field_index >= tt.fields.len() {
+                                    panic!(
+                                        "Field index {} out of bounds for tuple {} with {} fields",
+                                        field_index,
+                                        parent_shape,
+                                        tt.fields.len()
+                                    );
+                                }
+
+                                let field = &tt.fields[field_index];
+                                trace!(
+                                    "[{}] Setting tuple field {} ({}) of {}",
+                                    frame_len,
+                                    field_index.to_string().yellow(),
+                                    field.name.bright_blue(),
+                                    parent_shape.blue()
+                                );
+
+                                unsafe {
+                                    // Copy the element data to the tuple field
+                                    let field_ptr = parent_frame.data.field_uninit_at(field.offset);
+                                    field_ptr
+                                        .copy_from(
+                                            PtrConst::new(frame.data.as_byte_ptr()),
+                                            field.shape(),
+                                        )
+                                        .map_err(|_| ReflectError::Unsized {
+                                            shape: field.shape(),
+                                        })?; // Use ? to propagate potential unsized error
+
+                                    // Mark the specific field as initialized using its index
+                                    parent_frame.istate.fields.set(field_index);
+
+                                    // Mark the element as moved
+                                    self.mark_moved_out_of(&mut frame);
+                                }
                             }
 
                             // Handle Tuple Structs
@@ -1916,7 +1978,7 @@ impl<'facet_lifetime> Wip<'facet_lifetime> {
                             // Unexpected parent type
                             _ => {
                                 panic!(
-                                    "FrameMode::ListElement pop expected parent to be List, Tuple Struct, or Tuple Enum Variant, but got {}",
+                                    "FrameMode::ListElement pop expected parent to be List, Tuple, Tuple Struct, or Tuple Enum Variant, but got {}",
                                     parent_shape
                                 );
                             }
